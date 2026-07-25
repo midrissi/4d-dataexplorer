@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Data Explorer</title>
+  <style>
+    /* Neutral base backgrounds so the very first frame (before the theme CSS
+       finishes loading) is never white. The bootstrap script below refines this
+       to match the persisted light/dark preference. */
+    html {
+      background-color: #12141c;
+    }
+
+    html:not(.dark) {
+      background-color: #f5f6f8;
+    }
+  </style>
+  <script>
+    // Apply the persisted theme (light/dark + theme name) synchronously, before
+    // the app renders, so the window paints the correct colors on the first
+    // frame instead of flashing a default/white background.
+    (() => {
+      let theme = 'dark';
+      let themeName = 'tangerine';
+      try {
+        const raw = localStorage.getItem('dataexplorer:profiles');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          const current = parsed?.current ? parsed.current : 'default';
+          const settings = parsed?.profiles?.[current] ? parsed.profiles[current].settings : null;
+          if (settings) {
+            if (settings.theme === 'light' || settings.theme === 'dark') theme = settings.theme;
+            if (settings.themeName) themeName = settings.themeName;
+          }
+        }
+        const root = document.documentElement;
+        root.setAttribute('data-theme', themeName);
+        if (theme === 'dark') root.classList.add('dark');
+        else root.classList.remove('dark');
+      } catch {
+        // Fall back to the default dark theme already applied via CSS above.
+      }
+    })();
+  </script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
+</html>

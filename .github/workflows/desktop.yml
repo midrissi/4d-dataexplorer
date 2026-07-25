@@ -1,0 +1,348 @@
+name: Desktop Build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Create the GitHub release once so matrix jobs only upload assets (avoids
+  # duplicate-release races that drop platform entries from latest.json).
+  create-release:
+    name: Create GitHub Release
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
+      tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Read version
+        id: meta
+        shell: bash
+        run: |
+          # Append short git SHA so every commit gets a unique SemVer prerelease
+          # (e.g. 1.3.3-a4b0436). A fourth dotted segment like 1.3.3.a4b0436 is
+          # not valid SemVer and is rejected by Tauri's updater / tauri.conf.
+          # Windows builds use NSIS only (see matrix) because MSI/WiX requires a
+          # numeric-only prerelease ≤ 65535 and cannot accept a git SHA.
+          BASE="$(node -p "require('./apps/desktop/package.json').version")"
+          REV="$(git rev-parse --short=7 HEAD)"
+          VERSION="${BASE}-${REV}"
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Ensure release exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${{ steps.meta.outputs.tag }}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists (assets replaced on upload)"
+          else
+            # Do not mark as Latest until every platform build has uploaded assets.
+            gh release create "$TAG" --title "Release $TAG" --notes "" --latest=false
+          fi
+
+  build-desktop:
+    name: Build Desktop (${{ matrix.name }})
+    needs: [create-release]
+    # Run on PRs even when create-release is skipped
+    if: always() && (needs.create-release.result == 'success' || needs.create-release.result == 'skipped')
+    runs-on: ${{ matrix.platform }}
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      # Serialize release builds so each job can merge its platform into latest.json
+      # without clobbering the previous one. PRs stay parallel.
+      max-parallel: ${{ github.event_name == 'pull_request' && 4 || 1 }}
+      matrix:
+        include:
+          - name: macOS (Apple Silicon)
+            platform: macos-latest
+            target: aarch64-apple-darwin
+            args: '--target aarch64-apple-darwin'
+          - name: macOS (Intel)
+            platform: macos-latest
+            target: x86_64-apple-darwin
+            args: '--target x86_64-apple-darwin'
+          - name: Linux (x86_64)
+            platform: ubuntu-22.04
+            target: ''
+            args: ''
+          # MSI/WiX only allows numeric prereleases ≤ 65535, so skip msi and
+          # ship NSIS (full SemVer, including our `<semver>-<gitsha>` stamps).
+          - name: Windows (x86_64)
+            platform: windows-latest
+            target: ''
+            args: '--bundles nsis'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install Linux dependencies
+        if: matrix.platform == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libappindicator3-dev \
+            librsvg2-dev \
+            patchelf \
+            libxdo-dev \
+            libssl-dev \
+            build-essential \
+            file \
+            wget \
+            curl
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri -> target
+          key: ${{ matrix.target }}
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Get version
+        id: version
+        shell: bash
+        run: |
+          if [ -n "${{ needs.create-release.outputs.version }}" ]; then
+            echo "version=${{ needs.create-release.outputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            BASE="$(node -p "require('./apps/desktop/package.json').version")"
+            REV="$(git rev-parse --short=7 HEAD)"
+            echo "version=${BASE}-${REV}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Stamp version into desktop manifests
+        shell: bash
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require('fs');
+          const version = process.env.VERSION;
+          if (!version) throw new Error('VERSION is empty');
+
+          const pkgPath = 'apps/desktop/package.json';
+          const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+          pkg.version = version;
+          fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
+
+          const confPath = 'apps/desktop/src-tauri/tauri.conf.json';
+          const conf = JSON.parse(fs.readFileSync(confPath, 'utf8'));
+          conf.version = version;
+          fs.writeFileSync(confPath, JSON.stringify(conf, null, 2) + '\n');
+
+          const cargoPath = 'apps/desktop/src-tauri/Cargo.toml';
+          const cargo = fs.readFileSync(cargoPath, 'utf8');
+          const next = cargo.replace(
+            /^version\s*=\s*"[^"]*"/m,
+            `version = "${version}"`,
+          );
+          if (next === cargo) {
+            throw new Error(`Failed to patch version in ${cargoPath}`);
+          }
+          fs.writeFileSync(cargoPath, next);
+
+          console.log(`Stamped desktop version: ${version}`);
+          NODE
+
+      - name: Build desktop app (PR - no release)
+        if: github.event_name == 'pull_request'
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          projectPath: apps/desktop
+          tauriScript: bunx tauri
+          args: ${{ matrix.args }}
+
+      - name: Build & attach desktop app to release
+        if: github.event_name != 'pull_request'
+        uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          projectPath: apps/desktop
+          tauriScript: bunx tauri
+          args: ${{ matrix.args }}
+          tagName: v${{ steps.version.outputs.version }}
+          releaseName: Release v${{ steps.version.outputs.version }}
+          releaseDraft: false
+          prerelease: false
+          uploadUpdaterJson: true
+          retryAttempts: 5
+
+      - name: Package macOS app (ad-hoc sign, ZIP, SHA-256)
+        id: macpkg
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${{ matrix.target }}" in
+            aarch64-apple-darwin) ARCH=aarch64 ;;
+            x86_64-apple-darwin)  ARCH=x86_64 ;;
+            *) ARCH=unknown ;;
+          esac
+          BUNDLE_DIR="apps/desktop/src-tauri/target/${{ matrix.target }}/release/bundle/macos"
+          APP_PATH="$BUNDLE_DIR/Data Explorer.app"
+          if [ ! -d "$APP_PATH" ]; then
+            echo "::error::App bundle not found at $APP_PATH"
+            ls -la "$BUNDLE_DIR" || true
+            exit 1
+          fi
+          # Ad-hoc code signing to satisfy basic Gatekeeper code-signing checks
+          codesign --force --deep --sign - "$APP_PATH"
+          codesign --verify --deep --strict --verbose=2 "$APP_PATH"
+          VERSION="${{ steps.version.outputs.version }}"
+          ZIP_NAME="Data-Explorer_${VERSION}_${ARCH}.zip"
+          # ditto preserves the code signature and bundle structure
+          ditto -c -k --keepParent "$APP_PATH" "$BUNDLE_DIR/$ZIP_NAME"
+          ( cd "$BUNDLE_DIR" && shasum -a 256 "$ZIP_NAME" | tee "$ZIP_NAME.sha256" )
+          echo "zip_path=$BUNDLE_DIR/$ZIP_NAME" >> "$GITHUB_OUTPUT"
+          echo "sha_path=$BUNDLE_DIR/$ZIP_NAME.sha256" >> "$GITHUB_OUTPUT"
+
+      - name: Upload macOS ZIP + checksum to release
+        if: runner.os == 'macOS' && github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="v${{ steps.version.outputs.version }}"
+          # Release already exists; only attach the extra ZIP assets
+          gh release upload "$TAG" \
+            "${{ steps.macpkg.outputs.zip_path }}" \
+            "${{ steps.macpkg.outputs.sha_path }}" \
+            --clobber
+
+      - name: Upload desktop bundles artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: desktop-${{ matrix.platform }}-${{ matrix.target || 'default' }}
+          path: |
+            apps/desktop/src-tauri/target/release/bundle/**
+            apps/desktop/src-tauri/target/*/release/bundle/**
+          retention-days: 30
+          if-no-files-found: ignore
+
+  # Web assets for 4D (Resources/WEBJS/DataBrowser) — attached to the same
+  # release as desktop so /releases/latest/download/DataExplorer.zip works.
+  upload-web-zip:
+    name: Upload DataExplorer.zip
+    needs: [create-release]
+    if: github.event_name != 'pull_request' && needs.create-release.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build web assets
+        run: bun --filter @4d/dataexplorer build
+
+      - name: Create DataExplorer.zip
+        run: |
+          set -euo pipefail
+          cd apps/dataexplorer
+          test -d DataBrowser
+          zip -r DataExplorer.zip DataBrowser
+
+      - name: Upload to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${{ needs.create-release.outputs.tag }}"
+          gh release upload "$TAG" \
+            apps/dataexplorer/DataExplorer.zip \
+            --clobber
+
+  # Promote only after every matrix platform finished successfully so
+  # releases/latest never points at a half-uploaded build.
+  finalize-release:
+    name: Mark release as latest
+    needs: [create-release, build-desktop, upload-web-zip]
+    if: >-
+      github.event_name != 'pull_request' &&
+      needs.create-release.result == 'success' &&
+      needs.build-desktop.result == 'success' &&
+      needs.upload-web-zip.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      # tauri-action@v1 writes api.github.com asset URLs into latest.json.
+      # Those hit the unauthenticated REST rate limit (60/hr/IP) and return 403
+      # for public clients. Rewrite to browser_download_url before marking latest.
+      - name: Rewrite latest.json to browser download URLs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          bun apps/desktop/scripts/rewrite-updater-json-urls.ts \
+            --tag "${{ needs.create-release.outputs.tag }}" \
+            --repo "${{ github.repository }}"
+
+      - name: Set release as latest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${{ needs.create-release.outputs.tag }}"
+          gh release edit "$TAG" --repo "${{ github.repository }}" --latest

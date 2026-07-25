@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <title>4D Data Explorer — Open Graph image</title>
+  <!--
+    Source art for og-image.png. Rasterize with:
+      rsvg-convert -w 1200 -h 630 apps/docs/public/og-image.svg -o apps/docs/public/og-image.png
+    Colors match the docs dark theme (oklch → hex): bg #131b29, brand #df5e3b / #f37f5f,
+    text #e7ebf2 / #b0b8c5 / #7c8799. Fonts: Fraunces (title), DM Sans (UI).
+  -->
+  <defs>
+    <linearGradient id="logoGrad" x1="64" y1="52" x2="112" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f37f5f"/>
+      <stop offset="1" stop-color="#df5e3b"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1020 520) rotate(90) scale(460 400)">
+      <stop offset="0" stop-color="#df5e3b" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#df5e3b" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse">
+      <circle cx="1.2" cy="1.2" r="1.1" fill="#df5e3b" fill-opacity="0.10"/>
+    </pattern>
+    <pattern id="dots2" width="48" height="48" patternUnits="userSpaceOnUse">
+      <circle cx="13.2" cy="13.2" r="1" fill="#7c8799" fill-opacity="0.08"/>
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="630" fill="#131b29"/>
+  <rect width="1200" height="630" fill="url(#dots)"/>
+  <rect width="1200" height="630" fill="url(#dots2)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <rect x="64" y="52" width="48" height="48" rx="12" fill="url(#logoGrad)"/>
+  <g transform="translate(88 76) scale(1.35) translate(-12 -12)" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <ellipse cx="12" cy="5" rx="9" ry="3"/>
+    <path d="M3 5V19A9 3 0 0 0 21 19V5"/>
+    <path d="M3 12A9 3 0 0 0 21 12"/>
+  </g>
+  <text x="128" y="82" fill="#df5e3b" font-family="DM Sans, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" letter-spacing="3.4">4D REST DATA BROWSER</text>
+
+  <text x="64" y="180" fill="#e7ebf2" font-family="Fraunces, Georgia, serif" font-size="78" font-weight="700">Data Explorer</text>
+  <text x="64" y="228" fill="#b0b8c5" font-family="DM Sans, Helvetica, Arial, sans-serif" font-size="24">Browse, query, and document your database through the REST API.</text>
+  <text x="64" y="262" fill="#7c8799" font-family="DM Sans, Helvetica, Arial, sans-serif" font-size="20">Tabbed workspace for everyday 4D data work in the browser, Docker, or desktop.</text>
+
+  <g font-family="DM Sans, Helvetica, Arial, sans-serif" font-size="15" font-weight="500">
+    <rect x="64" y="300" width="168" height="36" rx="18" fill="#1c2433" stroke="#3b4253"/>
+    <text x="148" y="323" text-anchor="middle" fill="#e7ebf2">Structure graph</text>
+    <rect x="244" y="300" width="150" height="36" rx="18" fill="#1c2433" stroke="#3b4253"/>
+    <text x="319" y="323" text-anchor="middle" fill="#e7ebf2">Query builder</text>
+    <rect x="406" y="300" width="132" height="36" rx="18" fill="#1c2433" stroke="#3b4253"/>
+    <text x="472" y="323" text-anchor="middle" fill="#e7ebf2">AI assistant</text>
+    <rect x="550" y="300" width="168" height="36" rx="18" fill="#1c2433" stroke="#3b4253"/>
+    <text x="634" y="323" text-anchor="middle" fill="#e7ebf2">Method Executor</text>
+    <rect x="730" y="300" width="108" height="36" rx="18" fill="#1c2433" stroke="#3b4253"/>
+    <text x="784" y="323" text-anchor="middle" fill="#e7ebf2">Themes</text>
+    <rect x="850" y="300" width="148" height="36" rx="18" fill="#1c2433" stroke="#3b4253"/>
+    <text x="924" y="323" text-anchor="middle" fill="#e7ebf2">Entity viewer</text>
+
+    <rect x="64" y="348" width="132" height="36" rx="18" fill="#1c2433" stroke="#3b4253"/>
+    <text x="130" y="371" text-anchor="middle" fill="#e7ebf2">Console</text>
+    <rect x="208" y="348" width="176" height="36" rx="18" fill="#1c2433" stroke="#3b4253"/>
+    <text x="296" y="371" text-anchor="middle" fill="#e7ebf2">Schema builder</text>
+    <rect x="396" y="348" width="168" height="36" rx="18" fill="#1c2433" stroke="#3b4253"/>
+    <text x="480" y="371" text-anchor="middle" fill="#e7ebf2">Command palette</text>
+    <rect x="576" y="348" width="188" height="36" rx="18" fill="#1c2433" stroke="#3b4253"/>
+    <text x="670" y="371" text-anchor="middle" fill="#e7ebf2">Metadata editor</text>
+    <rect x="776" y="348" width="112" height="36" rx="18" fill="#1c2433" stroke="#3b4253"/>
+    <text x="832" y="371" text-anchor="middle" fill="#e7ebf2">Profiles</text>
+  </g>
+
+  <g font-family="DM Sans, Helvetica, Arial, sans-serif" font-size="16" font-weight="600">
+    <rect x="64" y="422" width="210" height="44" rx="22" fill="#df5e3b"/>
+    <text x="169" y="449" text-anchor="middle" fill="#ffffff">Desktop app</text>
+    <rect x="290" y="422" width="210" height="44" rx="22" fill="#1c2433" stroke="#df5e3b" stroke-width="1.5"/>
+    <text x="395" y="449" text-anchor="middle" fill="#e7ebf2">Run with Docker</text>
+    <rect x="516" y="422" width="250" height="44" rx="22" fill="#1c2433" stroke="#3b4253"/>
+    <text x="641" y="449" text-anchor="middle" fill="#b0b8c5">Open from 4D browser</text>
+  </g>
+
+  <text x="64" y="530" fill="#7c8799" font-family="DM Sans, Helvetica, Arial, sans-serif" font-size="18">Guide · Download · Release notes · GitHub</text>
+  <text x="64" y="568" fill="#b0b8c5" font-family="DM Sans, Helvetica, Arial, sans-serif" font-size="20" font-weight="500">midrissi.github.io/4d-dataexplorer</text>
+  <text x="1136" y="568" text-anchor="end" fill="#7c8799" font-family="DM Sans, Helvetica, Arial, sans-serif" font-size="16">REST · ORDA · AI</text>
+</svg>

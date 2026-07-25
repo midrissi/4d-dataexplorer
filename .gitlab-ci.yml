@@ -1,0 +1,108 @@
+stages:
+  - check
+  - build
+  - test
+  - release
+
+variables:
+  BUN_VERSION: "latest"
+
+default:
+  image: oven/bun:latest
+  interruptible: true
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - node_modules/
+      - .bun/
+
+.install_dependencies: &install_dependencies
+  before_script:
+    - bun install --frozen-lockfile
+
+# Check stage
+checks:
+  stage: check
+  <<: *install_dependencies
+  script:
+    - bunx biome format .
+    - bun run lint
+    - bun run check
+    - bun run typecheck
+
+# Build stage
+build:
+  stage: build
+  <<: *install_dependencies
+  needs:
+    - checks
+  script:
+    - bun run build
+    - mv apps/dataexplorer/DataBrowser .
+  artifacts:
+    name: DataBrowser-${CI_COMMIT_REF_SLUG}
+    paths:
+      - DataBrowser/
+    expire_in: 30 days
+
+# Unit Test stage
+unit-tests:
+  stage: test
+  <<: *install_dependencies
+  needs:
+    - checks
+  script:
+    - bun run test:unit
+
+# E2E Test stage
+e2e:
+  stage: test
+  <<: *install_dependencies
+  needs:
+    - build
+    - unit-tests
+  before_script:
+    - bash scripts/e2e-setup.sh
+  script:
+    - cd packages/e2e && npx playwright test
+  after_script:
+    - |
+      if [ -f packages/rest-server/rest-server.pid ]; then
+        kill $(cat packages/rest-server/rest-server.pid) || true
+      fi
+  variables:
+    BACKEND_URL: "${BACKEND_URL:-http://localhost:7080}"
+    CI: "true"
+    PORT: "7080"
+  artifacts:
+    when: always
+    name: playwright-report-${CI_COMMIT_REF_SLUG}
+    paths:
+      - packages/e2e/playwright-report/
+      - packages/rest-server/rest-server.log
+    expire_in: 30 days
+
+# Release stage (only on main branch tags)
+release:
+  stage: release
+  <<: *install_dependencies
+  needs:
+    - build
+    - e2e
+  rules:
+    - if: $CI_COMMIT_TAG
+  script:
+    - bun run build
+    - mv apps/dataexplorer/DataBrowser . && zip -r DataExplorer.zip DataBrowser
+  artifacts:
+    name: DataExplorer-${CI_COMMIT_TAG}
+    paths:
+      - DataExplorer.zip
+    expire_in: never
+  release:
+    tag_name: $CI_COMMIT_TAG
+    description: "Release $CI_COMMIT_TAG"
+    assets:
+      links:
+        - name: DataExplorer
+          url: "${CI_PROJECT_URL}/-/jobs/${CI_JOB_ID}/artifacts/file/DataExplorer.zip"

@@ -1,0 +1,63 @@
+# Cursor Rules
+
+## Commit Messages
+
+Always propose commit messages following the [Conventional Commits](https://www.conventionalcommits.org/) specification.
+
+### Format
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+### Types
+
+- `feat`: A new feature
+- `fix`: A bug fix
+- `docs`: Documentation only changes
+- `style`: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
+- `refactor`: A code change that neither fixes a bug nor adds a feature
+- `perf`: A code change that improves performance
+- `test`: Adding missing tests or correcting existing tests
+- `build`: Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)
+- `ci`: Changes to CI configuration files and scripts
+- `chore`: Other changes that don't modify src or test files
+- `revert`: Reverts a previous commit
+
+### Scope
+
+The scope should be the name of the package or module affected (e.g., `shared`, `backend`, `frontend`, `auth`, `workflows`, `integrations`).
+
+### Subject
+
+- Use imperative, present tense: "change" not "changed" nor "changes"
+- Don't capitalize the first letter
+- No dot (.) at the end
+- Maximum 72 characters
+
+### Examples
+
+```
+feat(auth): add OAuth2 callback error handling
+
+fix(shared): use ZodTypeAny for schema field compatibility
+
+refactor(workflows): extract base workflow engine
+
+docs(backend): update API documentation
+
+chore(deps): update zod to v4.1.13
+```
+
+### Guidelines
+
+- Use the most specific type that applies
+- Include scope when the change affects a specific module/package
+- Keep subject concise and descriptive
+- Add body for complex changes explaining the "what" and "why"
+- Reference issues in footer when applicable: `Fixes #123`
+

@@ -1,0 +1,52 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Testing
+coverage
+
+# Production
+build
+dist
+releases
+
+# Database
+db
+
+# Misc
+.DS_Store
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+# bun.lockb
+
+# Editor directories and files
+.idea
+*.suo
+*.ntvs
+*.njsproj
+*.sln
+*.sw?
+
+# Monorepo
+.turbo
+*.tsbuildinfo
+.yalc
+.tmp
+
+# Cursor
+.cursor/*
+!.cursor/skills
+
+# WASM glue occasionally regenerated next to committed pkg/
+packages/base64-decoder/pkg/.gitignore
+packages/base64-decoder/pkg/package.json
+packages/base64-decoder/pkg/README.md

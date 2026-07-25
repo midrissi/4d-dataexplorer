@@ -1,0 +1,1442 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE base SYSTEM "http://www.4d.com/dtd/2007/base.dtd" >
+<base name="Cars" uuid="553BC97456B540DFAC0A459C735B5048" collation_locale="fr">
+	<schema name="DEFAULT_SCHEMA"/>
+	<table name="Agency" uuid="63817B86C5EC4F92AD4AC19B3E8222C0" id="1">
+		<field name="ID" uuid="2152ECE0F6F342BFB98409B619C44883" type="4" unique="true" autosequence="true" not_null="true" id="1">
+			<field_extra multi_line="false" position="1"/>
+		</field>
+		<field name="name" uuid="1FC30072636A45C6861E80C91DE8068D" type="10" limiting_length="255" id="2">
+			<field_extra position="2"/>
+		</field>
+		<field name="address" uuid="CCE4D6B6F9AC4AABB82298930A1B159A" type="10" limiting_length="255" id="3">
+			<field_extra position="3"/>
+		</field>
+		<field name="ID_category_agency" uuid="7D20CE471F09423D8D69498922ACC0B8" type="4" id="4">
+			<field_extra position="6">
+				<editor_field_info>
+					<color red="0" green="81" blue="186" alpha="255"/>
+				</editor_field_info>
+			</field_extra>
+		</field>
+		<field name="ID_department" uuid="9D79FA279E8B4AD8938C707E337A8D31" type="4" id="5">
+			<field_extra position="7">
+				<editor_field_info>
+					<color red="0" green="81" blue="186" alpha="255"/>
+				</editor_field_info>
+			</field_extra>
+		</field>
+		<field name="vector" uuid="8BEAC7D84E054EE0B8148642C12BCDDE" type="21" blob_switch_size="2147483647" id="6">
+			<field_extra class_id="4D.Vector" position="9"/>
+		</field>
+		<field name="latitude" uuid="E6175826D3D44CFF88E17B2F520A2F83" type="10" limiting_length="255" id="7">
+			<field_extra position="4"/>
+		</field>
+		<field name="longitude" uuid="05E826DB6CCF4779BD4EA0F23CB07EBA" type="10" limiting_length="255" id="8">
+			<field_extra position="5"/>
+		</field>
+		<field name="ID_manager" uuid="CE5FE0F69C1A40E69EAD53640B52B956" type="4" id="9">
+			<field_extra position="8">
+				<editor_field_info>
+					<color red="0" green="81" blue="186" alpha="255"/>
+				</editor_field_info>
+			</field_extra>
+		</field>
+		<primary_key field_name="ID" field_uuid="2152ECE0F6F342BFB98409B619C44883"/>
+		<table_extra output_form="Form1">
+			<editor_table_info fields_ordering="2" displayable_fields_count="12">
+				<color red="150" green="216" blue="175" alpha="255"/>
+				<coordinates left="200" top="180" width="157" height="276"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
+	<table name="Employee" uuid="F9607793DA2745B0A5A84D217E92FC59" id="2">
+		<field name="ID" uuid="801BF0D6DF8F4A58ABF1FFA0736E8F1C" type="4" unique="true" autosequence="true" not_null="true" id="1">
+			<field_extra multi_line="false" position="1"/>
+		</field>
+		<field name="firstname" uuid="AEA0599427294EE5B1D941EBA967B806" type="10" limiting_length="255" id="2">
+			<field_extra position="2"/>
+		</field>
+		<field name="lastname" uuid="A2187B6D4BFA404286D7AC3EBD9C036D" type="10" limiting_length="255" id="3">
+			<field_extra position="3"/>
+		</field>
+		<field name="mail" uuid="9C434AD9A2D04B82A441AEA42275E558" type="10" limiting_length="255" id="4">
+			<field_extra position="4"/>
+		</field>
+		<field name="phone" uuid="F1E80DA285BB4F91A94303F7BB372F93" type="10" limiting_length="255" id="6">
+			<field_extra position="5"/>
+		</field>
+		<field name="ID_agency" uuid="9CAC4828256C4040B6546DDCA0835343" type="4" id="9">
+			<field_extra position="8">
+				<editor_field_info>
+					<color red="0" green="81" blue="186" alpha="255"/>
+				</editor_field_info>
+			</field_extra>
+		</field>
+		<field name="photo" uuid="50485B454C2741B1BB692C61837B4831" type="12" id="11">
+			<field_extra position="6"/>
+		</field>
+		<field name="birthdate" uuid="9F2EAB61D9E14AB8AB72798230FE4625" type="8" id="12">
+			<field_extra multi_line="false" position="7"/>
+		</field>
+		<primary_key field_name="ID" field_uuid="801BF0D6DF8F4A58ABF1FFA0736E8F1C"/>
+		<table_extra>
+			<editor_table_info fields_ordering="2" displayable_fields_count="12">
+				<color red="223" green="114" blue="114" alpha="255"/>
+				<coordinates left="420" top="340" width="140" height="293"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
+	<table name="Customer" uuid="2E280B716AD54E40B49E8D6393190625" id="3">
+		<field name="ID" uuid="A80CCC5CE445408BAE6A7CC406451FE6" type="4" unique="true" autosequence="true" not_null="true" id="1">
+			<field_extra multi_line="false" position="1"/>
+		</field>
+		<field name="firstname" uuid="6A6FC910759D4A3587ECA57920D3F037" type="10" limiting_length="255" id="2">
+			<field_extra position="2"/>
+		</field>
+		<field name="lastname" uuid="E8CD3657FB9544D19C887AB6472C3210" type="10" limiting_length="255" id="3">
+			<field_extra position="3"/>
+		</field>
+		<field name="mail" uuid="A9983EA477A04827B5352024F5E60D78" type="10" limiting_length="255" id="4">
+			<field_extra position="5"/>
+		</field>
+		<field name="phone" uuid="FD81734A8E6D4423A024070AA60C3FD7" type="10" limiting_length="255" id="5">
+			<field_extra position="7"/>
+		</field>
+		<field name="address" uuid="5C3DF14DDB4843A789A7A8C0B86F6292" type="10" limiting_length="255" id="6">
+			<field_extra position="8"/>
+		</field>
+		<field name="birthdate" uuid="A1DABCD31579462289E51113F7853287" type="8" id="8">
+			<field_extra position="4"/>
+		</field>
+		<primary_key field_name="ID" field_uuid="A80CCC5CE445408BAE6A7CC406451FE6"/>
+		<table_extra>
+			<editor_table_info displayable_fields_count="9">
+				<color red="249" green="130" blue="127" alpha="255"/>
+				<coordinates left="420" top="680" width="140" height="239"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
+	<table name="CarModel" uuid="E91129F3F4D74831BB11CEED379ECF69" id="4">
+		<field name="ID" uuid="64F80876C06746DBA95224B0D7B63AE7" type="4" unique="true" autosequence="true" not_null="true" id="1">
+			<field_extra multi_line="false" position="1"/>
+		</field>
+		<field name="brand" uuid="6CAEBB82E61549139CD6BB41408943AB" type="10" limiting_length="255" id="2">
+			<field_extra position="3"/>
+		</field>
+		<field name="model" uuid="441F34875A6B41BC8CDD0697D95DD96F" type="10" limiting_length="255" id="3">
+			<field_extra position="4"/>
+		</field>
+		<field name="buyingPrice" uuid="7B04544C04D34BA0873CF238C6913EFB" type="6" id="4">
+			<field_extra position="5"/>
+		</field>
+		<field name="dailyRentalPrice" uuid="C1F313CE9F1148309F4FBFD8B7D1838A" type="6" id="5">
+			<field_extra position="6"/>
+		</field>
+		<field name="numberDoors" uuid="17F5147CD21F4D218EE4A58F5C54D1F4" type="3" id="6">
+			<field_extra position="7"/>
+		</field>
+		<field name="numberSeats" uuid="3B438949002845D7A7175F91B5801EBC" type="3" id="7">
+			<field_extra position="8"/>
+		</field>
+		<field name="trunkCapacity" uuid="E8AC9327098740FC939D0B5EE028F39F" type="3" id="8">
+			<field_extra position="9"/>
+		</field>
+		<field name="fuel" uuid="FFE15B5704EF42C3A94323FEA8F2C2CA" type="10" limiting_length="255" id="9">
+			<field_extra position="10"/>
+		</field>
+		<field name="gearbox" uuid="C792D19035FC492288A8D26E92DC1580" type="10" limiting_length="255" id="10">
+			<field_extra position="11"/>
+		</field>
+		<field name="power" uuid="408728DA75AF4BF0BE0F8CBFB7854A16" type="3" id="11">
+			<field_extra position="12"/>
+		</field>
+		<field name="transmission" uuid="3FCFAAD1568C49E693708969A56A5A73" type="10" limiting_length="255" id="12">
+			<field_extra position="13"/>
+		</field>
+		<field name="GPS" uuid="91EE9CE5E4584201879CF92B2BAF11D3" type="1" id="13">
+			<field_extra position="14"/>
+		</field>
+		<field name="photo" uuid="2955CE127F5144258039D7D7E93902D6" type="12" id="14">
+			<field_extra position="16"/>
+		</field>
+		<field name="tankCapacity" uuid="F4D9FB3358DE44BCAE9077E06621E76D" type="3" id="15">
+			<field_extra position="15"/>
+		</field>
+		<field name="ID_category_car" uuid="4F1586B2875147C5A4AA28C4EFB7A624" type="4" id="16">
+			<field_extra position="2">
+				<editor_field_info>
+					<color red="0" green="81" blue="186" alpha="255"/>
+				</editor_field_info>
+			</field_extra>
+		</field>
+		<primary_key field_name="ID" field_uuid="64F80876C06746DBA95224B0D7B63AE7"/>
+		<table_extra>
+			<editor_table_info fields_ordering="2" displayable_fields_count="18">
+				<color red="114" green="209" blue="221" alpha="255"/>
+				<coordinates left="1180" top="200" width="146" height="432"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
+	<table name="(toto)" uuid="CEC137026F4D4249B21C73C6363E811C" id="5" hide_in_REST="true">
+		<field name="ID" uuid="AA66746EDCB74FA8B974B13FDB30F71F" type="10" unique="true" autogenerate="true" store_as_UUID="true" not_null="true" id="1"/>
+		<field name="tata" uuid="482EB0FFA0AF47D496D581880ACDD63F" type="10" limiting_length="255" id="2"/>
+		<primary_key field_name="ID" field_uuid="AA66746EDCB74FA8B974B13FDB30F71F"/>
+		<table_extra trashed="true">
+			<editor_table_info displayable_fields_count="6">
+				<color red="255" green="255" blue="255" alpha="0"/>
+				<coordinates left="2000" top="240" width="120" height="167"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
+	<table name="(CsvFileImport)" uuid="C3BF60D7477D448EA151677C63A6B582" id="6" hide_in_REST="true">
+		<field name="ID" uuid="29ED3F426B8A4143A59C995B0537F475" type="10" unique="true" autogenerate="true" store_as_UUID="true" not_null="true" id="1"/>
+		<primary_key field_name="ID" field_uuid="29ED3F426B8A4143A59C995B0537F475"/>
+		<table_extra trashed="true">
+			<editor_table_info fields_ordering="1" displayable_fields_count="3">
+				<color red="255" green="255" blue="255" alpha="0"/>
+				<coordinates left="2000" top="440" width="136" height="112"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
+	<table name="Region" uuid="B8791225A1F24CAFAF79C0351F72CBC4" id="7">
+		<field name="ID" uuid="AA751AA43AAB4C7AB475E8F72CEEDB28" type="4" unique="true" autosequence="true" not_null="true" id="1"/>
+		<field name="code" uuid="6E7BBD6B79A14FBB9A6D355597A48250" type="4" id="2"/>
+		<field name="name" uuid="4E2C6EFACB4044B4A85B75CCABC8DCC3" type="10" limiting_length="255" id="3"/>
+		<field name="slug" uuid="85652997F62C47A3AA57DB1BCD770463" type="10" limiting_length="255" id="4"/>
+		<primary_key field_name="ID" field_uuid="AA751AA43AAB4C7AB475E8F72CEEDB28"/>
+		<table_extra>
+			<editor_table_info displayable_fields_count="4">
+				<color red="150" green="216" blue="175" alpha="255"/>
+				<coordinates left="40" top="40" width="86" height="125"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
+	<table name="Car" uuid="49BDF4422C5149B7AF346E45D5876B0A" id="8">
+		<field name="ID" uuid="E378D217EC604A8B906FDBF8C789B5B5" type="4" unique="true" autosequence="true" not_null="true" id="1">
+			<field_extra multi_line="false" position="1"/>
+		</field>
+		<field name="ID_model" uuid="FDE06A8B937A488A8D50BF03F396E3B1" type="4" id="2">
+			<field_extra position="11">
+				<editor_field_info>
+					<color red="0" green="81" blue="186" alpha="255"/>
+				</editor_field_info>
+			</field_extra>
+		</field>
+		<field name="buyingDate" uuid="453FC28233084141867E8B47077E5F43" type="8" id="3">
+			<field_extra position="2"/>
+		</field>
+		<field name="mileage" uuid="79C5902C045A45AE9DCBADBF5F8117D7" type="4" id="4">
+			<field_extra position="3"/>
+		</field>
+		<field name="metadata" uuid="610B20216FB94435A3A8CFFCE1730A03" type="21" blob_switch_size="2147483647" id="5"/>
+		<field name="inMaintenance" uuid="5A0AB424869E4258A032A39282C70F5E" type="1" id="6">
+			<field_extra position="4"/>
+		</field>
+		<field name="tires" uuid="BD34235E7285473EB000D0AC5F79AF5A" type="10" limiting_length="255" id="7">
+			<field_extra position="5"/>
+		</field>
+		<field name="ID_agency" uuid="D550B471D03042FE9EA2BE7BF75DE6A6" type="4" id="8">
+			<field_extra position="12">
+				<editor_field_info>
+					<color red="0" green="81" blue="186" alpha="255"/>
+				</editor_field_info>
+			</field_extra>
+		</field>
+		<field name="nextTechnicalVisit" uuid="4E0DA3D43F024683B61E193DFDB5623B" type="8" id="9">
+			<field_extra position="6"/>
+		</field>
+		<field name="endOfInsuranceValidity" uuid="63218B156DA14F8A8F10B51AF5861B47" type="8" id="10">
+			<field_extra position="7"/>
+		</field>
+		<field name="ID_color" uuid="CBA0CDE6988540E1994341AA7A6704E2" type="4" never_null="true" id="11">
+			<field_extra position="10"/>
+		</field>
+		<field name="lastOilChange" uuid="77C8A73EB8D8465580381F53EB38CE9B" type="8" id="12">
+			<field_extra position="8"/>
+		</field>
+		<field name="registration" uuid="48655805EA7F40B9AEC2D499B003D251" type="10" limiting_length="255" id="13">
+			<field_extra position="9"/>
+		</field>
+		<primary_key field_name="ID" field_uuid="E378D217EC604A8B906FDBF8C789B5B5"/>
+		<table_extra input_form="Form1" output_form="Form1">
+			<editor_table_info displayable_fields_count="14">
+				<color red="114" green="209" blue="221" alpha="255"/>
+				<coordinates left="960" top="200" width="189" height="348"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
+	<table name="Reservation" uuid="5927D693FB624AD6AFE657556105B987" id="9">
+		<field name="ID" uuid="FA51C34D70BD4A97AE0D43BA5F4CDFC5" type="4" unique="true" autosequence="true" not_null="true" id="1">
+			<field_extra position="1"/>
+		</field>
+		<field name="ID_car" uuid="78393AC4F3334F9780891F74FFD826FA" type="4" id="2">
+			<field_extra position="8">
+				<editor_field_info>
+					<color red="0" green="81" blue="186" alpha="255"/>
+				</editor_field_info>
+			</field_extra>
+		</field>
+		<field name="ID_employee" uuid="56F273EBC297429B9E121CA85053C307" type="4" id="3">
+			<field_extra position="16">
+				<editor_field_info>
+					<color red="0" green="81" blue="186" alpha="255"/>
+				</editor_field_info>
+			</field_extra>
+		</field>
+		<field name="ID_customer" uuid="2EEAB8246D764ED9AB4FB8752299CCA3" type="4" id="4">
+			<field_extra position="11">
+				<editor_field_info>
+					<color red="0" green="81" blue="186" alpha="255"/>
+				</editor_field_info>
+			</field_extra>
+		</field>
+		<field name="ID_departure_agency" uuid="8B3FDF5EF7CE40698C787D70005DB23D" type="4" id="5">
+			<field_extra position="14">
+				<editor_field_info>
+					<color red="0" green="81" blue="186" alpha="255"/>
+				</editor_field_info>
+			</field_extra>
+		</field>
+		<field name="ID_arrival_agency" uuid="3C9A6A36319F406CB9218C6AF6E4D115" type="4" id="6">
+			<field_extra position="15">
+				<editor_field_info>
+					<color red="0" green="81" blue="186" alpha="255"/>
+				</editor_field_info>
+			</field_extra>
+		</field>
+		<field name="departureDate" uuid="E395D7DF92A045118292F269D78013D8" type="8" id="7">
+			<field_extra position="2"/>
+		</field>
+		<field name="arrivalDate" uuid="80CCA5699BAD4E1FBF1665A1C220C8B7" type="8" id="8">
+			<field_extra position="3"/>
+		</field>
+		<field name="departureTime" uuid="37DB193543B84ED2B069A887C115A2E7" type="9" id="9">
+			<field_extra position="4"/>
+		</field>
+		<field name="arrivalTime" uuid="9800FCA81FA34847AAF39DC3AE914EE6" type="9" id="10">
+			<field_extra position="5"/>
+		</field>
+		<field name="ID_status" uuid="2374911BF16C41BAB47636507B61E82E" type="4" id="11">
+			<field_extra position="10">
+				<editor_field_info>
+					<color red="0" green="81" blue="186" alpha="255"/>
+				</editor_field_info>
+			</field_extra>
+		</field>
+		<field name="ID_departure_inventory" uuid="BF74A2A4799248539493FDF3AD5BB74E" type="4" id="12">
+			<field_extra position="12">
+				<editor_field_info>
+					<color red="0" green="81" blue="186" alpha="255"/>
+				</editor_field_info>
+			</field_extra>
+		</field>
+		<field name="ID_arrival_inventory" uuid="547755C46C4549F7BA4EE1673A270DDB" type="4" id="13">
+			<field_extra position="13">
+				<editor_field_info>
+					<color red="0" green="81" blue="186" alpha="255"/>
+				</editor_field_info>
+			</field_extra>
+		</field>
+		<field name="price" uuid="6EFA6C1519BF42078DCF0E65D244DF6C" type="6" id="14">
+			<field_extra position="6"/>
+		</field>
+		<field name="kilometersConsumed" uuid="831EA260BF604886B15FFCAACE2A9DB6" type="3" id="15">
+			<field_extra position="7"/>
+		</field>
+		<field name="ID_category_car" uuid="4D60FE1E9BD04B34ADF9ACA3926E42BD" type="4" id="16">
+			<field_extra position="9">
+				<editor_field_info>
+					<color red="0" green="81" blue="186" alpha="255"/>
+				</editor_field_info>
+			</field_extra>
+		</field>
+		<primary_key field_name="ID" field_uuid="FA51C34D70BD4A97AE0D43BA5F4CDFC5"/>
+		<table_extra>
+			<editor_table_info fields_ordering="2" displayable_fields_count="17">
+				<color red="249" green="130" blue="127" alpha="255"/>
+				<coordinates left="680" top="180" width="185" height="412"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
+	<table name="Inventory" uuid="819D65C1F5F340A79013E9CDB238021C" id="10">
+		<field name="ID" uuid="5FD2B081C5B2462F980374D0EEF0C1EB" type="4" unique="true" autosequence="true" not_null="true" id="1">
+			<field_extra position="1"/>
+		</field>
+		<field name="date" uuid="774D7B341C474A3993BC8C2FC0F2B499" type="8" id="40">
+			<field_extra position="2"/>
+		</field>
+		<field name="time" uuid="C2E6E6CF568C43378F75DAF9ADA06DBD" type="9" id="41">
+			<field_extra position="3"/>
+		</field>
+		<field name="ID_employee" uuid="2F4DA3F2E3F2476AB2D0D059A2592AFC" type="4" id="43">
+			<field_extra position="5">
+				<editor_field_info>
+					<color red="0" green="81" blue="186" alpha="255"/>
+				</editor_field_info>
+			</field_extra>
+		</field>
+		<primary_key field_name="ID" field_uuid="5FD2B081C5B2462F980374D0EEF0C1EB"/>
+		<table_extra>
+			<editor_table_info displayable_fields_count="5">
+				<color red="252" green="191" blue="73" alpha="255"/>
+				<coordinates left="1660" top="540" width="170" height="153"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
+	<table name="Status" uuid="6422EBA611974E83AF17767A0808E19C" id="11">
+		<field name="ID" uuid="2521E1C0F66D4DFDB33C533FEF09028C" type="4" unique="true" autosequence="true" not_null="true" id="1">
+			<field_extra multi_line="false"/>
+		</field>
+		<field name="label" uuid="CA670ADA68E247D7B0B8ABC6D9789B16" type="10" limiting_length="255" id="2"/>
+		<primary_key field_name="ID" field_uuid="2521E1C0F66D4DFDB33C533FEF09028C"/>
+		<table_extra>
+			<editor_table_info displayable_fields_count="3">
+				<color red="249" green="130" blue="127" alpha="255"/>
+				<coordinates left="680" top="40" width="140" height="104"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
+	<table name="Color" uuid="552E0ABCF460477DB14E69BCDB5C056F" id="12">
+		<field name="ID" uuid="FBF3BBE1A855405D80534D0CCC384657" type="4" unique="true" autosequence="true" not_null="true" id="1"/>
+		<field name="label" uuid="270D5DB69D644B0B8663DC6525213335" type="10" limiting_length="255" never_null="true" id="2"/>
+		<field name="photo" uuid="892AD87312744BE0BCCE85536B51FE69" type="12" never_null="true" id="3"/>
+		<primary_key field_name="ID" field_uuid="FBF3BBE1A855405D80534D0CCC384657"/>
+		<table_extra>
+			<editor_table_info displayable_fields_count="4">
+				<color red="114" green="209" blue="221" alpha="255"/>
+				<coordinates left="960" top="40" width="140" height="125"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
+	<table name="OptionCategory" uuid="0FF4878A86F941C094049453B930ADEA" id="13">
+		<field name="ID" uuid="C110944D8158488095CE74B9D35B9EBA" type="4" unique="true" autosequence="true" not_null="true" id="1">
+			<field_extra multi_line="false"/>
+		</field>
+		<field name="label" uuid="B1A5F3D819984207959C1CC239C0D924" type="10" limiting_length="255" id="2"/>
+		<primary_key field_name="ID" field_uuid="C110944D8158488095CE74B9D35B9EBA"/>
+		<table_extra>
+			<editor_table_info displayable_fields_count="3">
+				<color red="168" green="206" blue="226" alpha="255"/>
+				<coordinates left="1420" top="40" width="140" height="104"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
+	<table name="Defect" uuid="3851857BDD464716974A355CC9CA5468" id="14">
+		<field name="ID" uuid="4CCB037309364AFB8478BEC5068B5DFC" type="4" unique="true" autosequence="true" not_null="true" id="1">
+			<field_extra position="1"/>
+		</field>
+		<field name="ID_inventory" uuid="A88E6D2CA8FF4C64A32D8C16BA6F8B33" type="4" id="2">
+			<field_extra position="6">
+				<editor_field_info>
+					<color red="0" green="81" blue="186" alpha="255"/>
+				</editor_field_info>
+			</field_extra>
+		</field>
+		<field name="remark" uuid="ADF46239EBD4439291278E60397FC433" type="10" limiting_length="255" id="3">
+			<field_extra position="2"/>
+		</field>
+		<field name="severity" uuid="BE26F577F18444AABDF9E3565D8EEDD7" type="3" id="4">
+			<field_extra position="3"/>
+		</field>
+		<field name="photo" uuid="E0C4690B05204FE68324378C2392755B" type="12" id="5">
+			<field_extra position="4"/>
+		</field>
+		<field name="ID_defective_element" uuid="722BA6908E9841208DAE48F62A6BF941" type="4" id="6">
+			<field_extra position="7">
+				<editor_field_info>
+					<color red="0" green="81" blue="186" alpha="255"/>
+				</editor_field_info>
+			</field_extra>
+		</field>
+		<field name="ID_car" uuid="A5CE2ECDE8C34657B96CDAED5A4F2CDD" type="4" never_null="true" id="7">
+			<field_extra position="5">
+				<editor_field_info>
+					<color red="0" green="81" blue="186" alpha="255"/>
+				</editor_field_info>
+			</field_extra>
+		</field>
+		<primary_key field_name="ID" field_uuid="4CCB037309364AFB8478BEC5068B5DFC"/>
+		<table_extra>
+			<editor_table_info fields_ordering="2" displayable_fields_count="7">
+				<color red="224" green="234" blue="104" alpha="255"/>
+				<coordinates left="1660" top="300" width="167" height="203"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
+	<table name="CategoryCar" uuid="A1DC3504FBA24247806F85F37D0761CB" id="15">
+		<field name="ID" uuid="26DD746D4DF94B1EAC3EA9103CCC4365" type="4" unique="true" autosequence="true" not_null="true" id="1">
+			<field_extra multi_line="false"/>
+		</field>
+		<field name="rank" uuid="84D8279EA0E04D63A78B7E7CA8E8E687" type="3" id="2"/>
+		<field name="label" uuid="37DDE960F46743D8AD1D2307E00DD3FC" type="10" limiting_length="255" id="3"/>
+		<primary_key field_name="ID" field_uuid="26DD746D4DF94B1EAC3EA9103CCC4365"/>
+		<table_extra>
+			<editor_table_info displayable_fields_count="4">
+				<color red="114" green="209" blue="221" alpha="255"/>
+				<coordinates left="1140" top="40" width="140" height="125"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
+	<table name="ChosenOptions" uuid="21764E8ADC4D45AEBC7599A6D2903BA8" id="16">
+		<field name="ID" uuid="3678969530584EDCB2C2C6977D069241" type="4" unique="true" autosequence="true" not_null="true" id="1"/>
+		<field name="ID_reservation" uuid="3AE8D95F7A7947ADB5A51C9D8491A120" type="4" id="2">
+			<field_extra>
+				<editor_field_info>
+					<color red="0" green="81" blue="186" alpha="255"/>
+				</editor_field_info>
+			</field_extra>
+		</field>
+		<field name="ID_option_disponible" uuid="2E34BAEEA58A4EF2A4D7F8F8E2E323E0" type="4" id="3">
+			<field_extra>
+				<editor_field_info>
+					<color red="0" green="81" blue="186" alpha="255"/>
+				</editor_field_info>
+			</field_extra>
+		</field>
+		<primary_key field_name="ID" field_uuid="3678969530584EDCB2C2C6977D069241"/>
+		<table_extra>
+			<editor_table_info displayable_fields_count="4">
+				<color red="249" green="130" blue="127" alpha="255"/>
+				<coordinates left="680" top="640" width="163" height="125"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
+	<table name="DefectCategory" uuid="72C68E7559D042A5AC39DFFF24A8CE79" id="17">
+		<field name="ID" uuid="FDE05754B09A4B53BDE01E059FD678F8" type="4" unique="true" autosequence="true" not_null="true" id="1">
+			<field_extra multi_line="false"/>
+		</field>
+		<field name="label" uuid="631305E6068344339FDEC5E3F88BE171" type="10" limiting_length="255" id="2"/>
+		<primary_key field_name="ID" field_uuid="FDE05754B09A4B53BDE01E059FD678F8"/>
+		<table_extra>
+			<editor_table_info displayable_fields_count="2">
+				<color red="224" green="234" blue="104" alpha="255"/>
+				<coordinates left="1660" top="40" width="117" height="83"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
+	<table name="DefectiveElement" uuid="2D011E339A494C0591ED5D1C9DD97687" id="18">
+		<field name="ID" uuid="3E517CC3671D4417801790F8DF6196D8" type="4" unique="true" autosequence="true" not_null="true" id="1">
+			<field_extra multi_line="false"/>
+		</field>
+		<field name="label" uuid="F2D73572866943CAABD4A7B752B3C3B7" type="10" limiting_length="255" id="2"/>
+		<field name="ID_defect_category" uuid="F4305144A7C4411D96B6C01194C30084" type="4" id="3">
+			<field_extra>
+				<editor_field_info>
+					<color red="0" green="81" blue="186" alpha="255"/>
+				</editor_field_info>
+			</field_extra>
+		</field>
+		<primary_key field_name="ID" field_uuid="3E517CC3671D4417801790F8DF6196D8"/>
+		<table_extra>
+			<editor_table_info displayable_fields_count="3">
+				<color red="224" green="234" blue="104" alpha="255"/>
+				<coordinates left="1660" top="160" width="156" height="104"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
+	<table name="OptionAvailable" uuid="47D26AA340D64AF78888BFA4D3D3B73E" id="19">
+		<field name="ID" uuid="5BC1D7EE8F9649A8A64C384BF9845242" type="4" unique="true" autosequence="true" not_null="true" id="1">
+			<field_extra multi_line="false" position="1"/>
+		</field>
+		<field name="label" uuid="22259357FE33467B98F04348A05DA9F6" type="10" limiting_length="255" id="2">
+			<field_extra position="2"/>
+		</field>
+		<field name="ID_option_category" uuid="0382F03801E04D92AAD4E65D5717DA86" type="4" id="3">
+			<field_extra position="5">
+				<editor_field_info>
+					<color red="0" green="81" blue="186" alpha="255"/>
+				</editor_field_info>
+			</field_extra>
+		</field>
+		<field name="price" uuid="0AB46AC35F5D45A98993E992C8D1DB87" type="6" id="4">
+			<field_extra position="3"/>
+		</field>
+		<field name="photo" uuid="33DD8485C678482788A4391FD8274F1B" type="12" id="5">
+			<field_extra position="4"/>
+		</field>
+		<primary_key field_name="ID" field_uuid="5BC1D7EE8F9649A8A64C384BF9845242"/>
+		<table_extra>
+			<editor_table_info fields_ordering="2" displayable_fields_count="6">
+				<color red="30" green="30" blue="30" alpha="255"/>
+				<coordinates left="1420" top="180" width="156" height="167"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
+	<table name="Department" uuid="77483DFEE39540608A3543C004F0C3D0" id="21">
+		<field name="ID" uuid="D9C39FB16E76461E9C689C64F1F1EE39" type="4" unique="true" autosequence="true" not_null="true" id="1">
+			<field_extra multi_line="false" position="1"/>
+		</field>
+		<field name="ID_region" uuid="5C2A518DB02B46C996E4DE2621381A00" type="4" id="2">
+			<field_extra position="5"/>
+		</field>
+		<field name="code" uuid="6C3B399EEC694C4A8A8170AFEF21F045" type="10" limiting_length="255" id="3">
+			<field_extra position="2"/>
+		</field>
+		<field name="name" uuid="2F172629F74D41BCB71DE6643D34FA6E" type="10" limiting_length="255" id="4">
+			<field_extra position="3"/>
+		</field>
+		<field name="slug" uuid="C92B0FE27C97421DA4EC278D55FCE722" type="10" limiting_length="255" id="5">
+			<field_extra position="4"/>
+		</field>
+		<primary_key field_name="ID" field_uuid="D9C39FB16E76461E9C689C64F1F1EE39"/>
+		<table_extra>
+			<editor_table_info displayable_fields_count="6">
+				<color red="150" green="216" blue="175" alpha="255"/>
+				<coordinates left="40" top="200" width="120" height="171"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
+	<table name="CategoryAgency" uuid="A485EB84A25D4D8F87CE243B3E6FA98F" id="22">
+		<field name="ID" uuid="3C40A83BA080445A9FA1EF6FB9031C1F" type="4" unique="true" autosequence="true" not_null="true" id="1">
+			<field_extra multi_line="false"/>
+		</field>
+		<field name="label" uuid="2AA741E0C0EE4AE1948986C7AFA9553E" type="10" limiting_length="255" id="2"/>
+		<primary_key field_name="ID" field_uuid="3C40A83BA080445A9FA1EF6FB9031C1F"/>
+		<table_extra>
+			<editor_table_info displayable_fields_count="3">
+				<color red="150" green="216" blue="175" alpha="255"/>
+				<coordinates left="200" top="40" width="140" height="104"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
+	<table name="(Adresses)" uuid="95D449C2B74849FB8DD20C2CEC02291E" id="23" hide_in_REST="true">
+		<field name="ID" uuid="38237CCFC9614D0A815A7D86D2C0C666" type="4" unique="true" autosequence="true" not_null="true" id="1">
+			<field_extra position="1"/>
+		</field>
+		<field name="numero_voie" uuid="DEB87F471604456CA64725B90BD0189C" type="10" limiting_length="255" never_null="true" id="2">
+			<field_extra position="2"/>
+		</field>
+		<field name="nom_voie" uuid="1653C4D3E9824149A01638FC560FA2A2" type="10" limiting_length="255" never_null="true" id="3">
+			<field_extra position="3"/>
+		</field>
+		<field name="code_insee" uuid="B22C3845ABA54871B9E143A943C0BF72" type="4" never_null="true" id="4">
+			<field_extra position="4"/>
+		</field>
+		<field name="longitude" uuid="C2A289925E4E4FAE8DC3DCEE6871A957" type="6" never_null="true" id="5">
+			<field_extra position="6"/>
+		</field>
+		<field name="latitude" uuid="E55EFC16190A4AEAB9477B0A3D815E69" type="6" never_null="true" id="6">
+			<field_extra position="7"/>
+		</field>
+		<field name="nom_commune" uuid="40E7028ED089484480540EF2BE68A721" type="10" limiting_length="255" never_null="true" id="7">
+			<field_extra position="5"/>
+		</field>
+		<primary_key field_name="ID" field_uuid="38237CCFC9614D0A815A7D86D2C0C666"/>
+		<table_extra trashed="true">
+			<editor_table_info fields_ordering="2" displayable_fields_count="7">
+				<color red="175" green="188" blue="191" alpha="255"/>
+				<coordinates left="2160" top="320" width="136" height="188"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
+	<table name="(Registration)" uuid="0B01E8B1817A4273B3C46E41E53AF9BE" id="24" hide_in_REST="true" prevent_journaling="true">
+		<field name="ID" uuid="58D7459B4E9F4EBC899C369EC2F0BCEA" type="4" unique="true" autosequence="true" id="1"/>
+		<field name="registration" uuid="CC17259348FA43F4BA587D62AA9E2EE3" type="10" id="2"/>
+		<primary_key field_name="ID" field_uuid="58D7459B4E9F4EBC899C369EC2F0BCEA"/>
+		<table_extra trashed="true">
+			<editor_table_info fields_ordering="1" displayable_fields_count="2">
+				<color red="175" green="188" blue="191" alpha="255"/>
+				<coordinates left="2160" top="540" width="114" height="83"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
+	<table name="(Utilities)" uuid="EFA7E4F8C88B4EBF893B88FE96F9ABF3" id="25" hide_in_REST="true">
+		<field name="ID" uuid="7A30F7E7240C49589FB48FAAB8527258" type="10" unique="true" autogenerate="true" store_as_UUID="true" not_null="true" id="1"/>
+		<field name="value" uuid="F56916A4FE9C4180BC5B17A68081EE9D" type="10" never_null="true" id="2"/>
+		<field name="key" uuid="81D88742C1E44C2F97311D6AEF5A23AC" type="10" limiting_length="255" unique="true" never_null="true" id="3"/>
+		<primary_key field_name="ID" field_uuid="7A30F7E7240C49589FB48FAAB8527258"/>
+		<table_extra trashed="true">
+			<editor_table_info displayable_fields_count="3">
+				<color red="255" green="255" blue="255" alpha="0"/>
+				<coordinates left="2000" top="580" width="85" height="104"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
+	<table name="(DataInit)" uuid="6136354FC99D45669F8150FAB293A3B2" id="26" hide_in_REST="true">
+		<field name="ID" uuid="F960FDCCC95D43498CFCBA3E2349883A" type="10" unique="true" autogenerate="true" store_as_UUID="true" not_null="true" id="1"/>
+		<primary_key field_name="ID" field_uuid="F960FDCCC95D43498CFCBA3E2349883A"/>
+		<table_extra trashed="true">
+			<editor_table_info displayable_fields_count="1">
+				<color red="255" green="255" blue="255" alpha="0"/>
+				<coordinates left="2000" top="720" width="80" height="62"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
+	<table name="(bookingWrapper)" uuid="71CB726CAC0F4CC58F3D863FC1466F7F" id="27" hide_in_REST="true">
+		<field name="ID" uuid="6303993A810E4A3B946CF426A8D2CDFC" type="10" unique="true" autogenerate="true" store_as_UUID="true" not_null="true" id="1"/>
+		<primary_key field_name="ID" field_uuid="6303993A810E4A3B946CF426A8D2CDFC"/>
+		<table_extra trashed="true">
+			<editor_table_info displayable_fields_count="1">
+				<color red="255" green="255" blue="255" alpha="0"/>
+				<coordinates left="2160" top="40" width="122" height="62"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
+	<table name="(__DeletedRecords)" uuid="9A3458051E3A4D97BB407085FA7ED40F" id="28" leave_tag_on_delete="true" hide_in_REST="true" prevent_journaling="true">
+		<field name="ID" uuid="2736EA72AD824196B29301E4EE5A16B9" type="5" unique="true" autosequence="true" id="1"/>
+		<field name="__Stamp" uuid="9776753DFE0C42EC941CA293C6E9697A" type="5" id="2"/>
+		<field name="__TableNumber" uuid="5B7645694E774764A0FC160480CBFA08" type="4" id="3"/>
+		<field name="__TableName" uuid="07E1A0DE98FE43A590A273BD643F70F8" type="10" limiting_length="255" id="4"/>
+		<field name="__PrimaryKey" uuid="834447E175CB40BBBE25A25134C53A6D" type="10" limiting_length="255" id="5"/>
+		<primary_key field_name="ID" field_uuid="2736EA72AD824196B29301E4EE5A16B9"/>
+		<table_extra trashed="true">
+			<editor_table_info fields_ordering="1" displayable_fields_count="5">
+				<color red="255" green="255" blue="255" alpha="0"/>
+				<coordinates left="2160" top="140" width="138" height="146"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
+	<table name="User" uuid="58439AA7DB3546DF89EA33D88EB57488" id="29">
+		<field name="ID" uuid="756CB4038F5043FA89898815E30F989A" type="4" unique="true" autosequence="true" not_null="true" id="1">
+			<field_extra position="1"/>
+		</field>
+		<field name="ID_employee" uuid="34AA7CBEA3A3478C9B1CB3AB42DC11E9" type="4" id="2">
+			<field_extra position="7"/>
+		</field>
+		<field name="passwordHash" uuid="79DE543B55FB46E2BF17E415B9CB30E7" type="10" limiting_length="255" id="3">
+			<field_extra position="2"/>
+		</field>
+		<field name="mail" uuid="CCA8A200AC804495B19114AC6654B95A" type="10" limiting_length="255" id="4">
+			<field_extra position="3"/>
+		</field>
+		<field name="firstname" uuid="78BF91613BB3484B9233B6EA2CE391F3" type="10" limiting_length="255" id="5">
+			<field_extra position="4"/>
+		</field>
+		<field name="lastname" uuid="371BB5608EBF4A94A38FC48470DF1098" type="10" limiting_length="255" id="6">
+			<field_extra position="5"/>
+		</field>
+		<field name="role" uuid="5279A0D073F3464A92635653BA247E42" type="10" limiting_length="255" id="7">
+			<field_extra position="6"/>
+		</field>
+		<primary_key field_name="ID" field_uuid="756CB4038F5043FA89898815E30F989A"/>
+		<table_extra>
+			<editor_table_info fields_ordering="2" displayable_fields_count="10">
+				<color red="71" green="119" blue="215" alpha="255"/>
+				<coordinates left="420" top="40" width="196" height="256"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
+	<relation uuid="A6401BD8E6F44A5C9ABD617DD112E6DA" name_Nto1="departureAgency" name_1toN="reservationsDeparted" state="1">
+		<related_field kind="source">
+			<field_ref uuid="8B3FDF5EF7CE40698C787D70005DB23D" name="ID_departure_agency">
+				<table_ref uuid="5927D693FB624AD6AFE657556105B987" name="Reservation"/>
+			</field_ref>
+		</related_field>
+		<related_field kind="destination">
+			<field_ref uuid="2152ECE0F6F342BFB98409B619C44883" name="ID">
+				<table_ref uuid="63817B86C5EC4F92AD4AC19B3E8222C0" name="Agency"/>
+			</field_ref>
+		</related_field>
+		<relation_extra entry_wildchar="false" entry_create="false" choice_field="0" entry_autofill="false">
+			<editor_relation_info via_point_x="-1" via_point_y="-1" prefers_left="false" smartlink="true">
+				<color red="255" green="255" blue="255" alpha="0"/>
+			</editor_relation_info>
+		</relation_extra>
+	</relation>
+	<relation uuid="6E410E45DDCB462D89ABA2046822CE4D" name_Nto1="car" name_1toN="reservations" state="1">
+		<related_field kind="source">
+			<field_ref uuid="78393AC4F3334F9780891F74FFD826FA" name="ID_car">
+				<table_ref uuid="5927D693FB624AD6AFE657556105B987" name="Reservation"/>
+			</field_ref>
+		</related_field>
+		<related_field kind="destination">
+			<field_ref uuid="E378D217EC604A8B906FDBF8C789B5B5" name="ID">
+				<table_ref uuid="49BDF4422C5149B7AF346E45D5876B0A" name="Car"/>
+			</field_ref>
+		</related_field>
+		<relation_extra entry_wildchar="false" entry_create="false" choice_field="0" entry_autofill="false">
+			<editor_relation_info via_point_x="-1" via_point_y="-1" prefers_left="false" smartlink="true">
+				<color red="255" green="255" blue="255" alpha="0"/>
+			</editor_relation_info>
+		</relation_extra>
+	</relation>
+	<relation uuid="C0A8C2C7BC1F49AEAD9B87AD20D379F8" name_Nto1="arrivalAgency" name_1toN="reservationsArrived" state="1">
+		<related_field kind="source">
+			<field_ref uuid="3C9A6A36319F406CB9218C6AF6E4D115" name="ID_arrival_agency">
+				<table_ref uuid="5927D693FB624AD6AFE657556105B987" name="Reservation"/>
+			</field_ref>
+		</related_field>
+		<related_field kind="destination">
+			<field_ref uuid="2152ECE0F6F342BFB98409B619C44883" name="ID">
+				<table_ref uuid="63817B86C5EC4F92AD4AC19B3E8222C0" name="Agency"/>
+			</field_ref>
+		</related_field>
+		<relation_extra entry_wildchar="false" entry_create="false" choice_field="0" entry_autofill="false">
+			<editor_relation_info via_point_x="-1" via_point_y="-1" prefers_left="false" smartlink="true">
+				<color red="255" green="255" blue="255" alpha="0"/>
+			</editor_relation_info>
+		</relation_extra>
+	</relation>
+	<relation uuid="390EFA2866A24DD99F3EE7AD92D2917D" name_Nto1="color" name_1toN="cars" state="1">
+		<related_field kind="source">
+			<field_ref uuid="CBA0CDE6988540E1994341AA7A6704E2" name="ID_color">
+				<table_ref uuid="49BDF4422C5149B7AF346E45D5876B0A" name="Car"/>
+			</field_ref>
+		</related_field>
+		<related_field kind="destination">
+			<field_ref uuid="FBF3BBE1A855405D80534D0CCC384657" name="ID">
+				<table_ref uuid="552E0ABCF460477DB14E69BCDB5C056F" name="Color"/>
+			</field_ref>
+		</related_field>
+		<relation_extra entry_wildchar="false" entry_create="false" choice_field="0" entry_autofill="false">
+			<editor_relation_info via_point_x="-1" via_point_y="-1" prefers_left="false" smartlink="true">
+				<color red="255" green="255" blue="255" alpha="0"/>
+			</editor_relation_info>
+		</relation_extra>
+	</relation>
+	<relation uuid="E5CD8BC6452F44ABA048591B435B7ED1" name_Nto1="employee" name_1toN="reservations" state="1">
+		<related_field kind="source">
+			<field_ref uuid="56F273EBC297429B9E121CA85053C307" name="ID_employee">
+				<table_ref uuid="5927D693FB624AD6AFE657556105B987" name="Reservation"/>
+			</field_ref>
+		</related_field>
+		<related_field kind="destination">
+			<field_ref uuid="801BF0D6DF8F4A58ABF1FFA0736E8F1C" name="ID">
+				<table_ref uuid="F9607793DA2745B0A5A84D217E92FC59" name="Employee"/>
+			</field_ref>
+		</related_field>
+		<relation_extra entry_wildchar="false" entry_create="false" choice_field="0" entry_autofill="false">
+			<editor_relation_info via_point_x="-1" via_point_y="-1" prefers_left="false" smartlink="true">
+				<color red="255" green="255" blue="255" alpha="0"/>
+			</editor_relation_info>
+		</relation_extra>
+	</relation>
+	<relation uuid="A7995A2FE90143B693CA73D3FA722C52" name_Nto1="customer" name_1toN="reservations" state="1">
+		<related_field kind="source">
+			<field_ref uuid="2EEAB8246D764ED9AB4FB8752299CCA3" name="ID_customer">
+				<table_ref uuid="5927D693FB624AD6AFE657556105B987" name="Reservation"/>
+			</field_ref>
+		</related_field>
+		<related_field kind="destination">
+			<field_ref uuid="A80CCC5CE445408BAE6A7CC406451FE6" name="ID">
+				<table_ref uuid="2E280B716AD54E40B49E8D6393190625" name="Customer"/>
+			</field_ref>
+		</related_field>
+		<relation_extra entry_wildchar="false" entry_create="false" choice_field="0" entry_autofill="false">
+			<editor_relation_info via_point_x="-1" via_point_y="-1" prefers_left="false" smartlink="true">
+				<color red="255" green="255" blue="255" alpha="0"/>
+			</editor_relation_info>
+		</relation_extra>
+	</relation>
+	<relation uuid="DE163FB9C2164A1A9479D339D7C952BE" name_Nto1="model" name_1toN="cars" state="1">
+		<related_field kind="source">
+			<field_ref uuid="FDE06A8B937A488A8D50BF03F396E3B1" name="ID_model">
+				<table_ref uuid="49BDF4422C5149B7AF346E45D5876B0A" name="Car"/>
+			</field_ref>
+		</related_field>
+		<related_field kind="destination">
+			<field_ref uuid="64F80876C06746DBA95224B0D7B63AE7" name="ID">
+				<table_ref uuid="E91129F3F4D74831BB11CEED379ECF69" name="CarModel"/>
+			</field_ref>
+		</related_field>
+		<relation_extra entry_wildchar="false" entry_create="false" choice_field="0" entry_autofill="false">
+			<editor_relation_info via_point_x="-1" via_point_y="-1" prefers_left="false" smartlink="true">
+				<color red="255" green="255" blue="255" alpha="0"/>
+			</editor_relation_info>
+		</relation_extra>
+	</relation>
+	<relation uuid="B86BDD86B0944E21BC6EC709730B7228" name_Nto1="manager" name_1toN="managedAgencies" state="1">
+		<related_field kind="source">
+			<field_ref uuid="CE5FE0F69C1A40E69EAD53640B52B956" name="ID_manager">
+				<table_ref uuid="63817B86C5EC4F92AD4AC19B3E8222C0" name="Agency"/>
+			</field_ref>
+		</related_field>
+		<related_field kind="destination">
+			<field_ref uuid="801BF0D6DF8F4A58ABF1FFA0736E8F1C" name="ID">
+				<table_ref uuid="F9607793DA2745B0A5A84D217E92FC59" name="Employee"/>
+			</field_ref>
+		</related_field>
+		<relation_extra entry_wildchar="false" entry_create="false" choice_field="0" entry_autofill="false">
+			<editor_relation_info via_point_x="-1" via_point_y="-1" prefers_left="true" smartlink="true">
+				<color red="255" green="255" blue="255" alpha="0"/>
+			</editor_relation_info>
+		</relation_extra>
+	</relation>
+	<relation uuid="CC5FE628583F45A38242D3EFBDC2AD4A" name_Nto1="departureInventory" name_1toN="reservationDeparture" state="1">
+		<related_field kind="source">
+			<field_ref uuid="BF74A2A4799248539493FDF3AD5BB74E" name="ID_departure_inventory">
+				<table_ref uuid="5927D693FB624AD6AFE657556105B987" name="Reservation"/>
+			</field_ref>
+		</related_field>
+		<related_field kind="destination">
+			<field_ref uuid="5FD2B081C5B2462F980374D0EEF0C1EB" name="ID">
+				<table_ref uuid="819D65C1F5F340A79013E9CDB238021C" name="Inventory"/>
+			</field_ref>
+		</related_field>
+		<relation_extra entry_wildchar="true" entry_create="false" choice_field="1" entry_autofill="false">
+			<editor_relation_info via_point_x="-1" via_point_y="-1" prefers_left="true" smartlink="true">
+				<color red="255" green="255" blue="255" alpha="0"/>
+			</editor_relation_info>
+		</relation_extra>
+	</relation>
+	<relation uuid="193A62E1A4794584BECEE8AD0078A95C" name_Nto1="arrivalInventory" name_1toN="reservationArrival" state="1">
+		<related_field kind="source">
+			<field_ref uuid="547755C46C4549F7BA4EE1673A270DDB" name="ID_arrival_inventory">
+				<table_ref uuid="5927D693FB624AD6AFE657556105B987" name="Reservation"/>
+			</field_ref>
+		</related_field>
+		<related_field kind="destination">
+			<field_ref uuid="5FD2B081C5B2462F980374D0EEF0C1EB" name="ID">
+				<table_ref uuid="819D65C1F5F340A79013E9CDB238021C" name="Inventory"/>
+			</field_ref>
+		</related_field>
+		<relation_extra entry_wildchar="false" entry_create="false" choice_field="0" entry_autofill="false">
+			<editor_relation_info via_point_x="-1" via_point_y="-1" prefers_left="true" smartlink="true">
+				<color red="255" green="255" blue="255" alpha="0"/>
+			</editor_relation_info>
+		</relation_extra>
+	</relation>
+	<relation uuid="DE52A3CBEF80429088D83E16B77963FF" name_Nto1="status" name_1toN="reservations" state="1">
+		<related_field kind="source">
+			<field_ref uuid="2374911BF16C41BAB47636507B61E82E" name="ID_status">
+				<table_ref uuid="5927D693FB624AD6AFE657556105B987" name="Reservation"/>
+			</field_ref>
+		</related_field>
+		<related_field kind="destination">
+			<field_ref uuid="2521E1C0F66D4DFDB33C533FEF09028C" name="ID">
+				<table_ref uuid="6422EBA611974E83AF17767A0808E19C" name="Status"/>
+			</field_ref>
+		</related_field>
+		<relation_extra entry_wildchar="false" entry_create="false" choice_field="0" entry_autofill="false">
+			<editor_relation_info via_point_x="-1" via_point_y="-1" prefers_left="true" smartlink="true">
+				<color red="255" green="255" blue="255" alpha="0"/>
+			</editor_relation_info>
+		</relation_extra>
+	</relation>
+	<relation uuid="D88E4D39112E41B9A3FDF9870A794AF2" name_Nto1="reservation" name_1toN="chosenOptions" state="1">
+		<related_field kind="source">
+			<field_ref uuid="3AE8D95F7A7947ADB5A51C9D8491A120" name="ID_reservation">
+				<table_ref uuid="21764E8ADC4D45AEBC7599A6D2903BA8" name="ChosenOptions"/>
+			</field_ref>
+		</related_field>
+		<related_field kind="destination">
+			<field_ref uuid="FA51C34D70BD4A97AE0D43BA5F4CDFC5" name="ID">
+				<table_ref uuid="5927D693FB624AD6AFE657556105B987" name="Reservation"/>
+			</field_ref>
+		</related_field>
+		<relation_extra entry_wildchar="false" entry_create="false" choice_field="0" entry_autofill="false">
+			<editor_relation_info via_point_x="-1" via_point_y="-1" prefers_left="false" smartlink="true">
+				<color red="255" green="255" blue="255" alpha="0"/>
+			</editor_relation_info>
+		</relation_extra>
+	</relation>
+	<relation uuid="8D380F91A0CB45D88E9EC0A20B3577F6" name_Nto1="categoryCar" name_1toN="reservations" state="1">
+		<related_field kind="source">
+			<field_ref uuid="4D60FE1E9BD04B34ADF9ACA3926E42BD" name="ID_category_car">
+				<table_ref uuid="5927D693FB624AD6AFE657556105B987" name="Reservation"/>
+			</field_ref>
+		</related_field>
+		<related_field kind="destination">
+			<field_ref uuid="26DD746D4DF94B1EAC3EA9103CCC4365" name="ID">
+				<table_ref uuid="A1DC3504FBA24247806F85F37D0761CB" name="CategoryCar"/>
+			</field_ref>
+		</related_field>
+		<relation_extra entry_wildchar="false" entry_create="false" choice_field="0" entry_autofill="false">
+			<editor_relation_info via_point_x="-1" via_point_y="-1" prefers_left="false" smartlink="true">
+				<color red="255" green="255" blue="255" alpha="0"/>
+			</editor_relation_info>
+		</relation_extra>
+	</relation>
+	<relation uuid="BE1BB2133132410CB947D353C84D99A8" name_Nto1="category" name_1toN="carsModel" state="1">
+		<related_field kind="source">
+			<field_ref uuid="4F1586B2875147C5A4AA28C4EFB7A624" name="ID_category_car">
+				<table_ref uuid="E91129F3F4D74831BB11CEED379ECF69" name="CarModel"/>
+			</field_ref>
+		</related_field>
+		<related_field kind="destination">
+			<field_ref uuid="26DD746D4DF94B1EAC3EA9103CCC4365" name="ID">
+				<table_ref uuid="A1DC3504FBA24247806F85F37D0761CB" name="CategoryCar"/>
+			</field_ref>
+		</related_field>
+		<relation_extra entry_wildchar="false" entry_create="false" choice_field="0" entry_autofill="false">
+			<editor_relation_info via_point_x="-1" via_point_y="-1" prefers_left="true" smartlink="true">
+				<color red="255" green="255" blue="255" alpha="0"/>
+			</editor_relation_info>
+		</relation_extra>
+	</relation>
+	<relation uuid="EAEDF2EB712443449BBD76610EB9F6C1" name_Nto1="category" name_1toN="defectiveElements" state="1">
+		<related_field kind="source">
+			<field_ref uuid="F4305144A7C4411D96B6C01194C30084" name="ID_defect_category">
+				<table_ref uuid="2D011E339A494C0591ED5D1C9DD97687" name="DefectiveElement"/>
+			</field_ref>
+		</related_field>
+		<related_field kind="destination">
+			<field_ref uuid="FDE05754B09A4B53BDE01E059FD678F8" name="ID">
+				<table_ref uuid="72C68E7559D042A5AC39DFFF24A8CE79" name="DefectCategory"/>
+			</field_ref>
+		</related_field>
+		<relation_extra entry_wildchar="false" entry_create="false" choice_field="0" entry_autofill="false">
+			<editor_relation_info via_point_x="-1" via_point_y="-1" prefers_left="true" smartlink="true">
+				<color red="255" green="255" blue="255" alpha="0"/>
+			</editor_relation_info>
+		</relation_extra>
+	</relation>
+	<relation uuid="D064148D9CF94964A847620FA35EB55A" name_Nto1="element" name_1toN="defects" state="1">
+		<related_field kind="source">
+			<field_ref uuid="722BA6908E9841208DAE48F62A6BF941" name="ID_defective_element">
+				<table_ref uuid="3851857BDD464716974A355CC9CA5468" name="Defect"/>
+			</field_ref>
+		</related_field>
+		<related_field kind="destination">
+			<field_ref uuid="3E517CC3671D4417801790F8DF6196D8" name="ID">
+				<table_ref uuid="2D011E339A494C0591ED5D1C9DD97687" name="DefectiveElement"/>
+			</field_ref>
+		</related_field>
+		<relation_extra entry_wildchar="false" entry_create="false" choice_field="0" entry_autofill="false">
+			<editor_relation_info via_point_x="-1" via_point_y="-1" prefers_left="false" smartlink="true">
+				<color red="255" green="255" blue="255" alpha="0"/>
+			</editor_relation_info>
+		</relation_extra>
+	</relation>
+	<relation uuid="50BC754CA60346A1BAB0AF64254C0E64" name_Nto1="inventory" name_1toN="defects" state="1">
+		<related_field kind="source">
+			<field_ref uuid="A88E6D2CA8FF4C64A32D8C16BA6F8B33" name="ID_inventory">
+				<table_ref uuid="3851857BDD464716974A355CC9CA5468" name="Defect"/>
+			</field_ref>
+		</related_field>
+		<related_field kind="destination">
+			<field_ref uuid="5FD2B081C5B2462F980374D0EEF0C1EB" name="ID">
+				<table_ref uuid="819D65C1F5F340A79013E9CDB238021C" name="Inventory"/>
+			</field_ref>
+		</related_field>
+		<relation_extra entry_wildchar="false" entry_create="false" choice_field="0" entry_autofill="false">
+			<editor_relation_info via_point_x="-1" via_point_y="-1" prefers_left="true" smartlink="true">
+				<color red="255" green="255" blue="255" alpha="0"/>
+			</editor_relation_info>
+		</relation_extra>
+	</relation>
+	<relation uuid="E87FB0336D844AD49B4032FD5B1A9518" name_Nto1="category" name_1toN="options" state="1">
+		<related_field kind="source">
+			<field_ref uuid="0382F03801E04D92AAD4E65D5717DA86" name="ID_option_category">
+				<table_ref uuid="47D26AA340D64AF78888BFA4D3D3B73E" name="OptionAvailable"/>
+			</field_ref>
+		</related_field>
+		<related_field kind="destination">
+			<field_ref uuid="C110944D8158488095CE74B9D35B9EBA" name="ID">
+				<table_ref uuid="0FF4878A86F941C094049453B930ADEA" name="OptionCategory"/>
+			</field_ref>
+		</related_field>
+		<relation_extra entry_wildchar="false" entry_create="false" choice_field="0" entry_autofill="false">
+			<editor_relation_info via_point_x="-1" via_point_y="-1" prefers_left="false" smartlink="true">
+				<color red="255" green="255" blue="255" alpha="0"/>
+			</editor_relation_info>
+		</relation_extra>
+	</relation>
+	<relation uuid="2023EAC252BB41ED88535A1B789746EC" name_Nto1="employee" name_1toN="inventories" state="1">
+		<related_field kind="source">
+			<field_ref uuid="2F4DA3F2E3F2476AB2D0D059A2592AFC" name="ID_employee">
+				<table_ref uuid="819D65C1F5F340A79013E9CDB238021C" name="Inventory"/>
+			</field_ref>
+		</related_field>
+		<related_field kind="destination">
+			<field_ref uuid="801BF0D6DF8F4A58ABF1FFA0736E8F1C" name="ID">
+				<table_ref uuid="F9607793DA2745B0A5A84D217E92FC59" name="Employee"/>
+			</field_ref>
+		</related_field>
+		<relation_extra entry_wildchar="false" entry_create="false" choice_field="0" entry_autofill="false">
+			<editor_relation_info via_point_x="-1" via_point_y="-1" prefers_left="false" smartlink="true">
+				<color red="255" green="255" blue="255" alpha="0"/>
+			</editor_relation_info>
+		</relation_extra>
+	</relation>
+	<relation uuid="89A54FB7204942ACBF6EE754964FC8F8" name_Nto1="optionChosen" name_1toN="chosenBy" state="1">
+		<related_field kind="source">
+			<field_ref uuid="2E34BAEEA58A4EF2A4D7F8F8E2E323E0" name="ID_option_disponible">
+				<table_ref uuid="21764E8ADC4D45AEBC7599A6D2903BA8" name="ChosenOptions"/>
+			</field_ref>
+		</related_field>
+		<related_field kind="destination">
+			<field_ref uuid="5BC1D7EE8F9649A8A64C384BF9845242" name="ID">
+				<table_ref uuid="47D26AA340D64AF78888BFA4D3D3B73E" name="OptionAvailable"/>
+			</field_ref>
+		</related_field>
+		<relation_extra entry_wildchar="false" entry_create="false" choice_field="0" entry_autofill="false">
+			<editor_relation_info via_point_x="-1" via_point_y="-1" prefers_left="true" smartlink="true">
+				<color red="255" green="255" blue="255" alpha="0"/>
+			</editor_relation_info>
+		</relation_extra>
+	</relation>
+	<relation uuid="607AD7DBE02740FF9893E30C327862E6" name_Nto1="category" name_1toN="agencies" state="1">
+		<related_field kind="source">
+			<field_ref uuid="7D20CE471F09423D8D69498922ACC0B8" name="ID_category_agency">
+				<table_ref uuid="63817B86C5EC4F92AD4AC19B3E8222C0" name="Agency"/>
+			</field_ref>
+		</related_field>
+		<related_field kind="destination">
+			<field_ref uuid="3C40A83BA080445A9FA1EF6FB9031C1F" name="ID">
+				<table_ref uuid="A485EB84A25D4D8F87CE243B3E6FA98F" name="CategoryAgency"/>
+			</field_ref>
+		</related_field>
+		<relation_extra entry_wildchar="false" entry_create="false" choice_field="0" entry_autofill="false">
+			<editor_relation_info via_point_x="-1" via_point_y="-1" prefers_left="true" smartlink="true">
+				<color red="255" green="255" blue="255" alpha="0"/>
+			</editor_relation_info>
+		</relation_extra>
+	</relation>
+	<relation uuid="745DC0042B4D4A138EB62BD455273199" name_Nto1="employeeAgency" name_1toN="employees" state="1">
+		<related_field kind="source">
+			<field_ref uuid="9CAC4828256C4040B6546DDCA0835343" name="ID_agency">
+				<table_ref uuid="F9607793DA2745B0A5A84D217E92FC59" name="Employee"/>
+			</field_ref>
+		</related_field>
+		<related_field kind="destination">
+			<field_ref uuid="2152ECE0F6F342BFB98409B619C44883" name="ID">
+				<table_ref uuid="63817B86C5EC4F92AD4AC19B3E8222C0" name="Agency"/>
+			</field_ref>
+		</related_field>
+		<relation_extra entry_wildchar="false" entry_create="false" choice_field="0" entry_autofill="false">
+			<editor_relation_info via_point_x="-1" via_point_y="-1" prefers_left="true" smartlink="true">
+				<color red="255" green="255" blue="255" alpha="0"/>
+			</editor_relation_info>
+		</relation_extra>
+	</relation>
+	<relation uuid="055D8ACD42CC4622A0A52466F7043D6C" name_Nto1="agency" name_1toN="cars" state="1">
+		<related_field kind="source">
+			<field_ref uuid="D550B471D03042FE9EA2BE7BF75DE6A6" name="ID_agency">
+				<table_ref uuid="49BDF4422C5149B7AF346E45D5876B0A" name="Car"/>
+			</field_ref>
+		</related_field>
+		<related_field kind="destination">
+			<field_ref uuid="2152ECE0F6F342BFB98409B619C44883" name="ID">
+				<table_ref uuid="63817B86C5EC4F92AD4AC19B3E8222C0" name="Agency"/>
+			</field_ref>
+		</related_field>
+		<relation_extra entry_wildchar="false" entry_create="false" choice_field="0" entry_autofill="false">
+			<editor_relation_info via_point_x="-1" via_point_y="-1" prefers_left="true" smartlink="true">
+				<color red="255" green="255" blue="255" alpha="0"/>
+			</editor_relation_info>
+		</relation_extra>
+	</relation>
+	<relation uuid="93B34800C76746F9BC7C1C720F101189" name_Nto1="car" name_1toN="defects" state="1">
+		<related_field kind="source">
+			<field_ref uuid="A5CE2ECDE8C34657B96CDAED5A4F2CDD" name="ID_car">
+				<table_ref uuid="3851857BDD464716974A355CC9CA5468" name="Defect"/>
+			</field_ref>
+		</related_field>
+		<related_field kind="destination">
+			<field_ref uuid="E378D217EC604A8B906FDBF8C789B5B5" name="ID">
+				<table_ref uuid="49BDF4422C5149B7AF346E45D5876B0A" name="Car"/>
+			</field_ref>
+		</related_field>
+		<relation_extra entry_wildchar="false" entry_create="false" choice_field="0" entry_autofill="false">
+			<editor_relation_info via_point_x="-1" via_point_y="-1" prefers_left="false" smartlink="true">
+				<color red="255" green="255" blue="255" alpha="0"/>
+			</editor_relation_info>
+		</relation_extra>
+	</relation>
+	<relation uuid="D9403EB06EF845749F54AABABFC188DE" name_Nto1="region" name_1toN="departments" state="1">
+		<related_field kind="source">
+			<field_ref uuid="5C2A518DB02B46C996E4DE2621381A00" name="ID_region">
+				<table_ref uuid="77483DFEE39540608A3543C004F0C3D0" name="Department"/>
+			</field_ref>
+		</related_field>
+		<related_field kind="destination">
+			<field_ref uuid="AA751AA43AAB4C7AB475E8F72CEEDB28" name="ID">
+				<table_ref uuid="B8791225A1F24CAFAF79C0351F72CBC4" name="Region"/>
+			</field_ref>
+		</related_field>
+		<relation_extra entry_wildchar="false" entry_create="false" choice_field="0" entry_autofill="false">
+			<editor_relation_info via_point_x="-1" via_point_y="-1" prefers_left="false" smartlink="true">
+				<color red="30" green="30" blue="30" alpha="0"/>
+			</editor_relation_info>
+		</relation_extra>
+	</relation>
+	<relation uuid="E46EDB654A8944BE90134F3D1ACD0E2C" name_Nto1="department" name_1toN="agencies" state="1">
+		<related_field kind="source">
+			<field_ref uuid="9D79FA279E8B4AD8938C707E337A8D31" name="ID_department">
+				<table_ref uuid="63817B86C5EC4F92AD4AC19B3E8222C0" name="Agency"/>
+			</field_ref>
+		</related_field>
+		<related_field kind="destination">
+			<field_ref uuid="D9C39FB16E76461E9C689C64F1F1EE39" name="ID">
+				<table_ref uuid="77483DFEE39540608A3543C004F0C3D0" name="Department"/>
+			</field_ref>
+		</related_field>
+		<relation_extra entry_wildchar="false" entry_create="false" choice_field="0" entry_autofill="false">
+			<editor_relation_info via_point_x="-1" via_point_y="-1" prefers_left="false" smartlink="true">
+				<color red="30" green="30" blue="30" alpha="0"/>
+			</editor_relation_info>
+		</relation_extra>
+	</relation>
+	<relation uuid="9E697CDFEE2D4FD4BCFBFFFF987269FD" name_Nto1="employee" name_1toN="users" state="1">
+		<related_field kind="source">
+			<field_ref uuid="34AA7CBEA3A3478C9B1CB3AB42DC11E9" name="ID_employee">
+				<table_ref uuid="58439AA7DB3546DF89EA33D88EB57488" name="User"/>
+			</field_ref>
+		</related_field>
+		<related_field kind="destination">
+			<field_ref uuid="801BF0D6DF8F4A58ABF1FFA0736E8F1C" name="ID">
+				<table_ref uuid="F9607793DA2745B0A5A84D217E92FC59" name="Employee"/>
+			</field_ref>
+		</related_field>
+		<relation_extra entry_wildchar="false" entry_create="false" choice_field="0" entry_autofill="false">
+			<editor_relation_info via_point_x="-1" via_point_y="-1" prefers_left="true" smartlink="true">
+				<color red="255" green="255" blue="255" alpha="0"/>
+			</editor_relation_info>
+		</relation_extra>
+	</relation>
+	<index kind="regular" unique_keys="true" uuid="0BAF9FF2B4494AD7A9CA005DCE33D45B" type="3">
+		<field_ref uuid="2152ECE0F6F342BFB98409B619C44883" name="ID">
+			<table_ref uuid="63817B86C5EC4F92AD4AC19B3E8222C0" name="Agency"/>
+		</field_ref>
+	</index>
+	<index kind="regular" unique_keys="true" uuid="0EFF6F792D2946B28480B0508A0E7614" type="3">
+		<field_ref uuid="5FD2B081C5B2462F980374D0EEF0C1EB" name="ID">
+			<table_ref uuid="819D65C1F5F340A79013E9CDB238021C" name="Inventory"/>
+		</field_ref>
+	</index>
+	<index kind="regular" unique_keys="true" name="__DeletedRecordsID" uuid="13A05A90B4BC42C99113A3E32DD891A5" type="7">
+		<field_ref uuid="2736EA72AD824196B29301E4EE5A16B9" name="ID">
+			<table_ref uuid="9A3458051E3A4D97BB407085FA7ED40F" name="(__DeletedRecords)"/>
+		</field_ref>
+	</index>
+	<index kind="regular" uuid="14A4F7B2D03B47C0AEB16F6B44BE40C2" type="7">
+		<field_ref uuid="A5CE2ECDE8C34657B96CDAED5A4F2CDD" name="ID_car">
+			<table_ref uuid="3851857BDD464716974A355CC9CA5468" name="Defect"/>
+		</field_ref>
+	</index>
+	<index kind="regular" uuid="1DC74D109638430EBA5D138C53FC605A" type="3">
+		<field_ref uuid="8B3FDF5EF7CE40698C787D70005DB23D" name="ID_departure_agency">
+			<table_ref uuid="5927D693FB624AD6AFE657556105B987" name="Reservation"/>
+		</field_ref>
+	</index>
+	<index kind="regular" unique_keys="true" uuid="1EA776D498BE41CC996C77EB7943EBF5" type="3">
+		<field_ref uuid="3E517CC3671D4417801790F8DF6196D8" name="ID">
+			<table_ref uuid="2D011E339A494C0591ED5D1C9DD97687" name="DefectiveElement"/>
+		</field_ref>
+	</index>
+	<index kind="regular" unique_keys="true" uuid="1F2B8C3717464AB6A589E74076F16181" type="7">
+		<field_ref uuid="7A30F7E7240C49589FB48FAAB8527258" name="ID">
+			<table_ref uuid="EFA7E4F8C88B4EBF893B88FE96F9ABF3" name="(Utilities)"/>
+		</field_ref>
+	</index>
+	<index kind="regular" unique_keys="true" uuid="20771971E4E34B1FAB924FFDF6641E8B" type="7">
+		<field_ref uuid="58D7459B4E9F4EBC899C369EC2F0BCEA" name="ID">
+			<table_ref uuid="0B01E8B1817A4273B3C46E41E53AF9BE" name="(Registration)"/>
+		</field_ref>
+	</index>
+	<index kind="regular" unique_keys="true" uuid="23177C92658D4C879C459E26CF58436C" type="7">
+		<field_ref uuid="F960FDCCC95D43498CFCBA3E2349883A" name="ID">
+			<table_ref uuid="6136354FC99D45669F8150FAB293A3B2" name="(DataInit)"/>
+		</field_ref>
+	</index>
+	<index kind="regular" unique_keys="true" uuid="2A181482A7A24DEABE75686169CBBBC5" type="7">
+		<field_ref uuid="FBF3BBE1A855405D80534D0CCC384657" name="ID">
+			<table_ref uuid="552E0ABCF460477DB14E69BCDB5C056F" name="Color"/>
+		</field_ref>
+	</index>
+	<index kind="regular" uuid="322F1FEADD9E436AAE53B4D853F8D27C" type="7">
+		<field_ref uuid="4F1586B2875147C5A4AA28C4EFB7A624" name="ID_category_car">
+			<table_ref uuid="E91129F3F4D74831BB11CEED379ECF69" name="CarModel"/>
+		</field_ref>
+	</index>
+	<index kind="regular" unique_keys="true" uuid="3D2396365D97468A9DC04387053CF60E" type="3">
+		<field_ref uuid="5BC1D7EE8F9649A8A64C384BF9845242" name="ID">
+			<table_ref uuid="47D26AA340D64AF78888BFA4D3D3B73E" name="OptionAvailable"/>
+		</field_ref>
+	</index>
+	<index kind="regular" unique_keys="true" uuid="3F10F60794234EEAA91D93F4A11C6A88" type="7">
+		<field_ref uuid="AA751AA43AAB4C7AB475E8F72CEEDB28" name="ID">
+			<table_ref uuid="B8791225A1F24CAFAF79C0351F72CBC4" name="Region"/>
+		</field_ref>
+	</index>
+	<index kind="regular" uuid="4F5F56A659D443B5B1C62E4CD1F9693D" type="3">
+		<field_ref uuid="2374911BF16C41BAB47636507B61E82E" name="ID_status">
+			<table_ref uuid="5927D693FB624AD6AFE657556105B987" name="Reservation"/>
+		</field_ref>
+	</index>
+	<index kind="regular" unique_keys="true" uuid="591E7CE0338D4FB9A32C5018FD3E12EE" type="7">
+		<field_ref uuid="3C40A83BA080445A9FA1EF6FB9031C1F" name="ID">
+			<table_ref uuid="A485EB84A25D4D8F87CE243B3E6FA98F" name="CategoryAgency"/>
+		</field_ref>
+	</index>
+	<index kind="regular" uuid="5AE0480312594BD88E86B451A9F31C85" type="7">
+		<field_ref uuid="3AE8D95F7A7947ADB5A51C9D8491A120" name="ID_reservation">
+			<table_ref uuid="21764E8ADC4D45AEBC7599A6D2903BA8" name="ChosenOptions"/>
+		</field_ref>
+	</index>
+	<index kind="regular" uuid="6128D37280234FE5B133AB2919B5BA7D" type="3">
+		<field_ref uuid="D550B471D03042FE9EA2BE7BF75DE6A6" name="ID_agency">
+			<table_ref uuid="49BDF4422C5149B7AF346E45D5876B0A" name="Car"/>
+		</field_ref>
+	</index>
+	<index kind="regular" unique_keys="true" uuid="6212ECAD062640EA9413638F13C2BB06" type="3">
+		<field_ref uuid="FA51C34D70BD4A97AE0D43BA5F4CDFC5" name="ID">
+			<table_ref uuid="5927D693FB624AD6AFE657556105B987" name="Reservation"/>
+		</field_ref>
+	</index>
+	<index kind="regular" uuid="625CF8799D1942BAAAECEA6F244CEC6A" type="3">
+		<field_ref uuid="547755C46C4549F7BA4EE1673A270DDB" name="ID_arrival_inventory">
+			<table_ref uuid="5927D693FB624AD6AFE657556105B987" name="Reservation"/>
+		</field_ref>
+	</index>
+	<index kind="regular" name="__DeletedRecords__Stamp" uuid="6C06CD70109F4CEB9A2950624444F1C6" type="7">
+		<field_ref uuid="9776753DFE0C42EC941CA293C6E9697A" name="__Stamp">
+			<table_ref uuid="9A3458051E3A4D97BB407085FA7ED40F" name="(__DeletedRecords)"/>
+		</field_ref>
+	</index>
+	<index kind="regular" unique_keys="true" uuid="6F6563B9F5CB4545B538C8727B088FF8" type="3">
+		<field_ref uuid="3678969530584EDCB2C2C6977D069241" name="ID">
+			<table_ref uuid="21764E8ADC4D45AEBC7599A6D2903BA8" name="ChosenOptions"/>
+		</field_ref>
+	</index>
+	<index kind="regular" unique_keys="true" uuid="73E9392579C3484E88AEE5407D98C6E3" type="3">
+		<field_ref uuid="4CCB037309364AFB8478BEC5068B5DFC" name="ID">
+			<table_ref uuid="3851857BDD464716974A355CC9CA5468" name="Defect"/>
+		</field_ref>
+	</index>
+	<index kind="regular" uuid="79375AB838614E77B2569D5E35A46734" type="3">
+		<field_ref uuid="56F273EBC297429B9E121CA85053C307" name="ID_employee">
+			<table_ref uuid="5927D693FB624AD6AFE657556105B987" name="Reservation"/>
+		</field_ref>
+	</index>
+	<index kind="regular" unique_keys="true" uuid="79FC890E6D2E4487A985D578CCDAE8F9" type="7">
+		<field_ref uuid="38237CCFC9614D0A815A7D86D2C0C666" name="ID">
+			<table_ref uuid="95D449C2B74849FB8DD20C2CEC02291E" name="(Adresses)"/>
+		</field_ref>
+	</index>
+	<index kind="regular" unique_keys="true" uuid="7E5F949CF2A44B2FBAC569CEA1FD7C59" type="7">
+		<field_ref uuid="FDE05754B09A4B53BDE01E059FD678F8" name="ID">
+			<table_ref uuid="72C68E7559D042A5AC39DFFF24A8CE79" name="DefectCategory"/>
+		</field_ref>
+	</index>
+	<index kind="regular" uuid="8643AAF617FF41D881E292549E2EF424" type="3">
+		<field_ref uuid="80CCA5699BAD4E1FBF1665A1C220C8B7" name="arrivalDate">
+			<table_ref uuid="5927D693FB624AD6AFE657556105B987" name="Reservation"/>
+		</field_ref>
+	</index>
+	<index kind="regular" uuid="88EEDBF6D6C1409288369C0D9FA28655" type="3">
+		<field_ref uuid="9CAC4828256C4040B6546DDCA0835343" name="ID_agency">
+			<table_ref uuid="F9607793DA2745B0A5A84D217E92FC59" name="Employee"/>
+		</field_ref>
+	</index>
+	<index kind="regular" unique_keys="true" uuid="94B657BD0917470289BE94945303AEB3" type="7">
+		<field_ref uuid="26DD746D4DF94B1EAC3EA9103CCC4365" name="ID">
+			<table_ref uuid="A1DC3504FBA24247806F85F37D0761CB" name="CategoryCar"/>
+		</field_ref>
+	</index>
+	<index kind="regular" uuid="979362651D9D43478CDEBA0AA50B032A" type="3">
+		<field_ref uuid="4D60FE1E9BD04B34ADF9ACA3926E42BD" name="ID_category_car">
+			<table_ref uuid="5927D693FB624AD6AFE657556105B987" name="Reservation"/>
+		</field_ref>
+	</index>
+	<index kind="regular" unique_keys="true" uuid="9A04057C57804DB8B7A4ED2F33B59D04" type="7">
+		<field_ref uuid="C110944D8158488095CE74B9D35B9EBA" name="ID">
+			<table_ref uuid="0FF4878A86F941C094049453B930ADEA" name="OptionCategory"/>
+		</field_ref>
+	</index>
+	<index kind="regular" unique_keys="true" uuid="9AD4177069DD4AC0B589E47E28BB7FB5" type="7">
+		<field_ref uuid="2521E1C0F66D4DFDB33C533FEF09028C" name="ID">
+			<table_ref uuid="6422EBA611974E83AF17767A0808E19C" name="Status"/>
+		</field_ref>
+	</index>
+	<index kind="regular" uuid="9B602E93212B4107888308D836BCAD78" type="3">
+		<field_ref uuid="3C9A6A36319F406CB9218C6AF6E4D115" name="ID_arrival_agency">
+			<table_ref uuid="5927D693FB624AD6AFE657556105B987" name="Reservation"/>
+		</field_ref>
+	</index>
+	<index kind="regular" uuid="A2F626D070F3403E9BA54F7A6B8D07A3" type="3">
+		<field_ref uuid="78393AC4F3334F9780891F74FFD826FA" name="ID_car">
+			<table_ref uuid="5927D693FB624AD6AFE657556105B987" name="Reservation"/>
+		</field_ref>
+	</index>
+	<index kind="regular" unique_keys="true" uuid="AE747BBAE3B5461ABBCE67CCDBA28F55" type="3">
+		<field_ref uuid="D9C39FB16E76461E9C689C64F1F1EE39" name="ID">
+			<table_ref uuid="77483DFEE39540608A3543C004F0C3D0" name="Department"/>
+		</field_ref>
+	</index>
+	<index kind="regular" uuid="AFA52A80FE1A4899814BD0613F649E80" type="3">
+		<field_ref uuid="F4305144A7C4411D96B6C01194C30084" name="ID_defect_category">
+			<table_ref uuid="2D011E339A494C0591ED5D1C9DD97687" name="DefectiveElement"/>
+		</field_ref>
+	</index>
+	<index kind="regular" uuid="B51639C3234E4EE3911E2B76B9A16217" type="3">
+		<field_ref uuid="C792D19035FC492288A8D26E92DC1580" name="gearbox">
+			<table_ref uuid="E91129F3F4D74831BB11CEED379ECF69" name="CarModel"/>
+		</field_ref>
+	</index>
+	<index kind="regular" unique_keys="true" uuid="B5291AFB79894F839693150601E285D4" type="7">
+		<field_ref uuid="AA66746EDCB74FA8B974B13FDB30F71F" name="ID">
+			<table_ref uuid="CEC137026F4D4249B21C73C6363E811C" name="(toto)"/>
+		</field_ref>
+	</index>
+	<index kind="regular" uuid="C4E2206C79E84834A284875B1D97FF7D" type="3">
+		<field_ref uuid="E395D7DF92A045118292F269D78013D8" name="departureDate">
+			<table_ref uuid="5927D693FB624AD6AFE657556105B987" name="Reservation"/>
+		</field_ref>
+	</index>
+	<index kind="regular" unique_keys="true" uuid="C52BF90AB2024E76B6F87D416A0B971D" type="3">
+		<field_ref uuid="801BF0D6DF8F4A58ABF1FFA0736E8F1C" name="ID">
+			<table_ref uuid="F9607793DA2745B0A5A84D217E92FC59" name="Employee"/>
+		</field_ref>
+	</index>
+	<index kind="regular" unique_keys="true" uuid="C6EF5B156E474BDAA70361EEB04D6E85" type="3">
+		<field_ref uuid="A80CCC5CE445408BAE6A7CC406451FE6" name="ID">
+			<table_ref uuid="2E280B716AD54E40B49E8D6393190625" name="Customer"/>
+		</field_ref>
+	</index>
+	<index kind="regular" uuid="C7D6367AA28A427AB9292A8716BDD2CA" type="3">
+		<field_ref uuid="BF74A2A4799248539493FDF3AD5BB74E" name="ID_departure_inventory">
+			<table_ref uuid="5927D693FB624AD6AFE657556105B987" name="Reservation"/>
+		</field_ref>
+	</index>
+	<index kind="regular" uuid="CAC7AF3F68944E559B0FF9B8EF17E1D4" type="3">
+		<field_ref uuid="2EEAB8246D764ED9AB4FB8752299CCA3" name="ID_customer">
+			<table_ref uuid="5927D693FB624AD6AFE657556105B987" name="Reservation"/>
+		</field_ref>
+	</index>
+	<index kind="regular" unique_keys="true" uuid="CE68D2B4ED4A498E8A48CDE10DE4A511" type="7">
+		<field_ref uuid="E378D217EC604A8B906FDBF8C789B5B5" name="ID">
+			<table_ref uuid="49BDF4422C5149B7AF346E45D5876B0A" name="Car"/>
+		</field_ref>
+	</index>
+	<index kind="regular" unique_keys="true" uuid="CE891B69F70148799A3CA858C8020762" type="7">
+		<field_ref uuid="29ED3F426B8A4143A59C995B0537F475" name="ID">
+			<table_ref uuid="C3BF60D7477D448EA151677C63A6B582" name="(CsvFileImport)"/>
+		</field_ref>
+	</index>
+	<index kind="regular" uuid="D1FB859F0B334D76893991A4E753F188" type="7">
+		<field_ref uuid="CBA0CDE6988540E1994341AA7A6704E2" name="ID_color">
+			<table_ref uuid="49BDF4422C5149B7AF346E45D5876B0A" name="Car"/>
+		</field_ref>
+	</index>
+	<index kind="keywords" unique_keys="true" uuid="D52C5E5391274AA69C620D0C79F31A55" type="3">
+		<field_ref uuid="81D88742C1E44C2F97311D6AEF5A23AC" name="key">
+			<table_ref uuid="EFA7E4F8C88B4EBF893B88FE96F9ABF3" name="(Utilities)"/>
+		</field_ref>
+	</index>
+	<index kind="regular" unique_keys="true" uuid="DEE576571DC24C7AAA02CFF6685DD92B" type="1">
+		<field_ref uuid="81D88742C1E44C2F97311D6AEF5A23AC" name="key">
+			<table_ref uuid="EFA7E4F8C88B4EBF893B88FE96F9ABF3" name="(Utilities)"/>
+		</field_ref>
+	</index>
+	<index kind="regular" unique_keys="true" uuid="DF50E370FD944AB39C5A73E817D0E84B" type="7">
+		<field_ref uuid="64F80876C06746DBA95224B0D7B63AE7" name="ID">
+			<table_ref uuid="E91129F3F4D74831BB11CEED379ECF69" name="CarModel"/>
+		</field_ref>
+	</index>
+	<index kind="regular" unique_keys="true" uuid="E0F8B6C8E3B14620823B0FB4D2087568" type="7">
+		<field_ref uuid="6303993A810E4A3B946CF426A8D2CDFC" name="ID">
+			<table_ref uuid="71CB726CAC0F4CC58F3D863FC1466F7F" name="(bookingWrapper)"/>
+		</field_ref>
+	</index>
+	<index kind="regular" unique_keys="true" uuid="E59CC7A7E8234B74B7E93FD196834E29" type="7">
+		<field_ref uuid="756CB4038F5043FA89898815E30F989A" name="ID">
+			<table_ref uuid="58439AA7DB3546DF89EA33D88EB57488" name="User"/>
+		</field_ref>
+	</index>
+	<index kind="regular" uuid="EEB4F7F0B14849EB894C48B72D5899E1" type="7">
+		<field_ref uuid="6E7BBD6B79A14FBB9A6D355597A48250" name="code">
+			<table_ref uuid="B8791225A1F24CAFAF79C0351F72CBC4" name="Region"/>
+		</field_ref>
+	</index>
+	<index kind="regular" uuid="F5FCA85C945D4D5BAC9B5E41F300BE2B" type="3">
+		<field_ref uuid="FDE06A8B937A488A8D50BF03F396E3B1" name="ID_model">
+			<table_ref uuid="49BDF4422C5149B7AF346E45D5876B0A" name="Car"/>
+		</field_ref>
+	</index>
+	<base_extra>
+		<journal_file journal_file_enabled="false"/>
+	</base_extra>
+</base>

@@ -1,0 +1,19 @@
+{
+  "name": "@4d/docs",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "predev": "bun run scripts/copy-assets.ts",
+    "dev": "vitepress dev",
+    "prebuild": "bun run scripts/copy-assets.ts",
+    "build": "vitepress build",
+    "preview": "vitepress preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "7.0.2",
+    "vitepress": "1.6.4",
+    "vue": "3.5.39"
+  }
+}

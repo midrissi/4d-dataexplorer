@@ -1,0 +1,42 @@
+/** Site base — backgrounds, VitePress typography tweaks */
+
+/* Dot grid background */
+.VPContent,
+.VPHome,
+.docs-site.is-home .VPContent {
+  background-image:
+    radial-gradient(oklch(0.64 0.17 36 / 8%) 1px, transparent 1px),
+    radial-gradient(oklch(0.5 0.08 280 / 5%) 1px, transparent 1px);
+  background-size:
+    24px 24px,
+    48px 48px;
+  background-position:
+    0 0,
+    12px 12px;
+}
+
+.VPHomeHero .name {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.VPHomeHero .text {
+  font-family: "Fraunces", Georgia, serif;
+  font-weight: 600;
+}
+
+.VPDoc h1,
+.VPDoc h2 {
+  font-family: "Fraunces", Georgia, serif;
+  letter-spacing: -0.01em;
+}
+
+/* VitePress h2 already has a top border — hide redundant hr above it */
+.vp-doc hr:has(+ h2) {
+  display: none;
+}
+
+.vp-doc .doc-table-wrap + h2 {
+  margin-top: 40px;
+}

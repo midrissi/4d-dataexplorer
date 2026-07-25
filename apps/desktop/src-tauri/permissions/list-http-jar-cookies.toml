@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-list-http-jar-cookies"
+description = "Allow reading cookies from the HTTP plugin jar for the HTTP Client UI"
+commands.allow = ["list_http_jar_cookies"]

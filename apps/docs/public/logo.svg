@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <title>Data Explorer logo</title>
+  <defs>
+    <linearGradient id="deLogoBg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fb923c" />
+      <stop offset="1" stop-color="#ea580c" />
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="8" fill="url(#deLogoBg)" />
+  <g
+    transform="translate(16 16) scale(0.9) translate(-12 -12)"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="1.9"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <ellipse cx="12" cy="5" rx="9" ry="3" />
+    <path d="M3 5V19A9 3 0 0 0 21 19V5" />
+    <path d="M3 12A9 3 0 0 0 21 12" />
+  </g>
+</svg>

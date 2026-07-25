@@ -1,0 +1,248 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-and-check:
+    name: Lint & Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Format check
+        run: bunx biome format .
+
+      - name: Lint
+        run: bun run lint
+
+      - name: Check
+        run: bun run check
+
+      - name: Typecheck
+        run: bun run typecheck
+
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: lint-and-check
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run unit tests with coverage
+        run: bun run test:coverage
+
+      - name: Generate HTML coverage report
+        run: bun run coverage:html
+
+      - name: Upload coverage reports
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-reports
+          path: |
+            apps/dataexplorer/coverage/
+            packages/rest/coverage/
+            packages/rest-server/coverage/
+            packages/ui/coverage/
+            coverage/lcov.info
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: Upload HTML coverage report
+        uses: actions/upload-artifact@v7
+        with:
+          name: coverage-html
+          path: coverage/html/
+          retention-days: 30
+          if-no-files-found: error
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [lint-and-check, test]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build
+        run: bun run build
+
+      - name: Upload DataBrowser artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: DataBrowser
+          path: apps/dataexplorer/DataBrowser
+          retention-days: 30
+
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Download DataBrowser artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: DataBrowser
+          path: apps/dataexplorer/DataBrowser
+
+      - name: Build dataexplorer (if artifact missing)
+        if: failure()
+        run: bun run build --filter @4d/dataexplorer
+
+      - name: Install Playwright browsers
+        run: cd packages/e2e && bunx playwright install --with-deps
+
+      - name: Start rest-server
+        run: |
+          cd packages/rest-server
+          bun run dev > rest-server.log 2>&1 &
+          echo $! > rest-server.pid
+          # Wait for server to be ready
+          timeout 30 bash -c 'until curl -f http://localhost:7080/health 2>/dev/null; do sleep 1; done' || true
+        env:
+          PORT: 7080
+
+      - name: Verify rest-server is running
+        run: |
+          sleep 2
+          curl -f http://localhost:7080/health || exit 1
+          curl -f http://localhost:7080/dataexplorer/ || exit 1
+
+      - name: Run E2E tests
+        run: bun run test:e2e
+        timeout-minutes: 50
+        env:
+          BACKEND_URL: ${{ secrets.BACKEND_URL || 'http://localhost:7080' }}
+          CI: true
+
+      - name: Stop rest-server
+        if: always()
+        run: |
+          if [ -f packages/rest-server/rest-server.pid ]; then
+            kill $(cat packages/rest-server/rest-server.pid) || true
+          fi
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: packages/e2e/playwright-report/
+          retention-days: 30
+
+      - name: Upload rest-server logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: rest-server-logs
+          path: packages/rest-server/rest-server.log
+          retention-days: 7
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: [build, e2e]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Build
+        run: bun run build
+
+      - name: Create release archive
+        run: |
+          cd apps/dataexplorer
+          zip -r DataExplorer.zip DataBrowser
+
+      - name: Get version
+        id: version
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Check if release tag exists
+        id: tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="v${{ steps.version.outputs.version }}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create release
+        if: steps.tag.outputs.exists != 'true'
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Release v${{ steps.version.outputs.version }}
+          files: apps/dataexplorer/DataExplorer.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update DataExplorer.zip asset
+        if: steps.tag.outputs.exists == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "v${{ steps.version.outputs.version }}" \
+            apps/dataexplorer/DataExplorer.zip \
+            --clobber

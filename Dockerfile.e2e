@@ -1,0 +1,31 @@
+# E2E tests with Playwright (matches GitLab CI flow).
+# Full run: ~3-5 min (111 tests × chromium/firefox/webkit). Use: docker run --rm dataexplorer-e2e
+FROM oven/bun:latest
+
+# Install system deps: curl for health check, Node/npm for Playwright CLI (matches e2e-setup.sh)
+RUN apt-get update -qq && apt-get install -y -qq curl nodejs npm && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy workspace root and package files
+COPY package.json bun.lockb bunfig.toml ./
+COPY apps ./apps
+COPY packages ./packages
+COPY scripts ./scripts
+COPY biome.json ./
+
+# Install dependencies and build the app
+RUN bun install --frozen-lockfile
+RUN bun run build
+
+# Install Playwright browsers (Chromium, Firefox, WebKit)
+RUN cd packages/e2e && bunx playwright install --with-deps && cd ../..
+
+RUN chmod +x /app/scripts/e2e-docker-entrypoint.sh
+
+ENV CI=true
+ENV PORT=7080
+ENV DATAEXPLORER_URL=http://localhost:7080
+
+ENTRYPOINT ["/app/scripts/e2e-docker-entrypoint.sh"]
+CMD []

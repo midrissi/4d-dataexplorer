@@ -1,0 +1,603 @@
+{
+  "version": 1,
+  "settings": {
+    "readonlyMode": false,
+    "sidebarCollapsed": false,
+    "assistantOpen": false,
+    "defaultViewMode": "cards",
+    "defaultEntityViewMode": "form",
+    "defaultEditMode": "form",
+    "sidebarViewMode": "cards",
+    "pageSize": 100,
+    "shortcuts": [
+      {
+        "id": "command-palette",
+        "label": "Open Command Palette",
+        "key": "p",
+        "modifiers": {
+          "meta": true
+        },
+        "enabled": true,
+        "category": "General"
+      },
+      {
+        "id": "search-dataclasses",
+        "label": "Search Dataclasses",
+        "key": "k",
+        "modifiers": {
+          "meta": true
+        },
+        "chord": [
+          {
+            "key": "k",
+            "modifiers": {
+              "meta": true
+            }
+          },
+          {
+            "key": "p",
+            "modifiers": {
+              "meta": true
+            }
+          }
+        ],
+        "enabled": true,
+        "category": "General"
+      },
+      {
+        "id": "show-shortcuts",
+        "label": "Show Keyboard Shortcuts",
+        "key": "?",
+        "modifiers": {},
+        "chord": [
+          {
+            "key": "k",
+            "modifiers": {
+              "meta": true
+            }
+          },
+          {
+            "key": "h",
+            "modifiers": {
+              "meta": true
+            }
+          }
+        ],
+        "enabled": true,
+        "category": "General"
+      },
+      {
+        "id": "open-settings",
+        "label": "Open Settings",
+        "key": ",",
+        "modifiers": {
+          "meta": true
+        },
+        "chord": [
+          {
+            "key": "k",
+            "modifiers": {
+              "meta": true
+            }
+          },
+          {
+            "key": ",",
+            "modifiers": {
+              "meta": true
+            }
+          }
+        ],
+        "enabled": true,
+        "category": "General"
+      },
+      {
+        "id": "toggle-readonly",
+        "label": "Toggle Read-only Mode",
+        "key": "r",
+        "modifiers": {
+          "meta": true,
+          "shift": true
+        },
+        "enabled": true,
+        "category": "General"
+      },
+      {
+        "id": "toggle-assistant",
+        "label": "Toggle Assistant",
+        "key": "a",
+        "modifiers": {
+          "meta": true,
+          "shift": true
+        },
+        "enabled": true,
+        "category": "General"
+      },
+      {
+        "id": "toggle-sidebar",
+        "label": "Toggle Sidebar",
+        "key": "b",
+        "modifiers": {
+          "meta": true
+        },
+        "chord": [
+          {
+            "key": "k",
+            "modifiers": {
+              "meta": true
+            }
+          },
+          {
+            "key": "b",
+            "modifiers": {
+              "meta": true
+            }
+          }
+        ],
+        "enabled": true,
+        "category": "View"
+      },
+      {
+        "id": "toggle-theme",
+        "label": "Toggle Theme",
+        "key": "d",
+        "modifiers": {
+          "meta": true,
+          "shift": true
+        },
+        "chord": [
+          {
+            "key": "k",
+            "modifiers": {
+              "meta": true
+            }
+          },
+          {
+            "key": "d",
+            "modifiers": {
+              "meta": true
+            }
+          }
+        ],
+        "enabled": true,
+        "category": "View"
+      },
+      {
+        "id": "view-cards",
+        "label": "Card View",
+        "key": "1",
+        "modifiers": {
+          "meta": true
+        },
+        "enabled": true,
+        "category": "View"
+      },
+      {
+        "id": "view-table",
+        "label": "Table View",
+        "key": "2",
+        "modifiers": {
+          "meta": true
+        },
+        "enabled": true,
+        "category": "View"
+      },
+      {
+        "id": "open-home",
+        "label": "Open Home",
+        "key": "h",
+        "modifiers": {
+          "meta": true
+        },
+        "enabled": true,
+        "category": "Navigation"
+      },
+      {
+        "id": "open-structure",
+        "label": "Display Structure",
+        "key": "s",
+        "modifiers": {
+          "meta": true,
+          "shift": true
+        },
+        "enabled": true,
+        "category": "Navigation"
+      },
+      {
+        "id": "open-assistant-metadata",
+        "label": "Assistant Metadata Editor",
+        "key": "m",
+        "modifiers": {
+          "meta": true,
+          "shift": true
+        },
+        "enabled": true,
+        "category": "Navigation"
+      },
+      {
+        "id": "nav-prev",
+        "label": "Previous Entity",
+        "key": "ArrowUp",
+        "modifiers": {},
+        "enabled": true,
+        "category": "Navigation"
+      },
+      {
+        "id": "nav-next",
+        "label": "Next Entity",
+        "key": "ArrowDown",
+        "modifiers": {},
+        "enabled": true,
+        "category": "Navigation"
+      },
+      {
+        "id": "page-first",
+        "label": "First Page",
+        "key": "PageUp",
+        "modifiers": {
+          "alt": true
+        },
+        "enabled": true,
+        "category": "Navigation"
+      },
+      {
+        "id": "page-prev",
+        "label": "Previous Page",
+        "key": "ArrowLeft",
+        "modifiers": {},
+        "enabled": true,
+        "category": "Navigation"
+      },
+      {
+        "id": "page-next",
+        "label": "Next Page",
+        "key": "ArrowRight",
+        "modifiers": {},
+        "enabled": true,
+        "category": "Navigation"
+      },
+      {
+        "id": "page-last",
+        "label": "Last Page",
+        "key": "PageDown",
+        "modifiers": {
+          "alt": true
+        },
+        "enabled": true,
+        "category": "Navigation"
+      },
+      {
+        "id": "refresh",
+        "label": "Refresh",
+        "key": "r",
+        "modifiers": {
+          "meta": true,
+          "alt": true
+        },
+        "enabled": true,
+        "category": "Entities"
+      },
+      {
+        "id": "new-entity",
+        "label": "New Entity",
+        "key": "n",
+        "modifiers": {},
+        "enabled": true,
+        "category": "Entities"
+      },
+      {
+        "id": "edit-entity",
+        "label": "Edit Entity",
+        "key": "e",
+        "modifiers": {},
+        "enabled": true,
+        "category": "Entities"
+      },
+      {
+        "id": "save-entity",
+        "label": "Save Entity",
+        "key": "s",
+        "modifiers": {
+          "meta": true
+        },
+        "enabled": true,
+        "category": "Entities"
+      },
+      {
+        "id": "cancel-edit",
+        "label": "Cancel Edit",
+        "key": "Escape",
+        "modifiers": {},
+        "enabled": true,
+        "category": "Entities"
+      },
+      {
+        "id": "duplicate-entity",
+        "label": "Duplicate Entity",
+        "key": "d",
+        "modifiers": {},
+        "enabled": true,
+        "category": "Entities"
+      },
+      {
+        "id": "delete-entity",
+        "label": "Delete Entity",
+        "key": "Delete",
+        "modifiers": {},
+        "enabled": true,
+        "category": "Entities"
+      },
+      {
+        "id": "go-to-entity",
+        "label": "Go to Entity",
+        "key": "g",
+        "modifiers": {
+          "meta": true
+        },
+        "enabled": true,
+        "category": "Entities"
+      },
+      {
+        "id": "open-dataclass-select",
+        "label": "Open Dataclass Select",
+        "key": "g",
+        "modifiers": {
+          "meta": true,
+          "shift": true
+        },
+        "enabled": true,
+        "category": "Navigation"
+      },
+      {
+        "id": "open-dataclass-data",
+        "label": "Open Dataclass Data",
+        "key": "o",
+        "modifiers": {
+          "meta": true
+        },
+        "enabled": true,
+        "category": "Navigation"
+      },
+      {
+        "id": "switch-tabs",
+        "label": "Switch Tabs",
+        "key": "t",
+        "modifiers": {
+          "ctrl": true,
+          "shift": true
+        },
+        "enabled": true,
+        "category": "Tabs"
+      },
+      {
+        "id": "close-tab",
+        "label": "Close Tab",
+        "key": "w",
+        "modifiers": {
+          "ctrl": true,
+          "alt": true
+        },
+        "enabled": true,
+        "category": "Tabs"
+      },
+      {
+        "id": "pin-tab",
+        "label": "Pin/Unpin Tab",
+        "key": "p",
+        "modifiers": {
+          "meta": true,
+          "shift": true
+        },
+        "enabled": true,
+        "category": "Tabs"
+      },
+      {
+        "id": "tab-next",
+        "label": "Next Tab",
+        "key": "ArrowRight",
+        "modifiers": {
+          "ctrl": true,
+          "alt": true
+        },
+        "enabled": true,
+        "category": "Tabs"
+      },
+      {
+        "id": "tab-prev",
+        "label": "Previous Tab",
+        "key": "ArrowLeft",
+        "modifiers": {
+          "ctrl": true,
+          "alt": true
+        },
+        "enabled": true,
+        "category": "Tabs"
+      },
+      {
+        "id": "tab-1",
+        "label": "Switch to Tab 1",
+        "key": "1",
+        "modifiers": {
+          "ctrl": true,
+          "alt": true
+        },
+        "enabled": true,
+        "category": "Tabs"
+      },
+      {
+        "id": "tab-2",
+        "label": "Switch to Tab 2",
+        "key": "2",
+        "modifiers": {
+          "ctrl": true,
+          "alt": true
+        },
+        "enabled": true,
+        "category": "Tabs"
+      },
+      {
+        "id": "tab-3",
+        "label": "Switch to Tab 3",
+        "key": "3",
+        "modifiers": {
+          "ctrl": true,
+          "alt": true
+        },
+        "enabled": true,
+        "category": "Tabs"
+      },
+      {
+        "id": "tab-4",
+        "label": "Switch to Tab 4",
+        "key": "4",
+        "modifiers": {
+          "ctrl": true,
+          "alt": true
+        },
+        "enabled": true,
+        "category": "Tabs"
+      },
+      {
+        "id": "tab-5",
+        "label": "Switch to Tab 5",
+        "key": "5",
+        "modifiers": {
+          "ctrl": true,
+          "alt": true
+        },
+        "enabled": true,
+        "category": "Tabs"
+      },
+      {
+        "id": "tab-6",
+        "label": "Switch to Tab 6",
+        "key": "6",
+        "modifiers": {
+          "ctrl": true,
+          "alt": true
+        },
+        "enabled": true,
+        "category": "Tabs"
+      },
+      {
+        "id": "tab-7",
+        "label": "Switch to Tab 7",
+        "key": "7",
+        "modifiers": {
+          "ctrl": true,
+          "alt": true
+        },
+        "enabled": true,
+        "category": "Tabs"
+      },
+      {
+        "id": "tab-8",
+        "label": "Switch to Tab 8",
+        "key": "8",
+        "modifiers": {
+          "ctrl": true,
+          "alt": true
+        },
+        "enabled": true,
+        "category": "Tabs"
+      },
+      {
+        "id": "tab-9",
+        "label": "Switch to Tab 9",
+        "key": "9",
+        "modifiers": {
+          "ctrl": true,
+          "alt": true
+        },
+        "enabled": true,
+        "category": "Tabs"
+      }
+    ],
+    "activeShortcutPreset": "default",
+    "dataclassCustomizations": {
+      "Agency": {
+        "icon": "ChartBar",
+        "color": "lime"
+      },
+      "Employee": {
+        "icon": "Server",
+        "color": "cyan"
+      },
+      "Customer": {
+        "icon": "Globe",
+        "color": "rose"
+      },
+      "CarModel": {
+        "icon": "Cpu",
+        "color": "violet"
+      },
+      "Region": {
+        "icon": "Link2",
+        "color": "emerald"
+      },
+      "Car": {
+        "icon": "Scale",
+        "color": "indigo"
+      },
+      "Reservation": {
+        "icon": "Smartphone",
+        "color": "rose"
+      },
+      "Inventory": {
+        "icon": "Landmark",
+        "color": "rose"
+      },
+      "Status": {
+        "icon": "Phone",
+        "color": "pink"
+      },
+      "Color": {
+        "icon": "Cpu",
+        "color": "teal"
+      },
+      "OptionCategory": {
+        "icon": "Smartphone",
+        "color": "emerald"
+      },
+      "Defect": {
+        "icon": "MapPin",
+        "color": "cyan"
+      },
+      "CategoryCar": {
+        "icon": "Settings",
+        "color": "green"
+      },
+      "ChosenOptions": {
+        "icon": "Table2",
+        "color": "orange"
+      },
+      "DefectCategory": {
+        "icon": "Mail",
+        "color": "yellow"
+      },
+      "DefectiveElement": {
+        "icon": "TrendingUp",
+        "color": "red"
+      },
+      "OptionAvailable": {
+        "icon": "Gift",
+        "color": "violet"
+      },
+      "MaTable": {
+        "icon": "ChartBar",
+        "color": "orange"
+      },
+      "Department": {
+        "icon": "DollarSign",
+        "color": "teal"
+      },
+      "CategoryAgency": {
+        "icon": "File",
+        "color": "indigo"
+      },
+      "User": {
+        "icon": "Users",
+        "color": "indigo"
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+/**
+ * Data Explorer docs — Tangerine-inspired editorial theme
+ *
+ * Styles are split by concern under ./styles/. Import order matters
+ * for cascade (tokens first, then layout/components).
+ */
+
+@import "./styles/tokens.css";
+@import "./styles/base.css";
+@import "./styles/screenshots.css";
+@import "./styles/home-landing.css";
+@import "./styles/download-stats.css";
+@import "./styles/chrome.css";
+@import "./styles/app-layout.css";
+@import "./styles/doc-tables.css";

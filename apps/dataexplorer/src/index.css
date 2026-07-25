@@ -1,0 +1,227 @@
+@import "tailwindcss";
+@import "@4d/ui/styles";
+@import "@4d/ui/themes/slate.css";
+@import "@4d/ui/themes/tangerine.css";
+@import "@4d/ui/themes/violet-bloom.css";
+@import "@4d/ui/themes/vercel.css";
+@import "@4d/ui/themes/graphite.css";
+@import "@4d/ui/themes/aurora.css";
+@import "./styles/assistant-theme-bridge.css";
+@config "../tailwind.config.js";
+
+.structure-graph[data-graph-moving="true"] .dataclass-node-card,
+.structure-graph[data-graph-moving="true"] .dataclass-node-card * {
+  transition: none;
+}
+
+.structure-graph[data-graph-moving="true"] .dataclass-node-card {
+  box-shadow: none;
+}
+
+.structure-graph[data-graph-moving="true"] .dataclass-node-detail,
+.structure-graph[data-graph-moving="true"] [data-graph-node-action],
+.structure-graph[data-graph-detail="overview"] .dataclass-node-detail,
+.structure-graph[data-graph-detail="overview"] [data-graph-node-action] {
+  visibility: hidden;
+}
+
+.structure-graph[data-graph-moving="true"] .dataclass-node-card,
+.structure-graph[data-graph-detail="overview"] .dataclass-node-card {
+  contain: layout paint style;
+}
+
+.structure-graph[data-graph-moving="true"] .react-flow__edge path {
+  shape-rendering: optimizeSpeed;
+}
+
+/* Hide focus outline/ring on buttons */
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+/* ============================================
+   LIQUID GLASS THEME ENHANCEMENTS
+   ============================================ */
+
+/* Apply glassmorphism to cards in aurora theme */
+:root[data-theme="aurora"] [data-slot="card"],
+:root[data-theme="aurora"] .card {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: oklch(1 0 0 / 0.8);
+  border: 1px solid oklch(0.85 0.02 210 / 0.3);
+  box-shadow:
+    0 8px 32px oklch(0.5 0.1 220 / 0.08),
+    inset 0 1px 0 oklch(1 0 0 / 0.6);
+}
+
+:root[data-theme="aurora"].dark [data-slot="card"],
+:root[data-theme="aurora"].dark .card {
+  background: oklch(0.2 0.03 230 / 0.7);
+  border: 1px solid oklch(0.5 0.06 220 / 0.2);
+  box-shadow:
+    0 8px 32px oklch(0 0 0 / 0.3),
+    0 0 1px oklch(0.6 0.1 200 / 0.2),
+    inset 0 1px 0 oklch(1 0 0 / 0.08);
+}
+
+/* Sidebar glass effect */
+:root[data-theme="aurora"] [data-sidebar],
+:root[data-theme="aurora"] aside {
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Button glow effects for aurora */
+:root[data-theme="aurora"] button[data-variant="default"]:hover,
+:root[data-theme="aurora"] [role="button"][data-variant="default"]:hover {
+  box-shadow: 0 0 20px oklch(0.65 0.18 195 / 0.3);
+}
+
+:root[data-theme="aurora"].dark button[data-variant="default"]:hover,
+:root[data-theme="aurora"].dark [role="button"][data-variant="default"]:hover {
+  box-shadow: 0 0 25px oklch(0.72 0.16 195 / 0.4);
+}
+
+/* Input field glass effect — use theme tokens so light/dark stay in sync */
+:root[data-theme="aurora"] input,
+:root[data-theme="aurora"] textarea,
+:root[data-theme="aurora"] select {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  background: color-mix(in oklch, var(--input) 65%, transparent);
+  border: 1px solid color-mix(in oklch, var(--border) 45%, transparent);
+  color: var(--foreground);
+  transition: all 0.2s ease;
+}
+
+:root[data-theme="aurora"] input:focus,
+:root[data-theme="aurora"] textarea:focus,
+:root[data-theme="aurora"] select:focus {
+  background: color-mix(in oklch, var(--input) 85%, transparent);
+  border-color: color-mix(in oklch, var(--primary) 50%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--primary) 15%, transparent);
+}
+
+/* Read-only inputs: solid surface — glass blur + transparency washes out in dark mode */
+:root[data-theme="aurora"] input:read-only,
+:root[data-theme="aurora"] textarea:read-only {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  background: var(--input);
+  color: var(--foreground);
+  -webkit-text-fill-color: var(--foreground);
+}
+
+/* Popover/dropdown glass effect */
+:root[data-theme="aurora"] [data-radix-popper-content-wrapper] > div,
+:root[data-theme="aurora"] [role="listbox"],
+:root[data-theme="aurora"] [role="menu"] {
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  background: oklch(1 0 0 / 0.85);
+  border: 1px solid oklch(0.85 0.02 210 / 0.3);
+  box-shadow:
+    0 10px 40px oklch(0.5 0.1 220 / 0.15),
+    inset 0 1px 0 oklch(1 0 0 / 0.5);
+}
+
+:root[data-theme="aurora"].dark [data-radix-popper-content-wrapper] > div,
+:root[data-theme="aurora"].dark [role="listbox"],
+:root[data-theme="aurora"].dark [role="menu"] {
+  background: oklch(0.18 0.03 230 / 0.85);
+  border: 1px solid oklch(0.5 0.06 220 / 0.25);
+  box-shadow:
+    0 10px 40px oklch(0 0 0 / 0.4),
+    0 0 1px oklch(0.6 0.1 200 / 0.3),
+    inset 0 1px 0 oklch(1 0 0 / 0.06);
+}
+
+/* Tab bar glass effect */
+:root[data-theme="aurora"] [role="tablist"] {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Badge/tag glass effect */
+:root[data-theme="aurora"] [data-slot="badge"],
+:root[data-theme="aurora"] .badge {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Command palette in aurora: no input border/background so it blends with dialog */
+:root[data-theme="aurora"] .command-palette input,
+:root[data-theme="aurora"] .command-palette textarea {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+:root[data-theme="aurora"] .command-palette input:focus,
+:root[data-theme="aurora"] .command-palette textarea:focus {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+/* Softer divider in command palette for aurora light */
+:root[data-theme="aurora"] .command-palette .border-border {
+  border-color: oklch(0.88 0.02 210 / 0.7);
+}
+
+/* Softer divider in command palette for aurora dark */
+:root[data-theme="aurora"].dark .command-palette .border-border {
+  border-color: oklch(0.25 0.03 230 / 0.6);
+}
+
+/* Placeholder in command palette for aurora light */
+:root[data-theme="aurora"] .command-palette input::placeholder {
+  color: oklch(0.5 0.02 220);
+}
+
+/* Placeholder in command palette for aurora dark */
+:root[data-theme="aurora"].dark .command-palette input::placeholder {
+  color: oklch(0.55 0.02 215);
+}
+
+.dataexplorer-assistant {
+  height: 100%;
+  min-height: 0;
+}
+
+/* Transparency board for image previews in HTTP Client */
+.http-preview-checkerboard {
+  background-color: color-mix(in oklab, var(--muted) 55%, var(--background));
+  background-image:
+    linear-gradient(
+      45deg,
+      color-mix(in oklab, var(--muted-foreground) 12%, transparent) 25%,
+      transparent 25%
+    ),
+    linear-gradient(
+      -45deg,
+      color-mix(in oklab, var(--muted-foreground) 12%, transparent) 25%,
+      transparent 25%
+    ),
+    linear-gradient(
+      45deg,
+      transparent 75%,
+      color-mix(in oklab, var(--muted-foreground) 12%, transparent) 75%
+    ),
+    linear-gradient(
+      -45deg,
+      transparent 75%,
+      color-mix(in oklab, var(--muted-foreground) 12%, transparent) 75%
+    );
+  background-position:
+    0 0,
+    0 8px,
+    8px -8px,
+    -8px 0;
+  background-size: 16px 16px;
+}

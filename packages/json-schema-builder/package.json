@@ -1,0 +1,43 @@
+{
+  "name": "@4d/json-schema-builder",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "lint": "biome lint ./src",
+    "typecheck": "tsc --noEmit",
+    "demo": "vite --config demo/vite.config.ts"
+  },
+  "dependencies": {
+    "@4d/ui": "workspace:*",
+    "@dnd-kit/core": "6.3.1",
+    "@dnd-kit/sortable": "10.0.0",
+    "@dnd-kit/utilities": "3.2.2",
+    "ajv": "8.20.0",
+    "lucide-react": "1.24.0",
+    "react-syntax-highlighter": "16.1.1"
+  },
+  "peerDependencies": {
+    "react": "19.2.7",
+    "react-dom": "19.2.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.2",
+    "@types/react": "19.2.17",
+    "@types/react-dom": "19.2.3",
+    "@types/react-syntax-highlighter": "15.5.13",
+    "@vitejs/plugin-react": "6.0.3",
+    "autoprefixer": "10.5.2",
+    "monaco-editor": "0.55.1",
+    "postcss": "8.5.19",
+    "tailwindcss": "4.3.2",
+    "tailwindcss-animate": "1.0.7",
+    "typescript": "7.0.2",
+    "vite": "8.1.4"
+  }
+}

@@ -1,0 +1,236 @@
+/** App layout diagram */
+
+/* App layout diagram */
+.app-layout {
+  margin: 1.5rem 0 2rem;
+}
+
+.app-layout__shell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--vp-c-divider);
+  background: linear-gradient(145deg, var(--vp-c-bg-soft) 0%, var(--vp-c-bg-mute) 100%);
+  box-shadow:
+    0 12px 40px oklch(0.15 0.03 260 / 22%),
+    inset 0 1px 0 oklch(1 0 0 / 6%);
+}
+
+.app-layout__body {
+  display: grid;
+  grid-template-columns: minmax(72px, 22%) 1fr;
+  gap: 3px;
+  min-height: 200px;
+}
+
+.app-layout__main {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.app-layout__region {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--vp-c-divider);
+  background: var(--vp-c-bg-alt);
+  overflow: hidden;
+}
+
+.app-layout__region::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, oklch(0.64 0.17 36 / 6%) 0%, transparent 55%);
+  pointer-events: none;
+}
+
+.app-layout__header {
+  min-height: 52px;
+}
+
+.app-layout__footer {
+  min-height: 40px;
+}
+
+.app-layout__sidebar {
+  min-height: 100%;
+}
+
+.app-layout__tabs {
+  min-height: 24px;
+  gap: 2px;
+  padding-top: 5px;
+  padding-bottom: 4px;
+  --app-layout-label-size: 10px;
+  --app-layout-label-line-height: 1;
+  flex-shrink: 0;
+}
+
+.app-layout__content {
+  flex: 1;
+  min-height: 120px;
+}
+
+.app-layout__label {
+  position: relative;
+  z-index: 1;
+  font-size: var(--app-layout-label-size, 11px);
+  line-height: var(--app-layout-label-line-height, 1.2);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--vp-c-brand-2);
+}
+
+.app-layout__hint {
+  position: relative;
+  z-index: 1;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--vp-c-text-2);
+}
+
+.app-layout__caption {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--vp-c-text-3);
+  text-align: center;
+}
+
+/* Decorative mock UI inside regions */
+.app-layout__mock--search {
+  position: relative;
+  z-index: 1;
+  margin-top: 4px;
+  height: 10px;
+  width: 55%;
+  max-width: 220px;
+  border-radius: 999px;
+  background: var(--vp-c-bg-mute);
+  border: 1px solid var(--vp-c-divider);
+}
+
+.app-layout__mock-list {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 6px;
+  flex: 1;
+}
+
+.app-layout__mock-row {
+  display: block;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--vp-c-bg-mute);
+  border: 1px solid var(--vp-c-divider);
+}
+
+.app-layout__mock-row:nth-child(1) {
+  width: 88%;
+}
+
+.app-layout__mock-row:nth-child(2) {
+  width: 72%;
+}
+
+.app-layout__mock-row:nth-child(3) {
+  width: 80%;
+}
+
+.app-layout__mock-row:nth-child(4) {
+  width: 65%;
+}
+
+.app-layout__mock-row:nth-child(5) {
+  width: 76%;
+}
+
+.app-layout__mock-tabs {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 5px;
+  margin-top: 1px;
+}
+
+.app-layout__mock-tab {
+  display: block;
+  height: 5px;
+  width: 42px;
+  border-radius: 4px 4px 0 0;
+  background: var(--vp-c-bg-mute);
+  border: 1px solid var(--vp-c-divider);
+  border-bottom: none;
+  opacity: 0.65;
+}
+
+.app-layout__mock-tab--active {
+  opacity: 1;
+  background: oklch(0.64 0.17 36 / 18%);
+  border-color: oklch(0.64 0.17 36 / 35%);
+}
+
+.app-layout__mock-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.app-layout__mock-card {
+  display: block;
+  height: 36px;
+  border-radius: 6px;
+  background: var(--vp-c-bg-mute);
+  border: 1px solid var(--vp-c-divider);
+}
+
+.app-layout__mock-footer {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 5px;
+  margin-top: 2px;
+  margin-left: auto;
+}
+
+.app-layout__mock-dot {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--vp-c-bg-mute);
+  border: 1px solid var(--vp-c-divider);
+}
+
+.app-layout__mock-dot:nth-child(3) {
+  background: oklch(0.64 0.17 36 / 25%);
+  border-color: oklch(0.64 0.17 36 / 40%);
+}
+
+@media (max-width: 640px) {
+  .app-layout__body {
+    grid-template-columns: 1fr;
+  }
+
+  .app-layout__sidebar {
+    min-height: 80px;
+  }
+
+  .app-layout__mock-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}

@@ -1,0 +1,248 @@
+/* AI action modals — flat chrome only (no gradients / glows) */
+
+.ai-action-prompt--active textarea {
+  border-color: color-mix(in oklch, var(--primary) 40%, var(--border));
+}
+
+.ai-action-cta:not(:disabled):active {
+  transform: translateY(1px);
+}
+
+/* Task history list + detail — keep sheet width; scroll wide content inside */
+.ai-task-history-scroll [data-radix-scroll-area-viewport],
+.ai-task-detail-scroll [data-radix-scroll-area-viewport] {
+  min-width: 0;
+}
+
+/* Radix viewport child defaults to display:table + min-width:100%, which lets
+   content expand past the sheet and clips the remove/cancel column. Force a block box. */
+.ai-task-history-scroll [data-radix-scroll-area-viewport] > div,
+.ai-task-detail-scroll [data-radix-scroll-area-viewport] > div {
+  /* biome-ignore lint/complexity/noImportantStyles: override Radix ScrollArea child sizing */
+  display: block !important;
+  /* biome-ignore lint/complexity/noImportantStyles: override Radix ScrollArea child sizing */
+  min-width: 0 !important;
+  max-width: 100%;
+}
+
+.ai-task-markdown.markdown-body {
+  max-width: 100%;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--foreground);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.ai-task-markdown.markdown-body > :first-child {
+  margin-top: 0;
+}
+
+.ai-task-markdown.markdown-body > :last-child {
+  margin-bottom: 0;
+}
+
+.ai-task-markdown.markdown-body .markdown-table-wrap {
+  margin: 0.75rem 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.ai-task-markdown.markdown-body p,
+.ai-task-markdown.markdown-body li {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.ai-task-markdown.markdown-body p {
+  margin: 0.4em 0;
+}
+
+.ai-task-thinking-markdown.markdown-body {
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: color-mix(in oklch, var(--muted-foreground) 85%, transparent);
+}
+
+.ai-task-thinking-markdown.markdown-body h1,
+.ai-task-thinking-markdown.markdown-body h2,
+.ai-task-thinking-markdown.markdown-body h3,
+.ai-task-thinking-markdown.markdown-body h4 {
+  color: var(--muted-foreground);
+  font-size: 0.8125rem;
+}
+
+.ai-task-thinking-markdown.markdown-body .markdown-table-wrap {
+  margin: 0.5rem 0;
+}
+
+.ai-task-thinking-markdown.markdown-body table {
+  font-size: 0.6875rem;
+}
+
+.ai-task-markdown.markdown-body .markdown-image-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  min-width: 2rem;
+  min-height: 2rem;
+  vertical-align: middle;
+  overflow: hidden;
+  border-radius: 9999px;
+  border: 1px dashed color-mix(in oklch, var(--border) 80%, transparent);
+  background: color-mix(in oklch, var(--muted) 55%, transparent);
+  color: color-mix(in oklch, var(--muted-foreground) 80%, transparent);
+}
+
+.ai-task-markdown.markdown-body .markdown-image-fallback__icon {
+  width: 0.875rem;
+  height: 0.875rem;
+  opacity: 0.85;
+}
+
+.ai-task-markdown.markdown-body .markdown-image {
+  max-width: 100%;
+  height: auto;
+  vertical-align: middle;
+  border-radius: var(--radius);
+}
+
+.ai-task-markdown.markdown-body td .markdown-image,
+.ai-task-markdown.markdown-body td .markdown-image-fallback {
+  width: 2rem;
+  height: 2rem;
+  object-fit: cover;
+}
+
+/* Tools & activity — JSON syntax highlighting */
+.ai-task-activity__code {
+  overflow: auto;
+  border-radius: var(--radius);
+  background: color-mix(in oklch, var(--background) 80%, transparent);
+  padding: 0.375rem;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 10px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.ai-task-activity__code .hljs {
+  background: transparent;
+  color: var(--log-syntax-base, var(--foreground));
+  white-space: inherit;
+  overflow-wrap: inherit;
+  word-break: inherit;
+}
+
+.ai-task-activity__code .hljs .hljs-attr,
+.ai-task-activity__code .hljs .hljs-property,
+.ai-task-activity__code .hljs .hljs-title {
+  color: var(--log-syntax-key);
+}
+
+.ai-task-activity__code .hljs .hljs-string {
+  color: var(--log-syntax-string);
+}
+
+.ai-task-activity__code .hljs .hljs-number {
+  color: var(--log-syntax-number);
+}
+
+.ai-task-activity__code .hljs .hljs-literal,
+.ai-task-activity__code .hljs .hljs-keyword {
+  color: var(--log-syntax-literal);
+}
+
+.ai-task-activity__code .hljs .hljs-punctuation {
+  color: var(--log-syntax-punctuation);
+}
+
+/* Result JSON tree — compact type; keep values scrollable within the panel */
+.ai-task-result-tree {
+  font-size: 11px;
+  line-height: 1.4;
+  max-width: 100%;
+}
+
+/* Standalone Trace (ChatActivity) — match assistant card framing outside chat bubbles */
+.ai-task-detail-scroll .assistant-activity--embedded {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius);
+}
+
+.ai-task-detail-scroll .assistant-activity__header {
+  border-bottom-color: transparent;
+}
+
+.ai-task-detail-scroll .assistant-activity__steps {
+  border-top: 1px solid var(--border-default);
+}
+
+/* Resizable AI tasks dialog */
+.ai-task-history-dialog {
+  position: relative;
+}
+
+.ai-task-history-dialog--resizing {
+  transition: none;
+}
+
+.ai-task-history-dialog__resize-edge {
+  position: absolute;
+  z-index: 20;
+  border: none;
+  background: transparent;
+  padding: 0;
+}
+
+.ai-task-history-dialog__resize-edge--right {
+  top: 0.75rem;
+  right: 0;
+  bottom: 0.75rem;
+  width: 0.4rem;
+  cursor: ew-resize;
+}
+
+.ai-task-history-dialog__resize-edge--bottom {
+  right: 0.75rem;
+  bottom: 0;
+  left: 0.75rem;
+  height: 0.4rem;
+  cursor: ns-resize;
+}
+
+.ai-task-history-dialog__resize-edge:hover,
+.ai-task-history-dialog__resize-edge--active,
+.ai-task-history-dialog__resize-edge:focus-visible {
+  background: color-mix(in oklch, var(--primary) 18%, transparent);
+  outline: none;
+}
+
+.ai-task-history-dialog__resize-corner {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 21;
+  width: 1rem;
+  height: 1rem;
+  border: none;
+  border-right: 2px solid color-mix(in oklch, var(--muted-foreground) 50%, transparent);
+  border-bottom: 2px solid color-mix(in oklch, var(--muted-foreground) 50%, transparent);
+  border-radius: 0 0 var(--radius) 0;
+  background: transparent;
+  cursor: nwse-resize;
+  padding: 0;
+}
+
+.ai-task-history-dialog__resize-corner:hover,
+.ai-task-history-dialog__resize-corner--active,
+.ai-task-history-dialog__resize-corner:focus-visible {
+  border-right-color: color-mix(in oklch, var(--primary) 75%, transparent);
+  border-bottom-color: color-mix(in oklch, var(--primary) 75%, transparent);
+  background: color-mix(in oklch, var(--primary) 10%, transparent);
+  outline: none;
+}

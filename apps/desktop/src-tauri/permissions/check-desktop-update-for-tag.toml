@@ -1,0 +1,4 @@
+[[permission]]
+identifier = "allow-check-desktop-update-for-tag"
+description = "Allow checking the updater feed for a specific GitHub release tag"
+commands.allow = ["check_desktop_update_for_tag"]

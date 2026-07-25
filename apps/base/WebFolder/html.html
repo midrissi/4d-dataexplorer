@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Modern Demo</title>
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: rgba(255, 255, 255, 0.08);
+      --border: rgba(255, 255, 255, 0.15);
+      --primary: #3b82f6;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: Inter, system-ui, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, #2563eb 0%, transparent 40%),
+        radial-gradient(circle at bottom right, #9333ea 0%, transparent 35%),
+        var(--bg);
+      padding: 2rem;
+    }
+
+    .card {
+      width: min(500px, 100%);
+      padding: 2rem;
+      border-radius: 24px;
+      background: var(--card);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 50px rgba(0,0,0,.35);
+      animation: fadeIn .6s ease;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: .5rem;
+    }
+
+    p {
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+
+    button {
+      padding: .9rem 1.4rem;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      color: white;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: .25s ease;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(59,130,246,.35);
+    }
+
+    .counter {
+      margin-top: 1.5rem;
+      font-size: 1.2rem;
+      font-weight: 600;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="card">
+    <h1>Modern Web Demo</h1>
+
+    <p>
+      This page uses semantic HTML, modern CSS (glassmorphism, gradients,
+      animations) and a small amount of vanilla JavaScript.
+    </p>
+
+    <button id="button" type="button">
+      Click me
+    </button>
+
+    <div class="counter">
+      Clicks: <span id="count">0</span>
+    </div>
+  </main>
+
+  <script>
+    let count = 0;
+
+    const button = document.getElementById("button");
+    const counter = document.getElementById("count");
+
+    button.addEventListener("click", () => {
+      count++;
+      counter.textContent = count;
+
+      button.animate([
+        { transform: "scale(1)" },
+        { transform: "scale(0.95)" },
+        { transform: "scale(1)" }
+      ], {
+        duration: 180
+      });
+    });
+  </script>
+
+</body>
+</html>

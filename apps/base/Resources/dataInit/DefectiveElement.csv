@@ -1,0 +1,39 @@
+﻿label;$rel_DefectCategory_label_category
+Dashboard;Indoor
+Hand brake;Indoor
+Gear lever;Indoor
+Pedals;Indoor
+Wing mirror;Indoor
+Door aspect;Indoor
+Windows;Indoor
+Carpet;Indoor
+Seats;Indoor
+Ceiling;Indoor
+Trunk Coating;Indoor
+Front Right Tire;Tires
+Front Left Tire;Tires
+Rear Right Tire;Tires
+Left Rear Tire;Tires
+Front Right Rim;Tires
+Front Left Rim;Tires
+Rear Right Rim;Tires
+Left Rear Rim;Tires
+Spare tire;Tires
+Front bumper;Outdoor
+Rear bumper;Outdoor
+Hood;Outdoor
+Right Front Door;Outdoor
+Front Left Door;Outdoor
+Right Rear Door;Outdoor
+Left Rear Door;Outdoor
+Chest;Outdoor
+Roof;Outdoor
+Wiper;Outdoor
+Windshield;Outdoor
+Back window;Outdoor
+Front Right Light;Outdoor
+Left Front Light;Outdoor
+Right Rear Light;Outdoor
+Left Rear Light;Outdoor
+Right mirror;Outdoor
+Left mirror;Outdoor

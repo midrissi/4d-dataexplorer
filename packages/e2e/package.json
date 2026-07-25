@@ -1,0 +1,24 @@
+{
+  "name": "@4d/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "playwright test",
+    "test:ui": "playwright test --ui",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "test:report": "playwright show-report",
+    "test:codegen": "playwright codegen ${DATAEXPLORER_URL:-http://localhost:7080}/dataexplorer/",
+    "capture:screenshots": "bun ./scripts/capture-docs-screenshots.ts",
+    "capture:screenshots:console": "bun ./scripts/capture-console-screenshot.ts",
+    "capture:screenshots:http-client": "bun ./scripts/capture-http-client-screenshot.ts",
+    "capture:screenshots:ai-actions": "bun ./scripts/capture-ai-actions-screenshot.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.61.1",
+    "@types/node": "26.1.1",
+    "typescript": "7.0.2"
+  }
+}

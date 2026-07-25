@@ -1,0 +1,233 @@
+/* Aurora Theme - Translucent, iridescent, northern lights aesthetics */
+/* Inspired by frosted glass, aurora borealis, and holographic prisms */
+
+:root[data-theme="aurora"] {
+  /* Background: Soft ice-white with subtle blue undertone */
+  --background: oklch(0.985 0.008 220);
+  --foreground: oklch(0.18 0.02 240);
+
+  /* Cards: Frosted glass effect - pure white with ethereal quality */
+  --card: oklch(0.995 0.005 220);
+  --card-foreground: oklch(0.18 0.02 240);
+
+  /* Popover: Slightly more opaque glass */
+  --popover: oklch(0.99 0.006 220);
+  --popover-foreground: oklch(0.18 0.02 240);
+
+  /* Primary: Luminous cyan - like light through water */
+  --primary: oklch(0.65 0.18 195);
+  --primary-foreground: oklch(0.99 0.005 220);
+
+  /* Secondary: Soft aquamarine mist */
+  --secondary: oklch(0.95 0.025 200);
+  --secondary-foreground: oklch(0.25 0.03 220);
+
+  /* Muted: Gentle fog */
+  --muted: oklch(0.96 0.012 210);
+  --muted-foreground: oklch(0.5 0.02 220);
+
+  /* Accent: Iridescent teal-violet shift */
+  --accent: oklch(0.92 0.04 250);
+  --accent-foreground: oklch(0.45 0.15 260);
+
+  /* Destructive: Coral pink - like sunset through water */
+  --destructive: oklch(0.68 0.19 15);
+  --destructive-foreground: oklch(0.99 0 0);
+
+  /* Borders: Delicate ice edges */
+  --border: oklch(0.9 0.02 210);
+  --input: oklch(0.94 0.015 210);
+  --ring: oklch(0.65 0.18 195);
+
+  /* Charts: Prismatic rainbow spectrum */
+  --chart-1: oklch(0.7 0.2 195); /* Cyan */
+  --chart-2: oklch(0.68 0.18 280); /* Violet */
+  --chart-3: oklch(0.75 0.16 165); /* Teal */
+  --chart-4: oklch(0.72 0.15 330); /* Pink */
+  --chart-5: oklch(0.78 0.14 85); /* Gold */
+
+  /* Sidebar: Frosted glass panel */
+  --sidebar: oklch(0.975 0.01 220);
+  --sidebar-foreground: oklch(0.18 0.02 240);
+  --sidebar-primary: oklch(0.65 0.18 195);
+  --sidebar-primary-foreground: oklch(0.99 0.005 220);
+  --sidebar-accent: oklch(0.93 0.03 230);
+  --sidebar-accent-foreground: oklch(0.35 0.06 220);
+  --sidebar-border: oklch(0.92 0.015 215);
+  --sidebar-ring: oklch(0.65 0.18 195);
+  --success: oklch(0.55 0.14 145);
+  --success-foreground: oklch(0.99 0 0);
+  --warning: oklch(0.72 0.15 75);
+  --warning-foreground: oklch(0.22 0.04 75);
+
+  /* Typography */
+  --font-sans:
+    "SF Pro Display", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-mono:
+    "SF Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+}
+
+:root[data-theme="aurora"].dark {
+  /* Background: Deep ocean abyss with subtle glow */
+  --background: oklch(0.14 0.025 235);
+  --foreground: oklch(0.92 0.015 210);
+
+  /* Cards: Dark frosted glass with depth */
+  --card: oklch(0.18 0.03 230);
+  --card-foreground: oklch(0.92 0.015 210);
+
+  /* Popover: Glowing dark glass */
+  --popover: oklch(0.2 0.035 235);
+  --popover-foreground: oklch(0.92 0.015 210);
+
+  /* Primary: Luminescent cyan - bioluminescent glow */
+  --primary: oklch(0.72 0.16 195);
+  --primary-foreground: oklch(0.12 0.02 230);
+
+  /* Secondary: Deep sea teal */
+  --secondary: oklch(0.24 0.04 220);
+  --secondary-foreground: oklch(0.88 0.02 210);
+
+  /* Muted: Ocean depths */
+  --muted: oklch(0.22 0.03 225);
+  --muted-foreground: oklch(0.62 0.03 215);
+
+  /* Accent: Aurora-like iridescence */
+  --accent: oklch(0.28 0.06 270);
+  --accent-foreground: oklch(0.78 0.12 280);
+
+  /* Destructive: Warm coral glow */
+  --destructive: oklch(0.65 0.18 20);
+  --destructive-foreground: oklch(0.95 0 0);
+
+  /* Borders: Subtle glow edges */
+  --border: oklch(0.28 0.035 230);
+  --input: oklch(0.25 0.03 225);
+  --ring: oklch(0.72 0.16 195);
+
+  /* Charts: Glowing prismatic colors */
+  --chart-1: oklch(0.72 0.18 195); /* Glowing Cyan */
+  --chart-2: oklch(0.68 0.2 290); /* Electric Violet */
+  --chart-3: oklch(0.75 0.15 165); /* Bioluminescent Teal */
+  --chart-4: oklch(0.7 0.18 340); /* Neon Pink */
+  --chart-5: oklch(0.8 0.15 95); /* Amber Glow */
+
+  /* Sidebar: Deep glass with subtle luminescence */
+  --sidebar: oklch(0.16 0.03 235);
+  --sidebar-foreground: oklch(0.92 0.015 210);
+  --sidebar-primary: oklch(0.72 0.16 195);
+  --sidebar-primary-foreground: oklch(0.12 0.02 230);
+  --sidebar-accent: oklch(0.26 0.045 240);
+  --sidebar-accent-foreground: oklch(0.72 0.16 195);
+  --sidebar-border: oklch(0.28 0.035 230);
+  --sidebar-ring: oklch(0.72 0.16 195);
+  --success: oklch(0.68 0.15 145);
+  --success-foreground: oklch(0.15 0.02 145);
+  --warning: oklch(0.78 0.14 85);
+  --warning-foreground: oklch(0.2 0.04 85);
+
+  /* Typography */
+  --font-sans:
+    "SF Pro Display", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-mono:
+    "SF Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+}
+
+/* ============================================
+   AURORA SPECIAL EFFECTS
+   ============================================ */
+
+/* Glassmorphism backdrop blur for cards and surfaces */
+:root[data-theme="aurora"] {
+  --glass-blur: 20px;
+  --glass-opacity: 0.85;
+  --glass-border-opacity: 0.2;
+  --glow-intensity: 0.15;
+}
+
+:root[data-theme="aurora"].dark {
+  --glass-blur: 24px;
+  --glass-opacity: 0.75;
+  --glass-border-opacity: 0.15;
+  --glow-intensity: 0.25;
+}
+
+/* Shimmer animation for aurora effect */
+@keyframes aurora-shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+/* Gentle floating animation */
+@keyframes aurora-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
+/* Iridescent glow pulse */
+@keyframes aurora-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 20px oklch(0.65 0.18 195 / 0.15);
+  }
+  50% {
+    box-shadow: 0 0 30px oklch(0.72 0.16 195 / 0.25);
+  }
+}
+
+/* Apply glass effect to cards in aurora theme */
+:root[data-theme="aurora"] .glass-effect {
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  background: oklch(1 0 0 / var(--glass-opacity));
+  border: 1px solid oklch(0.8 0.03 210 / var(--glass-border-opacity));
+  box-shadow:
+    0 4px 30px oklch(0.5 0.1 220 / 0.1),
+    inset 0 1px 0 oklch(1 0 0 / 0.5);
+}
+
+:root[data-theme="aurora"].dark .glass-effect {
+  background: oklch(0.2 0.03 230 / var(--glass-opacity));
+  border: 1px solid oklch(0.5 0.05 220 / var(--glass-border-opacity));
+  box-shadow:
+    0 4px 30px oklch(0.5 0.1 220 / 0.15),
+    inset 0 1px 0 oklch(1 0 0 / 0.1);
+}
+
+/* Iridescent shimmer on hover */
+:root[data-theme="aurora"] .aurora-shimmer:hover {
+  background: linear-gradient(
+    110deg,
+    transparent 30%,
+    oklch(0.9 0.05 200 / 0.4) 45%,
+    oklch(0.9 0.05 270 / 0.4) 55%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: aurora-shimmer 2s ease-in-out infinite;
+}
+
+/* Primary glow effect */
+:root[data-theme="aurora"] .aurora-glow {
+  animation: aurora-glow 3s ease-in-out infinite;
+}
+
+/* Floating effect for interactive elements */
+:root[data-theme="aurora"] .aurora-float {
+  animation: aurora-float 3s ease-in-out infinite;
+}

@@ -1,0 +1,46 @@
+﻿brand;model;buyingPrice;dailyRentalPrice;numberDoors;numberSeats;trunkCapacity;fuel;gearbox;power;transmission;GPS;tankCapacity;$rel_CategoryCar_label_category;photo
+Laurent;Climo;15000;55;5;5;366;Diesel;Manual;106;Traction;True;42;City-dweller;/RESOURCES/dataInit/cars-transparent/Yellow/shutterstock_394558912.png
+Laurent;Climo;16500;60;5;5;366;Diesel;Automatic;106;Traction;True;42;City-dweller;/RESOURCES/dataInit/cars-transparent/White/shutterstock_1434306809.png
+Jeupot;288;16900;61;5;5;311;Diesel;Automatic;92;Traction;True;44;City-dweller;/RESOURCES/dataInit/cars-transparent/White/shutterstock_1893029728.png
+Flat;510;14300;52;3;4;185;Diesel;Manual;69;Traction;True;35;City-dweller;/RESOURCES/dataInit/cars-transparent/Green/shutterstock_1912003168.png
+Flat;510;15290;56;3;4;185;Diesel;Automatic;69;Traction;True;35;City-dweller;/RESOURCES/dataInit/cars-transparent/Green/shutterstock_1912003168.png
+Wancar;Polux;16000;58;5;5;351;Gasoline;Manual;110;Traction;True;40;City-dweller;/RESOURCES/dataInit/cars-transparent/White/shutterstock_1685297359.png
+Wancar;Polux;17260;63;5;5;351;Gasoline;Automatic;110;Traction;True;40;City-dweller;/RESOURCES/dataInit/cars-transparent/White/shutterstock_1685297359.png
+Yotata;Haris ;21950;80;5;5;286;Hybride;Automatic;100;Traction;True;36;City-dweller;/RESOURCES/dataInit/cars-transparent/Red/shutterstock_1883238280.png
+BNM;Episode 1;28500;103;5;5;380;Diesel;Automatic;150;Traction;True;42;City-dweller Premium;/RESOURCES/dataInit/cars-transparent/Blue/shutterstock_794152324.png
+Starcar;Stage A;28000;101;5;5;405;Diesel;Manual;136;Traction;True;50;City-dweller Premium;/RESOURCES/dataInit/cars-transparent/White/shutterstock_1083139805.png
+Starcar;Stage A;30550;110;5;5;405;Diesel;Automatic;136;Traction;True;50;City-dweller Premium;/RESOURCES/dataInit/cars-transparent/White/shutterstock_1083139805.png
+Fourrings;A3;29630;107;5;5;425;Gasoline;Automatic;150;Traction;True;50;City-dweller Premium;/RESOURCES/dataInit/cars-transparent/White/shutterstock_1607338021.png
+Short;Cuter Cabriolet;27000;98;3;4;211;Gasoline;Automatic;136;Traction;True;40;City-dweller Premium;/RESOURCES/dataInit/cars-transparent/Red/shutterstock_1269430585.png
+Jeupot;588;35179;127;5;5;515;Diesel;Automatic;120;Traction;True;72;Sedan;/RESOURCES/dataInit/cars-transparent/Red/shutterstock_1661806276.png
+Tronic;C4;23900;87;5;5;380;Gasoline;Automatic;131;Traction;True;50;Sedan;/RESOURCES/dataInit/cars-transparent/White/shutterstock_1797618079.png
+Tronic;C4;21000;76;5;5;380;Gasoline;Manual;131;Traction;True;50;Sedan;/RESOURCES/dataInit/cars-transparent/White/shutterstock_1797618079.png
+Wancar;Jetta;22300;81;5;5;374;Hybride;Automatic;170;Traction;True;45;Sedan;/RESOURCES/dataInit/cars-transparent/Red/shutterstock_1883238274.png
+BNM;Episode 3;42500;154;4;5;400;Diesel;Automatic;122;Propulsion;True;40;Sedan Premium;/RESOURCES/dataInit/cars-transparent/White/shutterstock_1886703031.png
+Starcar;Stage C;41100;148;4;5;455;Gasoline;Automatic;157;Traction;True;66;Sedan Premium;/RESOURCES/dataInit/cars-transparent/White/shutterstock_1868220316.png
+Fourrings;A4;40150;145;4;5;480;Gasoline;Automatic;150;Traction;True;54;Sedan Premium;/RESOURCES/dataInit/cars-transparent/Blue/shutterstock_1179046030.png
+Tronic;DSN9;47700;172;4;5;510;Gasoline;Automatic;225;Traction;True;50;Sedan Premium;/RESOURCES/dataInit/cars-transparent/Blue/shutterstock_1728441586.png
+Strong;Centrate;27200;98;5;5;375;Gasoline;Automatic;125;Traction;True;52;Break;/RESOURCES/dataInit/cars-transparent/White/shutterstock_1792015556.png
+Laurent;Super State;28000;101;5;5;389;Gasoline;Manual;140;Traction;True;47;Break;/RESOURCES/dataInit/cars-transparent/White/shutterstock_1845235630.png
+Jeupot;308 SW;29550;107;5;5;610;Diesel;Automatic;130;Traction;True;53;Break;/RESOURCES/dataInit/cars-transparent/Blue/shutterstock_1882322239.png
+BNM;Episode 3 Touring;44500;161;5;5;500;Diesel;Automatic;150;Propulsion;True;57;Break Premium;/RESOURCES/dataInit/cars-transparent/White/shutterstock_1870763158.png
+BNM;Episode 5 Touring;52600;190;5;5;570;Diesel;Automatic;150;Propulsion;True;66;Break Premium;/RESOURCES/dataInit/cars-transparent/White/shutterstock_1876916272.png
+Fourrings;A4 Avant;43800;158;5;5;495;Gasoline;Automatic;150;Traction;True;54;Break Premium;/RESOURCES/dataInit/cars-transparent/Blue/shutterstock_1179046030.png
+Jeupot;3888;34350;124;5;5;520;Diesel;Automatic;130;Traction;True;53;SUV;/RESOURCES/dataInit/cars-transparent/White/shutterstock_1791542507.png
+Sannis;Coldcash;28900;105;5;5;430;Gasoline;Manual;115;Traction;True;55;SUV;/RESOURCES/dataInit/cars-transparent/White/shutterstock_1658711125.png
+Sannis;Coldcash;31500;114;5;5;430;Gasoline;Automatic;116;Traction;True;55;SUV;/RESOURCES/dataInit/cars-transparent/White/shutterstock_1658711125.png
+Wancar;Leopan;36500;132;5;5;615;Gasoline;Automatic;130;Traction;True;58;SUV;/RESOURCES/dataInit/cars-transparent/Black/shutterstock_1545162455.png
+Strong;Kugar;30200;109;5;5;612;Diesel;Manual;120;Traction;True;54;SUV;/RESOURCES/dataInit/cars-transparent/Black/shutterstock_1500790013.png
+Fourrings;Kiu3;36200;131;5;5;530;Diesel;Automatic;150;Traction;True;60;SUV;/RESOURCES/dataInit/cars-transparent/Red/shutterstock_664197664.png
+Lovelove;ExC40;33700;122;5;5;460;Diesel;Automatic;150;Traction;True;54;SUV;/RESOURCES/dataInit/cars-transparent/Red/shutterstock_782230540.png
+BNM;iXi3;51000;184;5;5;550;Diesel;Automatic;150;Propulsion;True;68;SUV Premium;/RESOURCES/dataInit/cars-transparent/White/shutterstock_1167628807.png
+Starcar;Grand LE;66100;238;5;5;690;Diesel;Automatic;204;4x4;True;93;SUV Premium;/RESOURCES/dataInit/cars-transparent/White/shutterstock_1904283808.png
+BNM;iXi5;66700;241;5;5;650;Diesel;Automatic;231;4x4;True;80;SUV Premium;/RESOURCES/dataInit/cars-transparent/White/shutterstock_1845236002.png
+Lovelove;ExC90;68800;248;5;7;709;Diesel;Automatic;235;4x4;True;71;SUV Premium;/RESOURCES/dataInit/cars-transparent/White/shutterstock_1607338009.png
+Proche;Mackan;68000;245;5;5;450;Gasoline;Automatic;245;4x4;True;65;SUV Premium;/RESOURCES/dataInit/cars-transparent/Red/shutterstock_782230543.png
+Fourrings;Kiu5;52000;188;5;5;550;Diesel;Automatic;163;4x4;True;65;SUV Premium;/RESOURCES/dataInit/cars-transparent/Black/shutterstock_1119845468.png
+Drive Over;Tidy Mars Velar;59100;213;5;5;673;Diesel;Automatic;204;4x4;True;60;SUV Premium;/RESOURCES/dataInit/cars-transparent/Blue/shutterstock_1533334871.png
+BNM;M4;95000;343;3;4;445;Gasoline;Automatic;431;Propulsion;True;60;Sport;/RESOURCES/dataInit/cars-transparent/Blue/shutterstock_607816220.png
+Starcar;Stage S Cabriolet AMG;202000;728;3;4;350;Gasoline;Automatic;585;4x4;True;80;Sport;/RESOURCES/dataInit/cars-transparent/White/shutterstock_2099510230.png
+Fourrings;RS3;63000;227;5;5;335;Gasoline;Automatic;400;4x4;True;55;Sport;/RESOURCES/dataInit/cars-transparent/Yellow/shutterstock_627968291.png
+Proche;911;110000;397;2;4;385;Gasoline;Automatic;132;Propulsion;True;64;Sport;/RESOURCES/dataInit/cars-transparent/Yellow/shutterstock_1969418734.png

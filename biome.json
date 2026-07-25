@@ -1,0 +1,131 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.3/schema.json",
+  "formatter": {
+    "indentStyle": "space",
+    "lineWidth": 100
+  },
+  "linter": {
+    "enabled": true,
+    "domains": {
+      "tailwind": "recommended"
+    },
+    "rules": {
+      "preset": "recommended",
+      "correctness": {
+        "noUnusedImports": {
+          "level": "error"
+        },
+        "useExhaustiveDependencies": "error"
+      },
+      "a11y": {
+        "noSvgWithoutTitle": "error",
+        "noStaticElementInteractions": "error",
+        "useKeyWithClickEvents": "error",
+        "useSemanticElements": "error"
+      },
+      "suspicious": {
+        "noUnknownAtRules": {
+          "level": "off"
+        },
+        "noExplicitAny": "error",
+        "noArrayIndexKey": "error"
+      },
+      "nursery": {
+        "useSortedClasses": {
+          "level": "error",
+          "options": {
+            "attributes": ["class", "className"],
+            "functions": ["clsx", "cva", "cn", "tw", "tw.*"]
+          }
+        }
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "trailingCommas": "es5",
+      "semicolons": "asNeeded"
+    }
+  },
+  "html": {
+    "parser": {
+      "interpolation": true
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
+  "files": {
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/build",
+      "!**/DataBrowser",
+      "!**/playwright-report",
+      "!**/test-results",
+      "!**/.turbo",
+      "!**/coverage",
+      "!**/.next",
+      "!**/.vite",
+      "!**/.cache",
+      "!**/.vitepress/cache",
+      "!**/.vitepress/dist",
+      "!**/bun.lockb",
+      "!**/*.tsbuildinfo",
+      "!**/.DS_Store",
+      "!db",
+      "!apps/backend/dist",
+      "!apps/backend/public",
+      "!apps/frontend/dist",
+      "!**/views/**/*.html",
+      "!**/src-tauri/target",
+      "!**/packages/base64-decoder"
+    ]
+  },
+  "overrides": [
+    {
+      "includes": ["apps/docs/**/*.vue"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUnusedVariables": "off",
+            "noUnusedImports": "off"
+          },
+          "style": {
+            "useVueMultiWordComponentNames": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "apps/dataexplorer/src/components/QueryBuilder/index.tsx",
+        "packages/json-schema-builder/src/components/array-editor.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noArrayIndexKey": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "apps/dataexplorer/src/components/CommandPalette/SwitchTabsMode.tsx",
+        "apps/dataexplorer/src/components/Sidebar/SidebarList.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "useSemanticElements": "off"
+          }
+        }
+      }
+    }
+  ]
+}

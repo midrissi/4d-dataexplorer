@@ -1,0 +1,389 @@
+@layer base {
+  :root {
+    /* ------------------------------------------------------------------ */
+    /*  Density layer — shared by every data-theme × light/dark             */
+    /* ------------------------------------------------------------------ */
+    --font-sans:
+      ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+      "Segoe UI Symbol", "Noto Color Emoji";
+    --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+    --font-mono:
+      ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+      monospace;
+
+    --text-xs: 0.6875rem; /* 11px — metadata, badges */
+    --text-sm: 0.75rem; /* 12px — data cells, compact UI */
+    --text-md: 0.8125rem; /* 13px — body / controls */
+    --text-base: 0.875rem; /* 14px — titles */
+
+    --leading-tight: 1.25;
+    --leading-normal: 1.45;
+
+    --space-1: 0.125rem; /* 2px */
+    --space-2: 0.25rem; /* 4px */
+    --space-3: 0.375rem; /* 6px */
+    --space-4: 0.5rem; /* 8px */
+    --space-5: 0.75rem; /* 12px */
+    --space-6: 1rem; /* 16px */
+
+    --control-h-xs: 1.5rem; /* 24px */
+    --control-h-sm: 1.75rem; /* 28px */
+    --control-h-md: 2rem; /* 32px */
+    --row-h: 1.75rem; /* 28px data rows */
+
+    --radius-sm: 0.125rem; /* 2px */
+    --radius-md: 0.25rem; /* 4px */
+    --radius-lg: 0.375rem; /* 6px */
+    --radius: var(--radius-md);
+
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+    --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.12), 0 2px 4px -2px rgb(0 0 0 / 0.08);
+
+    --scrollbar-size: 6px;
+
+    /* Semantic status (themes may override) */
+    --success: oklch(0.55 0.14 145);
+    --success-foreground: oklch(0.99 0 0);
+    --warning: oklch(0.72 0.15 75);
+    --warning-foreground: oklch(0.22 0.04 75);
+
+    /* Syntax highlighting — light defaults */
+    --syntax-key: var(--primary);
+    --syntax-string: oklch(0.45 0.12 145);
+    --syntax-number: oklch(0.45 0.14 250);
+    --syntax-boolean: oklch(0.55 0.2 25);
+    --syntax-null: oklch(0.5 0.18 300);
+
+    /* Duration for interactive transitions */
+    --duration-fast: 150ms;
+    --duration-normal: 200ms;
+  }
+
+  .dark {
+    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.2);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.35), 0 1px 2px -1px rgb(0 0 0 / 0.25);
+    --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.45), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+
+    --success: oklch(0.68 0.15 145);
+    --success-foreground: oklch(0.15 0.02 145);
+    --warning: oklch(0.78 0.14 85);
+    --warning-foreground: oklch(0.2 0.04 85);
+
+    --syntax-string: oklch(0.78 0.08 230);
+    --syntax-number: oklch(0.72 0.12 250);
+    --syntax-boolean: oklch(0.72 0.14 15);
+    --syntax-null: oklch(0.72 0.12 300);
+  }
+
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    font-size: var(--text-md);
+    line-height: var(--leading-normal);
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
+  }
+
+  /* Interactive affordance: anything actionable shows a pointer */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  [role="tab"]:not([aria-disabled="true"]):not([data-disabled]),
+  [role="menuitem"]:not([data-disabled]),
+  [role="menuitemcheckbox"]:not([data-disabled]),
+  [role="menuitemradio"]:not([data-disabled]),
+  [role="option"]:not([data-disabled]),
+  [role="checkbox"]:not([aria-disabled="true"]):not([data-disabled]),
+  [role="radio"]:not([aria-disabled="true"]):not([data-disabled]),
+  [role="switch"]:not([aria-disabled="true"]):not([data-disabled]),
+  [role="combobox"]:not([aria-disabled="true"]):not([data-disabled]),
+  [role="listbox"]:not([aria-disabled="true"]),
+  [role="treeitem"]:not([aria-disabled="true"]),
+  [role="link"],
+  summary,
+  a[href],
+  label[for],
+  select:not(:disabled),
+  input[type="button"]:not(:disabled),
+  input[type="submit"]:not(:disabled),
+  input[type="reset"]:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  input[type="file"]:not(:disabled),
+  input[type="color"]:not(:disabled),
+  input[type="range"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [aria-disabled="true"],
+  [data-disabled],
+  input:disabled,
+  select:disabled,
+  textarea:disabled {
+    cursor: not-allowed;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :root {
+      --duration-fast: 0ms;
+      --duration-normal: 0ms;
+    }
+  }
+}
+
+/* Custom scrollbar styles — thin ghost thumbs */
+::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: color-mix(in oklch, var(--muted-foreground) 28%, transparent);
+  border-radius: var(--radius-sm);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklch, var(--muted-foreground) 45%, transparent);
+}
+
+/* JSON syntax highlighting via tokens */
+.json-key {
+  color: var(--syntax-key);
+}
+
+.json-string {
+  color: var(--syntax-string);
+}
+
+.json-number {
+  color: var(--syntax-number);
+}
+
+.json-boolean {
+  color: var(--syntax-boolean);
+}
+
+.json-null {
+  color: var(--syntax-null);
+}
+
+/* Code editor: transparent Monaco layers so `bg-background` on the host shows through */
+[data-code-editor] .monaco-editor,
+[data-code-editor] .monaco-editor .overflow-guard,
+[data-code-editor] .monaco-editor .monaco-editor-background,
+[data-code-editor] .monaco-editor .margin,
+[data-code-editor] .monaco-editor .view-lines,
+[data-code-editor] .monaco-editor .lines-content,
+[data-code-editor] .monaco-editor .scrollable,
+[data-code-editor] .monaco-editor .monaco-scrollable-element {
+  background: transparent;
+}
+
+/* Right-edge chrome: kill default black scrollbar track / overview-ruler gutters */
+[data-code-editor] .monaco-editor .scrollbar {
+  background: transparent;
+  box-shadow: none;
+}
+
+[data-code-editor] .monaco-editor .decorationsOverviewRuler {
+  background: transparent;
+  box-shadow: none;
+  width: 0;
+}
+
+/* Sticky scroll widget: use --card background (override --vscode-editorStickyScroll-background) */
+[data-code-editor] .sticky-widget,
+[data-code-editor] .sticky-widget-line-numbers,
+[data-code-editor] .sticky-widget-lines-scrollable,
+[data-code-editor] .sticky-widget-lines,
+[data-code-editor] .sticky-line-number,
+[data-code-editor] .sticky-line-content {
+  background-color: var(--card);
+}
+
+/* Minimap: glass effect (frosted, neutral so it works in light and dark) */
+[data-code-editor] .minimap {
+  background: color-mix(in oklch, var(--foreground) 6%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: none;
+}
+
+[data-code-editor] .minimap .minimap-slider,
+[data-code-editor] .minimap .minimap-slider-background {
+  background: transparent;
+}
+
+/* Remove Monaco’s left-edge shadow so there’s no visible line above/beside the minimap */
+[data-code-editor] .minimap-shadow-visible {
+  background: transparent;
+  box-shadow: none;
+}
+
+/* Monaco hover/diagnostic: stacking + full message when using overflowWidgetsDomNode.
+   Specificity over .monaco-hover so we don't need !important. */
+.monaco-editor.vs .monaco-hover,
+.monaco-editor.vs-dark .monaco-hover {
+  z-index: 10000;
+  max-width: min(80ch, 90vw);
+  pointer-events: auto; /* clickable (e.g. View Problem, Copy) when container has pointer-events: none */
+}
+.monaco-editor.vs .monaco-hover .monaco-hover-content,
+.monaco-editor.vs-dark .monaco-hover .monaco-hover-content {
+  max-width: min(80ch, 90vw);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Suggest / parameter-hints live in the same body-level overflowWidgetsDomNode
+   (pointer-events: none). Re-enable interaction so the list can scroll and click.
+   Hover already sets pointer-events above with higher specificity. */
+.monaco-editor .suggest-widget,
+.monaco-editor .parameter-hints-widget {
+  pointer-events: auto;
+}
+
+.monaco-editor .suggest-widget {
+  z-index: 10001;
+}
+
+.monaco-editor .suggest-widget .monaco-list,
+.monaco-editor .suggest-widget .monaco-scrollable-element {
+  /* Keep wheel/trackpad scrolling inside the suggest list */
+  overscroll-behavior: contain;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Monaco overlay widgets follow the active app theme.                 */
+/*  Monaco styles the hover tooltip, autocomplete/suggest widget and    */
+/*  right-click context menu from `--vscode-*` color variables. We      */
+/*  remap those variables onto the shadcn theme tokens so the popovers  */
+/*  match whichever theme (and light/dark mode) is active, instead of   */
+/*  the default vs / vs-dark palette.                                   */
+/* ------------------------------------------------------------------ */
+
+/* Hover tooltip + autocomplete/suggest widget render inside the editor
+   (and the body-level overflow-widgets container), which carry the
+   `.monaco-editor.vs` / `.monaco-editor.vs-dark` classes. */
+.monaco-editor.vs,
+.monaco-editor.vs-dark {
+  /* Hover */
+  --vscode-editorHoverWidget-background: var(--popover);
+  --vscode-editorHoverWidget-foreground: var(--popover-foreground);
+  --vscode-editorHoverWidget-border: var(--border);
+  --vscode-editorHoverWidget-statusBarBackground: var(--muted);
+
+  /* Badges used inside hover markdown (e.g. attribute type/kind pills) */
+  --vscode-badge-background: var(--secondary);
+  --vscode-badge-foreground: var(--secondary-foreground);
+
+  /* Inline links / codicons inside widgets */
+  --vscode-textLink-foreground: var(--primary);
+  --vscode-textLink-activeForeground: var(--primary);
+  --vscode-icon-foreground: var(--muted-foreground);
+  --vscode-textSeparator-foreground: var(--border);
+
+  /* Autocomplete / suggest widget */
+  --vscode-editorSuggestWidget-background: var(--popover);
+  --vscode-editorSuggestWidget-foreground: var(--popover-foreground);
+  --vscode-editorSuggestWidget-border: var(--border);
+  --vscode-editorSuggestWidget-selectedBackground: var(--accent);
+  --vscode-editorSuggestWidget-selectedForeground: var(--accent-foreground);
+  --vscode-editorSuggestWidget-selectedIconForeground: var(--accent-foreground);
+  --vscode-editorSuggestWidget-highlightForeground: var(--primary);
+  --vscode-editorSuggestWidget-focusHighlightForeground: var(--accent-foreground);
+
+  /* Shared editor widget surface (suggest details / parameter hints) */
+  --vscode-editorWidget-background: var(--popover);
+  --vscode-editorWidget-foreground: var(--popover-foreground);
+  --vscode-editorWidget-border: var(--border);
+}
+
+/* Context menu. Monaco applies `var(--vscode-menu-*)` as inline styles on
+   the menu's scroll element and via a global stylesheet, resolving the
+   variables from the `.context-view.monaco-menu-container` ancestor. We
+   must define them on that container (not the inner `.monaco-menu`, which
+   is a descendant of the styled scroll element). */
+.context-view.monaco-menu-container {
+  --vscode-menu-background: var(--popover);
+  --vscode-menu-foreground: var(--popover-foreground);
+  --vscode-menu-border: var(--border);
+  --vscode-menu-selectionBackground: var(--accent);
+  --vscode-menu-selectionForeground: var(--accent-foreground);
+  --vscode-menu-separatorBackground: var(--border);
+}
+
+/* Compact data table utility (CSV viewers, inline grids) */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: var(--leading-tight);
+}
+
+.data-table th,
+.data-table td {
+  height: var(--row-h);
+  padding: 0 var(--space-4);
+  text-align: left;
+  vertical-align: middle;
+  border-bottom: 1px solid color-mix(in oklch, var(--border) 70%, transparent);
+  white-space: nowrap;
+}
+
+.data-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--muted);
+  color: var(--foreground);
+  font-weight: 600;
+  font-size: var(--text-xs);
+  letter-spacing: 0.01em;
+}
+
+.data-table td {
+  color: var(--foreground);
+}
+
+.data-table tr:hover td {
+  background: color-mix(in oklch, var(--accent) 40%, transparent);
+}
+
+.data-table .row-index {
+  color: var(--muted-foreground);
+  font-variant-numeric: tabular-nums;
+  width: 1%;
+  user-select: none;
+}
+
+/* Toast auto-dismiss progress bar */
+@keyframes toast-progress {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @keyframes toast-progress {
+    from,
+    to {
+      transform: scaleX(0);
+      opacity: 0;
+    }
+  }
+}

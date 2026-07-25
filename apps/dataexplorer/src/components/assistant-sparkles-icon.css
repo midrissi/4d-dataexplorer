@@ -1,0 +1,41 @@
+/* Twinkle for Lucide Sparkles (main star + plus paths + trailing circle).
+   Loaded with AssistantSparklesIcon so AI task UI works even when the chatbot
+   panel CSS has not been mounted. Stroke glyphs use opacity (not scale) because
+   transform-box: fill-box has no useful box on unfilled strokes. */
+
+@keyframes assistant-small-star-twinkle {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Keep the main star fully opaque — only the accent marks shimmer. */
+.assistant-icon-twinkle > path:first-of-type {
+  opacity: 1;
+}
+
+.assistant-icon-twinkle > path:nth-of-type(n + 2),
+.assistant-icon-twinkle > circle {
+  animation: assistant-small-star-twinkle 1.8s ease-in-out infinite;
+}
+
+.assistant-icon-twinkle > circle {
+  animation-delay: 0.4s;
+}
+
+.assistant-icon-twinkle > path:nth-of-type(3) {
+  animation-delay: 0.2s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assistant-icon-twinkle > path:nth-of-type(n + 2),
+  .assistant-icon-twinkle > circle {
+    animation: none;
+    opacity: 1;
+  }
+}

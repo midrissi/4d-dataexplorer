@@ -1,0 +1,6 @@
+public/screenshots/
+release-notes/en.md
+release-notes/fr.md
+release-notes/es.md
+.vitepress/cache
+.vitepress/dist

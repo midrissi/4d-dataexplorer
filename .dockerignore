@@ -1,0 +1,57 @@
+# Allowlist: ignore everything, then include only what the image build needs.
+*
+!package.json
+!bun.lockb
+!bunfig.toml
+
+!patches/
+!patches/**
+
+!docker/
+!docker/**
+
+# Workspace package.json files (required for bun --frozen-lockfile)
+!apps/
+!apps/dataexplorer/
+!apps/dataexplorer/package.json
+!apps/desktop/
+!apps/desktop/package.json
+!apps/docs/
+!apps/docs/package.json
+
+!packages/
+!packages/e2e/
+!packages/e2e/package.json
+!packages/rest-server/
+!packages/rest-server/package.json
+!packages/json-schema-builder/
+!packages/json-schema-builder/package.json
+!packages/orda-language-service/
+!packages/orda-language-service/package.json
+!packages/rest/
+!packages/rest/package.json
+!packages/ui/
+!packages/ui/package.json
+
+# Sources required to build @4d/dataexplorer
+!apps/dataexplorer/**
+!packages/json-schema-builder/**
+!packages/orda-language-service/**
+!packages/rest/**
+!packages/ui/**
+
+# Drop junk from the allowlisted trees
+**/node_modules
+**/DataBrowser
+**/coverage
+**/.DS_Store
+**/__tests__
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+packages/json-schema-builder/demo
+apps/dataexplorer/docs
+apps/dataexplorer/scripts
+packages/rest/docs
+**/README.md

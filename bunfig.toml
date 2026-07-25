@@ -1,0 +1,12 @@
+# Bun configuration (see https://bun.sh/docs/runtime/bunfig)
+
+[test]
+# Polyfill localStorage/window for dataexplorer tests when running from repo root (`bun test`)
+preload = ["./apps/dataexplorer/src/test-setup.ts"]
+# Coverage: text summary in console + lcov for CI/editors (e.g. VS Code, Codecov)
+coverageReporter = ["text", "lcov"]
+coverageDir = "coverage"
+# Exclude test files from coverage stats
+coverageSkipTestFiles = true
+# Exclude test setup and non-source from coverage
+coverageExcludeGlobs = ["**/test-setup.ts", "**/*.test-helper.ts"]

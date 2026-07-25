@@ -1,0 +1,52 @@
+@import "tailwindcss";
+@import "@4d/ui/styles";
+@import "@4d/ui/themes/slate.css";
+@import "@4d/ui/themes/tangerine.css";
+@import "@4d/ui/themes/violet-bloom.css";
+@import "@4d/ui/themes/vercel.css";
+@import "@4d/ui/themes/graphite.css";
+@import "@4d/ui/themes/aurora.css";
+@import "../../dataexplorer/src/styles/assistant-theme-bridge.css";
+@config "../tailwind.config.js";
+
+/* Hide focus outline/ring on buttons */
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+
+@keyframes updater-progress-indeterminate {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(380%);
+  }
+}
+
+.updater-progress-indeterminate {
+  animation: updater-progress-indeterminate 1s ease-in-out infinite;
+}
+
+.updater-progress-determinate {
+  background: var(--primary);
+}
+
+@keyframes connection-home-glow {
+  0% {
+    opacity: 0.55;
+    transform: translateX(-50%) scale(1);
+  }
+  100% {
+    opacity: 0.9;
+    transform: translateX(-50%) scale(1.08);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .connection-home-glow,
+  [style*="connection-home-glow"] {
+    animation: none;
+  }
+}

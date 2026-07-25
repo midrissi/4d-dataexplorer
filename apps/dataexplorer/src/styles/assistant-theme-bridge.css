@@ -1,0 +1,84 @@
+/* @4djs/assistant theme bridge — maps app theme tokens to assistant CSS vars.
+   Theme vars are full colors (hsl/oklch), not hsl components. */
+
+:root {
+  --radius-base: var(--radius-md);
+  --radius-xl: calc(var(--radius-lg) + 2px);
+  --brand: var(--primary);
+  --brand-medium: color-mix(in oklch, var(--primary) 88%, transparent);
+  --brand-on-surface: var(--primary-foreground);
+  --text-heading: var(--foreground);
+  --text-body: color-mix(in oklch, var(--foreground) 88%, transparent);
+  --text-body-subtle: var(--muted-foreground);
+  --text-brand: var(--primary);
+  --text-brand-strong: var(--primary);
+  --text-disabled: color-mix(in oklch, var(--muted-foreground) 65%, transparent);
+  --text-on-brand: var(--primary-foreground);
+  --text-chat-secondary: var(--muted-foreground);
+  --text-chat-tertiary: color-mix(in oklch, var(--muted-foreground) 80%, transparent);
+  --border-default: var(--border);
+  --border-default-medium: var(--border);
+  --border-brand-subtle: color-mix(in oklch, var(--primary) 35%, transparent);
+  --surface-chat: var(--background);
+  --surface-chat-card: var(--card);
+  --surface-chat-trace: color-mix(in oklch, var(--muted) 65%, transparent);
+  --surface-chat-input: var(--background);
+  --overlay-hover: var(--accent);
+  --overlay-subtle: color-mix(in oklch, var(--muted) 45%, transparent);
+  --overlay-active: var(--accent);
+  --overlay-strong: color-mix(in oklch, var(--muted) 70%, transparent);
+  --surface-panel: var(--card);
+  --surface-inset: color-mix(in oklch, var(--muted) 55%, transparent);
+  --surface-input: var(--background);
+  --surface-input-hover: color-mix(in oklch, var(--muted) 55%, transparent);
+  --surface-input-focus: var(--background);
+  --surface-code: color-mix(in oklch, var(--muted) 65%, transparent);
+  --surface-code-border: var(--border);
+  --surface-code-text: var(--foreground);
+  --surface-divider: color-mix(in oklch, var(--border) 60%, transparent);
+  --surface-promo: color-mix(in oklch, var(--primary) 10%, transparent);
+  --surface-hero: var(--card);
+  --surface-hero-glow: transparent;
+  --surface-glass: color-mix(in oklch, var(--background) 82%, transparent);
+  --surface-glass-border: color-mix(in oklch, var(--border) 55%, transparent);
+  --surface-chip: color-mix(in oklch, var(--muted) 55%, transparent);
+  --surface-chip-border: color-mix(in oklch, var(--border) 50%, transparent);
+  --danger: var(--destructive);
+  --danger-strong: var(--destructive);
+  --danger-soft: color-mix(in oklch, var(--destructive) 14%, transparent);
+  --danger-on-hover: var(--destructive-foreground);
+  --text-danger: var(--destructive);
+  --border-danger-subtle: color-mix(in oklch, var(--destructive) 32%, transparent);
+  --success-soft: color-mix(in oklch, var(--success) 14%, transparent);
+  --text-success: var(--success);
+  --warning-soft: color-mix(in oklch, var(--warning) 14%, transparent);
+  --focus-ring: var(--ring);
+  --shadow-glow: 0 0 28px color-mix(in oklch, var(--primary) 10%, transparent);
+  --btn-primary-shadow: 0 4px 12px color-mix(in oklch, var(--primary) 22%, transparent);
+  --btn-primary-shadow-hover: 0 6px 16px color-mix(in oklch, var(--primary) 28%, transparent);
+  --log-syntax-base: var(--foreground);
+  --log-syntax-key: var(--syntax-key);
+  --log-syntax-string: var(--syntax-string);
+  --log-syntax-number: var(--syntax-number);
+  --log-syntax-literal: var(--syntax-null);
+  --log-syntax-punctuation: color-mix(in oklch, var(--muted-foreground) 85%, transparent);
+}
+
+/* Dark syntax + TRACE chrome live on .dark so desktop and AI task history
+   (outside .dataexplorer-assistant) still get the stepper / card styling. */
+.dark {
+  --log-syntax-base: color-mix(in oklch, var(--foreground) 92%, transparent);
+  --log-syntax-key: var(--syntax-key);
+  --log-syntax-string: var(--syntax-string);
+  --log-syntax-number: var(--syntax-number);
+  --log-syntax-literal: var(--syntax-boolean);
+  --log-syntax-punctuation: color-mix(in oklch, var(--foreground) 70%, transparent);
+  --text-chat-secondary: color-mix(in oklch, var(--foreground) 82%, transparent);
+  --text-chat-tertiary: var(--muted-foreground);
+  --border-default-medium: color-mix(in oklch, var(--foreground) 16%, var(--border));
+  --surface-chat: var(--card);
+  --surface-chat-card: var(--muted);
+  --surface-chat-input: var(--background);
+  --surface-chat-trace: var(--background);
+  --overlay-subtle: color-mix(in oklch, var(--muted) 50%, transparent);
+}

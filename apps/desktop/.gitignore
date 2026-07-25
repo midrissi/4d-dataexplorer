@@ -1,0 +1,7 @@
+dist/
+src-tauri/target/
+src-tauri/gen/
+
+# Tauri updater signing keys — NEVER commit these
+.tauri-updater.key
+.tauri-updater.key.pub
