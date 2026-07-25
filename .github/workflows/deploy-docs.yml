@@ -7,12 +7,15 @@ on:
       - 'apps/docs/**'
       - 'apps/dataexplorer/docs/**'
       - 'apps/dataexplorer/src/content/release-notes*.md'
+      - '.github/workflows/deploy-docs.yml'
   pull_request:
     branches: [main]
     paths:
       - 'apps/docs/**'
       - 'apps/dataexplorer/docs/**'
       - 'apps/dataexplorer/src/content/release-notes*.md'
+      - '.github/workflows/deploy-docs.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read

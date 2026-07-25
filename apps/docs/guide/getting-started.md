@@ -4,7 +4,7 @@ title: Getting started
 
 # Getting started
 
-Install the **Data Explorer** web assets in your 4D application, open Data Explorer from the **Records** menu, or [run the Docker image](#run-with-docker) against your REST backend.
+Install the **Data Explorer** web assets in your 4D application, open Data Explorer from the **Records** menu, or [run the Docker image](#run-with-docker) against your 4D REST backend.
 
 ## Install Data Explorer (web)
 
