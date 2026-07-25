@@ -1296,7 +1296,27 @@ export function EntityDataGrid({
       api.redrawRows({ rowNodes: rowNodesToRefresh })
     }
 
+    // Keep the selected row in view (mirrors cards `scrollIntoView` on focus change).
+    const selectionChanged = prevSelectedEntityIdRef.current !== selectedEntityId
+    let scrollTimeout: ReturnType<typeof setTimeout> | undefined
+    if (selectedEntityId && (selectionChanged || entitiesChanged)) {
+      const scrollToSelection = () => {
+        const live = gridRef.current?.api
+        if (!live || live.isDestroyed?.()) return
+        const node = live.getRowNode(selectedEntityId)
+        if (node) live.ensureNodeVisible(node)
+      }
+      scrollToSelection()
+      // After page/data replacement, row nodes may not exist until AG Grid applies rowData.
+      if (entitiesChanged) {
+        scrollTimeout = setTimeout(scrollToSelection, 0)
+      }
+    }
+
     prevSelectedEntityIdRef.current = selectedEntityId
+    return () => {
+      if (scrollTimeout) clearTimeout(scrollTimeout)
+    }
   }, [selectedEntityId, entities])
 
   // After the column definitions change (page navigation, field selection,

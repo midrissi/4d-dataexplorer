@@ -2603,14 +2603,14 @@ export function EntityViewer(props: EntityViewerProps) {
 
   const handleNavigatePrev = useCallback(() => {
     if (entities.length === 0) return
-    // Selection missing from this page (reload race) — don't jump to last/first.
+    // No selection on this page (e.g. after pager change) — select last row.
     if (currentEntityIndex < 0) {
-      if (selectedEntityId) return
-      const first = entities[0]
-      selectEntity(first)
-      setFocusedEntityIndex(0)
+      const lastIndex = entities.length - 1
+      const last = entities[lastIndex]
+      selectEntity(last)
+      setFocusedEntityIndex(lastIndex)
       if (activeDataclassTab) {
-        setSelectedEntityId(activeDataclassTab.id, first.id)
+        setSelectedEntityId(activeDataclassTab.id, last.id)
       }
       return
     }
@@ -2643,7 +2643,6 @@ export function EntityViewer(props: EntityViewerProps) {
     }
   }, [
     currentEntityIndex,
-    selectedEntityId,
     entities,
     pagination,
     fetchEntities,
@@ -2655,9 +2654,8 @@ export function EntityViewer(props: EntityViewerProps) {
 
   const handleNavigateNext = useCallback(() => {
     if (entities.length === 0) return
-    // Selection missing from this page (reload race) — don't jump to row 0.
+    // No selection on this page (e.g. after pager change) — select first row.
     if (currentEntityIndex < 0) {
-      if (selectedEntityId) return
       const first = entities[0]
       selectEntity(first)
       setFocusedEntityIndex(0)
@@ -2694,7 +2692,6 @@ export function EntityViewer(props: EntityViewerProps) {
     }
   }, [
     currentEntityIndex,
-    selectedEntityId,
     entities,
     pagination,
     fetchEntities,

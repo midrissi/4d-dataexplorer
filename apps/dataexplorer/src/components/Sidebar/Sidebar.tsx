@@ -111,7 +111,7 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
 
   return (
     <TooltipProvider delayDuration={300}>
-      <div className="flex h-full w-full flex-col bg-muted/30">
+      <div className="flex h-full w-full min-w-0 flex-col bg-muted/30">
         <SidebarHeader
           totalEntities={totalEntities}
           searchQuery={searchQuery}
