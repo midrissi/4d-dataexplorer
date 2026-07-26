@@ -7,8 +7,13 @@ import {
   getCurrentBaseId,
   getCurrentPrefs,
   getDataclassCustomizations,
+  getEntityListHeight,
   getEntityListWidth,
   getGraphEditorState,
+  getHttpClientRequestHeight,
+  getHttpClientRequestWidth,
+  getMethodExecutorRequestHeight,
+  getMethodExecutorRequestWidth,
   getProfilesStorage,
   getRecentCommands,
   getSidebarWidth,
@@ -22,7 +27,12 @@ import {
   saveRecentCommand,
   setConsoleHeight,
   setCurrentBaseId,
+  setEntityListHeight,
   setEntityListWidth,
+  setHttpClientRequestHeight,
+  setHttpClientRequestWidth,
+  setMethodExecutorRequestHeight,
+  setMethodExecutorRequestWidth,
   setSidebarWidth,
   setTheme,
   setThemeName,
@@ -69,10 +79,10 @@ describe('storage', () => {
       expect(DEFAULT_PROFILE_PREFS.themeName).toBe('tangerine')
       expect(DEFAULT_PROFILE_PREFS.panels).toEqual({
         sidebar: { width: 325 },
-        entitylist: { width: 40 },
+        entitylist: { width: 40, height: 45 },
         console: { height: 220 },
-        methodExecutor: { width: 40 },
-        httpClient: { width: 50 },
+        methodExecutor: { width: 40, height: 45 },
+        httpClient: { width: 50, height: 45 },
       })
       expect(Array.isArray(DEFAULT_PROFILE_PREFS.recentCommands)).toBe(true)
       expect(DEFAULT_PROFILE_PREFS.recentCommands).toHaveLength(0)
@@ -159,9 +169,12 @@ describe('storage', () => {
       expect(prefs.panels.httpClient).toBeDefined()
       expect(prefs.panels.sidebar?.width).toBe(325)
       expect(prefs.panels.entitylist?.width).toBe(40)
+      expect(prefs.panels.entitylist?.height).toBe(45)
       expect(prefs.panels.console?.height).toBe(220)
       expect(prefs.panels.methodExecutor?.width).toBe(40)
+      expect(prefs.panels.methodExecutor?.height).toBe(45)
       expect(prefs.panels.httpClient?.width).toBe(50)
+      expect(prefs.panels.httpClient?.height).toBe(45)
     })
   })
 
@@ -201,6 +214,49 @@ describe('storage', () => {
       clearProfilesCache()
       expect(getEntityListWidth()).toBe(50)
       setEntityListWidth(40)
+    })
+
+    it('getEntityListHeight and setEntityListHeight', () => {
+      expect(getEntityListHeight()).toBe(45)
+      setEntityListHeight(55)
+      clearProfilesCache()
+      expect(getEntityListHeight()).toBe(55)
+      // Width is preserved when updating height
+      setEntityListWidth(48)
+      setEntityListHeight(30)
+      clearProfilesCache()
+      expect(getEntityListWidth()).toBe(48)
+      expect(getEntityListHeight()).toBe(30)
+      setEntityListWidth(40)
+      setEntityListHeight(45)
+    })
+
+    it('getMethodExecutorRequestHeight and setMethodExecutorRequestHeight', () => {
+      expect(getMethodExecutorRequestHeight()).toBe(45)
+      setMethodExecutorRequestHeight(60)
+      clearProfilesCache()
+      expect(getMethodExecutorRequestHeight()).toBe(60)
+      setMethodExecutorRequestWidth(35)
+      setMethodExecutorRequestHeight(25)
+      clearProfilesCache()
+      expect(getMethodExecutorRequestWidth()).toBe(35)
+      expect(getMethodExecutorRequestHeight()).toBe(25)
+      setMethodExecutorRequestWidth(40)
+      setMethodExecutorRequestHeight(45)
+    })
+
+    it('getHttpClientRequestHeight and setHttpClientRequestHeight', () => {
+      expect(getHttpClientRequestHeight()).toBe(45)
+      setHttpClientRequestHeight(55)
+      clearProfilesCache()
+      expect(getHttpClientRequestHeight()).toBe(55)
+      setHttpClientRequestWidth(42)
+      setHttpClientRequestHeight(28)
+      clearProfilesCache()
+      expect(getHttpClientRequestWidth()).toBe(42)
+      expect(getHttpClientRequestHeight()).toBe(28)
+      setHttpClientRequestWidth(50)
+      setHttpClientRequestHeight(45)
     })
 
     it('getConsoleHeight and setConsoleHeight', () => {

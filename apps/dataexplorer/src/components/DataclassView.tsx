@@ -3,7 +3,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { EmptyPanel } from '~/components/EmptyPanel'
 import { useTranslation } from '~/i18n'
 import { eventBus } from '~/lib/eventBus'
-import { getEntityListWidth, setEntityListWidth } from '~/lib/storage'
+import {
+  getEntityListHeight,
+  getEntityListWidth,
+  setEntityListHeight,
+  setEntityListWidth,
+} from '~/lib/storage'
 import { useDataExplorerStore } from '~/store'
 import {
   isDataclassTab,
@@ -23,7 +28,7 @@ import { EntityList } from './EntityList'
 import { EntityViewer } from './EntityViewer'
 import { HttpClientTabView } from './HttpClient/HttpClientTabView'
 import { MethodExecutorTabView } from './MethodExecutor/MethodExecutorTabView'
-import { ResizableHandle } from './ResizablePanel'
+import { ResizableHandle, ResizableVerticalHandle } from './ResizablePanel'
 import { SchemaBuilderTabView } from './SchemaBuilderTabView'
 import { SettingsPage } from './SettingsPage'
 import { StaticTabView } from './StaticTabView'
@@ -33,6 +38,10 @@ const DEFAULT_WIDTH_PERCENT = 40
 const MIN_WIDTH_PERCENT = 25
 const MAX_WIDTH_PERCENT = 70
 
+const DEFAULT_HEIGHT_PERCENT = 45
+const MIN_HEIGHT_PERCENT = 20
+const MAX_HEIGHT_PERCENT = 70
+
 /** Max number of dataclass tab contents kept mounted at once (LRU). */
 const MAX_MOUNTED_TABS = 10
 
@@ -40,32 +49,56 @@ const MAX_MOUNTED_TABS = 10
  * Split-pane content for a single dataclass tab. Kept mounted while its tab is
  * open so scroll position, expanded sections and loaded relations are preserved
  * across tab switches.
+ *
+ * Below 1200px: list stacked above detail with a vertical (row) resizer.
+ * At 1200px+: side-by-side with a horizontal (column) resizer.
  */
 function DataclassTabContent({
   tabId,
   widthPercent,
-  onResize,
-  onDoubleClick,
+  heightPercent,
+  onHorizontalResize,
+  onVerticalResize,
+  onHorizontalDoubleClick,
+  onVerticalDoubleClick,
 }: {
   tabId: string
   widthPercent: number
-  onResize: (delta: number) => void
-  onDoubleClick: () => void
+  heightPercent: number
+  onHorizontalResize: (delta: number) => void
+  onVerticalResize: (delta: number) => void
+  onHorizontalDoubleClick: () => void
+  onVerticalDoubleClick: () => void
 }) {
   return (
-    <div className="flex h-full max-lg:min-h-0 max-lg:flex-col" data-dataclass-view>
-      {/* Entity List Panel — full width when stacked; % width from lg up */}
-      <div
-        className="min-h-0 min-w-0 overflow-hidden max-lg:h-[min(45%,22rem)] max-lg:w-full max-lg:shrink-0 max-lg:border-border max-lg:border-b lg:w-(--entity-list-width) lg:shrink-0"
-        style={{ ['--entity-list-width' as string]: `${widthPercent}%` }}
-      >
+    <div
+      className="flex h-full min-h-0 max-[1199px]:flex-col"
+      data-dataclass-view
+      style={
+        {
+          ['--entity-list-width' as string]: `${widthPercent}%`,
+          ['--entity-list-height' as string]: `${heightPercent}%`,
+        } as React.CSSProperties
+      }
+    >
+      {/* Entity List — height % when stacked; width % when side-by-side */}
+      <div className="min-h-0 min-w-0 overflow-hidden max-[1199px]:h-(--entity-list-height) max-[1199px]:w-full max-[1199px]:shrink-0 min-[1200px]:w-(--entity-list-width) min-[1200px]:shrink-0">
         <EntityList tabId={tabId} />
       </div>
 
-      {/* Resize Handle — desktop split only */}
-      <div className="hidden lg:contents">
-        <ResizableHandle onResize={onResize} onDoubleClick={onDoubleClick} />
-      </div>
+      {/* Vertical resizer — stacked layout only (<1200px) */}
+      <ResizableVerticalHandle
+        className="min-[1200px]:hidden"
+        onResize={onVerticalResize}
+        onDoubleClick={onVerticalDoubleClick}
+      />
+
+      {/* Horizontal resizer — side-by-side layout only (≥1200px) */}
+      <ResizableHandle
+        className="hidden min-[1200px]:flex"
+        onResize={onHorizontalResize}
+        onDoubleClick={onHorizontalDoubleClick}
+      />
 
       {/* Entity Viewer Panel */}
       <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
@@ -157,36 +190,64 @@ export function DataclassView() {
     return DEFAULT_WIDTH_PERCENT
   })
 
-  // Restore entity list width when profile changes (panels prefs are per-profile)
-  useEffect(() => {
+  const [entityListHeightPercent, setEntityListHeightPercent] = useState(() => {
     if (typeof window !== 'undefined') {
-      const stored = getEntityListWidth()
-      const clamped = Math.min(MAX_WIDTH_PERCENT, Math.max(MIN_WIDTH_PERCENT, stored))
-      setEntityListWidthPercent(clamped)
+      const stored = getEntityListHeight()
+      if (stored >= MIN_HEIGHT_PERCENT && stored <= MAX_HEIGHT_PERCENT) {
+        return stored
+      }
     }
+    return DEFAULT_HEIGHT_PERCENT
+  })
+
+  // Restore entity list size when profile changes (panels prefs are per-profile)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const storedWidth = getEntityListWidth()
+    setEntityListWidthPercent(Math.min(MAX_WIDTH_PERCENT, Math.max(MIN_WIDTH_PERCENT, storedWidth)))
+    const storedHeight = getEntityListHeight()
+    setEntityListHeightPercent(
+      Math.min(MAX_HEIGHT_PERCENT, Math.max(MIN_HEIGHT_PERCENT, storedHeight))
+    )
   }, [])
 
-  // Save width to storage
+  // Persist panel sizes
   useEffect(() => {
     setEntityListWidth(entityListWidthPercent)
   }, [entityListWidthPercent])
 
-  const handleResize = useCallback((delta: number) => {
+  useEffect(() => {
+    setEntityListHeight(entityListHeightPercent)
+  }, [entityListHeightPercent])
+
+  const handleHorizontalResize = useCallback((delta: number) => {
     setEntityListWidthPercent((prev) => {
-      // Convert pixel delta to percentage based on the visible container width
       const container = Array.from(
         document.querySelectorAll<HTMLElement>('[data-dataclass-view]')
       ).find((el) => el.clientWidth > 0)
       if (!container) return prev
-      const containerWidth = container.clientWidth
-      const deltaPercent = (delta / containerWidth) * 100
-      const newPercent = prev + deltaPercent
-      return Math.min(MAX_WIDTH_PERCENT, Math.max(MIN_WIDTH_PERCENT, newPercent))
+      const deltaPercent = (delta / container.clientWidth) * 100
+      return Math.min(MAX_WIDTH_PERCENT, Math.max(MIN_WIDTH_PERCENT, prev + deltaPercent))
     })
   }, [])
 
-  const handleDoubleClick = useCallback(() => {
+  const handleVerticalResize = useCallback((delta: number) => {
+    setEntityListHeightPercent((prev) => {
+      const container = Array.from(
+        document.querySelectorAll<HTMLElement>('[data-dataclass-view]')
+      ).find((el) => el.clientHeight > 0)
+      if (!container) return prev
+      const deltaPercent = (delta / container.clientHeight) * 100
+      return Math.min(MAX_HEIGHT_PERCENT, Math.max(MIN_HEIGHT_PERCENT, prev + deltaPercent))
+    })
+  }, [])
+
+  const handleHorizontalDoubleClick = useCallback(() => {
     setEntityListWidthPercent(DEFAULT_WIDTH_PERCENT)
+  }, [])
+
+  const handleVerticalDoubleClick = useCallback(() => {
+    setEntityListHeightPercent(DEFAULT_HEIGHT_PERCENT)
   }, [])
 
   // Non-dataclass active views are rendered as an overlay over the (hidden)
@@ -231,8 +292,11 @@ export function DataclassView() {
               key={remountKeys[id] ?? 0}
               tabId={id}
               widthPercent={entityListWidthPercent}
-              onResize={handleResize}
-              onDoubleClick={handleDoubleClick}
+              heightPercent={entityListHeightPercent}
+              onHorizontalResize={handleHorizontalResize}
+              onVerticalResize={handleVerticalResize}
+              onHorizontalDoubleClick={handleHorizontalDoubleClick}
+              onVerticalDoubleClick={handleVerticalDoubleClick}
             />
           </div>
         )

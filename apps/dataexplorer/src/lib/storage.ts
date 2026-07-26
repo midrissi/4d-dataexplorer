@@ -21,12 +21,13 @@ export type ThemeName = string
  */
 export type PanelSizes = {
   sidebar?: { width: number }
-  entitylist?: { width: number }
+  /** List pane: width % when side-by-side (≥1200px), height % when stacked (<1200px) */
+  entitylist?: { width: number; height?: number }
   console?: { height: number }
-  /** Request pane width % in Method Executor (lg+) */
-  methodExecutor?: { width: number }
-  /** Request pane width % in HTTP Client (lg+) */
-  httpClient?: { width: number }
+  /** Request pane: width % side-by-side (≥1200px), height % stacked (<1200px) — Method Executor */
+  methodExecutor?: { width: number; height?: number }
+  /** Request pane: width % side-by-side (≥1200px), height % stacked (<1200px) — HTTP Client */
+  httpClient?: { width: number; height?: number }
 }
 
 /**
@@ -145,10 +146,10 @@ export const DEFAULT_PROFILE_PREFS: ProfilePrefs = {
   themeName: 'tangerine',
   panels: {
     sidebar: { width: 325 },
-    entitylist: { width: 40 },
+    entitylist: { width: 40, height: 45 },
     console: { height: 220 },
-    methodExecutor: { width: 40 },
-    httpClient: { width: 50 },
+    methodExecutor: { width: 40, height: 45 },
+    httpClient: { width: 50, height: 45 },
   },
   recentCommands: [],
 }
@@ -229,15 +230,18 @@ export function getCurrentPrefs(): ProfilePrefs {
       },
       entitylist: {
         width: raw.panels?.entitylist?.width ?? defaultPanels.entitylist?.width ?? 40,
+        height: raw.panels?.entitylist?.height ?? defaultPanels.entitylist?.height ?? 45,
       },
       console: {
         height: raw.panels?.console?.height ?? defaultPanels.console?.height ?? 220,
       },
       methodExecutor: {
         width: raw.panels?.methodExecutor?.width ?? defaultPanels.methodExecutor?.width ?? 40,
+        height: raw.panels?.methodExecutor?.height ?? defaultPanels.methodExecutor?.height ?? 45,
       },
       httpClient: {
         width: raw.panels?.httpClient?.width ?? defaultPanels.httpClient?.width ?? 50,
+        height: raw.panels?.httpClient?.height ?? defaultPanels.httpClient?.height ?? 45,
       },
     },
   }
@@ -316,61 +320,133 @@ export function setSidebarWidth(width: number): void {
 }
 
 /**
- * Get entity list width (as percentage)
+ * Get entity list width (as percentage, side-by-side layout)
  */
 export function getEntityListWidth(): number {
   return getCurrentPrefs().panels.entitylist?.width ?? 40
 }
 
 /**
- * Set entity list width (as percentage)
+ * Set entity list width (as percentage, side-by-side layout)
  */
 export function setEntityListWidth(width: number): void {
   const prefs = getCurrentPrefs()
   saveCurrentPrefs({
     panels: {
       ...prefs.panels,
-      entitylist: { width },
+      entitylist: { ...prefs.panels.entitylist, width },
     },
   })
 }
 
 /**
- * Get Method Executor request pane width (as percentage).
+ * Get entity list height (as percentage, stacked layout below 1200px)
+ */
+export function getEntityListHeight(): number {
+  return getCurrentPrefs().panels.entitylist?.height ?? 45
+}
+
+/**
+ * Set entity list height (as percentage, stacked layout below 1200px)
+ */
+export function setEntityListHeight(height: number): void {
+  const prefs = getCurrentPrefs()
+  saveCurrentPrefs({
+    panels: {
+      ...prefs.panels,
+      entitylist: {
+        ...prefs.panels.entitylist,
+        width: prefs.panels.entitylist?.width ?? 40,
+        height,
+      },
+    },
+  })
+}
+
+/**
+ * Get Method Executor request pane width (as percentage, side-by-side layout).
  */
 export function getMethodExecutorRequestWidth(): number {
   return getCurrentPrefs().panels.methodExecutor?.width ?? 40
 }
 
 /**
- * Set Method Executor request pane width (as percentage).
+ * Set Method Executor request pane width (as percentage, side-by-side layout).
  */
 export function setMethodExecutorRequestWidth(width: number): void {
   const prefs = getCurrentPrefs()
   saveCurrentPrefs({
     panels: {
       ...prefs.panels,
-      methodExecutor: { width },
+      methodExecutor: { ...prefs.panels.methodExecutor, width },
     },
   })
 }
 
 /**
- * Get HTTP Client request pane width (as percentage).
+ * Get Method Executor request pane height (as percentage, stacked layout below 1200px).
+ */
+export function getMethodExecutorRequestHeight(): number {
+  return getCurrentPrefs().panels.methodExecutor?.height ?? 45
+}
+
+/**
+ * Set Method Executor request pane height (as percentage, stacked layout below 1200px).
+ */
+export function setMethodExecutorRequestHeight(height: number): void {
+  const prefs = getCurrentPrefs()
+  saveCurrentPrefs({
+    panels: {
+      ...prefs.panels,
+      methodExecutor: {
+        ...prefs.panels.methodExecutor,
+        width: prefs.panels.methodExecutor?.width ?? 40,
+        height,
+      },
+    },
+  })
+}
+
+/**
+ * Get HTTP Client request pane width (as percentage, side-by-side layout).
  */
 export function getHttpClientRequestWidth(): number {
   return getCurrentPrefs().panels.httpClient?.width ?? 50
 }
 
 /**
- * Set HTTP Client request pane width (as percentage).
+ * Set HTTP Client request pane width (as percentage, side-by-side layout).
  */
 export function setHttpClientRequestWidth(width: number): void {
   const prefs = getCurrentPrefs()
   saveCurrentPrefs({
     panels: {
       ...prefs.panels,
-      httpClient: { width },
+      httpClient: { ...prefs.panels.httpClient, width },
+    },
+  })
+}
+
+/**
+ * Get HTTP Client request pane height (as percentage, stacked layout below 1200px).
+ */
+export function getHttpClientRequestHeight(): number {
+  return getCurrentPrefs().panels.httpClient?.height ?? 45
+}
+
+/**
+ * Set HTTP Client request pane height (as percentage, stacked layout below 1200px).
+ */
+export function setHttpClientRequestHeight(height: number): void {
+  const prefs = getCurrentPrefs()
+  saveCurrentPrefs({
+    panels: {
+      ...prefs.panels,
+      httpClient: {
+        ...prefs.panels.httpClient,
+        width: prefs.panels.httpClient?.width ?? 50,
+        height,
+      },
     },
   })
 }
