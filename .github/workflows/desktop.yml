@@ -230,11 +230,25 @@ jobs:
           codesign --verify --deep --strict --verbose=2 "$APP_PATH"
           VERSION="${{ steps.version.outputs.version }}"
           ZIP_NAME="Data-Explorer_${VERSION}_${ARCH}.zip"
+          STAMP_DIR="$BUNDLE_DIR/quarantine-stamp"
+          rm -rf "$STAMP_DIR"
+          # Stamp per-release script + README (versioned GitHub Release download URL)
+          bash apps/desktop/scripts/stamp-macos-quarantine-assets.sh "$VERSION" "$STAMP_DIR"
+          STAGE="$BUNDLE_DIR/zip-stage"
+          rm -rf "$STAGE"
+          mkdir -p "$STAGE"
           # ditto preserves the code signature and bundle structure
-          ditto -c -k --keepParent "$APP_PATH" "$BUNDLE_DIR/$ZIP_NAME"
+          ditto "$APP_PATH" "$STAGE/Data Explorer.app"
+          cp "$STAMP_DIR/README.html" "$STAGE/README.html"
+          cp "$STAMP_DIR/fix-macos-quarantine.sh" "$STAGE/fix-macos-quarantine.sh"
+          chmod +x "$STAGE/fix-macos-quarantine.sh"
+          # ZIP root: app + README + versioned fix script
+          ( cd "$STAGE" && ditto -c -k . "../$ZIP_NAME" )
+          rm -rf "$STAGE"
           ( cd "$BUNDLE_DIR" && shasum -a 256 "$ZIP_NAME" | tee "$ZIP_NAME.sha256" )
           echo "zip_path=$BUNDLE_DIR/$ZIP_NAME" >> "$GITHUB_OUTPUT"
           echo "sha_path=$BUNDLE_DIR/$ZIP_NAME.sha256" >> "$GITHUB_OUTPUT"
+          echo "script_path=$STAMP_DIR/fix-macos-quarantine.sh" >> "$GITHUB_OUTPUT"
 
       - name: Upload macOS ZIP + checksum to release
         if: runner.os == 'macOS' && github.event_name != 'pull_request'
@@ -244,11 +258,16 @@ jobs:
         run: |
           set -euo pipefail
           TAG="v${{ steps.version.outputs.version }}"
-          # Release already exists; only attach the extra ZIP assets
-          gh release upload "$TAG" \
-            "${{ steps.macpkg.outputs.zip_path }}" \
-            "${{ steps.macpkg.outputs.sha_path }}" \
-            --clobber
+          # Release already exists; attach ZIP (+ checksum). Upload the stamped
+          # quarantine script once (Apple Silicon job) so each tag has its own asset.
+          UPLOAD_ARGS=(
+            "${{ steps.macpkg.outputs.zip_path }}"
+            "${{ steps.macpkg.outputs.sha_path }}"
+          )
+          if [ "${{ matrix.target }}" = "aarch64-apple-darwin" ]; then
+            UPLOAD_ARGS+=("${{ steps.macpkg.outputs.script_path }}")
+          fi
+          gh release upload "$TAG" "${UPLOAD_ARGS[@]}" --clobber
 
       - name: Upload desktop bundles artifact
         if: always()

@@ -11,6 +11,7 @@ const guideSidebar = [
     items: [
       { text: 'Introduction', link: '/guide/' },
       { text: 'Getting started', link: '/guide/getting-started' },
+      { text: 'macOS desktop first launch', link: '/guide/macos-desktop' },
     ],
   },
   {

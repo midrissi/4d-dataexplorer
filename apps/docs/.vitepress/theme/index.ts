@@ -6,6 +6,7 @@ import DocTable from './components/DocTable.vue'
 import DownloadDesktop from './components/DownloadDesktop.vue'
 import DownloadStats from './components/DownloadStats.vue'
 import HomeLanding from './components/HomeLanding.vue'
+import MacosQuarantineScript from './components/MacosQuarantineScript.vue'
 import RunDocker from './components/RunDocker.vue'
 import ScreenshotFrame from './components/ScreenshotFrame.vue'
 import Layout from './Layout.vue'
@@ -21,6 +22,7 @@ export default {
     app.component('DownloadDesktop', DownloadDesktop)
     app.component('DownloadStats', DownloadStats)
     app.component('HomeLanding', HomeLanding)
+    app.component('MacosQuarantineScript', MacosQuarantineScript)
     app.component('RunDocker', RunDocker)
     app.component('ScreenshotFrame', ScreenshotFrame)
   },

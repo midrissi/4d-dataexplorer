@@ -16,7 +16,7 @@ import { introMetaRows, metaColumns } from '../.vitepress/data/tables'
 
 The sidebar is grouped by topic:
 
-- **Getting started** — install, open from 4D, or [run with Docker](/guide/getting-started#run-with-docker)
+- **Getting started** — install, open from 4D, or [run with Docker](/guide/getting-started#run-with-docker); [macOS desktop first launch](/guide/macos-desktop)
 - **Basics** — layout, home, sidebar, tabs, modes
 - **Working with data** — browse, query, view, methods, structure graph
 - **AI** — chat assistant, [AI actions & tasks](/guide/ai-actions), metadata
@@ -24,7 +24,7 @@ The sidebar is grouped by topic:
 - **Configuration** — settings, shortcuts, language, profiles
 - **Development** — contributing and local setup
 
-Start with [Getting started](/guide/getting-started).
+Start with [Getting started](/guide/getting-started) or [macOS desktop first launch](/guide/macos-desktop).
 
 ## Related resources
 

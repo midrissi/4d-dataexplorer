@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { withBase } from 'vitepress'
+import HomeFaq from './HomeFaq.vue'
 import ScreenshotFrame from './ScreenshotFrame.vue'
 
 const capabilities = [
@@ -183,6 +184,8 @@ const gallery = [
         </article>
       </div>
     </section>
+
+    <HomeFaq />
 
     <footer class="home-landing__footnote">
       <p>
