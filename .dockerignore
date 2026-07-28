@@ -43,6 +43,9 @@
 # Drop junk from the allowlisted trees
 **/node_modules
 **/DataBrowser
+# Re-include for docker/Dockerfile.prebuilt (CI downloads the Build artifact here)
+!apps/dataexplorer/DataBrowser
+!apps/dataexplorer/DataBrowser/**
 **/coverage
 **/.DS_Store
 **/__tests__

@@ -101,7 +101,7 @@ jobs:
   e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build, test]
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -163,10 +163,11 @@ jobs:
           path: packages/rest-server/rest-server.log
           retention-days: 7
 
+  # ── Publish / package only after unit + e2e pass ───────────────────────────
   docker:
     name: Docker
     runs-on: ubuntu-latest
-    needs: [lint-and-check, build]
+    needs: [e2e]
     permissions:
       contents: read
       packages: write
@@ -223,7 +224,7 @@ jobs:
 
   check-pages:
     name: Check GitHub Pages
-    needs: [lint-and-check]
+    needs: [e2e]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
@@ -259,11 +260,11 @@ jobs:
 
   deploy-docs:
     name: Deploy Docs
-    needs: [build, check-pages]
+    needs: [e2e, check-pages]
     if: >-
       github.event_name == 'push' &&
       github.ref == 'refs/heads/main' &&
-      needs.build.result == 'success' &&
+      needs.e2e.result == 'success' &&
       needs.check-pages.result == 'success' &&
       needs.check-pages.outputs.enabled == 'true'
     runs-on: ubuntu-latest
@@ -290,7 +291,7 @@ jobs:
   release-web:
     name: Release Web ZIP
     runs-on: ubuntu-latest
-    needs: [build, e2e]
+    needs: [e2e]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
       contents: write
@@ -350,7 +351,7 @@ jobs:
   # ── Desktop (SHA-stamped release; gated by lint) ───────────────────────────
   create-release:
     name: Create Desktop Release
-    needs: [lint-and-check]
+    needs: [e2e]
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
@@ -392,10 +393,11 @@ jobs:
 
   build-desktop:
     name: Build Desktop (${{ matrix.name }})
-    needs: [lint-and-check, create-release]
+    needs: [e2e, create-release]
+    # Run on PRs even when create-release is skipped; never continue if tests failed
     if: >-
       always() &&
-      needs.lint-and-check.result == 'success' &&
+      needs.e2e.result == 'success' &&
       (needs.create-release.result == 'success' || needs.create-release.result == 'skipped')
     runs-on: ${{ matrix.platform }}
     permissions:
@@ -608,10 +610,10 @@ jobs:
   # Web ZIP on the SHA-stamped desktop release (reuse Build artifact)
   upload-web-zip:
     name: Upload DataExplorer.zip
-    needs: [build, create-release]
+    needs: [e2e, create-release]
     if: >-
       github.event_name != 'pull_request' &&
-      needs.build.result == 'success' &&
+      needs.e2e.result == 'success' &&
       needs.create-release.result == 'success'
     runs-on: ubuntu-latest
     permissions:
@@ -639,6 +641,7 @@ jobs:
           TAG="${{ needs.create-release.outputs.tag }}"
           gh release upload "$TAG" \
             apps/dataexplorer/DataExplorer.zip \
+            --repo "${{ github.repository }}" \
             --clobber
 
   finalize-release:
