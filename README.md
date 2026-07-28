@@ -162,7 +162,7 @@ Then open http://localhost:8080/dataexplorer/.
 | `PUBLISHED_PORT` | Host port shown in the welcome banner (keep in sync with `-p`) |
 | `--add-host=host.docker.internal:host-gateway` | Lets the container reach the Docker host (needed on Linux) |
 
-Published images: `ghcr.io/midrissi/4d-dataexplorer` (`linux/amd64` + `linux/arm64`; see GitHub Packages / CI `docker.yml`).
+Published images: `ghcr.io/midrissi/4d-dataexplorer` (`linux/amd64` + `linux/arm64`; see GitHub Packages / CI `ci.yml`).
 
 ```bash
 docker pull ghcr.io/midrissi/4d-dataexplorer:latest

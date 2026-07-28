@@ -63,7 +63,7 @@ and you'll be prompted for one.
 
 ### 2. Add the CI secrets
 
-The [`desktop.yml`](../../../.github/workflows/desktop.yml) workflow signs
+The [`ci.yml`](../../../.github/workflows/ci.yml) workflow signs
 release artifacts with these repository secrets:
 
 | Secret | Value |
@@ -81,14 +81,14 @@ gh secret set TAURI_SIGNING_PRIVATE_KEY_PASSWORD   # paste the password, or leav
 ### 3. Verify the endpoint
 
 Confirm the `endpoints` URL in `tauri.conf.json` points at the repository that
-publishes releases. It must match the repo `desktop.yml` releases to.
+publishes releases. It must match the repo `ci.yml` desktop releases to.
 
 ## Publishing an update
 
 1. Bump the **base** version in `apps/desktop/package.json` and
    `apps/desktop/src-tauri/tauri.conf.json` (and `Cargo.toml`) when you want a
    new marketed release line (e.g. `1.3.3` → `1.3.4`). Keep them in sync.
-2. Push to `main` (or tag/push). The `desktop.yml` workflow appends the short
+2. Push to `main` (or tag/push). The `ci.yml` workflow appends the short
    git SHA as a SemVer prerelease, so `latest.json` gets a unique version such
    as `1.3.3-a4b0436`. (A fourth dotted segment like `1.3.3.a4b0436` is not
    valid SemVer and cannot be used with Tauri's updater.)
