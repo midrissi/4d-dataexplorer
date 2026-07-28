@@ -1,0 +1,7 @@
+dist/
+src-tauri/target/
+src-tauri/gen/
+src-tauri/android/
+src-tauri/ios/
+src-tauri/plugins/**/.tauri/
+.build/

@@ -30,6 +30,7 @@ export default defineConfig({
   base: '/dataexplorer/',
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
+    'import.meta.env.VITE_APP_SHELL': JSON.stringify('web'),
   },
   resolve: {
     alias: [

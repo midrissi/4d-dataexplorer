@@ -1,6 +1,7 @@
 import { toolResultErr, toolResultOk } from '@4djs/assistant/core'
 import type { AssistantToolHandler } from '@4djs/assistant/tools'
 import { eventBus } from '~/lib/eventBus'
+import { isMobileShell } from '~/lib/platform'
 import { getTheme, getThemeName } from '~/lib/storage'
 import { useDataExplorerStore } from '~/store'
 import { useSettingsStore } from '~/store/settings'
@@ -129,6 +130,9 @@ export function buildNavigationTools(): AssistantToolHandler[] {
             tabsState.openHomeTab()
             return toolResultOk({ opened: 'home' })
           case 'structure':
+            if (isMobileShell()) {
+              return toolResultErr('Structure graph is not available in the mobile beta')
+            }
             await tabsState.openGraphTab()
             return toolResultOk({ opened: 'structure' })
           case 'settings':
@@ -138,6 +142,9 @@ export function buildNavigationTools(): AssistantToolHandler[] {
             tabsState.openStaticTab('release-notes')
             return toolResultOk({ opened: 'release-notes' })
           case 'schema-builder':
+            if (isMobileShell()) {
+              return toolResultErr('JSON Schema Builder is not available in the mobile beta')
+            }
             tabsState.openSchemaBuilderTab()
             return toolResultOk({ opened: 'schema-builder' })
           case 'assistant-metadata':

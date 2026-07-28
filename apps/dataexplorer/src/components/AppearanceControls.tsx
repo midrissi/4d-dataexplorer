@@ -12,7 +12,7 @@ import {
   TooltipTrigger,
 } from '@4d/ui'
 import { Languages, Loader2, Moon, Palette, Sun } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import type { Locale } from '~/i18n'
 import { useTranslation } from '~/i18n'
 import { useTheme, useThemeName } from '~/providers/ThemeProvider'
@@ -37,6 +37,13 @@ export type AppearanceControlsProps = {
   className?: string
   /** Whether to render the full-page language switch overlay. Defaults to `true`. */
   showLanguageOverlay?: boolean
+  /**
+   * `icons` — compact icon cluster (desktop footer).
+   * `toolbar` — full-width labeled bar for mobile.
+   */
+  variant?: 'icons' | 'toolbar'
+  /** Control size for `icons` variant. `md` ≈ 44px. Defaults to `sm`. */
+  size?: 'sm' | 'md'
 }
 
 /**
@@ -52,6 +59,8 @@ export function AppearanceControls({
   align = 'end',
   className,
   showLanguageOverlay = true,
+  variant = 'icons',
+  size = 'sm',
 }: AppearanceControlsProps) {
   const { t } = useTranslation()
   const { themeName, setThemeName, availableThemes } = useThemeName()
@@ -61,9 +70,14 @@ export function AppearanceControls({
   const shortcuts = useShortcuts()
   const themeShortcut = shortcuts.find((s) => s.id === 'toggle-theme')
 
+  const isToolbar = variant === 'toolbar'
+  const menuAlign = isToolbar ? 'center' : align
+  const iconClass = isToolbar || size === 'md' ? 'h-5 w-5' : 'h-3 w-3'
+  const itemClass = isToolbar ? 'min-h-11 gap-3 px-3 text-sm' : undefined
+  const menuClass = isToolbar ? 'w-[min(calc(100vw-2rem),18rem)]' : undefined
+
   const [pendingLanguageSwitch, setPendingLanguageSwitch] = useState<Locale | null>(null)
 
-  // When user selects a new language: show overlay for 2s then apply switch
   useEffect(() => {
     if (pendingLanguageSwitch === null) return
     const timer = setTimeout(() => {
@@ -78,6 +92,99 @@ export function AppearanceControls({
     { id: 'fr', flag: '🇫🇷', label: t('language.french') },
     { id: 'es', flag: '🇪🇸', label: t('language.spanish') },
   ]
+
+  const modeLabel = theme === 'dark' ? t('mobile.appearanceLight') : t('mobile.appearanceDark')
+
+  const wrapTrigger = (trigger: ReactNode, tooltip: ReactNode) => {
+    if (isToolbar) return trigger
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>{trigger}</TooltipTrigger>
+          <TooltipContent side={side}>{tooltip}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    )
+  }
+
+  const renderToolbarLabel = (label: string) => (
+    <span className="max-w-full truncate font-medium text-[11px] text-muted-foreground leading-none">
+      {label}
+    </span>
+  )
+
+  const languageTrigger = (
+    <DropdownMenuTrigger asChild>
+      <Button
+        variant="ghost"
+        size={isToolbar ? 'default' : 'icon'}
+        className={cn(
+          isToolbar
+            ? 'h-auto min-h-14 w-full flex-col gap-1.5 rounded-xl px-2 py-2.5 text-muted-foreground hover:text-foreground'
+            : size === 'md'
+              ? 'h-11 w-11'
+              : 'h-6 w-6'
+        )}
+        aria-label={t('layout.language')}
+      >
+        <Languages className={iconClass} aria-hidden />
+        {isToolbar ? renderToolbarLabel(t('mobile.appearanceLanguage')) : null}
+      </Button>
+    </DropdownMenuTrigger>
+  )
+
+  const themeTrigger = (
+    <DropdownMenuTrigger asChild>
+      <Button
+        variant="ghost"
+        size={isToolbar ? 'default' : 'icon'}
+        className={cn(
+          isToolbar
+            ? 'h-auto min-h-14 w-full flex-col gap-1.5 rounded-xl px-2 py-2.5 text-muted-foreground hover:text-foreground'
+            : size === 'md'
+              ? 'h-11 w-11'
+              : 'h-6 w-6'
+        )}
+        aria-label={t('layout.themeAria')}
+      >
+        <Palette className={iconClass} aria-hidden />
+        {isToolbar ? renderToolbarLabel(t('mobile.appearanceTheme')) : null}
+      </Button>
+    </DropdownMenuTrigger>
+  )
+
+  const modeButton = (
+    <Button
+      variant="ghost"
+      size={isToolbar ? 'default' : 'icon'}
+      className={cn(
+        'relative',
+        isToolbar
+          ? 'h-auto min-h-14 w-full flex-col gap-1.5 rounded-xl px-2 py-2.5 text-muted-foreground hover:text-foreground'
+          : size === 'md'
+            ? 'h-11 w-11'
+            : 'h-6 w-6'
+      )}
+      onClick={toggleTheme}
+      aria-label={theme === 'dark' ? t('layout.lightMode') : t('layout.darkMode')}
+    >
+      <span className="relative flex h-5 w-5 items-center justify-center" aria-hidden>
+        <Sun
+          className={cn(
+            iconClass,
+            'rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0'
+          )}
+        />
+        <Moon
+          className={cn(
+            iconClass,
+            'absolute rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100'
+          )}
+        />
+      </span>
+      {isToolbar ? renderToolbarLabel(modeLabel) : null}
+    </Button>
+  )
 
   return (
     <>
@@ -95,27 +202,27 @@ export function AppearanceControls({
         </output>
       )}
 
-      <div className={cn('flex items-center gap-0.5', className)}>
-        {/* Language */}
-        <DropdownMenu>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    aria-label={t('layout.language')}
-                  >
-                    <Languages className="h-3 w-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-              </TooltipTrigger>
-              <TooltipContent side={side}>{t('layout.language')}</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <DropdownMenuContent align={align} side={side} className="w-44">
+      <div
+        className={cn(
+          isToolbar ? 'grid w-full grid-cols-3 gap-1' : cn('flex items-center', size === 'md' ? 'gap-1' : 'gap-0.5'),
+          className
+        )}
+        {...(isToolbar
+          ? { role: 'group' as const, 'aria-label': t('mobile.appearanceToolbar') }
+          : {})}
+      >
+        <DropdownMenu modal={false}>
+          {wrapTrigger(
+            languageTrigger,
+            t('layout.language')
+          )}
+          <DropdownMenuContent
+            align={menuAlign}
+            side={side}
+            className={cn(isToolbar ? menuClass : 'w-44')}
+            collisionPadding={12}
+            onCloseAutoFocus={(event) => event.preventDefault()}
+          >
             <div className="px-2 py-1.5">
               <p className="font-medium text-sm">{t('layout.language')}</p>
             </div>
@@ -128,6 +235,7 @@ export function AppearanceControls({
                 }}
                 className={cn(
                   'flex items-center gap-2',
+                  itemClass,
                   language === opt.id && 'bg-primary text-primary-foreground'
                 )}
               >
@@ -141,33 +249,25 @@ export function AppearanceControls({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Color theme */}
-        <DropdownMenu>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    aria-label={t('layout.themeAria')}
-                  >
-                    <Palette className="h-3 w-3" />
-                  </Button>
-                </DropdownMenuTrigger>
-              </TooltipTrigger>
-              <TooltipContent side={side}>
-                {t('layout.themeAria')}
-                {themeShortcut?.enabled ? (
-                  <kbd className="ml-2 rounded bg-muted px-1 text-[10px]">
-                    {formatShortcut(themeShortcut)}
-                  </kbd>
-                ) : null}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <DropdownMenuContent align={align} side={side} className="w-48">
+        <DropdownMenu modal={false}>
+          {wrapTrigger(
+            themeTrigger,
+            <>
+              {t('layout.themeAria')}
+              {themeShortcut?.enabled ? (
+                <kbd className="ml-2 rounded bg-muted px-1 text-[10px]">
+                  {formatShortcut(themeShortcut)}
+                </kbd>
+              ) : null}
+            </>
+          )}
+          <DropdownMenuContent
+            align={menuAlign}
+            side={side}
+            className={cn(isToolbar ? menuClass : 'w-48')}
+            collisionPadding={12}
+            onCloseAutoFocus={(event) => event.preventDefault()}
+          >
             <div className="px-2 py-1.5">
               <p className="font-medium text-sm">{t('layout.colorTheme')}</p>
               <p className="text-muted-foreground text-xs">{t('layout.chooseColors')}</p>
@@ -179,11 +279,12 @@ export function AppearanceControls({
                 onClick={() => setThemeName(key as typeof themeName)}
                 className={cn(
                   'flex items-center gap-2',
+                  itemClass,
                   themeName === key && 'bg-primary text-primary-foreground'
                 )}
               >
                 <div
-                  className="h-4 w-4 rounded-full border"
+                  className="h-4 w-4 shrink-0 rounded-full border"
                   style={{ background: THEME_SWATCHES[key] ?? DEFAULT_SWATCH }}
                 />
                 <span>{themeOption.name}</span>
@@ -193,31 +294,17 @@ export function AppearanceControls({
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Light / dark mode */}
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                onClick={toggleTheme}
-                aria-label={theme === 'dark' ? t('layout.lightMode') : t('layout.darkMode')}
-              >
-                <Sun className="h-3 w-3 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-                <Moon className="absolute h-3 w-3 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side={side}>
-              {theme === 'dark' ? t('layout.lightMode') : t('layout.darkMode')}
-              {themeShortcut?.enabled ? (
-                <kbd className="ml-2 rounded bg-muted px-1 text-[10px]">
-                  {formatShortcut(themeShortcut)}
-                </kbd>
-              ) : null}
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        {wrapTrigger(
+          modeButton,
+          <>
+            {theme === 'dark' ? t('layout.lightMode') : t('layout.darkMode')}
+            {themeShortcut?.enabled ? (
+              <kbd className="ml-2 rounded bg-muted px-1 text-[10px]">
+                {formatShortcut(themeShortcut)}
+              </kbd>
+            ) : null}
+          </>
+        )}
       </div>
     </>
   )

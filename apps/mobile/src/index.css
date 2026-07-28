@@ -1,0 +1,49 @@
+@import "tailwindcss" source(none);
+@import "@4d/ui/styles";
+@import "@4d/ui/themes/slate.css";
+@import "@4d/ui/themes/tangerine.css";
+@import "@4d/ui/themes/violet-bloom.css";
+@import "@4d/ui/themes/vercel.css";
+@import "@4d/ui/themes/graphite.css";
+@import "@4d/ui/themes/aurora.css";
+@import "../../dataexplorer/src/styles/assistant-theme-bridge.css";
+
+/* Explicit sources — avoid auto-scanning src-tauri plugin .tauri trees (picomatch 64k limit) */
+@source "../index.html";
+@source "./**/*.{js,ts,jsx,tsx}";
+@source "../../dataexplorer/src/**/*.{js,ts,jsx,tsx}";
+@source "../../desktop/src/**/*.{js,ts,jsx,tsx}";
+@source "../../../packages/ui/src/**/*.{js,ts,jsx,tsx}";
+@config "../tailwind.config.js";
+
+/* Fill the WKWebView; safe areas applied on screen chrome */
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background-color: var(--background);
+}
+
+#root {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+:root {
+  --app-safe-top: env(safe-area-inset-top, 0px);
+  --app-safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: none;
+  box-shadow: none;
+}

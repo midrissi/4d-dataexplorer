@@ -1,4 +1,6 @@
 import { AuthenticationError, type RESTClientError } from '@4d/rest'
+import { Button } from '@4d/ui'
+import { Database } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { AccessKeyScreen } from './components/AccessKeyScreen'
 import { DataclassView } from './components/DataclassView'
@@ -11,7 +13,7 @@ import { TabBar } from './components/TabBar'
 import { useTranslation } from './i18n'
 import { api, clearCatalogCacheAndStorage, formatThrownError, isTransportError } from './lib/api'
 import '~/lib/assistant-llm-configured'
-import { getConnectionStoreAPI, isDesktop } from './lib/platform'
+import { getConnectionStoreAPI, isDesktop, isMobileShell } from './lib/platform'
 import { KeyboardShortcutsProvider } from './providers/KeyboardShortcutsProvider'
 import { ShortcutController } from './providers/ShortcutController'
 import { ThemeProvider } from './providers/ThemeProvider'
@@ -221,32 +223,106 @@ function AppContent({ onDisconnect, onSwitchConnection, onEditConnection }: AppC
       onSwitchConnection={onSwitchConnection}
       onEditConnection={onEditConnection}
     >
-      <div className="flex h-full">
-        <ResizablePanel
-          defaultSize={325}
-          minSize={325}
-          maxSize={450}
-          direction="left"
-          storageKey="sidebar"
-          className="border-r"
-          collapsible
-          collapsedSize={52}
-          collapsed={sidebarCollapsed}
-          onCollapsedChange={setSidebarCollapsed}
-        >
-          <Sidebar collapsed={sidebarCollapsed} />
-        </ResizablePanel>
-        <main
-          className="flex min-w-0 flex-1 flex-col overflow-hidden"
-          aria-label={t('app.entityExplorerAria')}
-        >
-          <TabBar />
-          <div className="flex-1 overflow-hidden">
-            <DataclassView />
-          </div>
-        </main>
-      </div>
+      {isMobileShell() ? (
+        <MobileExplorerShell />
+      ) : (
+        <div className="flex h-full">
+          <ResizablePanel
+            defaultSize={325}
+            minSize={325}
+            maxSize={450}
+            direction="left"
+            storageKey="sidebar"
+            className="border-r"
+            collapsible
+            collapsedSize={52}
+            collapsed={sidebarCollapsed}
+            onCollapsedChange={setSidebarCollapsed}
+          >
+            <Sidebar collapsed={sidebarCollapsed} />
+          </ResizablePanel>
+          <main
+            className="flex min-w-0 flex-1 flex-col overflow-hidden"
+            aria-label={t('app.entityExplorerAria')}
+          >
+            <TabBar />
+            <div className="flex-1 overflow-hidden">
+              <DataclassView />
+            </div>
+          </main>
+        </div>
+      )}
     </Layout>
+  )
+}
+
+/** Mobile: full-width content with a slide-over dataclass drawer. */
+function MobileExplorerShell() {
+  const { t } = useTranslation()
+  const [catalogOpen, setCatalogOpen] = useState(false)
+  const sidebarCollapsed = useSettingsStore((state) => state.sidebarCollapsed)
+  const setSidebarCollapsed = useSettingsStore((state) => state.setSidebarCollapsed)
+
+  // Keep settings store in sync so shortcuts / assistant tools still work.
+  useEffect(() => {
+    if (!sidebarCollapsed) setSidebarCollapsed(true)
+  }, [sidebarCollapsed, setSidebarCollapsed])
+
+  return (
+    <div className="relative flex h-full flex-col">
+      <div className="flex items-center gap-2 border-border border-b bg-background px-2 py-1.5">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1.5 px-2.5 text-xs"
+          onClick={() => setCatalogOpen(true)}
+        >
+          <Database className="h-3.5 w-3.5" />
+          {t('mobile.openCatalog')}
+        </Button>
+        <p className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground">
+          {t('mobile.betaDisclaimer')}
+        </p>
+      </div>
+      <main
+        className="flex min-w-0 flex-1 flex-col overflow-hidden"
+        aria-label={t('app.entityExplorerAria')}
+      >
+        <TabBar />
+        <div className="flex-1 overflow-hidden">
+          <DataclassView />
+        </div>
+      </main>
+
+      {catalogOpen ? (
+        <div className="absolute inset-0 z-40 flex">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/40"
+            aria-label={t('mobile.closeCatalog')}
+            onClick={() => setCatalogOpen(false)}
+          />
+          <div className="relative z-10 flex h-full w-[min(100%,20rem)] flex-col bg-background shadow-lg">
+            <div className="flex items-center justify-between border-border border-b px-3 py-2">
+              <p className="font-medium text-sm">{t('sidebar.dataclasses')}</p>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-8"
+                onClick={() => setCatalogOpen(false)}
+              >
+                {t('mobile.closeCatalog')}
+              </Button>
+            </div>
+            <div className="min-h-0 flex-1">
+              <Sidebar collapsed={false} onDataclassOpened={() => setCatalogOpen(false)} />
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
   )
 }
 

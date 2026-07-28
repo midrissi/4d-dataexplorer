@@ -1,0 +1,18 @@
+[package]
+name = "tauri-plugin-edge-to-edge"
+version = "0.1.0"
+edition = "2021"
+links = "tauri-plugin-edge-to-edge"
+
+[lib]
+name = "tauri_plugin_edge_to_edge"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-plugin = { version = "2", features = ["build"] }
+
+[dependencies]
+tauri = { version = "2", default-features = false }
+
+[target.'cfg(target_os = "ios")'.dependencies]
+tauri = { version = "2", default-features = false, features = ["wry"] }

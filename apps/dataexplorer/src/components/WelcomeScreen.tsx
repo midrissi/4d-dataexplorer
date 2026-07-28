@@ -22,6 +22,7 @@ import { EmptyPanel, EmptyPanelAction } from '~/components/EmptyPanel'
 import { getIntlLocale, useTranslation } from '~/i18n'
 import { api } from '~/lib/api'
 import { eventBus } from '~/lib/eventBus'
+import { isMobileShell } from '~/lib/platform'
 import { formatBytes, formatCount } from '~/lib/utils'
 import { type Dataclass, useDataExplorerStore } from '~/store'
 import {
@@ -323,21 +324,23 @@ export function WelcomeScreen() {
                 </kbd>
               )}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => openGraphTab()}
-              className="gap-2"
-            >
-              <Network className="h-4 w-4" />
-              {t('welcome.structure')}
-              {openStructureShortcut?.enabled && (
-                <kbd className="rounded border bg-muted px-1.5 font-mono text-[10px] text-muted-foreground">
-                  {formatShortcut(openStructureShortcut)}
-                </kbd>
-              )}
-            </Button>
+            {!isMobileShell() ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => openGraphTab()}
+                className="gap-2"
+              >
+                <Network className="h-4 w-4" />
+                {t('welcome.structure')}
+                {openStructureShortcut?.enabled && (
+                  <kbd className="rounded border bg-muted px-1.5 font-mono text-[10px] text-muted-foreground">
+                    {formatShortcut(openStructureShortcut)}
+                  </kbd>
+                )}
+              </Button>
+            ) : null}
           </div>
         </div>
 
@@ -594,9 +597,11 @@ export function WelcomeScreen() {
                 >
                   {t('welcome.openCommandPalette')}
                 </EmptyPanelAction>
-                <EmptyPanelAction icon={Network} onClick={() => openGraphTab()}>
-                  {t('welcome.viewStructure')}
-                </EmptyPanelAction>
+                {!isMobileShell() ? (
+                  <EmptyPanelAction icon={Network} onClick={() => openGraphTab()}>
+                    {t('welcome.viewStructure')}
+                  </EmptyPanelAction>
+                ) : null}
               </>
             }
           />

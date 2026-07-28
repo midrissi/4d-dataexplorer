@@ -17,6 +17,7 @@ export default defineConfig({
   base: '/',
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
+    'import.meta.env.VITE_APP_SHELL': JSON.stringify('desktop'),
   },
   resolve: {
     alias: [

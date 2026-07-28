@@ -4,6 +4,7 @@ import {
   releaseEntitySetIfOrphaned,
   releaseEntitySetsFromRemovedTabs,
 } from '~/lib/entity-set-lifecycle'
+import { isMobileShell } from '~/lib/platform'
 import {
   columnPresetTableNames,
   getBaseSettings,
@@ -756,6 +757,7 @@ export const useTabsStore = create<TabsState>()(
          * Returns a Promise that resolves when the graph tab content is mounted and ready.
          */
         openGraphTab: () => {
+          if (isMobileShell()) return Promise.resolve()
           const { tabs, activeTabId } = get()
           const existingGraphTab = tabs.find(isGraphTab)
           const graphTabId = existingGraphTab?.id
@@ -802,6 +804,7 @@ export const useTabsStore = create<TabsState>()(
          * Opens the Schema Builder tab. If a schema builder tab already exists, activates it.
          */
         openSchemaBuilderTab: () => {
+          if (isMobileShell()) return
           const { tabs } = get()
           const existingTab = tabs.find((t) => t.type === 'schema-builder')
           if (existingTab) {

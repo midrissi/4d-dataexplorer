@@ -1,24 +1,61 @@
 import { createLoggingFetch } from './logging-fetch'
 
 /**
- * Platform detection and base URL management for desktop/web modes.
+ * Platform detection and base URL management for web / desktop / mobile shells.
  *
  * In web mode: the app runs behind a Vite proxy, so baseUrl = window.location.origin.
- * In desktop mode (Tauri): the app connects to a user-configured remote server.
+ * In desktop/mobile (Tauri): the app connects to a user-configured remote server
+ * via native HTTP (CORS-free).
  */
 
+export type AppShell = 'web' | 'desktop' | 'mobile'
+
 /**
- * Detect if running inside a Tauri desktop app
+ * Shell selected at build time via `VITE_APP_SHELL`. Falls back to Tauri → desktop
+ * when the env is unset (legacy desktop builds).
+ */
+export function getAppShell(): AppShell {
+  const env = (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_APP_SHELL
+  if (env === 'desktop' || env === 'mobile' || env === 'web') return env
+  if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) return 'desktop'
+  return 'web'
+}
+
+/** Running inside any Tauri WebView (desktop or mobile). */
+export function isTauri(): boolean {
+  return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
+}
+
+/** Native shell with connection profiles + CORS-free fetch (desktop or mobile). */
+export function isNativeShell(): boolean {
+  const shell = getAppShell()
+  return shell === 'desktop' || shell === 'mobile' || isTauri()
+}
+
+/** Desktop Tauri shell only (menus, auto-updater, window chrome). */
+export function isDesktopShell(): boolean {
+  return getAppShell() === 'desktop'
+}
+
+/** Mobile Tauri shell (beta chrome, feature gates, stacked layouts). */
+export function isMobileShell(): boolean {
+  return getAppShell() === 'mobile'
+}
+
+/**
+ * True for Tauri native shells (desktop or mobile). Kept for call sites that
+ * need connection profiles, access-key sessions, and native fetch — not
+ * desktop-only UI.
  */
 export function isDesktop(): boolean {
-  return typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
+  return isNativeShell()
 }
 
 /**
  * Detect if running as a regular web application
  */
 export function isWeb(): boolean {
-  return !isDesktop()
+  return getAppShell() === 'web' && !isTauri()
 }
 
 // ─── Dynamic Base URL Management ────────────────────────────────────────────────

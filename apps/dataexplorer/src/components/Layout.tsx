@@ -52,7 +52,7 @@ import { useTranslation } from '~/i18n'
 import type { CommandPaletteMode } from '~/lib/eventBus'
 import { eventBus } from '~/lib/eventBus'
 import { resolveLucideIcon } from '~/lib/lucide-icon'
-import { isDesktop } from '~/lib/platform'
+import { isDesktop, isMobileShell } from '~/lib/platform'
 import { getConsoleHeight, setConsoleHeight as saveConsoleHeight } from '~/lib/storage'
 import { useKeyboardShortcutsContext } from '~/providers/KeyboardShortcutsProvider'
 import { useShortcutController } from '~/providers/ShortcutController'
@@ -247,14 +247,18 @@ export function Layout({
       registerShortcutHandler('toggle-readonly', toggleReadonlyMode),
       registerShortcutHandler('toggle-assistant', toggleAssistantOpen),
       registerShortcutHandler('open-home', openHomeTab),
-      registerShortcutHandler('open-structure', () => {
-        const dataclassToHighlight = activeDataclassTab?.dataclassName
-        openGraphTab().then(() => {
-          if (dataclassToHighlight) {
-            eventBus.emit('highlight-dataclass-in-graph', dataclassToHighlight)
-          }
-        })
-      }),
+      ...(isMobileShell()
+        ? []
+        : [
+            registerShortcutHandler('open-structure', () => {
+              const dataclassToHighlight = activeDataclassTab?.dataclassName
+              openGraphTab().then(() => {
+                if (dataclassToHighlight) {
+                  eventBus.emit('highlight-dataclass-in-graph', dataclassToHighlight)
+                }
+              })
+            }),
+          ]),
       registerShortcutHandler('open-assistant-metadata', openAssistantMetadataTab),
       registerShortcutHandler('tab-next', () => {
         if (tabs.length > 1) {
@@ -313,7 +317,7 @@ export function Layout({
   }, [showShortcuts])
 
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className={cn('flex flex-col bg-background', isMobileShell() ? 'h-full' : 'h-screen')}>
       {/* Header */}
       <header className="relative z-50 flex h-10 items-center justify-between gap-3 border-border/60 border-b bg-background px-3">
         {/* Left side - Logo (+ expand when sidebar is collapsed) */}
@@ -350,8 +354,19 @@ export function Layout({
             <Database className="h-3.5 w-3.5 text-primary-foreground" />
           </div>
           <div>
-            <h1 className="font-semibold text-sm leading-tight tracking-tight">{t('app.title')}</h1>
-            <p className="text-muted-foreground text-xs leading-tight">{t('app.subtitle')}</p>
+            <div className="flex items-center gap-1.5">
+              <h1 className="font-semibold text-sm leading-tight tracking-tight">
+                {t('app.title')}
+              </h1>
+              {isMobileShell() ? (
+                <span className="rounded-sm bg-amber-500/15 px-1.5 py-0.5 font-medium text-[10px] text-amber-700 uppercase tracking-wide dark:text-amber-400">
+                  {t('mobile.betaBadge')}
+                </span>
+              ) : null}
+            </div>
+            <p className="text-muted-foreground text-xs leading-tight">
+              {isMobileShell() ? t('mobile.subtitle') : t('app.subtitle')}
+            </p>
           </div>
         </div>
 
@@ -648,66 +663,70 @@ export function Layout({
             </Tooltip>
           </TooltipProvider>
 
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={showShortcuts}
-                  aria-label={t('layout.keyboardShortcutsAria')}
-                >
-                  <Keyboard className="h-3 w-3" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top">
-                {t('layout.keyboardShortcuts')}
-                {(() => {
-                  const sc = getShortcut('show-shortcuts')
-                  return sc?.enabled ? (
-                    <kbd className="ml-2 rounded bg-muted px-1 text-[10px]">
-                      {formatShortcut(sc)}
-                    </kbd>
-                  ) : null
-                })()}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          {!isMobileShell() ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={showShortcuts}
+                    aria-label={t('layout.keyboardShortcutsAria')}
+                  >
+                    <Keyboard className="h-3 w-3" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  {t('layout.keyboardShortcuts')}
+                  {(() => {
+                    const sc = getShortcut('show-shortcuts')
+                    return sc?.enabled ? (
+                      <kbd className="ml-2 rounded bg-muted px-1 text-[10px]">
+                        {formatShortcut(sc)}
+                      </kbd>
+                    ) : null
+                  })()}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : null}
 
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={() => {
-                    const dataclassToHighlight = activeDataclassTab?.dataclassName
-                    openGraphTab().then(() => {
-                      if (dataclassToHighlight) {
-                        eventBus.emit('highlight-dataclass-in-graph', dataclassToHighlight)
-                      }
-                    })
-                  }}
-                  aria-label={t('tabs.structure')}
-                >
-                  <Network className="h-3 w-3" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top">
-                {t('tabs.structure')}
-                {(() => {
-                  const sc = getShortcut('open-structure')
-                  return sc?.enabled ? (
-                    <kbd className="ml-2 rounded bg-muted px-1 text-[10px]">
-                      {formatShortcut(sc)}
-                    </kbd>
-                  ) : null
-                })()}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          {!isMobileShell() ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => {
+                      const dataclassToHighlight = activeDataclassTab?.dataclassName
+                      openGraphTab().then(() => {
+                        if (dataclassToHighlight) {
+                          eventBus.emit('highlight-dataclass-in-graph', dataclassToHighlight)
+                        }
+                      })
+                    }}
+                    aria-label={t('tabs.structure')}
+                  >
+                    <Network className="h-3 w-3" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  {t('tabs.structure')}
+                  {(() => {
+                    const sc = getShortcut('open-structure')
+                    return sc?.enabled ? (
+                      <kbd className="ml-2 rounded bg-muted px-1 text-[10px]">
+                        {formatShortcut(sc)}
+                      </kbd>
+                    ) : null
+                  })()}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : null}
 
           <DropdownMenu>
             <TooltipProvider>
@@ -728,10 +747,12 @@ export function Layout({
               </Tooltip>
             </TooltipProvider>
             <DropdownMenuContent align="end" side="top" className="w-48">
-              <DropdownMenuItem onClick={openSchemaBuilderTab}>
-                <Braces className="mr-2 h-4 w-4" />
-                {t('tabs.schemaBuilder')}
-              </DropdownMenuItem>
+              {!isMobileShell() ? (
+                <DropdownMenuItem onClick={openSchemaBuilderTab}>
+                  <Braces className="mr-2 h-4 w-4" />
+                  {t('tabs.schemaBuilder')}
+                </DropdownMenuItem>
+              ) : null}
               <DropdownMenuItem onClick={openAssistantMetadataTab}>
                 <BookText className="mr-2 h-4 w-4" />
                 {t('tabs.assistantMetadata')}
