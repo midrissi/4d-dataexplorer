@@ -249,6 +249,8 @@ jobs:
           echo "zip_path=$BUNDLE_DIR/$ZIP_NAME" >> "$GITHUB_OUTPUT"
           echo "sha_path=$BUNDLE_DIR/$ZIP_NAME.sha256" >> "$GITHUB_OUTPUT"
           echo "script_path=$STAMP_DIR/fix-macos-quarantine.sh" >> "$GITHUB_OUTPUT"
+          echo "install_sh_path=$STAMP_DIR/install-desktop.sh" >> "$GITHUB_OUTPUT"
+          echo "install_ps1_path=$STAMP_DIR/install-desktop.ps1" >> "$GITHUB_OUTPUT"
 
       - name: Upload macOS ZIP + checksum to release
         if: runner.os == 'macOS' && github.event_name != 'pull_request'
@@ -258,14 +260,18 @@ jobs:
         run: |
           set -euo pipefail
           TAG="v${{ steps.version.outputs.version }}"
-          # Release already exists; attach ZIP (+ checksum). Upload the stamped
-          # quarantine script once (Apple Silicon job) so each tag has its own asset.
+          # Release already exists; attach ZIP (+ checksum). Upload install/quarantine
+          # scripts once (Apple Silicon job) so each tag has its own assets.
           UPLOAD_ARGS=(
             "${{ steps.macpkg.outputs.zip_path }}"
             "${{ steps.macpkg.outputs.sha_path }}"
           )
           if [ "${{ matrix.target }}" = "aarch64-apple-darwin" ]; then
-            UPLOAD_ARGS+=("${{ steps.macpkg.outputs.script_path }}")
+            UPLOAD_ARGS+=(
+              "${{ steps.macpkg.outputs.script_path }}"
+              "${{ steps.macpkg.outputs.install_sh_path }}"
+              "${{ steps.macpkg.outputs.install_ps1_path }}"
+            )
           fi
           gh release upload "$TAG" "${UPLOAD_ARGS[@]}" --clobber
 

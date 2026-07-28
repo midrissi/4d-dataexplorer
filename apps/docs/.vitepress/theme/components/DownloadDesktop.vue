@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { withBase } from 'vitepress'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import {
   DOWNLOAD_STATS_RAW_URL,
@@ -8,14 +7,12 @@ import {
   type DownloadStatsReleaseRef,
   type DownloadStatsSnapshot,
 } from '../../data/download-stats'
+import TerminalInstall from './TerminalInstall.vue'
 
 const REPO = DOWNLOAD_STATS_REPO
 const RELEASES_INDEX = `https://github.com/${REPO}/releases`
 const STATS_BASE = DOWNLOAD_STATS_RAW_URL.replace(/\/releases\/download-stats\.json$/, '')
 const GH_LATEST_API = `https://api.github.com/repos/${REPO}/releases/latest`
-const MACOS_GUIDE_HREF = withBase('/guide/macos-desktop')
-const MACOS_SCRIPT_FILE = 'fix-macos-quarantine.sh'
-const MACOS_SCRIPT_SOURCE = `https://github.com/${REPO}/blob/main/apps/desktop/scripts/${MACOS_SCRIPT_FILE}`
 
 type PlatformId = 'mac-arm' | 'mac-intel' | 'windows' | 'linux' | 'web' | 'unknown'
 
@@ -84,7 +81,7 @@ function detectPlatform(): PlatformId {
 
 function classify(name: string): PlatformId | null {
   const n = name.toLowerCase()
-  if (n.endsWith('.sha256') || n.endsWith('.sig') || n.endsWith('.sh')) return null
+  if (n.endsWith('.sha256') || n.endsWith('.sig') || n.endsWith('.sh') || n.endsWith('.ps1')) return null
   if (n === 'latest.json') return null
   if (n === 'dataexplorer.zip' || n === 'databrowser.zip') return 'web'
   // Updater archives are not useful for manual install.
@@ -152,15 +149,6 @@ const releasePageUrl = computed(() =>
     ? `https://github.com/${REPO}/releases/tag/${encodeURIComponent(version.value)}`
     : RELEASES_INDEX
 )
-
-/** Per-release quarantine fix script (same asset name; version is in the URL). */
-const macosScriptHref = computed(() =>
-  version.value
-    ? `https://github.com/${REPO}/releases/download/${encodeURIComponent(version.value)}/${MACOS_SCRIPT_FILE}`
-    : `https://github.com/${REPO}/releases/latest/download/${MACOS_SCRIPT_FILE}`
-)
-
-const macosCurlCommand = computed(() => `curl -fsSL ${macosScriptHref.value} | bash`)
 
 function onDocClick(event: MouseEvent): void {
   if (root.value && !root.value.contains(event.target as Node)) {
@@ -274,14 +262,14 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="root" class="hero-download" :class="{ 'is-stacked': isMac }">
-    <span v-if="loading" class="hero-download__btn hero-download__btn--primary is-loading">
-      <span class="hero-download__spinner" aria-hidden="true" />
-      Fetching latest…
-    </span>
+  <div ref="root" class="hero-download is-stacked">
+    <div class="hero-download__stack">
+      <span v-if="loading" class="hero-download__btn hero-download__btn--primary is-loading">
+        <span class="hero-download__spinner" aria-hidden="true" />
+        Fetching latest…
+      </span>
 
-    <template v-else>
-      <div class="hero-download__stack">
+      <template v-else>
         <div class="hero-download__anchor">
           <div class="hero-download__split">
             <a
@@ -460,29 +448,20 @@ onBeforeUnmount(() => {
             </div>
           </transition>
         </div>
+      </template>
 
-        <p v-if="isMac" class="hero-download__note">
-          <span class="hero-download__note-title">First launch on macOS</span>
-          This build is ad-hoc signed but not Apple-notarized, so macOS may say it
-          <em>“can’t be opened”</em>. See
-          <a :href="MACOS_GUIDE_HREF">macOS desktop first launch</a>
-          —
-          <a :href="macosScriptHref" target="_blank" rel="noopener">view/download this version’s script</a>
-          (<a :href="MACOS_SCRIPT_SOURCE" target="_blank" rel="noopener">source</a>).
-          In Terminal run
-          <code>xattr -cr "/Applications/Data Explorer.app"</code>
-          or
-          <code>{{ macosCurlCommand }}</code>.
-          The ZIP also includes <strong>README.html</strong> and the same script.
-        </p>
+      <TerminalInstall
+        :loading="loading"
+        :detected="detected"
+        :version="version"
+      />
 
-        <p v-if="failed && !primaryAsset" class="hero-download__note">
-          Couldn’t load release assets. Visit
-          <a :href="RELEASES_INDEX" target="_blank" rel="noopener">GitHub Releases</a>
-          to download manually.
-        </p>
-      </div>
-    </template>
+      <p v-if="failed && !primaryAsset && !loading" class="hero-download__note">
+        Couldn’t load release assets. Visit
+        <a :href="RELEASES_INDEX" target="_blank" rel="noopener">GitHub Releases</a>
+        to download manually.
+      </p>
+    </div>
   </div>
 </template>
 

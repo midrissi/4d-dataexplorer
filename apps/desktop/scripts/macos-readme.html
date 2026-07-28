@@ -17,30 +17,20 @@
         --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif;
         --font-display: 'Fraunces', Georgia, serif;
         --font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, monospace;
-
         --brand-1: #f37f5f;
         --brand-2: #df5e3b;
-        --brand-3: #bb4d2f;
         --brand-soft: color-mix(in oklch, #df5e3b 12%, transparent);
         --on-brand: #f5f9ff;
-
         --bg: #131b29;
         --bg-alt: #1c2433;
         --bg-soft: #272d3d;
-        --bg-mute: #313848;
         --divider: #3b4253;
         --text-1: #e7ebf2;
         --text-2: #b0b8c5;
         --text-3: #7c8799;
-
         --radius: 14px;
-        --shadow: 0 10px 32px color-mix(in oklch, #0a1018 55%, transparent);
-        --hero-name: linear-gradient(
-          120deg,
-          #ff9577 0%,
-          #df5e3b 45%,
-          #6568b6 100%
-        );
+        --shadow: 0 10px 32px color-mix(in oklch, #0a1018 45%, transparent);
+        --hero-name: linear-gradient(120deg, #ff9577 0%, #df5e3b 45%, #6568b6 100%);
       }
 
       @media (prefers-color-scheme: light) {
@@ -48,12 +38,11 @@
           --bg: #f3f5f9;
           --bg-alt: #fbfcfe;
           --bg-soft: #ebeff4;
-          --bg-mute: #e1e5eb;
           --divider: #d3d8e2;
           --text-1: #101a2d;
           --text-2: #444d5e;
           --text-3: #717b8d;
-          --shadow: 0 10px 32px color-mix(in oklch, #101a2d 12%, transparent);
+          --shadow: 0 10px 32px color-mix(in oklch, #101a2d 10%, transparent);
         }
       }
 
@@ -63,16 +52,12 @@
         box-sizing: border-box;
       }
 
-      html {
-        scroll-behavior: smooth;
-      }
-
       body {
         margin: 0;
         min-height: 100vh;
         font-family: var(--font-sans);
         font-size: 1rem;
-        line-height: 1.65;
+        line-height: 1.6;
         color: var(--text-1);
         background-color: var(--bg);
         background-image:
@@ -85,12 +70,17 @@
 
       a {
         color: var(--brand-1);
-        text-decoration-thickness: 1px;
         text-underline-offset: 0.18em;
       }
 
       a:hover {
         color: var(--brand-2);
+      }
+
+      a:focus-visible {
+        outline: 2px solid var(--brand-1);
+        outline-offset: 2px;
+        border-radius: 2px;
       }
 
       code,
@@ -100,15 +90,14 @@
       }
 
       code {
-        padding: 0.15em 0.4em;
+        padding: 0.12em 0.38em;
         border-radius: 6px;
         background: var(--bg-soft);
-        color: var(--text-1);
       }
 
       kbd {
         display: inline-block;
-        padding: 0.12em 0.45em;
+        padding: 0.1em 0.4em;
         border: 1px solid var(--divider);
         border-bottom-width: 2px;
         border-radius: 6px;
@@ -116,62 +105,10 @@
         font-size: 0.8125em;
       }
 
-      pre {
-        margin: 0;
-        padding: 1rem 1.1rem;
-        overflow-x: auto;
-        border-radius: 10px;
-        background: var(--bg);
-        border: 1px solid var(--divider);
-        font-family: var(--font-mono);
-        font-size: 0.8125rem;
-        line-height: 1.55;
-        color: var(--text-1);
-      }
-
-      pre code {
-        padding: 0;
-        background: none;
-      }
-
-      .code-block {
-        position: relative;
-        margin: 0.75rem 0 0;
-      }
-
-      .code-block pre {
-        padding-right: 5.5rem;
-      }
-
-      .code-block__copy {
-        position: absolute;
-        top: 0.55rem;
-        right: 0.55rem;
-        padding: 0.35rem 0.65rem;
-        border-radius: 999px;
-        border: 1px solid var(--divider);
-        background: var(--bg-alt);
-        color: var(--text-2);
-        font-family: var(--font-sans);
-        font-size: 0.75rem;
-        font-weight: 600;
-        cursor: pointer;
-      }
-
-      .code-block__copy:hover {
-        border-color: var(--brand-2);
-        color: var(--brand-1);
-      }
-
-      .code-block__copy.is-copied {
-        border-color: var(--brand-2);
-        color: var(--brand-2);
-      }
-
       .wrap {
-        width: min(720px, calc(100% - 2rem));
+        width: min(640px, calc(100% - 2rem));
         margin: 0 auto;
-        padding: 2.5rem 0 4rem;
+        padding: 2rem 0 3.5rem;
       }
 
       .nav {
@@ -179,40 +116,33 @@
         align-items: center;
         justify-content: space-between;
         gap: 1rem;
-        margin-bottom: 2rem;
-        padding: 0.75rem 1rem;
+        margin-bottom: 1.75rem;
+        padding: 0.65rem 0.9rem;
         border: 1px solid var(--divider);
         border-radius: 999px;
-        background: color-mix(in oklch, var(--bg-alt) 85%, transparent);
+        background: color-mix(in oklch, var(--bg-alt) 88%, transparent);
         backdrop-filter: blur(12px);
-        box-shadow: var(--shadow);
       }
 
       .nav__brand {
         display: inline-flex;
         align-items: center;
-        gap: 0.65rem;
+        gap: 0.55rem;
         color: inherit;
         text-decoration: none;
         font-weight: 600;
         font-size: 0.9375rem;
       }
 
-      .nav__brand:hover {
-        color: inherit;
-      }
-
       .nav__logo {
-        width: 28px;
-        height: 28px;
-        flex-shrink: 0;
+        width: 26px;
+        height: 26px;
       }
 
       .nav__links {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.35rem 0.85rem;
-        justify-content: flex-end;
+        gap: 0.75rem;
         font-size: 0.8125rem;
       }
 
@@ -226,18 +156,18 @@
       }
 
       .eyebrow {
-        margin: 0 0 0.75rem;
+        margin: 0 0 0.55rem;
         font-size: 0.6875rem;
         font-weight: 600;
-        letter-spacing: 0.14em;
+        letter-spacing: 0.12em;
         text-transform: uppercase;
         color: var(--brand-2);
       }
 
       h1 {
-        margin: 0 0 0.85rem;
+        margin: 0 0 0.65rem;
         font-family: var(--font-display);
-        font-size: clamp(2rem, 5vw, 2.75rem);
+        font-size: clamp(1.85rem, 4.5vw, 2.4rem);
         font-weight: 600;
         line-height: 1.15;
         letter-spacing: -0.02em;
@@ -251,43 +181,135 @@
       }
 
       .lede {
-        margin: 0 0 1.75rem;
-        max-width: 38rem;
-        font-size: 1.0625rem;
+        margin: 0 0 1.35rem;
         color: var(--text-2);
+        font-size: 0.9375rem;
+      }
+
+      .panel {
+        margin: 0 0 1.25rem;
+        padding: 1.1rem 1.15rem;
+        border: 1px solid color-mix(in oklch, #df5e3b 35%, var(--divider));
+        border-radius: var(--radius);
+        background: linear-gradient(
+          160deg,
+          color-mix(in oklch, #df5e3b 10%, var(--bg-alt)) 0%,
+          var(--bg-alt) 55%
+        );
+        box-shadow: var(--shadow);
+      }
+
+      .panel h2 {
+        margin: 0 0 0.45rem;
+        font-family: var(--font-display);
+        font-size: 1.2rem;
+        font-weight: 600;
+      }
+
+      .panel > p {
+        margin: 0 0 0.85rem;
+        color: var(--text-2);
+        font-size: 0.875rem;
+      }
+
+      .label {
+        margin: 0 0 0.35rem;
+        font-size: 0.6875rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-3);
+      }
+
+      .code-block {
+        position: relative;
+        margin: 0 0 0.85rem;
+      }
+
+      .code-block pre {
+        margin: 0;
+        padding: 0.75rem 4.5rem 0.75rem 0.85rem;
+        overflow-x: auto;
+        border-radius: 10px;
+        border: 1px solid var(--divider);
+        background: var(--bg);
+        font-family: var(--font-mono);
+        font-size: 0.75rem;
+        line-height: 1.5;
+        color: var(--text-1);
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+
+      .code-block pre code {
+        padding: 0;
+        background: none;
+      }
+
+      .code-block__copy {
+        position: absolute;
+        top: 0.45rem;
+        right: 0.45rem;
+        min-height: 1.85rem;
+        padding: 0.3rem 0.65rem;
+        border-radius: 999px;
+        border: 1px solid var(--divider);
+        background: var(--bg-alt);
+        color: var(--text-1);
+        font-family: var(--font-sans);
+        font-size: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      .code-block__copy:hover,
+      .code-block__copy.is-copied {
+        border-color: var(--brand-2);
+        color: var(--brand-1);
+      }
+
+      .code-block__copy:focus-visible {
+        outline: 2px solid var(--brand-1);
+        outline-offset: 2px;
+      }
+
+      .alt {
+        margin: 0.85rem 0 0;
+        padding-top: 0.85rem;
+        border-top: 1px solid var(--divider);
+      }
+
+      .alt p {
+        margin: 0 0 0.45rem;
+        font-size: 0.8125rem;
+        color: var(--text-3);
       }
 
       .cta-row {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.75rem;
-        margin-bottom: 2.25rem;
+        gap: 0.55rem;
+        margin: 0 0 1.75rem;
       }
 
       .btn {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 0.45rem;
-        padding: 0.7rem 1.2rem;
+        min-height: 2.35rem;
+        padding: 0.5rem 1rem;
         border-radius: 999px;
         border: 1px solid transparent;
         font-family: inherit;
-        font-size: 0.9375rem;
+        font-size: 0.875rem;
         font-weight: 600;
         text-decoration: none;
         cursor: pointer;
-        transition:
-          background 0.15s ease,
-          border-color 0.15s ease,
-          color 0.15s ease,
-          box-shadow 0.15s ease;
       }
 
       .btn--primary {
         background: var(--brand-2);
         color: var(--on-brand);
-        box-shadow: 0 8px 22px -12px color-mix(in oklch, #df5e3b 65%, transparent);
       }
 
       .btn--primary:hover {
@@ -306,153 +328,51 @@
         color: var(--brand-1);
       }
 
-      .card {
-        margin: 0 0 1.25rem;
-        padding: 1.35rem 1.4rem;
-        border: 1px solid var(--divider);
-        border-radius: var(--radius);
-        background: var(--bg-alt);
-        box-shadow: var(--shadow);
+      .btn:focus-visible {
+        outline: 2px solid var(--brand-1);
+        outline-offset: 2px;
       }
 
-      .card--warn {
-        border-color: color-mix(in oklch, #df5e3b 45%, var(--divider));
-        background: linear-gradient(
-          160deg,
-          color-mix(in oklch, #df5e3b 10%, var(--bg-alt)) 0%,
-          var(--bg-alt) 55%
-        );
-      }
-
-      .card__title {
-        margin: 0 0 0.55rem;
+      h2.section {
+        margin: 0 0 0.65rem;
         font-family: var(--font-display);
-        font-size: 1.25rem;
-        font-weight: 600;
-        letter-spacing: -0.01em;
-      }
-
-      .card p {
-        margin: 0 0 0.85rem;
-        color: var(--text-2);
-      }
-
-      .card p:last-child {
-        margin-bottom: 0;
-      }
-
-      h2 {
-        margin: 2.5rem 0 1rem;
-        font-family: var(--font-display);
-        font-size: 1.5rem;
-        font-weight: 600;
-        letter-spacing: -0.015em;
-      }
-
-      h3 {
-        margin: 1.5rem 0 0.65rem;
-        font-size: 1.0625rem;
+        font-size: 1.15rem;
         font-weight: 600;
       }
 
-      ol.steps {
-        margin: 0;
+      .zip {
+        margin: 0 0 1.5rem;
         padding: 0;
         list-style: none;
-        counter-reset: step;
-      }
-
-      ol.steps > li {
-        position: relative;
-        margin: 0 0 1rem;
-        padding: 1.15rem 1.2rem 1.15rem 3.5rem;
         border: 1px solid var(--divider);
         border-radius: var(--radius);
         background: var(--bg-alt);
+        overflow: hidden;
       }
 
-      ol.steps > li::before {
-        counter-increment: step;
-        content: counter(step);
-        position: absolute;
-        left: 1.1rem;
-        top: 1.15rem;
-        width: 1.75rem;
-        height: 1.75rem;
+      .zip li {
         display: grid;
-        place-items: center;
-        border-radius: 999px;
-        background: var(--brand-soft);
-        color: var(--brand-2);
-        font-size: 0.8125rem;
-        font-weight: 700;
-      }
-
-      ol.steps > li strong {
-        display: block;
-        margin-bottom: 0.35rem;
-        color: var(--text-1);
-      }
-
-      ol.steps > li p {
-        margin: 0;
-        color: var(--text-2);
-        font-size: 0.9375rem;
-      }
-
-      .callout {
-        margin: 1rem 0 0;
-        padding: 0.85rem 1rem;
-        border-left: 3px solid var(--brand-2);
-        border-radius: 0 10px 10px 0;
-        background: var(--bg-soft);
-        color: var(--text-2);
-        font-size: 0.9375rem;
-      }
-
-      .links {
-        display: grid;
+        grid-template-columns: 11rem minmax(0, 1fr);
         gap: 0.75rem;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        margin: 0;
-        padding: 0;
-        list-style: none;
-      }
-
-      .links a {
-        display: block;
-        padding: 1rem 1.1rem;
-        border: 1px solid var(--divider);
-        border-radius: 12px;
-        background: var(--bg-alt);
-        text-decoration: none;
-        color: inherit;
-        transition:
-          border-color 0.15s ease,
-          box-shadow 0.15s ease;
-      }
-
-      .links a:hover {
-        border-color: var(--brand-2);
-        box-shadow: var(--shadow);
-        color: inherit;
-      }
-
-      .links > li a strong {
-        display: block;
-        margin-bottom: 0.25rem;
-        color: var(--brand-1);
-        font-size: 0.9375rem;
-      }
-
-      .links > li a span {
-        color: var(--text-3);
+        padding: 0.7rem 0.9rem;
+        border-top: 1px solid var(--divider);
         font-size: 0.8125rem;
-        line-height: 1.45;
+      }
+
+      .zip li:first-child {
+        border-top: none;
+      }
+
+      .zip code {
+        font-size: 0.78em;
+      }
+
+      .zip span {
+        color: var(--text-2);
       }
 
       details {
-        margin: 0.75rem 0;
+        margin: 0 0 0.55rem;
         border: 1px solid var(--divider);
         border-radius: 12px;
         background: var(--bg-alt);
@@ -460,9 +380,10 @@
       }
 
       summary {
-        padding: 0.9rem 1.1rem;
+        padding: 0.75rem 0.95rem;
         cursor: pointer;
         font-weight: 600;
+        font-size: 0.875rem;
         list-style: none;
       }
 
@@ -473,7 +394,7 @@
       summary::before {
         content: '▸';
         display: inline-block;
-        margin-right: 0.5rem;
+        margin-right: 0.45rem;
         color: var(--brand-2);
         transition: transform 0.15s ease;
       }
@@ -482,41 +403,43 @@
         transform: rotate(90deg);
       }
 
-      details .details-body {
-        padding: 0 1.1rem 1.1rem;
+      summary:focus-visible {
+        outline: 2px solid var(--brand-1);
+        outline-offset: -2px;
+      }
+
+      .details-body {
+        padding: 0 0.95rem 0.95rem;
         color: var(--text-2);
-        font-size: 0.9375rem;
-      }
-
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 0.875rem;
-      }
-
-      th,
-      td {
-        padding: 0.65rem 0.75rem;
-        border: 1px solid var(--divider);
-        text-align: left;
-        vertical-align: top;
-      }
-
-      th {
-        background: var(--bg-soft);
-        font-weight: 600;
-      }
-
-      footer {
-        margin-top: 3rem;
-        padding-top: 1.5rem;
-        border-top: 1px solid var(--divider);
-        color: var(--text-3);
         font-size: 0.8125rem;
       }
 
+      .details-body p {
+        margin: 0 0 0.55rem;
+      }
+
+      .details-body pre {
+        margin: 0;
+        padding: 0.65rem 0.75rem;
+        overflow-x: auto;
+        border-radius: 8px;
+        border: 1px solid var(--divider);
+        background: var(--bg);
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        line-height: 1.45;
+      }
+
+      .wrap > footer {
+        margin-top: 2rem;
+        padding-top: 1.15rem;
+        border-top: 1px solid var(--divider);
+        color: var(--text-3);
+        font-size: 0.75rem;
+      }
+
       .wrap > footer p {
-        margin: 0 0 0.5rem;
+        margin: 0 0 0.4rem;
       }
 
       @media (max-width: 560px) {
@@ -526,14 +449,15 @@
           border-radius: var(--radius);
         }
 
-        ol.steps > li {
-          padding-left: 1.2rem;
-          padding-top: 3.1rem;
+        .zip li {
+          grid-template-columns: 1fr;
+          gap: 0.25rem;
         }
+      }
 
-        ol.steps > li::before {
-          left: 1.2rem;
-          top: 1rem;
+      @media (prefers-reduced-motion: reduce) {
+        summary::before {
+          transition: none;
         }
       }
     </style>
@@ -566,365 +490,136 @@
           Data Explorer
         </a>
         <div class="nav__links">
-          <a href="https://midrissi.github.io/4d-dataexplorer/">Docs</a>
-          <a href="https://midrissi.github.io/4d-dataexplorer/guide/getting-started">Getting started</a>
+          <a href="https://midrissi.github.io/4d-dataexplorer/guide/macos-desktop">Guide</a>
           <a href="https://github.com/midrissi/4d-dataexplorer/releases">Releases</a>
           <a href="https://github.com/midrissi/4d-dataexplorer">GitHub</a>
         </div>
       </nav>
 
-      <p class="eyebrow">macOS · Desktop app · <span id="release-tag">__APP_TAG__</span></p>
-      <h1>
-        <span class="title-gradient">First launch on macOS</span>
-      </h1>
+      <p class="eyebrow">macOS · <span id="release-tag">__APP_TAG__</span></p>
+      <h1><span class="title-gradient">First launch on macOS</span></h1>
+      <p class="lede">
+        This build is ad-hoc signed but not Apple-notarized, so macOS may block it. Fix it in
+        Terminal — paste a one-liner, don’t double-click helper scripts.
+      </p>
 
-      <aside class="card card--warn" aria-label="Quick fix" style="margin-top: 1.25rem">
-        <h2 class="card__title" style="margin-top: 0">⚡ Quick fix (recommended)</h2>
+      <aside class="panel" aria-label="Quick fix">
+        <h2>Quick fix</h2>
         <p>
-          Downloaded helper scripts can be quarantined too, so this ZIP does
-          <strong>not</strong> rely on double-clicking a <code>.command</code> file.
-          Use <strong>Terminal</strong> instead — commands you paste are not blocked the same way.
-        </p>
-        <p>
-          <strong>1.</strong> Open <strong>Terminal</strong> (Spotlight → type
-          <code>Terminal</code>).<br />
-          <strong>2.</strong> Paste one of the commands below and press
-          <kbd>Return</kbd>.
+          Open <strong>Terminal</strong>, <code>cd</code> into this unzipped folder (type
+          <code>cd</code> then a space, drag the folder in, press <kbd>Return</kbd>), then paste:
         </p>
 
-        <h3 style="margin-top: 1rem">Option A — one command (finds the app)</h3>
-        <p>
-          Works if the app is in <code>/Applications</code>, your current folder,
-          <code>~/Downloads</code>, or <code>~/Desktop</code>:
-        </p>
+        <p class="label">From this folder (no internet)</p>
+        <div class="code-block">
+          <button type="button" class="code-block__copy" data-copy>Copy</button>
+          <pre><code>bash "./fix-macos-quarantine.sh"</code></pre>
+        </div>
+
+        <p class="label">Or from the internet</p>
         <div class="code-block">
           <button type="button" class="code-block__copy" data-copy>Copy</button>
           <pre><code>curl -fsSL https://github.com/midrissi/4d-dataexplorer/releases/latest/download/fix-macos-quarantine.sh | bash</code></pre>
         </div>
-        <div class="cta-row" style="margin: 0.85rem 0 0">
-          <a
-            class="btn btn--ghost"
-            href="https://github.com/midrissi/4d-dataexplorer/blob/main/apps/desktop/scripts/fix-macos-quarantine.sh"
-            target="_blank"
-            rel="noopener"
-            >👁 View script on GitHub</a
-          >
-          <a
-            class="btn btn--ghost"
-            href="https://github.com/midrissi/4d-dataexplorer/releases/latest/download/fix-macos-quarantine.sh"
-            target="_blank"
-            rel="noopener"
-            >📄 View raw</a
-          >
-          <a
-            class="btn btn--ghost"
-            href="https://github.com/midrissi/4d-dataexplorer/releases/latest/download/fix-macos-quarantine.sh"
-            download="fix-macos-quarantine.sh"
-            >⬇️ Download .sh</a
-          >
-          <a
-            class="btn btn--ghost"
-            href="https://midrissi.github.io/4d-dataexplorer/guide/macos-desktop"
-            target="_blank"
-            rel="noopener"
-            >📚 Docs page</a
-          >
-        </div>
 
-        <h3>Option B — app still in the unzipped folder</h3>
-        <p>
-          In Terminal type <code>cd</code> then a space, drag the unzipped folder into the
-          Terminal window, press <kbd>Return</kbd>, then paste:
-        </p>
+        <p class="label">Fresh install (download + install + open)</p>
         <div class="code-block">
           <button type="button" class="code-block__copy" data-copy>Copy</button>
-          <pre><code>xattr -cr "Data Explorer.app" &amp;&amp; open "Data Explorer.app"</code></pre>
+          <pre><code>curl -fsSL https://github.com/midrissi/4d-dataexplorer/releases/latest/download/install-desktop.sh | bash</code></pre>
         </div>
 
-        <h3>Option C — direct one-liner (app in Applications)</h3>
-        <div class="code-block">
-          <button type="button" class="code-block__copy" data-copy>Copy</button>
-          <pre><code>xattr -cr "/Applications/Data Explorer.app" &amp;&amp; open "/Applications/Data Explorer.app"</code></pre>
-        </div>
-
-        <div class="callout">
-          Inspect before running:
-          <a
-            href="https://github.com/midrissi/4d-dataexplorer/blob/main/apps/desktop/scripts/fix-macos-quarantine.sh"
-            target="_blank"
-            rel="noopener"
-            >view on GitHub</a
-          >
-          ·
-          <a
-            href="https://github.com/midrissi/4d-dataexplorer/releases/latest/download/fix-macos-quarantine.sh"
-            download="fix-macos-quarantine.sh"
-            >download .sh</a
-          >
-          ·
-          <a
-            href="https://midrissi.github.io/4d-dataexplorer/guide/macos-desktop"
-            target="_blank"
-            rel="noopener"
-            >docs guide</a
-          >.
-          You can also pass a path:
-          <code>bash fix-macos-quarantine.sh "/path/to/Data Explorer.app"</code>.
+        <div class="alt">
+          <p>Manual alternative:</p>
+          <div class="code-block">
+            <button type="button" class="code-block__copy" data-copy>Copy</button>
+            <pre><code>xattr -cr "Data Explorer.app" &amp;&amp; open "Data Explorer.app"</code></pre>
+          </div>
+          <p>
+            Or after moving to Applications:
+            <code>xattr -cr "/Applications/Data Explorer.app"</code>
+          </p>
         </div>
       </aside>
 
-      <p class="lede" style="margin-top: 1.75rem">
-        macOS may block this build because it is <strong>ad-hoc signed</strong> but
-        <strong>not Apple-notarized</strong>. That often looks like
-        <em>“Data Explorer can’t be opened because Apple cannot check it for malicious software”</em>
-        or <em>“is damaged and can’t be opened”</em>. Clear the quarantine attribute with
-        <code>xattr -cr</code> (or the curl script above), then open the app.
-      </p>
-
       <div class="cta-row">
-        <a class="btn btn--primary" href="https://midrissi.github.io/4d-dataexplorer/guide/macos-desktop">📚 macOS fix guide</a>
-        <a class="btn btn--ghost" href="https://midrissi.github.io/4d-dataexplorer/">Docs home</a>
-        <a class="btn btn--ghost" href="https://github.com/midrissi/4d-dataexplorer/releases/latest">⬇️ Latest release</a>
+        <a class="btn btn--primary" href="https://midrissi.github.io/4d-dataexplorer/guide/macos-desktop"
+          >macOS guide</a
+        >
+        <a class="btn btn--ghost" href="https://github.com/midrissi/4d-dataexplorer/releases/latest"
+          >Latest release</a
+        >
+        <a class="btn btn--ghost" href="https://midrissi.github.io/4d-dataexplorer/">Docs</a>
       </div>
 
-      <h2>📦 What’s in this ZIP</h2>
-      <div class="card">
-        <table>
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>Purpose</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td><code>Data Explorer.app</code></td>
-              <td>The desktop application (Tauri / native shell).</td>
-            </tr>
-            <tr>
-              <td><code>README.html</code></td>
-              <td>This guide — Terminal / curl steps for this release (<code>__APP_TAG__</code>).</td>
-            </tr>
-            <tr>
-              <td><code>fix-macos-quarantine.sh</code></td>
-              <td>
-                Per-version quarantine fix (also on the
-                <a href="https://github.com/midrissi/4d-dataexplorer/releases/latest/download/fix-macos-quarantine.sh"
-                  >GitHub Release</a
-                >). Run with <code>bash fix-macos-quarantine.sh</code>, not double-click.
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h2>🧭 Step-by-step</h2>
-      <ol class="steps">
+      <h2 class="section">In this ZIP</h2>
+      <ul class="zip">
         <li>
-          <strong>Unzip the download</strong>
-          <p>
-            Double-click the <code>.zip</code> in Finder (or use Archive Utility). Prefer a local
-            folder such as <code>~/Downloads</code> — avoid network shares for the first launch.
-            Optionally drag <strong>Data Explorer.app</strong> to <code>/Applications</code>.
-          </p>
+          <code>Data Explorer.app</code>
+          <span>The desktop app</span>
         </li>
         <li>
-          <strong>Open this README (optional)</strong>
-          <p>
-            Double-click <code>README.html</code> anytime you need these instructions. It works
-            offline; the curl command and website links need a network connection.
-          </p>
+          <code>README.html</code>
+          <span>This guide (release <code>__APP_TAG__</code>)</span>
         </li>
         <li>
-          <strong>Clear quarantine in Terminal</strong>
-          <p>
-            Use <strong>Option A, B, or C</strong> in the Quick fix section above. That runs
-            <code>xattr -cr</code> on the app (and Option A / B / C can also open it).
-          </p>
+          <code>fix-macos-quarantine.sh</code>
+          <span>Run with <code>bash "./fix-macos-quarantine.sh"</code> — not double-click</span>
         </li>
-        <li>
-          <strong>Launch the app</strong>
-          <p>
-            If it did not open automatically, double-click <strong>Data Explorer.app</strong>.
-            After a new download, run the fix again on the new copy.
-          </p>
-        </li>
-      </ol>
+      </ul>
 
-      <h2>🖱️ Alternative: Right-click → Open</h2>
-      <div class="card">
-        <p>
-          For a one-time Gatekeeper bypass without Terminal: right-click (or
-          <kbd>Control</kbd>-click) <strong>Data Explorer.app</strong> → choose
-          <strong>Open</strong> → confirm <strong>Open</strong> in the dialog. After that, normal
-          double-clicks usually work for that copy of the app.
-        </p>
-        <p>
-          If macOS still says the app is <em>damaged</em>, use the Terminal /
-          <code>curl</code> quick fix — the right-click path alone is often not enough for that
-          message.
-        </p>
-      </div>
-
-      <h2>❓ Why does this happen?</h2>
-      <div class="card">
-        <p>
-          Apple’s Gatekeeper expects apps distributed outside the Mac App Store to be
-          <strong>Developer ID–signed</strong> and <strong>notarized</strong>. Data Explorer’s CI
-          builds are <strong>ad-hoc signed</strong> (enough for a valid code signature locally) but
-          not notarized, so downloaded copies get a quarantine extended attribute
-          (<code>com.apple.quarantine</code>).
-        </p>
-        <p>
-          Clearing that attribute with <code>xattr -cr</code> tells macOS you trust this local copy.
-          It does not disable Gatekeeper system-wide. We do not ship a double-click
-          <code>.command</code> fixer because that file would be quarantined too.
-        </p>
-        <div class="callout">
-          Notarization requires an Apple Developer Program membership and signing secrets in CI.
-          Until those are configured, this README documents the Terminal / curl workaround.
-        </div>
-      </div>
-
-      <h2>🆘 Troubleshooting</h2>
+      <h2 class="section">More help</h2>
       <details>
-        <summary>curl: command not found / network error</summary>
+        <summary>Why does macOS block this?</summary>
         <div class="details-body">
           <p>
-            Use Option B or C instead (plain <code>xattr</code> — no download). Or fetch the script
-            when online:
+            Gatekeeper expects Developer ID signing + notarization. These CI builds are ad-hoc
+            signed only, so downloads get a <code>com.apple.quarantine</code> flag.
+            <code>xattr -cr</code> clears it for this copy — it does not disable Gatekeeper.
           </p>
-          <pre><code>curl -fsSL https://github.com/midrissi/4d-dataexplorer/releases/latest/download/fix-macos-quarantine.sh | bash</code></pre>
         </div>
       </details>
       <details>
-        <summary>Script says it can’t find Data Explorer.app</summary>
+        <summary>Right-click → Open</summary>
         <div class="details-body">
           <p>
-            <code>cd</code> into the folder that contains the app, move it to
-            <code>/Applications</code>, or pass the path:
+            You can also right-click the app → <strong>Open</strong> → confirm. If macOS still says
+            the app is <em>damaged</em>, use the Terminal one-liner above.
+          </p>
+        </div>
+      </details>
+      <details>
+        <summary>Script can’t find the app</summary>
+        <div class="details-body">
+          <p>
+            <code>cd</code> into this folder, move the app to <code>/Applications</code>, or pass a
+            path:
           </p>
           <pre><code>curl -fsSL https://github.com/midrissi/4d-dataexplorer/releases/latest/download/fix-macos-quarantine.sh | bash -s -- "/path/to/Data Explorer.app"</code></pre>
         </div>
       </details>
       <details>
-        <summary>Still blocked after xattr</summary>
+        <summary>Docker or web ZIP instead?</summary>
         <div class="details-body">
-          <p>Try:</p>
-          <pre><code>xattr -l "/path/to/Data Explorer.app"
-xattr -cr "/path/to/Data Explorer.app"
-codesign --verify --deep --strict --verbose=2 "/path/to/Data Explorer.app"</code></pre>
           <p>
-            Re-download from
-            <a href="https://github.com/midrissi/4d-dataexplorer/releases/latest">the latest GitHub release</a>
-            if the archive was truncated. Prefer the architecture-matched ZIP
-            (<code>aarch64</code> for Apple Silicon, <code>x86_64</code> for Intel).
+            <code>docker pull ghcr.io/midrissi/4d-dataexplorer:latest</code>
+            or install
+            <a href="https://github.com/midrissi/4d-dataexplorer/releases/latest/download/DataExplorer.zip"
+              >DataExplorer.zip</a
+            >
+            into 4D <code>Resources/WEBJS/</code>. See
+            <a href="https://midrissi.github.io/4d-dataexplorer/guide/getting-started">Getting started</a>.
           </p>
         </div>
       </details>
-      <details>
-        <summary>Wrong CPU architecture</summary>
-        <div class="details-body">
-          <p>
-            Apple Silicon Macs need the <code>aarch64</code> build; Intel Macs need
-            <code>x86_64</code>. Check <strong>Apple menu → About This Mac</strong>, then download
-            the matching asset from
-            <a href="https://github.com/midrissi/4d-dataexplorer/releases">Releases</a>.
-          </p>
-        </div>
-      </details>
-      <details>
-        <summary>Updates and auto-updater</summary>
-        <div class="details-body">
-          <p>
-            Once running, the desktop app can check GitHub Releases for newer signed builds. See the
-            <a href="https://midrissi.github.io/4d-dataexplorer/">docs site</a> and repository
-            updater notes. Fresh browser downloads may need the quarantine fix again; in-app
-            updates follow the signed updater path.
-          </p>
-        </div>
-      </details>
-
-      <h2>🔗 Links</h2>
-      <ul class="links">
-        <li>
-          <a href="https://midrissi.github.io/4d-dataexplorer/">
-            <strong>Documentation website</strong>
-            <span>Guides, release notes, download helpers — midrissi.github.io/4d-dataexplorer</span>
-          </a>
-        </li>
-        <li>
-          <a href="https://midrissi.github.io/4d-dataexplorer/guide/getting-started">
-            <strong>Getting started</strong>
-            <span>Web deployment into 4D Resources/WEBJS and first connection</span>
-          </a>
-        </li>
-        <li>
-          <a href="https://midrissi.github.io/4d-dataexplorer/release-notes/">
-            <strong>Release notes</strong>
-            <span>What changed in each version</span>
-          </a>
-        </li>
-        <li>
-          <a href="https://github.com/midrissi/4d-dataexplorer">
-            <strong>GitHub repository</strong>
-            <span>Source, issues, pull requests — midrissi/4d-dataexplorer</span>
-          </a>
-        </li>
-        <li>
-          <a href="https://github.com/midrissi/4d-dataexplorer/releases">
-            <strong>GitHub Releases</strong>
-            <span>Desktop builds (macOS / Windows / Linux) and DataExplorer.zip for 4D</span>
-          </a>
-        </li>
-        <li>
-          <a href="https://github.com/midrissi/4d-dataexplorer/releases/latest">
-            <strong>Latest release</strong>
-            <span>Always the current tagged desktop + web assets</span>
-          </a>
-        </li>
-        <li>
-          <a href="https://github.com/midrissi/4d-dataexplorer/issues">
-            <strong>Issues &amp; support</strong>
-            <span>Bug reports and questions — no Discord; use GitHub Issues</span>
-          </a>
-        </li>
-        <li>
-          <a href="https://github.com/midrissi/4d-dataexplorer/pkgs/container/4d-dataexplorer">
-            <strong>Docker image</strong>
-            <span>ghcr.io/midrissi/4d-dataexplorer:latest — web UI on :8080</span>
-          </a>
-        </li>
-      </ul>
-
-      <h2>🐳 Prefer Docker or the web build?</h2>
-      <div class="card">
-        <p>
-          You don’t need the macOS <code>.app</code> to browse 4D data. Alternatives:
-        </p>
-        <pre><code>docker pull ghcr.io/midrissi/4d-dataexplorer:latest
-# then run the container and open http://localhost:8080/dataexplorer/</code></pre>
-        <p style="margin-top: 0.85rem">
-          Or download
-          <a href="https://github.com/midrissi/4d-dataexplorer/releases/latest/download/DataExplorer.zip"
-            ><code>DataExplorer.zip</code></a
-          >
-          and extract it into your 4D server’s <code>Resources/WEBJS/</code> folder. Full steps:
-          <a href="https://midrissi.github.io/4d-dataexplorer/guide/getting-started">Getting started</a>.
-        </p>
-      </div>
 
       <footer>
         <p><strong>Data Explorer</strong> — 4D REST data browser</p>
         <p>
-          Docs:
-          <a href="https://midrissi.github.io/4d-dataexplorer/">https://midrissi.github.io/4d-dataexplorer/</a>
-          · Source:
-          <a href="https://github.com/midrissi/4d-dataexplorer">https://github.com/midrissi/4d-dataexplorer</a>
-        </p>
-        <p>
-          This HTML ships inside the macOS desktop ZIP from CI. Open it locally anytime — no install
-          required.
+          <a href="https://midrissi.github.io/4d-dataexplorer/">Docs</a>
+          ·
+          <a href="https://github.com/midrissi/4d-dataexplorer">GitHub</a>
+          ·
+          <a href="https://github.com/midrissi/4d-dataexplorer/issues">Issues</a>
         </p>
       </footer>
     </div>

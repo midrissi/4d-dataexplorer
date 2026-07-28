@@ -14,7 +14,21 @@ Each GitHub Release publishes its own `fix-macos-quarantine.sh` (stamped with th
 
 <MacosQuarantineScript />
 
-### Run with curl (this / latest release)
+### Install with Terminal
+
+```bash
+curl -fsSL https://github.com/midrissi/4d-dataexplorer/releases/latest/download/install-desktop.sh | bash
+```
+
+Windows (PowerShell):
+
+```powershell
+irm https://github.com/midrissi/4d-dataexplorer/releases/latest/download/install-desktop.ps1 | iex
+```
+
+Or use the **Install via Terminal** tabs on the docs home Download control (your OS is preselected).
+
+### Quarantine fix only
 
 ```bash
 curl -fsSL https://github.com/midrissi/4d-dataexplorer/releases/latest/download/fix-macos-quarantine.sh | bash
