@@ -16,11 +16,7 @@ const props = withDefaults(
 )
 
 const resolvedTag = ref(props.tag)
-const source = ref('')
-const loadError = ref('')
-const loading = ref(true)
 const copiedCurl = ref(false)
-const showSource = ref(false)
 let copyTimer: ReturnType<typeof setTimeout> | undefined
 
 const scriptHref = computed(() => {
@@ -57,32 +53,15 @@ async function resolveLatestTag(): Promise<void> {
   }
 }
 
-async function loadSource(): Promise<void> {
-  loading.value = true
-  loadError.value = ''
-  source.value = ''
-  try {
-    const res = await fetch(scriptHref.value)
-    if (!res.ok) throw new Error(`HTTP ${res.status}`)
-    source.value = await res.text()
-  } catch (err) {
-    loadError.value = err instanceof Error ? err.message : 'Failed to load script'
-  } finally {
-    loading.value = false
-  }
-}
-
-onMounted(async () => {
-  await resolveLatestTag()
-  await loadSource()
+onMounted(() => {
+  void resolveLatestTag()
 })
 
 watch(
   () => props.tag,
-  async (tag) => {
+  (tag) => {
     resolvedTag.value = tag
-    if (!tag) await resolveLatestTag()
-    await loadSource()
+    if (!tag) void resolveLatestTag()
   }
 )
 
@@ -109,25 +88,19 @@ async function copyCurl(): Promise<void> {
     </p>
 
     <div class="macos-fix__actions">
-      <a class="macos-fix__btn macos-fix__btn--primary" :href="scriptHref" target="_blank" rel="noopener">
-        View / download (this version)
+      <a
+        class="macos-fix__btn macos-fix__btn--primary"
+        :href="scriptHref"
+        :download="SCRIPT_FILE"
+        rel="noopener"
+      >
+        Download .sh
       </a>
       <a class="macos-fix__btn" :href="SOURCE_BLOB" target="_blank" rel="noopener">
         Source on GitHub
       </a>
-      <a class="macos-fix__btn" :href="scriptHref" :download="SCRIPT_FILE">
-        Download .sh
-      </a>
       <button type="button" class="macos-fix__btn" @click="copyCurl">
         {{ copiedCurl ? 'Copied curl' : 'Copy curl | bash' }}
-      </button>
-      <button
-        type="button"
-        class="macos-fix__btn"
-        :disabled="loading || !!loadError"
-        @click="showSource = !showSource"
-      >
-        {{ showSource ? 'Hide source' : 'Show source' }}
       </button>
     </div>
 
@@ -139,18 +112,6 @@ async function copyCurl(): Promise<void> {
       — full steps:
       <a :href="withBase('/guide/macos-desktop')">macOS desktop first launch</a>.
     </p>
-
-    <div v-if="showSource" class="macos-fix__source">
-      <p v-if="loading" class="macos-fix__status">Loading script…</p>
-      <p v-else-if="loadError" class="macos-fix__status macos-fix__status--err">
-        Couldn’t load script for this release ({{ loadError }}). It is published as a release
-        asset after the desktop workflow finishes — try
-        <a :href="releaseHref" target="_blank" rel="noopener">the release page</a>
-        or
-        <a :href="SOURCE_BLOB" target="_blank" rel="noopener">repo source</a>.
-      </p>
-      <pre v-else><code>{{ source }}</code></pre>
-    </div>
   </div>
 </template>
 
@@ -195,7 +156,7 @@ async function copyCurl(): Promise<void> {
     color 0.15s ease;
 }
 
-.macos-fix__btn:hover:not(:disabled) {
+.macos-fix__btn:hover:not(:disabled):not(.macos-fix__btn--primary) {
   border-color: var(--vp-c-brand-2);
   color: var(--vp-c-brand-1);
 }
@@ -211,9 +172,15 @@ async function copyCurl(): Promise<void> {
   color: oklch(0.98 0.01 260);
 }
 
-.macos-fix__btn--primary:hover {
+.macos-fix__btn--primary:hover:not(:disabled) {
   background: var(--vp-c-brand-1);
+  border-color: transparent;
   color: oklch(0.98 0.01 260);
+}
+
+.macos-fix__btn--primary:focus-visible {
+  outline: 2px solid var(--vp-c-brand-1);
+  outline-offset: 2px;
 }
 
 .macos-fix__hint {
@@ -225,31 +192,5 @@ async function copyCurl(): Promise<void> {
 
 .macos-fix__hint code {
   font-size: 0.78em;
-}
-
-.macos-fix__source {
-  margin-top: 0.9rem;
-}
-
-.macos-fix__source pre {
-  margin: 0;
-  max-height: 28rem;
-  overflow: auto;
-  padding: 0.9rem 1rem;
-  border-radius: 10px;
-  border: 1px solid var(--vp-c-divider);
-  background: var(--vp-c-bg);
-  font-size: 0.75rem;
-  line-height: 1.5;
-}
-
-.macos-fix__status {
-  margin: 0;
-  font-size: 0.8125rem;
-  color: var(--vp-c-text-2);
-}
-
-.macos-fix__status--err {
-  color: var(--vp-c-danger-1, #e11d48);
 }
 </style>
