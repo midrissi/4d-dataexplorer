@@ -79,7 +79,8 @@ interface GhRelease {
 
 function isTrackedAsset(name: string): boolean {
   const n = name.toLowerCase()
-  if (n.endsWith('.sig') || n.endsWith('.sha256') || n.endsWith('.sh') || n === 'latest.json') return false
+  if (n.endsWith('.sig') || n.endsWith('.sha256') || n.endsWith('.sh') || n === 'latest.json')
+    return false
   return true
 }
 
