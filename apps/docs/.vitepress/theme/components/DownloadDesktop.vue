@@ -81,7 +81,8 @@ function detectPlatform(): PlatformId {
 
 function classify(name: string): PlatformId | null {
   const n = name.toLowerCase()
-  if (n.endsWith('.sha256') || n.endsWith('.sig') || n.endsWith('.sh') || n.endsWith('.ps1')) return null
+  if (n.endsWith('.sha256') || n.endsWith('.sig') || n.endsWith('.sh') || n.endsWith('.ps1'))
+    return null
   if (n === 'latest.json') return null
   if (n === 'dataexplorer.zip' || n === 'databrowser.zip') return 'web'
   // Updater archives are not useful for manual install.
