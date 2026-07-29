@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, mock } from 'bun:test'
 import { saveBaseSettings, setCurrentBaseId } from '~/lib/storage'
+import { useSettingsStore } from './settings'
 import type { DataclassTab, HomeTab, SettingsTab, Tab } from './tabs'
 import {
   isAssistantMetadataTab,
@@ -614,16 +615,17 @@ describe('store/tabs', () => {
     })
 
     it('resetQueryOptions resets dataclass tab query', () => {
+      useSettingsStore.getState().setPageSize(50)
       useTabsStore.getState().openTab('Employee')
       const id = useTabsStore.getState().tabs[0]?.id
       expect(id).toBeDefined()
       if (id !== undefined) {
-        useTabsStore.getState().setQueryOptions(id, { filter: 'x', top: 50 })
+        useTabsStore.getState().setQueryOptions(id, { filter: 'x', top: 10 })
         useTabsStore.getState().resetQueryOptions(id)
       }
       const tab = useTabsStore.getState().tabs[0] as DataclassTab
       expect(tab.queryOptions.filter).toBe('')
-      expect(tab.queryOptions.top).toBe(100)
+      expect(tab.queryOptions.top).toBe(50)
     })
 
     it('setQueryExpanded and setSettingsDataclassesExpanded', () => {

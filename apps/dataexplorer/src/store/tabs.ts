@@ -302,7 +302,7 @@ const DEFAULT_QUERY_OPTIONS: QueryOptions = {
   sort: '',
   order: 'desc',
   select: '',
-  top: 100,
+  top: 50,
 }
 
 const DEFAULT_FIELD_CONFIG: FieldConfig = {
@@ -1164,8 +1164,9 @@ export const useTabsStore = create<TabsState>()(
           if (!tab || !isDataclassTab(tab)) return
 
           const previousId = tab.entitySetId
+          const { pageSize } = useSettingsStore.getState()
           const newTabs = updateDataclassTab(tabs, tabId, {
-            queryOptions: { ...DEFAULT_QUERY_OPTIONS },
+            queryOptions: { ...DEFAULT_QUERY_OPTIONS, top: pageSize },
             entitySetId: null,
             selectionCount: null,
           })

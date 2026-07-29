@@ -2175,7 +2175,7 @@ const DEFAULT_SETTINGS: ProfileSettings = {
   defaultEditMode: 'form' as EditMode,
   sidebarViewMode: 'cards' as SidebarViewMode,
   sidebarSortOption: 'name-asc' as SidebarSortOption,
-  pageSize: 100,
+  pageSize: 50,
   defaultQueryRunMode: 'run' as DefaultQueryRunMode,
   shortcuts: DEFAULT_SHORTCUTS,
   activeShortcutPreset: 'default' as ShortcutPresetId | 'custom',

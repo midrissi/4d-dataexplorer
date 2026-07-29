@@ -222,6 +222,10 @@ export const fr = {
     responseBody: 'Corps de la réponse',
     errorDetails: 'Erreur',
     openInHttpClient: 'Ouvrir dans le client HTTP',
+    loadImage: 'Charger l’image',
+    hideImage: 'Masquer l’image',
+    imagePreviewAlt: 'Aperçu de l’image de réponse',
+    imagePreviewHint: 'Rechargée à la demande (corps non mis en tampon)',
   },
   desktopMenu: {
     about: 'A propos de {appName}...',

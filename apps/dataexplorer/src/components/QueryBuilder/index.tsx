@@ -66,7 +66,7 @@ import {
 } from '~/store/ai-tasks'
 import { useHistoryStore } from '~/store/history'
 import type { RuntimeArgument } from '~/store/method-executor-types'
-import { useDefaultQueryRunMode } from '~/store/settings'
+import { useDefaultQueryRunMode, usePageSize } from '~/store/settings'
 import {
   type FilterParam,
   isDataclassTab,
@@ -140,6 +140,7 @@ export function QueryBuilder() {
   const mobile = isMobileShell()
   const { selectedDataclass, fetchEntities, entitiesLoading } = useDataExplorerStore()
   const defaultQueryRunMode = useDefaultQueryRunMode()
+  const pageSize = usePageSize()
   const defaultCreateEntitySet = defaultQueryRunMode === 'runAsSelection'
   const llmConfigured = useAssistantLlmConfigured()
   const [generateQueryOpen, setGenerateQueryOpen] = useState(false)
@@ -354,11 +355,11 @@ export function QueryBuilder() {
         sort: '',
         order: 'desc',
         select: '',
-        top: 100,
+        top: pageSize,
       },
       { createEntitySet: false }
     )
-  }, [handleResetQueryOptions, fetchEntities])
+  }, [handleResetQueryOptions, fetchEntities, pageSize])
 
   const displayedEntitySetId = entitySetIdEditing
     ? localEntitySetId

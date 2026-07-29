@@ -42,6 +42,7 @@ import type { ConsoleEntry, ConsoleFilter, NetworkDetails } from '~/store/consol
 import { useConsoleStore } from '~/store/console'
 import { useSettingsStore } from '~/store/settings'
 import { useTabsStore } from '~/store/tabs'
+import { ConsoleNetworkImageBody } from './ConsoleNetworkImageBody'
 import { ConsoleValue, ObjectTree } from './ObjectTree'
 
 function formatTimestamp(timestamp: number): string {
@@ -412,6 +413,7 @@ function NetworkEntry({
               defaultOpen={sectionsExpanded}
             />
           ) : null}
+          <ConsoleNetworkImageBody details={details} />
           {details.error !== undefined ? (
             <ObjectTree
               key={`${sectionsEpoch}-error`}

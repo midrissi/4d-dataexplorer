@@ -327,7 +327,7 @@ export interface EditorPrefs {
 }
 
 export const DEFAULT_EDITOR_PREFS: EditorPrefs = {
-  fontSizeDelta: 0,
+  fontSizeDelta: -2,
   wordWrap: false,
   minimap: false,
   toolbarPosition: 'top',
@@ -999,8 +999,8 @@ export function CodeEditor({
         id: 'zoom-reset',
         label: l.resetZoom,
         icon: <RotateCcw />,
-        action: () => updatePrefs({ fontSizeDelta: 0 }),
-        disabled: prefs.fontSizeDelta === 0,
+        action: () => updatePrefs({ fontSizeDelta: DEFAULT_EDITOR_PREFS.fontSizeDelta }),
+        disabled: prefs.fontSizeDelta === DEFAULT_EDITOR_PREFS.fontSizeDelta,
       },
       {
         id: 'word-wrap',

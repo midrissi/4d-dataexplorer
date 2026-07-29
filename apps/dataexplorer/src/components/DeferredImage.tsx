@@ -2,10 +2,11 @@ import { cn } from '@4d/ui'
 import { ImageOff } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { api } from '~/lib/api'
+import { detectBinaryFormat } from '~/lib/detect-binary-format'
 import { getImageUri } from '~/lib/fieldPaths'
 import { getBaseUrl, isDesktop, onConnectionChange } from '~/lib/platform'
 
-/** Cached blob object URLs keyed by absolute image URI (desktop only). */
+/** Cached blob object URLs keyed by absolute image URI (native shells only). */
 const blobCache = new Map<string, string>()
 const inflight = new Map<string, Promise<string>>()
 
@@ -15,9 +16,17 @@ function clearBlobCache() {
   inflight.clear()
 }
 
-// Drop cached images when the active server connection changes.
+// Only drop cached images when the server base URL changes. Cookie jar updates
+// also notify onConnectionChange (via setCookies), and revoking blobs then
+// makes every <img src="blob:…"> fire onError → ImageOff placeholders.
 if (typeof window !== 'undefined') {
-  onConnectionChange(clearBlobCache)
+  let cachedBaseUrl = getBaseUrl()
+  onConnectionChange(() => {
+    const next = getBaseUrl()
+    if (next === cachedBaseUrl) return
+    cachedBaseUrl = next
+    clearBlobCache()
+  })
 }
 
 function toAbsoluteUrl(uri: string): string {
@@ -25,10 +34,21 @@ function toAbsoluteUrl(uri: string): string {
   return `${getBaseUrl()}${uri.startsWith('/') ? '' : '/'}${uri}`
 }
 
+function mimeForImageBytes(bytes: Uint8Array, contentType: string | null): string {
+  const fromHeader = contentType?.split(';')[0]?.trim().toLowerCase()
+  if (fromHeader?.startsWith('image/') && fromHeader !== 'image/*') {
+    return fromHeader
+  }
+  const detected = detectBinaryFormat(bytes)
+  if (detected?.kind === 'image') return detected.mime
+  return fromHeader && fromHeader !== 'application/octet-stream' ? fromHeader : 'image/jpeg'
+}
+
 /**
  * Resolve an image URI for display. On web, absolute REST URLs work via the
- * Vite proxy / same-origin cookies. On desktop, `<img>` cannot use Tauri's
- * cookie jar, so we fetch through the platform HTTP client and return a blob URL.
+ * Vite proxy / same-origin cookies. On desktop/mobile, `<img>` cannot use
+ * Tauri's cookie jar, so we fetch through the platform HTTP client and return
+ * a blob URL.
  */
 async function resolveDisplaySrc(uri: string): Promise<string> {
   const absolute = toAbsoluteUrl(uri)
@@ -41,15 +61,21 @@ async function resolveDisplaySrc(uri: string): Promise<string> {
 
   let pending = inflight.get(absolute)
   if (!pending) {
-    pending = api.fetchBinary(absolute).then(({ bytes, contentType }) => {
-      const blob = new Blob([bytes.buffer as ArrayBuffer], {
-        type: contentType || 'image/*',
+    pending = api
+      .fetchBinary(absolute)
+      .then(({ bytes, contentType }) => {
+        // Copy into a standalone buffer — never pass a TypedArray's shared
+        // `.buffer` (may be larger / offset) into Blob.
+        const copy = new Uint8Array(bytes.byteLength)
+        copy.set(bytes)
+        const blob = new Blob([copy], { type: mimeForImageBytes(bytes, contentType) })
+        const objectUrl = URL.createObjectURL(blob)
+        blobCache.set(absolute, objectUrl)
+        return objectUrl
       })
-      const objectUrl = URL.createObjectURL(blob)
-      blobCache.set(absolute, objectUrl)
-      inflight.delete(absolute)
-      return objectUrl
-    })
+      .finally(() => {
+        inflight.delete(absolute)
+      })
     inflight.set(absolute, pending)
   }
   return pending
@@ -109,18 +135,10 @@ export function DeferredImage({
       return
     }
 
-    setStatus('loading')
-
-    // data:/blob: and web absolute URLs can paint immediately.
-    const absolute = toAbsoluteUrl(input)
-    if (/^(data:|blob:)/i.test(absolute) || !isDesktop()) {
-      setDisplaySrc(absolute)
-      setStatus('ready')
-      return
-    }
-
     let cancelled = false
+    setStatus('loading')
     setDisplaySrc(null)
+
     void resolveDisplaySrc(input)
       .then((url) => {
         if (cancelled) return
@@ -157,12 +175,18 @@ export function DeferredImage({
     )
   }
 
+  // Blob URLs are already fully fetched — never lazy-load them. AG Grid (and
+  // other overflow containers) break native lazy loading via IntersectionObserver.
+  const imgLoading =
+    displaySrc.startsWith('blob:') || displaySrc.startsWith('data:') ? 'eager' : loading
+
   return (
     <img
       src={displaySrc}
       alt={alt}
       className={className}
-      loading={loading}
+      loading={imgLoading}
+      decoding="async"
       onError={() => {
         setStatus('error')
         setDisplaySrc(null)

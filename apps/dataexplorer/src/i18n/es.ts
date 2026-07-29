@@ -221,6 +221,10 @@ export const es = {
     responseBody: 'Cuerpo de la respuesta',
     errorDetails: 'Error',
     openInHttpClient: 'Abrir en el cliente HTTP',
+    loadImage: 'Cargar imagen',
+    hideImage: 'Ocultar imagen',
+    imagePreviewAlt: 'Vista previa de la imagen de respuesta',
+    imagePreviewHint: 'Obtenida bajo demanda (cuerpo no almacenado)',
   },
   desktopMenu: {
     about: 'Acerca de {appName}...',

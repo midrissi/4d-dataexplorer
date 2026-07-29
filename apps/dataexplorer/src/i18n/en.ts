@@ -216,6 +216,10 @@ export const en = {
     responseBody: 'Response Body',
     errorDetails: 'Error',
     openInHttpClient: 'Open in HTTP Client',
+    loadImage: 'Load image',
+    hideImage: 'Hide image',
+    imagePreviewAlt: 'Response image preview',
+    imagePreviewHint: 'Re-fetched on demand (body was not buffered)',
   },
   desktopMenu: {
     about: 'About {appName}...',

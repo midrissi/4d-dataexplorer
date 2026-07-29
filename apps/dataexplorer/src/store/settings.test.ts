@@ -23,7 +23,7 @@ describe('store/settings', () => {
       defaultEditMode: 'form',
       sidebarViewMode: 'cards',
       sidebarSortOption: 'name-asc',
-      pageSize: 100,
+      pageSize: 50,
       currentProfileId: DEFAULT_PROFILE_ID,
     })
   })
