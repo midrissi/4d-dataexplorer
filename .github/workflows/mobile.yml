@@ -75,7 +75,7 @@ jobs:
           java-version: '21'
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
       - name: Setup Android NDK
         id: setup-ndk
@@ -128,6 +128,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+
+      - name: Untap unused Homebrew taps
+        run: |
+          # macOS runners ship aws/tap pre-installed; Homebrew 6+ warns on every
+          # brew invocation until untrusted taps are removed or trusted.
+          brew untap aws/tap 2>/dev/null || true
 
       - name: Setup Bun + install
         uses: ./.github/actions/setup-bun
