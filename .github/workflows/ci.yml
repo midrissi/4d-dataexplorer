@@ -391,6 +391,22 @@ jobs:
             gh release create "$TAG" --title "Release $TAG" --notes "" --latest=false
           fi
 
+  # Mobile builds only after lint → unit/build → e2e are green.
+  # On main, attach APK + iOS zip to the same SHA-stamped release as desktop.
+  mobile:
+    name: Mobile
+    needs: [e2e, create-release]
+    if: >-
+      always() &&
+      needs.e2e.result == 'success' &&
+      (needs.create-release.result == 'success' || needs.create-release.result == 'skipped')
+    uses: ./.github/workflows/mobile.yml
+    secrets: inherit
+    with:
+      upload_to_release: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.create-release.result == 'success' }}
+      release_tag: ${{ needs.create-release.outputs.tag }}
+      release_version: ${{ needs.create-release.outputs.version }}
+
   build-desktop:
     name: Build Desktop (${{ matrix.name }})
     needs: [e2e, create-release]

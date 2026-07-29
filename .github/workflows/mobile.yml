@@ -1,31 +1,22 @@
 name: Mobile
 
 on:
-  push:
-    branches: [main, feat/mobile]
-    paths:
-      - 'apps/mobile/**'
-      - 'apps/dataexplorer/**'
-      - 'apps/desktop/src/**'
-      - 'packages/**'
-      - 'bun.lockb'
-      - '.github/workflows/mobile.yml'
-      - '.github/actions/setup-bun/**'
-  pull_request:
-    branches: [main, feat/mobile]
-    paths:
-      - 'apps/mobile/**'
-      - 'apps/dataexplorer/**'
-      - 'apps/desktop/src/**'
-      - 'packages/**'
-      - 'bun.lockb'
-      - '.github/workflows/mobile.yml'
-      - '.github/actions/setup-bun/**'
+  workflow_call:
+    inputs:
+      upload_to_release:
+        description: Attach Android/iOS artifacts to the GitHub Release
+        type: boolean
+        default: false
+      release_tag:
+        description: Existing release tag (e.g. v1.3.4-a4b0436); required when uploading
+        type: string
+        default: ''
+      release_version:
+        description: Version stamp used in asset filenames (e.g. 1.3.4-a4b0436)
+        type: string
+        default: ''
+  # Manual re-run without waiting for full CI (does not upload to a release).
   workflow_dispatch:
-
-concurrency:
-  group: mobile-${{ github.ref }}
-  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -88,9 +79,9 @@ jobs:
         working-directory: apps/mobile
         run: bunx tauri android init --ci --skip-targets-install
 
-      - name: Patch Android splash screen
+      - name: Prepare Android branding (icons, label, splash)
         working-directory: apps/mobile
-        run: bash ./scripts/patch-mobile-splash.sh
+        run: bash ./scripts/android-prepare.sh
 
       - name: Build Android APK (debug, aarch64)
         working-directory: apps/mobile
@@ -125,6 +116,7 @@ jobs:
           path: apps/mobile/ci-artifacts/android/**
           retention-days: 14
           if-no-files-found: error
+
   build-ios:
     name: Build iOS (simulator)
     runs-on: macos-latest
@@ -169,6 +161,7 @@ jobs:
           CODE_SIGN_IDENTITY: ''
           AD_HOC_CODE_SIGNING_ALLOWED: 'YES'
         run: bun run tauri:ios:build -- --debug --target aarch64-sim --ci --verbose
+
       - name: Collect iOS artifacts
         shell: bash
         run: |
@@ -197,3 +190,76 @@ jobs:
           path: apps/mobile/ci-artifacts/ios/**
           retention-days: 14
           if-no-files-found: error
+
+  upload-release:
+    name: Upload mobile to release
+    needs: [build-android, build-ios]
+    if: ${{ inputs.upload_to_release && inputs.release_tag != '' && inputs.release_version != '' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Download Android APK
+        uses: actions/download-artifact@v8
+        with:
+          name: mobile-android-apk
+          path: release-assets/android
+
+      - name: Download iOS build
+        uses: actions/download-artifact@v8
+        with:
+          name: mobile-ios-sim
+          path: release-assets/ios
+
+      - name: Package release assets
+        id: pack
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${{ inputs.release_version }}"
+          OUT="$PWD/release-assets/upload"
+          mkdir -p "$OUT"
+
+          apk="$(find release-assets/android -type f -name '*.apk' | head -n 1 || true)"
+          if [ -z "$apk" ]; then
+            echo "::error::No APK in android artifact"
+            find release-assets/android -type f | head -n 50 || true
+            exit 1
+          fi
+          APK_NAME="Data-Explorer_${VERSION}_android-aarch64-debug.apk"
+          cp "$apk" "$OUT/$APK_NAME"
+          echo "apk=$OUT/$APK_NAME" >> "$GITHUB_OUTPUT"
+
+          IOS_ZIP="$OUT/Data-Explorer_${VERSION}_ios-sim.zip"
+          ( cd release-assets/ios && zip -r "$IOS_ZIP" . )
+          echo "ios_zip=$IOS_ZIP" >> "$GITHUB_OUTPUT"
+          ls -lah "$OUT"
+
+      - name: Ensure release exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="${{ inputs.release_tag }}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists"
+          else
+            gh release create "$TAG" \
+              --title "Release $TAG" \
+              --notes "Mobile + desktop build artifacts for \`$TAG\`." \
+              --latest=false
+          fi
+
+      - name: Upload mobile assets to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="${{ inputs.release_tag }}"
+          gh release upload "$TAG" \
+            "${{ steps.pack.outputs.apk }}" \
+            "${{ steps.pack.outputs.ios_zip }}" \
+            --clobber

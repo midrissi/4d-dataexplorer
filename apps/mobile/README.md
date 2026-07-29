@@ -74,12 +74,15 @@ Same as desktop/web: light/dark mode plus color themes Slate, Tangerine, Violet 
 
 ## CI
 
-GitHub Actions workflow [`.github/workflows/mobile.yml`](../../.github/workflows/mobile.yml) builds on pushes and PRs to **`main`** and **`feat/mobile`** (path-filtered to mobile-related changes), plus `workflow_dispatch`:
+Mobile builds run inside the main [CI](../../.github/workflows/ci.yml) pipeline **after** Lint & Check, Unit Tests, Build, and E2E are green (reusable workflow [`.github/workflows/mobile.yml`](../../.github/workflows/mobile.yml)):
 
-| Job | Runner | Output |
-| --- | --- | --- |
-| Android | `ubuntu-latest` | Debug APK (`aarch64`) artifact `mobile-android-apk` |
-| iOS | `macos-latest` | Simulator debug build (`aarch64-sim`, unsigned) artifact `mobile-ios-sim` |
+| Job | Runner | When | Output |
+| --- | --- | --- | --- |
+| Build Android | `ubuntu-latest` | After E2E | Debug APK (`aarch64`) artifact `mobile-android-apk` |
+| Build iOS | `macos-latest` | After E2E | Simulator debug build artifact `mobile-ios-sim` |
+| Upload mobile to release | `ubuntu-latest` | Push to **`main`** only | APK + iOS zip on the SHA-stamped GitHub Release |
+
+You can also run the Mobile workflow manually via `workflow_dispatch` (build only; no release upload).
 
 Generated `src-tauri/gen/` projects are created in CI via `tauri android|ios init --ci`. Store signing / App Store export is not configured yet — local device / release IPA builds still use `tauri:ios:build:device` with Xcode signing.
 
