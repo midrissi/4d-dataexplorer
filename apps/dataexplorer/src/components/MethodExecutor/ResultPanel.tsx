@@ -75,7 +75,7 @@ function EntitySelectionKeyBar({ entitySetId }: { entitySetId: string }) {
     <div
       className={cn(
         'flex shrink-0 flex-wrap items-center gap-2 rounded-md border bg-muted/20',
-        mobile ? 'px-3 py-2.5' : 'px-2.5 py-1.5'
+        mobile ? 'px-2.5 py-1.5' : 'px-2.5 py-1.5'
       )}
     >
       <span className="text-[11px] text-muted-foreground">{t('methodExecutor.selectionKey')}</span>
@@ -85,7 +85,7 @@ function EntitySelectionKeyBar({ entitySetId }: { entitySetId: string }) {
         tooltipCopiedLabel={t('common.copied')}
         className={cn(
           'inline-flex min-w-0 max-w-full items-center gap-1.5 rounded border bg-background font-mono text-foreground hover:bg-accent',
-          mobile ? 'min-h-10 px-2.5 py-2 text-xs' : 'px-2 py-0.5 text-xs'
+          mobile ? 'min-h-9 px-2 py-1.5 text-xs' : 'px-2 py-0.5 text-xs'
         )}
       >
         <KeyRound className="h-3 w-3 shrink-0 text-muted-foreground" aria-hidden />
@@ -173,25 +173,35 @@ function EntitySelectionResult({
     <div
       className={cn(
         'flex h-full min-h-0 flex-1 flex-col overflow-hidden',
-        mobile ? 'gap-3' : 'gap-3'
+        mobile ? 'gap-2' : 'gap-3'
       )}
     >
       {entitySetId ? <EntitySelectionKeyBar entitySetId={entitySetId} /> : null}
 
       <div
-        className={cn('flex shrink-0 gap-2', mobile ? 'flex-col' : 'items-center justify-between')}
+        className={cn(
+          'flex shrink-0 gap-2',
+          mobile ? 'items-center' : 'items-center justify-between'
+        )}
       >
-        <p className={cn('text-muted-foreground', mobile ? 'text-sm leading-snug' : 'text-sm')}>
+        <p
+          className={cn(
+            'min-w-0 flex-1 truncate text-muted-foreground',
+            mobile ? 'text-xs leading-snug' : 'text-sm'
+          )}
+          title={summary}
+        >
           {summary}
         </p>
         <Button
-          size={mobile ? 'default' : 'xs'}
-          className={cn(mobile && 'h-11 w-full')}
+          size={mobile ? 'sm' : 'xs'}
+          variant={mobile ? 'outline' : 'default'}
+          className={cn(mobile && 'h-9 shrink-0 gap-1.5 px-2.5')}
           onClick={openAll}
           disabled={!result.dataClass}
         >
-          <ExternalLink className="h-4 w-4" aria-hidden />
-          {t('methodExecutor.openAll')}
+          <ExternalLink className={mobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} aria-hidden />
+          {mobile ? t('methodExecutor.openAllShort') : t('methodExecutor.openAll')}
         </Button>
       </div>
 
@@ -199,10 +209,10 @@ function EntitySelectionResult({
         <div
           className={cn(
             'flex shrink-0 items-center gap-2 border-border/50 border-b text-muted-foreground',
-            mobile ? 'px-3 py-2 text-xs' : 'px-2.5 py-1 text-[10px]'
+            mobile ? 'px-2.5 py-1.5 text-[11px]' : 'px-2.5 py-1 text-[10px]'
           )}
         >
-          <TableProperties className={mobile ? 'h-3.5 w-3.5' : 'h-3 w-3'} aria-hidden />
+          <TableProperties className={mobile ? 'h-3 w-3' : 'h-3 w-3'} aria-hidden />
           <span>
             {t('httpClient.textPreviewCsvMeta', {
               rows: preview.length,
@@ -212,15 +222,15 @@ function EntitySelectionResult({
         </div>
 
         {mobile ? (
-          <ul className="min-h-0 flex-1 space-y-2 overflow-auto overscroll-contain p-2">
+          <ul className="min-h-0 flex-1 space-y-1.5 overflow-auto overscroll-contain p-1.5">
             {preview.map((entity, index) => {
               const key = String(entity.__KEY ?? index)
               return (
                 <li
                   key={key}
-                  className="rounded-xl border border-border/60 bg-background/80 px-3.5 py-3"
+                  className="rounded-lg border border-border/60 bg-background/80 px-3 py-2.5"
                 >
-                  <div className="mb-2.5 flex items-baseline justify-between gap-2">
+                  <div className="mb-2 flex items-baseline justify-between gap-2">
                     <span className="font-medium text-muted-foreground text-xs tabular-nums">
                       #{index + 1}
                     </span>
@@ -231,9 +241,9 @@ function EntitySelectionResult({
                       {t('methodExecutor.entityKey')}: {key}
                     </span>
                   </div>
-                  <dl className="space-y-2">
+                  <dl className="space-y-1.5">
                     {columns.map((column) => (
-                      <div key={column} className="grid grid-cols-[minmax(0,7.5rem)_1fr] gap-2">
+                      <div key={column} className="grid grid-cols-[minmax(0,6.5rem)_1fr] gap-2">
                         <dt
                           className="truncate font-medium text-muted-foreground text-xs"
                           title={column}

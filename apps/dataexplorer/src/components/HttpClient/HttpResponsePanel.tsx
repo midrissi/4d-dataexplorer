@@ -8,6 +8,7 @@ import { HttpPreviewStage } from '~/components/HttpClient/HttpPreviewStage'
 import { HttpResponseBinaryBody } from '~/components/HttpClient/HttpResponseBinaryBody'
 import { HttpResponseErrorBody } from '~/components/HttpClient/HttpResponseErrorBody'
 import { HttpResponseKeyValueList } from '~/components/HttpClient/HttpResponseKeyValueList'
+import { HttpResponseMobileSummary } from '~/components/HttpClient/HttpResponseMobileSummary'
 import { HttpResponseStatusBar } from '~/components/HttpClient/HttpResponseStatusBar'
 import { JsonTreePreview, TextPreviewPanel } from '~/components/HttpClient/TextPreviewPanel'
 import { detectMethodResult } from '~/components/MethodExecutor/detect-method-result'
@@ -164,11 +165,11 @@ export function HttpResponsePanel({ response }: { response: HttpClientResponse |
           className={cn(
             'inline-flex shrink-0 items-center gap-1.5 border bg-background text-muted-foreground hover:bg-accent hover:text-accent-foreground',
             mobile
-              ? 'h-11 min-w-0 flex-1 justify-center rounded-lg px-3 text-sm'
+              ? 'h-9 min-w-0 justify-center rounded-md px-2.5 text-xs'
               : 'h-6 gap-1 rounded-sm px-2 text-[11px] leading-none'
           )}
         >
-          <Copy className={mobile ? 'h-4 w-4 shrink-0' : 'h-3 w-3 shrink-0'} aria-hidden />
+          <Copy className={mobile ? 'h-3.5 w-3.5 shrink-0' : 'h-3 w-3 shrink-0'} aria-hidden />
           {t('httpClient.copy')}
         </ClickToCopy>
       ) : null}
@@ -176,7 +177,7 @@ export function HttpResponsePanel({ response }: { response: HttpClientResponse |
         <fieldset
           className={cn(
             'm-0 inline-flex shrink-0 items-stretch overflow-hidden border bg-muted/40 p-0.5',
-            mobile ? 'min-h-11 flex-1 rounded-lg' : 'h-6 rounded-sm p-px'
+            mobile ? 'h-9 rounded-md' : 'h-6 rounded-sm p-px'
           )}
         >
           <legend className="sr-only">{t('httpClient.bodyViewAria')}</legend>
@@ -191,8 +192,8 @@ export function HttpResponsePanel({ response }: { response: HttpClientResponse |
               type="button"
               aria-pressed={bodyView === id}
               className={cn(
-                'inline-flex flex-1 cursor-pointer items-center justify-center border-0 bg-transparent font-medium transition-colors',
-                mobile ? 'min-h-10 rounded-md px-3 text-sm' : 'h-5 px-2 text-[11px] leading-none',
+                'inline-flex cursor-pointer items-center justify-center border-0 bg-transparent font-medium transition-colors',
+                mobile ? 'min-h-8 rounded px-2.5 text-xs' : 'h-5 px-2 text-[11px] leading-none',
                 bodyView === id
                   ? 'bg-background text-foreground shadow-xs'
                   : 'text-muted-foreground hover:text-foreground'
@@ -209,59 +210,63 @@ export function HttpResponsePanel({ response }: { response: HttpClientResponse |
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className={cn(mobile ? 'mb-4' : 'mb-3')}>
-        <HttpResponseStatusBar response={response} />
-      </div>
-
       {mobile ? (
-        <div className="mb-3 space-y-2.5">
-          <div
-            className="flex gap-1 overflow-x-auto overscroll-x-contain border-border/60 border-b pb-px"
-            role="tablist"
-            aria-label={t('httpClient.responseTabsAria')}
-          >
+        <div className="mb-2 shrink-0 space-y-2">
+          <HttpResponseMobileSummary response={response} />
+          <div className="flex items-center gap-2 border-border/60 border-b pb-px">
+            <div
+              className="flex min-w-0 flex-1 gap-0.5 overflow-x-auto overscroll-x-contain"
+              role="tablist"
+              aria-label={t('httpClient.responseTabsAria')}
+            >
+              {tabItems.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === item.id}
+                  className={cn(
+                    'min-h-9 shrink-0 cursor-pointer border-b-2 px-2.5 font-medium text-xs transition-colors',
+                    tab === item.id
+                      ? 'border-primary text-foreground'
+                      : 'border-transparent text-muted-foreground'
+                  )}
+                  onClick={() => setTab(item.id)}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+            {tab === 'body' && (canPreviewBody || bodyText || response.error) ? (
+              <div className="mb-0.5 flex shrink-0 items-center gap-1.5">{bodyActions}</div>
+            ) : null}
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="mb-3">
+            <HttpResponseStatusBar response={response} />
+          </div>
+          <div className="mb-2 flex min-h-8 items-end gap-1 border-b pr-1">
             {tabItems.map((item) => (
               <button
                 key={item.id}
                 type="button"
-                role="tab"
-                aria-selected={tab === item.id}
                 className={cn(
-                  'min-h-11 shrink-0 cursor-pointer border-b-2 px-3.5 font-medium text-sm transition-colors',
+                  '-mb-px cursor-pointer border-b-2 px-3 py-1.5 font-medium text-xs transition-colors',
                   tab === item.id
                     ? 'border-primary text-foreground'
-                    : 'border-transparent text-muted-foreground'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
                 )}
                 onClick={() => setTab(item.id)}
               >
                 {item.label}
               </button>
             ))}
+            <div className="flex-1" />
+            <div className="mb-1 flex h-6 shrink-0 items-center gap-1.5">{bodyActions}</div>
           </div>
-          {tab === 'body' && (canPreviewBody || bodyText || response.error) ? (
-            <div className="flex gap-2">{bodyActions}</div>
-          ) : null}
-        </div>
-      ) : (
-        <div className="mb-2 flex min-h-8 items-end gap-1 border-b pr-1">
-          {tabItems.map((item) => (
-            <button
-              key={item.id}
-              type="button"
-              className={cn(
-                '-mb-px cursor-pointer border-b-2 px-3 py-1.5 font-medium text-xs transition-colors',
-                tab === item.id
-                  ? 'border-primary text-foreground'
-                  : 'border-transparent text-muted-foreground hover:text-foreground'
-              )}
-              onClick={() => setTab(item.id)}
-            >
-              {item.label}
-            </button>
-          ))}
-          <div className="flex-1" />
-          <div className="mb-1 flex h-6 shrink-0 items-center gap-1.5">{bodyActions}</div>
-        </div>
+        </>
       )}
 
       <div className="min-h-0 flex-1 overflow-hidden">

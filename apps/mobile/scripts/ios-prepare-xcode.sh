@@ -39,10 +39,7 @@ fi
 # ios init because gen/ is gitignored.
 bash "$ROOT/scripts/patch-mobile-splash.sh"
 
-# Short home-screen label (CFBundleDisplayName). Full productName stays for the
-# .app bundle / PRODUCT_NAME so Tauri simctl install paths keep working.
-# "4D Data Explorer" truncates to "4DDataExpl…" on SpringBoard.
-IOS_DISPLAY_NAME="4D Explorer"
+IOS_DISPLAY_NAME="Data Explorer"
 python3 - "$GEN_APPLE" "$IOS_DISPLAY_NAME" <<'PY'
 import pathlib, re, sys
 
