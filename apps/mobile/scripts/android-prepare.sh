@@ -63,3 +63,4 @@ if updated == 0:
 PY
 
 bash "$ROOT/scripts/patch-mobile-splash.sh"
+bash "$ROOT/scripts/patch-android-signing.sh"

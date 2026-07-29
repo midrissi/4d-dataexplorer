@@ -851,23 +851,74 @@ function onTabKeydown(event: KeyboardEvent, index: number) {
   }
 
   .term-install__titlebar {
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: 0.35rem 0.4rem;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.45rem;
+    padding: 0.45rem 0.55rem 0.5rem;
+    min-height: 0;
   }
 
+  .term-install__dots {
+    height: auto;
+    padding-bottom: 0;
+  }
+
+  /* Title already says Terminal/PowerShell — badge only cluttered the tab row */
   .term-install__shell-badge {
-    grid-column: 2;
-    justify-self: end;
-    align-self: center;
-    margin: 0;
+    display: none;
   }
 
   .term-install__tabs {
-    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.3rem;
+    padding: 0.2rem;
+    border-radius: 0.55rem;
+    border: 1px solid var(--vp-c-divider);
+    background: color-mix(in oklab, var(--vp-c-bg-mute) 70%, var(--vp-c-bg));
+  }
+
+  .term-install__tab {
+    flex-direction: column;
+    gap: 0.15rem;
+    min-height: 2.75rem;
+    padding: 0.4rem 0.25rem;
+    border-radius: 0.4rem;
+    border: 1px solid transparent;
+    font-size: 0.625rem;
+  }
+
+  .term-install__tab:hover {
+    background: color-mix(in oklab, var(--vp-c-bg) 70%, transparent);
+  }
+
+  .term-install__tab.is-active {
+    z-index: 1;
+    margin-bottom: 0;
+    padding-bottom: 0.4rem;
+    border-color: color-mix(in oklab, var(--ti-accent) 42%, var(--vp-c-divider));
+    background: var(--vp-c-bg);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in oklab, var(--ti-accent) 12%, transparent),
+      0 1px 0 color-mix(in oklab, var(--ti-accent) 25%, transparent);
+  }
+
+  .term-install__tab-icon {
+    opacity: 0.85;
+  }
+
+  .term-install__tab-icon svg {
+    width: 14px;
+    height: 14px;
   }
 
   .term-install__tab-label {
-    display: none;
+    display: block;
+    max-width: 100%;
+    font-size: 0.5625rem;
+    font-weight: 650;
+    letter-spacing: 0.02em;
   }
 
   .term-install__yours {
@@ -880,6 +931,7 @@ function onTabKeydown(event: KeyboardEvent, index: number) {
 
   .term-install__copy {
     justify-content: center;
+    min-height: 2.5rem;
   }
 }
 </style>

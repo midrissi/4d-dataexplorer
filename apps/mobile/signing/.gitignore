@@ -1,0 +1,8 @@
+# Keep private upload / iOS export material out of git.
+# The public sideload.p12 is intentionally tracked for GitHub Release APKs.
+private/
+*.env
+upload-*.p12
+upload-*.jks
+ios-secrets-*.env
+github-secrets-*.md

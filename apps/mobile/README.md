@@ -78,13 +78,31 @@ Mobile builds run inside the main [CI](../../.github/workflows/ci.yml) pipeline 
 
 | Job | Runner | When | Output |
 | --- | --- | --- | --- |
-| Build Android | `ubuntu-latest` | After E2E | Debug APK (`aarch64`) artifact `mobile-android-apk` |
+| Build Android | `ubuntu-latest` | After E2E | Signed release APK (`aarch64`) artifact `mobile-android-apk` |
 | Build iOS | `macos-latest` | After E2E | Simulator release build artifact `mobile-ios-sim` |
 | Upload mobile to release | `ubuntu-latest` | Push to **`main`** only | APK + iOS zip on the SHA-stamped GitHub Release |
 
 You can also run the Mobile workflow manually via `workflow_dispatch` (build only; no release upload).
 
-Generated `src-tauri/gen/` projects are created in CI via `tauri android|ios init --ci`. Store signing / App Store export is not configured yet — local device / release IPA builds still use `tauri:ios:build:device` with Xcode signing.
+Generated `src-tauri/gen/` projects are created in CI via `tauri android|ios init --ci`.
+
+### 🔐 Signing (Android + iOS)
+
+See **[signing/README.md](./signing/README.md)** for GitHub secrets, key generation, and install notes.
+
+```bash
+cd apps/mobile
+bash scripts/generate-mobile-signing.sh android              # 🤖 private upload keystore + secret values
+bash scripts/generate-mobile-signing.sh android --sideload --force   # rotate public sideload.p12
+bash scripts/generate-mobile-signing.sh ios checklist        # 🍎 Apple portal steps
+bash scripts/generate-mobile-signing.sh ios encode --cert … --profile … --password …
+bash scripts/generate-mobile-signing.sh secrets-list
+```
+
+Short version:
+
+- 🤖 **Android:** unsigned release APKs fail with **App not installed**. CI signs via `ANDROID_KEY_*` secrets, or falls back to the committed [`signing/sideload.p12`](./signing/sideload.p12).
+- 🍎 **iOS:** CI ships an unsigned simulator build. Device / TestFlight IPAs need Apple cert + profile (`IOS_*` secrets) or Xcode automatic signing — encode with the script above.
 
 ## Architecture notes
 

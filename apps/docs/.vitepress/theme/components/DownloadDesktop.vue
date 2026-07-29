@@ -691,7 +691,9 @@ onBeforeUnmount(() => {
               </template>
               <template v-else-if="activePlatform === 'android'">
                 <p class="hero-download__info-copy">
-                  APK installs require allowing installs from this browser or file manager. AAB
+                  APK installs require allowing installs from this browser or file manager. If you
+                  see <strong>App not installed</strong>, uninstall any older Data Explorer build
+                  first (debug and release use different signatures), then install again. AAB
                   files are for Play Console upload, not sideloading on a device.
                 </p>
               </template>

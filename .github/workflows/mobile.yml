@@ -79,8 +79,14 @@ jobs:
         working-directory: apps/mobile
         run: bunx tauri android init --ci --skip-targets-install
 
-      - name: Prepare Android branding (icons, label, splash)
+      - name: Prepare Android branding (icons, label, splash, signing)
         working-directory: apps/mobile
+        env:
+          # Optional private upload keystore. When unset, android-prepare uses
+          # apps/mobile/signing/sideload.p12 (see apps/mobile/signing/README.md).
+          ANDROID_KEY_BASE64: ${{ secrets.ANDROID_KEY_BASE64 }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: bash ./scripts/android-prepare.sh
 
       - name: Build Android APK (release, aarch64)
@@ -99,6 +105,11 @@ jobs:
           mkdir -p "$OUT"
           found=0
           while IFS= read -r -d '' path; do
+            # Skip Gradle's unsigned intermediates — they are not installable.
+            if [[ "$(basename "$path")" == *unsigned* ]]; then
+              echo "skip unsigned: $path"
+              continue
+            fi
             cp "$path" "$OUT/"
             found=1
           done < <(find apps/mobile/src-tauri/gen/android -type f -name '*.apk' -print0 2>/dev/null || true)
@@ -155,7 +166,9 @@ jobs:
         env:
           CI: true
           TAURI_IOS_TMPDIR: /tmp/tauri-ios-build-${{ github.run_id }}
-          # Unsigned simulator builds — no Apple Developer credentials required.
+          # Unsigned simulator builds — no Apple credentials required.
+          # For signed device IPAs see apps/mobile/signing/README.md
+          # (IOS_CERTIFICATE / IOS_CERTIFICATE_PASSWORD / IOS_MOBILE_PROVISION).
           CODE_SIGNING_ALLOWED: 'NO'
           CODE_SIGNING_REQUIRED: 'NO'
           CODE_SIGN_IDENTITY: ''
@@ -223,15 +236,29 @@ jobs:
           OUT="$PWD/release-assets/upload"
           mkdir -p "$OUT"
 
-          apk="$(find release-assets/android -type f -name '*.apk' | head -n 1 || true)"
+          # Prefer a release APK; never ship *-unsigned.apk (Android rejects them).
+          mapfile -t apks < <(
+            find release-assets/android -type f -name '*.apk' ! -name '*unsigned*' | sort
+          )
+          apk=""
+          for candidate in "${apks[@]+"${apks[@]}"}"; do
+            if [[ "$candidate" == *[Rr]elease* ]]; then
+              apk="$candidate"
+              break
+            fi
+          done
+          if [ -z "$apk" ] && [ "${#apks[@]}" -gt 0 ]; then
+            apk="${apks[0]}"
+          fi
           if [ -z "$apk" ]; then
-            echo "::error::No APK in android artifact"
+            echo "::error::No signed APK in android artifact"
             find release-assets/android -type f | head -n 50 || true
             exit 1
           fi
           APK_NAME="Data-Explorer_${VERSION}_android-aarch64.apk"
           cp "$apk" "$OUT/$APK_NAME"
           echo "apk=$OUT/$APK_NAME" >> "$GITHUB_OUTPUT"
+          echo "Publishing APK from: $apk"
 
           IOS_ZIP="$OUT/Data-Explorer_${VERSION}_ios-sim-release.zip"
           ( cd release-assets/ios && zip -r "$IOS_ZIP" . )

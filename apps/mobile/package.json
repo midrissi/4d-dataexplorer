@@ -17,7 +17,12 @@
     "tauri:ios:dev:raw": "tauri ios dev",
     "tauri:ios:build": "bash ./scripts/ios-build.sh",
     "tauri:ios:build:device": "bash ./scripts/ios-build.sh --target aarch64 --ci",
-    "tauri:ios:build:sim": "bash ./scripts/ios-build.sh --target aarch64-sim --ci"
+    "tauri:ios:build:sim": "bash ./scripts/ios-build.sh --target aarch64-sim --ci",
+    "signing:android": "bash ./scripts/generate-mobile-signing.sh android",
+    "signing:android:sideload": "bash ./scripts/generate-mobile-signing.sh android --sideload",
+    "signing:ios:checklist": "bash ./scripts/generate-mobile-signing.sh ios checklist",
+    "signing:ios:encode": "bash ./scripts/generate-mobile-signing.sh ios encode",
+    "signing:secrets": "bash ./scripts/generate-mobile-signing.sh secrets-list"
   },
   "dependencies": {
     "@4d/dataexplorer": "workspace:*",
