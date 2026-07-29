@@ -48,7 +48,6 @@ import {
   Clock,
   Copy,
   Database,
-  Download,
   Edit2,
   ExternalLink,
   FileJson,
@@ -65,7 +64,6 @@ import {
   Network,
   RefreshCw,
   Save,
-  Share,
   Trash2,
   TreePine,
   Unlink,
@@ -79,7 +77,6 @@ import {
   PRIVATE_BINARY_OBJECT_KEY,
 } from '~/components/BinaryObjectViewer'
 import { JsonTreePreview } from '~/components/Console/ObjectTree'
-import { DeferredImage } from '~/components/DeferredImage'
 import { DownloadableImage } from '~/components/DownloadableImage'
 import { EmptyPanel, EmptyPanelAction } from '~/components/EmptyPanel'
 import { EntityDataGrid } from '~/components/EntityDataGrid'
@@ -89,7 +86,6 @@ import { MethodListPopover } from '~/components/MethodExecutor/MethodListPopover
 import { PullToRefresh } from '~/components/PullToRefresh'
 import { getIntlLocale, useEditorLabels, useTranslation } from '~/i18n'
 import { api, formatThrownError } from '~/lib/api'
-import { canShareFiles, downloadBytes, shareBytes } from '~/lib/download-bytes'
 import { durationValueToInputValue, parseDurationInput } from '~/lib/duration'
 import { sanitizeForEditing } from '~/lib/entitySanitizer'
 import { eventBus } from '~/lib/eventBus'
@@ -1286,118 +1282,47 @@ function ImageField({
             onDrop={handleDrop}
             aria-label={t('entity.imageDropZoneAria')}
           >
-            <DeferredImage
+            <DownloadableImage
               src={previewUrl}
               alt={attr.name}
-              className="max-h-48 max-w-full rounded-md border object-contain"
+              name={attr.name}
+              imgClassName="max-h-48 max-w-full rounded-md object-contain"
             />
-            <div className="mt-2 flex flex-wrap gap-1.5">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className="h-8 w-8"
-                disabled={uploading}
-                aria-label={t('entity.downloadImage')}
-                title={t('entity.downloadImage')}
-                onClick={async (e) => {
-                  e.stopPropagation()
-                  try {
-                    const { bytes, contentType } = await api.fetchBinary(previewUrl)
-                    const ext = contentType?.includes('png')
-                      ? 'png'
-                      : contentType?.includes('jpeg') || contentType?.includes('jpg')
-                        ? 'jpg'
-                        : contentType?.includes('webp')
-                          ? 'webp'
-                          : contentType?.includes('gif')
-                            ? 'gif'
-                            : 'img'
-                    await downloadBytes({
-                      filename: `${attr.name}.${ext}`,
-                      bytes,
-                      mime: contentType ?? undefined,
-                    })
-                  } catch (err) {
-                    alert(err instanceof Error ? err.message : t('entity.failedToDownloadImage'))
-                  }
-                }}
-              >
-                <Download className="h-3.5 w-3.5" aria-hidden />
-              </Button>
-              {canShareFiles() ? (
+            {isEditing && !isReadonly ? (
+              <div className="mt-2 flex flex-wrap gap-1.5">
                 <Button
                   type="button"
                   variant="outline"
-                  size="icon"
-                  className="h-8 w-8"
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
-                  aria-label={t('entity.shareImage')}
-                  title={t('entity.shareImage')}
-                  onClick={async (e) => {
-                    e.stopPropagation()
-                    try {
-                      const { bytes, contentType } = await api.fetchBinary(previewUrl)
-                      const ext = contentType?.includes('png')
-                        ? 'png'
-                        : contentType?.includes('jpeg') || contentType?.includes('jpg')
-                          ? 'jpg'
-                          : contentType?.includes('webp')
-                            ? 'webp'
-                            : contentType?.includes('gif')
-                              ? 'gif'
-                              : 'img'
-                      await shareBytes({
-                        filename: `${attr.name}.${ext}`,
-                        bytes,
-                        mime: contentType ?? undefined,
-                      })
-                    } catch (err) {
-                      if (err instanceof DOMException && err.name === 'AbortError') return
-                      if (err instanceof Error && err.name === 'AbortError') return
-                      alert(err instanceof Error ? err.message : t('entity.failedToShareImage'))
-                    }
-                  }}
+                  className="h-8 gap-1 px-2 text-xs"
                 >
-                  <Share className="h-3.5 w-3.5" aria-hidden />
+                  {uploading ? (
+                    <>
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      {t('entity.uploading')}
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="h-3 w-3" />
+                      {t('entity.replace')}
+                    </>
+                  )}
                 </Button>
-              ) : null}
-              {isEditing && !isReadonly ? (
-                <>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                    className="h-8 gap-1 px-2 text-xs"
-                  >
-                    {uploading ? (
-                      <>
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                        {t('entity.uploading')}
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="h-3 w-3" />
-                        {t('entity.replace')}
-                      </>
-                    )}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleRemoveImage}
-                    disabled={uploading}
-                    className="h-8 gap-1 px-2 text-destructive text-xs"
-                  >
-                    <X className="h-3 w-3" />
-                    {t('common.remove')}
-                  </Button>
-                </>
-              ) : null}
-            </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRemoveImage}
+                  disabled={uploading}
+                  className="h-8 gap-1 px-2 text-destructive text-xs"
+                >
+                  <X className="h-3 w-3" />
+                  {t('common.remove')}
+                </Button>
+              </div>
+            ) : null}
           </section>
         ) : (
           <section

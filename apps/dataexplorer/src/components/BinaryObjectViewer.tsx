@@ -372,6 +372,7 @@ export function BinaryObjectViewer({
     } catch (err) {
       if (err instanceof DOMException && err.name === 'AbortError') return
       if (err instanceof Error && err.name === 'AbortError') return
+      alert(err instanceof Error ? err.message : 'Failed to share file')
     }
   }, [resolveBytes, shareFileBytes])
 

@@ -1,6 +1,6 @@
 import { Button, cn } from '@4d/ui'
 import { Download, Loader2, Share } from 'lucide-react'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { DeferredImage } from '~/components/DeferredImage'
 import { useTranslation } from '~/i18n'
 import { api } from '~/lib/api'
@@ -60,8 +60,8 @@ type LoadedImage = {
 }
 
 /**
- * Picture preview with download (and share on web/desktop when available).
- * Uses {@link downloadBytes} so Tauri shells get a native save dialog.
+ * Picture preview with download (and share when available).
+ * Prefetches bytes so share/download stay inside the iOS user-gesture window.
  */
 export function DownloadableImage({
   src,
@@ -73,55 +73,89 @@ export function DownloadableImage({
 }: DownloadableImageProps) {
   const { t } = useTranslation()
   const [busy, setBusy] = useState<'download' | 'share' | null>(null)
+  const cachedRef = useRef<LoadedImage | null>(null)
+  const loadPromiseRef = useRef<Promise<LoadedImage> | null>(null)
 
   const loadImage = useCallback(async (): Promise<LoadedImage> => {
-    const absolute = toAbsoluteUrl(src)
-    let bytes: Uint8Array
-    let mime: string | null
-    if (/^(data:|blob:)/i.test(absolute)) {
-      ;({ bytes, mime } = await bytesFromDataOrBlobUrl(absolute))
-    } else {
-      const result = await api.fetchBinary(absolute)
-      bytes = result.bytes
-      mime = result.contentType
-    }
-    return {
-      filename: suggestedFilename(name, mime),
-      bytes,
-      mime: mime ?? undefined,
+    if (cachedRef.current) return cachedRef.current
+    if (loadPromiseRef.current) return loadPromiseRef.current
+
+    const pending = (async () => {
+      const absolute = toAbsoluteUrl(src)
+      let bytes: Uint8Array
+      let mime: string | null
+      if (/^(data:|blob:)/i.test(absolute)) {
+        ;({ bytes, mime } = await bytesFromDataOrBlobUrl(absolute))
+      } else {
+        const result = await api.fetchBinary(absolute)
+        bytes = result.bytes
+        mime = result.contentType
+      }
+      const loaded: LoadedImage = {
+        filename: suggestedFilename(name, mime),
+        bytes,
+        mime: mime ?? undefined,
+      }
+      cachedRef.current = loaded
+      return loaded
+    })()
+
+    loadPromiseRef.current = pending
+    try {
+      return await pending
+    } finally {
+      if (loadPromiseRef.current === pending) loadPromiseRef.current = null
     }
   }, [name, src])
+
+  // Prefetch so tap handlers don't await network (iOS drops user activation).
+  useEffect(() => {
+    cachedRef.current = null
+    loadPromiseRef.current = null
+    let cancelled = false
+    void loadImage().catch(() => {
+      if (!cancelled) cachedRef.current = null
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [loadImage])
 
   const handleDownload = useCallback(async () => {
     if (busy) return
     setBusy('download')
     try {
-      const file = await loadImage()
+      // Prefer cache so mobile share-backed download keeps user activation.
+      const file = cachedRef.current ?? (await loadImage())
       await downloadBytes(file)
+    } catch (err) {
+      alert(err instanceof Error ? err.message : t('entity.failedToDownloadImage'))
     } finally {
       setBusy(null)
     }
-  }, [busy, loadImage])
+  }, [busy, loadImage, t])
 
   const handleShare = useCallback(async () => {
     if (busy) return
     setBusy('share')
     try {
-      const file = await loadImage()
+      // Prefer already-cached bytes so navigator.share keeps user activation.
+      const file = cachedRef.current ?? (await loadImage())
       await shareBytes(file)
     } catch (err) {
-      // AbortError = user dismissed the sheet; ignore.
       if (err instanceof DOMException && err.name === 'AbortError') return
       if (err instanceof Error && err.name === 'AbortError') return
+      alert(err instanceof Error ? err.message : t('entity.failedToShareImage'))
     } finally {
       setBusy(null)
     }
-  }, [busy, loadImage])
+  }, [busy, loadImage, t])
 
   const shareAvailable = canShareFiles()
 
   const iconSize = compact ? 'iconXs' : 'icon'
   const iconClass = compact ? 'h-8 w-8' : 'h-9 w-9 sm:h-8 sm:w-8'
+  const actionsDisabled = busy !== null
 
   return (
     <div className={cn('space-y-2', className)}>
@@ -148,7 +182,7 @@ export function DownloadableImage({
             e.stopPropagation()
             void handleDownload()
           }}
-          disabled={busy !== null}
+          disabled={actionsDisabled}
         >
           {busy === 'download' ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
@@ -168,7 +202,7 @@ export function DownloadableImage({
               e.stopPropagation()
               void handleShare()
             }}
-            disabled={busy !== null}
+            disabled={actionsDisabled}
           >
             {busy === 'share' ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />

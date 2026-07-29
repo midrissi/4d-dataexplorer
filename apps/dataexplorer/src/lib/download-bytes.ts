@@ -25,8 +25,15 @@ export function registerDownloadBytes(fn: DownloadBytesFn): void {
   _downloadBytes = fn
 }
 
+/** Copy into a standalone buffer — never pass a TypedArray's shared `.buffer` into Blob. */
+function copyBytes(bytes: Uint8Array): Uint8Array<ArrayBuffer> {
+  const copy = new Uint8Array(bytes.byteLength)
+  copy.set(bytes)
+  return copy
+}
+
 function toBlob({ bytes, mime }: DownloadBytesInput): Blob {
-  return new Blob([bytes.buffer as ArrayBuffer], {
+  return new Blob([copyBytes(bytes)], {
     type: mime ?? 'application/octet-stream',
   })
 }
@@ -80,8 +87,11 @@ export function canShareFiles(): boolean {
 }
 
 /**
- * Open the system share sheet for the given bytes (AirDrop, Mail, etc.).
+ * Open the system share sheet for the given bytes (AirDrop, Mail, Save to Files, etc.).
  * Throws if share is unavailable or the user cancels in a way that surfaces an error.
+ *
+ * Callers should preload bytes before the click handler when possible — iOS WKWebView
+ * requires a transient user gesture and drops it across `await` boundaries.
  */
 export async function shareBytes(input: DownloadBytesInput): Promise<void> {
   if (!canShareBytes(input)) {
