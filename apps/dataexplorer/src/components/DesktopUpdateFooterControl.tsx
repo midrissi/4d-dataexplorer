@@ -22,7 +22,7 @@ import {
   listDesktopReleases,
   normalizeDesktopVersion,
 } from '~/lib/desktop-releases'
-import { isDesktop } from '~/lib/platform'
+import { isDesktopShell } from '~/lib/platform'
 import { type DesktopUpdaterPhase, useDesktopUpdaterStore } from '~/store/desktop-updater'
 
 function formatBytes(bytes: number): string {
@@ -173,7 +173,7 @@ export function DesktopUpdateFooterControl() {
     }
   }
 
-  if (!isDesktop()) return null
+  if (!isDesktopShell()) return null
 
   const chrome = triggerChrome(phase)
   const busy = phase === 'checking' || phase === 'downloading'

@@ -22,6 +22,7 @@ import { EmptyPanel, EmptyPanelAction } from '~/components/EmptyPanel'
 import { getIntlLocale, useTranslation } from '~/i18n'
 import { api } from '~/lib/api'
 import { eventBus } from '~/lib/eventBus'
+import { isMobileShell } from '~/lib/platform'
 import { formatBytes, formatCount } from '~/lib/utils'
 import { type Dataclass, useDataExplorerStore } from '~/store'
 import {
@@ -31,6 +32,7 @@ import {
   useShortcuts,
 } from '~/store/settings'
 import { useTabsStore } from '~/store/tabs'
+import { AppBrandIcon } from './AppBrandIcon'
 import { DatabaseIdentityPanel } from './DatabaseIdentityPanel'
 import { DataclassIcon, getDataclassColorClasses } from './DataclassCustomizeModal'
 
@@ -282,12 +284,12 @@ export function WelcomeScreen() {
         <div className="text-center">
           <div className="relative mx-auto mb-4 h-20 w-20">
             <div className="absolute inset-0 animate-pulse rounded-3xl bg-primary/20" />
-            <div className="absolute inset-2 flex items-center justify-center rounded-2xl bg-background shadow-xl">
+            <div className="absolute inset-2 flex items-center justify-center">
               {isRefreshingDataclasses ? (
                 <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden />
               ) : (
-                <div className="relative">
-                  <Database className="h-8 w-8 text-primary" />
+                <div className="relative h-full w-full">
+                  <AppBrandIcon className="h-full w-full drop-shadow-xl" />
                   <div className="absolute -right-1 -bottom-1 rounded-full bg-background p-1 shadow">
                     <Layers className="h-3.5 w-3.5 text-violet-500" />
                   </div>
@@ -296,8 +298,15 @@ export function WelcomeScreen() {
             </div>
           </div>
 
-          <h1 className="font-semibold text-2xl text-foreground">{t('welcome.title')}</h1>
-          <p className="mt-1 text-muted-foreground">{t('welcome.subtitle')}</p>
+          <h1
+            className={cn(
+              'font-semibold text-foreground',
+              isMobileShell() ? 'text-xl' : 'text-2xl'
+            )}
+          >
+            {t('welcome.title')}
+          </h1>
+          <p className="mt-1 text-muted-foreground text-sm sm:text-base">{t('welcome.subtitle')}</p>
           {isRefreshingDataclasses && (
             <span className="sr-only" role="status" aria-live="polite">
               {t('loading.loadingStats')}
@@ -323,21 +332,23 @@ export function WelcomeScreen() {
                 </kbd>
               )}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => openGraphTab()}
-              className="gap-2"
-            >
-              <Network className="h-4 w-4" />
-              {t('welcome.structure')}
-              {openStructureShortcut?.enabled && (
-                <kbd className="rounded border bg-muted px-1.5 font-mono text-[10px] text-muted-foreground">
-                  {formatShortcut(openStructureShortcut)}
-                </kbd>
-              )}
-            </Button>
+            {!isMobileShell() ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => openGraphTab()}
+                className="gap-2"
+              >
+                <Network className="h-4 w-4" />
+                {t('welcome.structure')}
+                {openStructureShortcut?.enabled && (
+                  <kbd className="rounded border bg-muted px-1.5 font-mono text-[10px] text-muted-foreground">
+                    {formatShortcut(openStructureShortcut)}
+                  </kbd>
+                )}
+              </Button>
+            ) : null}
           </div>
         </div>
 
@@ -345,62 +356,79 @@ export function WelcomeScreen() {
         <div className="rounded-md border bg-card p-3">
           <h3 className="mb-3 flex items-center gap-2 font-medium text-foreground">
             <Lightbulb className="h-4 w-4 text-amber-500" />
-            {t('welcome.tipsShortcuts')}
+            {isMobileShell() ? t('mobile.welcomeTipsTitle') : t('welcome.tipsShortcuts')}
           </h3>
-          <ul className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-3">
-            {commandPaletteShortcut?.enabled && (
+          {isMobileShell() ? (
+            <ul className="grid gap-2 text-sm">
               <li className="flex items-center gap-2 text-muted-foreground">
-                <Sparkles className="h-4 w-4 shrink-0 text-primary" />
-                <span>
-                  {t('welcome.commandPaletteShortcut')}{' '}
-                  <kbd className="rounded border bg-muted px-1 font-mono text-xs">
-                    {formatShortcut(commandPaletteShortcut)}
-                  </kbd>
-                </span>
+                <Layers className="h-4 w-4 shrink-0 text-primary" />
+                <span>{t('mobile.welcomeTipCatalog')}</span>
               </li>
-            )}
-            {openDataclassDataShortcut?.enabled && (
+              <li className="flex items-center gap-2 text-muted-foreground">
+                <MousePointerClick className="h-4 w-4 shrink-0" />
+                <span>{t('mobile.welcomeTipOpen')}</span>
+              </li>
               <li className="flex items-center gap-2 text-muted-foreground">
                 <Search className="h-4 w-4 shrink-0" />
-                <span>
-                  {t('welcome.openDataclassShortcut')}{' '}
-                  <kbd className="rounded border bg-muted px-1 font-mono text-xs">
-                    {formatShortcut(openDataclassDataShortcut)}
-                  </kbd>
-                </span>
+                <span>{t('mobile.welcomeTipSearch')}</span>
               </li>
-            )}
-            {goToEntityShortcut?.enabled && (
+            </ul>
+          ) : (
+            <ul className="grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-3">
+              {commandPaletteShortcut?.enabled && (
+                <li className="flex items-center gap-2 text-muted-foreground">
+                  <Sparkles className="h-4 w-4 shrink-0 text-primary" />
+                  <span>
+                    {t('welcome.commandPaletteShortcut')}{' '}
+                    <kbd className="rounded border bg-muted px-1 font-mono text-xs">
+                      {formatShortcut(commandPaletteShortcut)}
+                    </kbd>
+                  </span>
+                </li>
+              )}
+              {openDataclassDataShortcut?.enabled && (
+                <li className="flex items-center gap-2 text-muted-foreground">
+                  <Search className="h-4 w-4 shrink-0" />
+                  <span>
+                    {t('welcome.openDataclassShortcut')}{' '}
+                    <kbd className="rounded border bg-muted px-1 font-mono text-xs">
+                      {formatShortcut(openDataclassDataShortcut)}
+                    </kbd>
+                  </span>
+                </li>
+              )}
+              {goToEntityShortcut?.enabled && (
+                <li className="flex items-center gap-2 text-muted-foreground">
+                  <FileText className="h-4 w-4 shrink-0" />
+                  <span>
+                    {t('welcome.goToEntityShortcut')}{' '}
+                    <kbd className="rounded border bg-muted px-1 font-mono text-xs">
+                      {formatShortcut(goToEntityShortcut)}
+                    </kbd>
+                  </span>
+                </li>
+              )}
+              {openStructureShortcut?.enabled && (
+                <li className="flex items-center gap-2 text-muted-foreground">
+                  <Network className="h-4 w-4 shrink-0" />
+                  <span>
+                    {t('welcome.structureViewShortcut')}{' '}
+                    <kbd className="rounded border bg-muted px-1 font-mono text-xs">
+                      {formatShortcut(openStructureShortcut)}
+                    </kbd>
+                  </span>
+                </li>
+              )}
               <li className="flex items-center gap-2 text-muted-foreground">
-                <FileText className="h-4 w-4 shrink-0" />
-                <span>
-                  {t('welcome.goToEntityShortcut')}{' '}
-                  <kbd className="rounded border bg-muted px-1 font-mono text-xs">
-                    {formatShortcut(goToEntityShortcut)}
-                  </kbd>
-                </span>
+                <MousePointerClick className="h-4 w-4 shrink-0" />
+                <span>{t('welcome.clickDataclassTip')}</span>
               </li>
-            )}
-            {openStructureShortcut?.enabled && (
               <li className="flex items-center gap-2 text-muted-foreground">
-                <Network className="h-4 w-4 shrink-0" />
-                <span>
-                  {t('welcome.structureViewShortcut')}{' '}
-                  <kbd className="rounded border bg-muted px-1 font-mono text-xs">
-                    {formatShortcut(openStructureShortcut)}
-                  </kbd>
-                </span>
+                <Layers className="h-4 w-4 shrink-0" />
+                <span>{t('welcome.sidebarTip')}</span>
               </li>
-            )}
-            <li className="flex items-center gap-2 text-muted-foreground">
-              <MousePointerClick className="h-4 w-4 shrink-0" />
-              <span>{t('welcome.clickDataclassTip')}</span>
-            </li>
-            <li className="flex items-center gap-2 text-muted-foreground">
-              <Layers className="h-4 w-4 shrink-0" />
-              <span>{t('welcome.sidebarTip')}</span>
-            </li>
-          </ul>
+            </ul>
+          )}
         </div>
 
         {/* Stats Cards */}
@@ -594,9 +622,11 @@ export function WelcomeScreen() {
                 >
                   {t('welcome.openCommandPalette')}
                 </EmptyPanelAction>
-                <EmptyPanelAction icon={Network} onClick={() => openGraphTab()}>
-                  {t('welcome.viewStructure')}
-                </EmptyPanelAction>
+                {!isMobileShell() ? (
+                  <EmptyPanelAction icon={Network} onClick={() => openGraphTab()}>
+                    {t('welcome.viewStructure')}
+                  </EmptyPanelAction>
+                ) : null}
               </>
             }
           />

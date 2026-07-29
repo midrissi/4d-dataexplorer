@@ -2,6 +2,7 @@ import { Button, cn, useEscapeToDismiss } from '@4d/ui'
 import { BookText, GripHorizontal, Maximize2, Minimize2, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from '~/i18n'
+import { isMobileShell } from '~/lib/platform'
 import { useTabsStore } from '~/store/tabs'
 import './assistant-chatbot.css'
 import { DataExplorerAssistant } from './DataExplorerAssistant'
@@ -55,8 +56,11 @@ function focusAssistantComposer(): boolean {
 
 export function AssistantChatbot({ open, onOpenChange, onLoadingChange }: AssistantChatbotProps) {
   const { t } = useTranslation()
+  const mobile = isMobileShell()
   const openAssistantMetadataTab = useTabsStore((state) => state.openAssistantMetadataTab)
   const [fullscreen, setFullscreen] = useState(false)
+  // Mobile always opens as a full-screen overlay (no windowed/resizable mode).
+  const isFullscreen = mobile || fullscreen
   const [preloaded, setPreloaded] = useState(false)
   const [heightPx, setHeightPx] = useState<number | null>(() => readStoredHeight())
   const [isResizing, setIsResizing] = useState(false)
@@ -95,12 +99,12 @@ export function AssistantChatbot({ open, onOpenChange, onLoadingChange }: Assist
   }, [onOpenChange])
 
   const dismissAssistant = useCallback(() => {
-    if (fullscreen) {
+    if (!mobile && fullscreen) {
       setFullscreen(false)
       return
     }
     handleClose()
-  }, [fullscreen, handleClose])
+  }, [mobile, fullscreen, handleClose])
 
   useEscapeToDismiss(open, dismissAssistant)
 
@@ -214,22 +218,23 @@ export function AssistantChatbot({ open, onOpenChange, onLoadingChange }: Assist
       ref={panelRef}
       className={cn(
         'assistant-chatbot fixed z-50',
+        mobile && 'assistant-chatbot--mobile',
         !open && 'pointer-events-none invisible opacity-0',
-        open && fullscreen
+        open && isFullscreen
           ? 'assistant-chatbot--fullscreen'
           : open
             ? 'fade-in slide-in-from-bottom-3 right-3 bottom-10 animate-in duration-300'
             : 'right-3 bottom-10',
         isResizing && 'assistant-chatbot--resizing'
       )}
-      style={!fullscreen && heightPx != null ? { height: `${heightPx}px` } : undefined}
+      style={!isFullscreen && heightPx != null ? { height: `${heightPx}px` } : undefined}
       role="dialog"
       aria-label={t('assistant.headerTitle')}
       aria-hidden={!open}
       aria-modal="false"
     >
       <div className="assistant-chatbot__frame">
-        {!fullscreen ? (
+        {!isFullscreen ? (
           <button
             type="button"
             className={cn(
@@ -260,31 +265,37 @@ export function AssistantChatbot({ open, onOpenChange, onLoadingChange }: Assist
         ) : null}
         <div className="assistant-chatbot__accent" aria-hidden />
         <div className="assistant-chatbot__actions">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="assistant-chatbot__action"
-            onClick={openAssistantMetadataTab}
-            aria-label={t('layout.assistantMetadataAria')}
-          >
-            <BookText className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="assistant-chatbot__action"
-            onClick={toggleFullscreen}
-            aria-label={fullscreen ? t('assistant.exitFullscreen') : t('assistant.enterFullscreen')}
-            aria-pressed={fullscreen}
-          >
-            {fullscreen ? (
-              <Minimize2 className="h-3.5 w-3.5" />
-            ) : (
-              <Maximize2 className="h-3.5 w-3.5" />
-            )}
-          </Button>
+          {!mobile ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="assistant-chatbot__action"
+              onClick={openAssistantMetadataTab}
+              aria-label={t('layout.assistantMetadataAria')}
+            >
+              <BookText className="h-3.5 w-3.5" />
+            </Button>
+          ) : null}
+          {!mobile ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="assistant-chatbot__action"
+              onClick={toggleFullscreen}
+              aria-label={
+                fullscreen ? t('assistant.exitFullscreen') : t('assistant.enterFullscreen')
+              }
+              aria-pressed={fullscreen}
+            >
+              {fullscreen ? (
+                <Minimize2 className="h-3.5 w-3.5" />
+              ) : (
+                <Maximize2 className="h-3.5 w-3.5" />
+              )}
+            </Button>
+          ) : null}
           <Button
             type="button"
             variant="ghost"

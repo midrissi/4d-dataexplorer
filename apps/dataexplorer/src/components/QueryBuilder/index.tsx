@@ -9,6 +9,9 @@ import {
   CodeEditor,
   type CodeEditorInstance,
   cn,
+  Dialog,
+  DialogContent,
+  DialogTitle,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -47,6 +50,13 @@ import {
 import { useAssistantLlmConfigured } from '~/hooks/useAssistantLlmConfigured'
 import { getIntlLocale, useTranslation } from '~/i18n'
 import { api } from '~/lib/api'
+import {
+  mobileFullscreenDialogClass,
+  mobileMenuCollisionProps,
+  mobileMenuContentClass,
+  mobileMenuItemClass,
+} from '~/lib/mobile-menu'
+import { isMobileShell } from '~/lib/platform'
 import { formatTime } from '~/lib/utils'
 import { useDataExplorerStore } from '~/store'
 import {
@@ -127,6 +137,7 @@ function runtimeArgumentToFilterParam(argument: RuntimeArgument): FilterParam {
 export function QueryBuilder() {
   const { t, language } = useTranslation()
   const locale = getIntlLocale(language)
+  const mobile = isMobileShell()
   const { selectedDataclass, fetchEntities, entitiesLoading } = useDataExplorerStore()
   const defaultQueryRunMode = useDefaultQueryRunMode()
   const defaultCreateEntitySet = defaultQueryRunMode === 'runAsSelection'
@@ -266,6 +277,12 @@ export function QueryBuilder() {
     }
   }, [activeDataclassTab, resetQueryOptions])
 
+  const handleCollapse = useCallback(() => {
+    if (activeDataclassTab) {
+      setQueryExpanded(activeDataclassTab.id, false)
+    }
+  }, [activeDataclassTab, setQueryExpanded])
+
   const handleRun = useCallback(
     (createEntitySet?: boolean) => {
       const shouldCreateEntitySet = createEntitySet ?? defaultCreateEntitySet
@@ -303,6 +320,10 @@ export function QueryBuilder() {
           const currentPagination = useDataExplorerStore.getState().pagination
           addToHistory(selectedDataclass, newQueryOptions, currentPagination?.total)
         }
+        // Mobile: fold the panel so results are visible after run.
+        if (isMobileShell() && activeDataclassTab) {
+          setQueryExpanded(activeDataclassTab.id, false)
+        }
       })
     },
     [
@@ -313,6 +334,8 @@ export function QueryBuilder() {
       selectedDataclass,
       addToHistory,
       defaultCreateEntitySet,
+      activeDataclassTab,
+      setQueryExpanded,
     ]
   )
 
@@ -659,6 +682,72 @@ export function QueryBuilder() {
 
   const selectedAttributeCount = parseSelectAttributes(queryOptions.select).length
 
+  const historyPanelBody = (
+    <>
+      <div className="mb-2 flex items-center justify-between">
+        <span className="font-medium text-sm">{t('query.queryHistory')}</span>
+        {history.length > 0 && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-6 gap-1 text-destructive"
+            onClick={handleClearHistory}
+          >
+            <Trash2 className="h-3 w-3" />
+            {t('query.clearAll')}
+          </Button>
+        )}
+      </div>
+      {history.length === 0 ? (
+        <EmptyPanel
+          icon={History}
+          title={t('query.noQueryHistoryYet')}
+          description={t('query.noQueryHistoryDescription')}
+          ghost="rows"
+          bordered
+          size="sm"
+        />
+      ) : (
+        <ScrollArea className={mobile ? undefined : 'max-h-[200px]'}>
+          <div className="space-y-1">
+            {history.map((item) => (
+              <div
+                key={item.id}
+                className="group flex items-center gap-2 rounded-md p-2 hover:bg-muted"
+              >
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="min-w-0 flex-1 justify-start text-left"
+                  onClick={() => handleApplyHistory(item)}
+                >
+                  <code className="block truncate font-mono text-xs">
+                    {formatQuery(item.query)}
+                  </code>
+                  <span className="text-muted-foreground text-xs">
+                    {formatTime(item.timestamp, locale)}
+                    {item.resultsCount !== undefined && ` · ${item.resultsCount} results`}
+                  </span>
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    'shrink-0 transition-opacity',
+                    mobile ? 'h-9 w-9' : 'h-6 w-6 opacity-0 group-hover:opacity-100'
+                  )}
+                  onClick={() => handleRemoveHistory(item.id)}
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+      )}
+    </>
+  )
+
   const handleFilterArgumentsChange = useCallback(
     (argumentsList: RuntimeArgument[]) => {
       filterParamIdsRef.current = argumentsList.map((argument) => argument.id)
@@ -674,24 +763,46 @@ export function QueryBuilder() {
       data-query-builder-panel
       className={cn(
         'shrink-0 border-b',
-        isExpanded && queryPanelHeight != null && 'flex flex-col overflow-hidden'
+        isExpanded && (mobile || queryPanelHeight != null) && 'flex flex-col overflow-hidden',
+        mobile && isExpanded && 'max-h-[min(70dvh,36rem)]'
       )}
       style={
-        isExpanded && queryPanelHeight != null ? { height: `${queryPanelHeight}px` } : undefined
+        !mobile && isExpanded && queryPanelHeight != null
+          ? { height: `${queryPanelHeight}px` }
+          : undefined
       }
       onKeyDown={handleKeyDown}
     >
-      {/* Collapsed header */}
-      <div className="@container/query flex flex-wrap items-center gap-1.5 p-2 pr-[18px]">
+      {/* Collapsed header — stays pinned so Run / Close remain reachable on mobile */}
+      <div
+        className={cn(
+          '@container/query flex shrink-0 flex-wrap items-center gap-1.5 bg-background p-2 pr-[18px]',
+          mobile && 'z-10 gap-1.5 border-b'
+        )}
+      >
         <Button
           variant="ghost"
           size="xs"
-          className="h-6 gap-1 px-2 text-xs"
+          className={cn('gap-1 px-2 text-xs', mobile ? 'h-9' : 'h-6')}
           onClick={() => activeDataclassTab && setQueryExpanded(activeDataclassTab.id, !isExpanded)}
+          aria-expanded={isExpanded}
+          aria-label={isExpanded ? t('common.collapsePanel') : t('common.expandPanel')}
         >
           {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
           {t('query.query')}
         </Button>
+        {mobile && isExpanded ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="xs"
+            className="h-9 w-9 px-0"
+            onClick={handleCollapse}
+            aria-label={t('common.close')}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        ) : null}
         <div className="min-w-0 flex-1 basis-[6rem]">
           {!isExpanded && boundEntitySetId && (
             <code className="mr-2 inline-block max-w-full truncate rounded bg-muted px-2 py-1 font-mono text-muted-foreground text-xs">
@@ -716,11 +827,15 @@ export function QueryBuilder() {
                 <Button
                   variant="ghost"
                   size="xs"
-                  className={cn('h-6 gap-1 px-1.5 text-xs', showHistory && 'bg-accent')}
+                  className={cn(
+                    'gap-1 px-1.5 text-xs',
+                    showHistory && 'bg-accent',
+                    mobile ? 'h-9 w-9 px-0' : 'h-6'
+                  )}
                   onClick={() => setShowHistory(!showHistory)}
                 >
                   <History className="h-3.5 w-3.5" />
-                  {history.length > 0 && (
+                  {history.length > 0 && !mobile && (
                     <span className="text-muted-foreground text-xs">{history.length}</span>
                   )}
                 </Button>
@@ -734,7 +849,10 @@ export function QueryBuilder() {
                 <Button
                   variant="ghost"
                   size="xs"
-                  className="h-6 gap-1 @[28rem]/query:px-2 px-1.5 text-xs"
+                  className={cn(
+                    'gap-1 @[28rem]/query:px-2 px-1.5 text-xs',
+                    mobile ? 'h-9 w-9 px-0' : 'h-6'
+                  )}
                   onClick={handleReset}
                   disabled={entitiesLoading}
                   aria-label={t('query.reset')}
@@ -746,116 +864,102 @@ export function QueryBuilder() {
               <TooltipContent>{t('entity.resetQuery')}</TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          <div className="flex items-center">
-            <Button
-              variant="default"
-              size="xs"
-              className="h-6 gap-1 rounded-r-none @[28rem]/query:px-2 px-1.5 text-xs"
-              onClick={() => handleRun()}
-              disabled={entitiesLoading}
-            >
-              <Play className="h-3.5 w-3.5" />
-              <span className="@[22rem]/query:inline hidden">
-                {defaultCreateEntitySet ? t('query.runAsSelection') : t('query.run')}
-              </span>
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="default"
-                  size="xs"
-                  className="h-6 rounded-l-none border-primary-foreground/20 border-l px-1.5"
-                  disabled={entitiesLoading}
-                  aria-label={t('query.runOptions')}
+          {/* On mobile when expanded, Run lives in the sticky footer below fields. */}
+          {!(mobile && isExpanded) ? (
+            <div className="flex items-center">
+              <Button
+                variant="default"
+                size="xs"
+                className={cn(
+                  'gap-1 rounded-r-none @[28rem]/query:px-2 px-1.5 text-xs',
+                  mobile ? 'h-9 px-2.5' : 'h-6'
+                )}
+                onClick={() => handleRun()}
+                disabled={entitiesLoading}
+              >
+                <Play className="h-3.5 w-3.5" />
+                <span className={mobile ? 'inline' : '@[22rem]/query:inline hidden'}>
+                  {defaultCreateEntitySet ? t('query.runAsSelection') : t('query.run')}
+                </span>
+              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="default"
+                    size="xs"
+                    className={cn(
+                      'rounded-l-none border-primary-foreground/20 border-l px-1.5',
+                      mobile ? 'h-9 w-8' : 'h-6'
+                    )}
+                    disabled={entitiesLoading}
+                    aria-label={t('query.runOptions')}
+                  >
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className={mobile ? mobileMenuContentClass() : 'w-64'}
+                  {...(mobile
+                    ? mobileMenuCollisionProps
+                    : { collisionPadding: 12, avoidCollisions: true })}
                 >
-                  <ChevronDown className="h-3.5 w-3.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64">
-                <DropdownMenuItem
-                  onClick={() => handleRun(false)}
-                  className="flex flex-col items-start gap-0.5"
-                >
-                  <span className="font-medium">{t('query.run')}</span>
-                  <span className="text-muted-foreground text-xs">{t('query.runDescription')}</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => handleRun(true)}
-                  className="flex flex-col items-start gap-0.5"
-                >
-                  <span className="font-medium">{t('query.runAsSelection')}</span>
-                  <span className="text-muted-foreground text-xs">
-                    {t('query.runAsSelectionDescription')}
-                  </span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+                  <DropdownMenuItem
+                    onClick={() => handleRun(false)}
+                    className={cn(
+                      'flex flex-col items-start gap-0.5',
+                      mobile && mobileMenuItemClass('items-start')
+                    )}
+                  >
+                    <span className="font-medium">{t('query.run')}</span>
+                    <span className="text-muted-foreground text-xs">
+                      {t('query.runDescription')}
+                    </span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => handleRun(true)}
+                    className={cn(
+                      'flex flex-col items-start gap-0.5',
+                      mobile && mobileMenuItemClass('items-start')
+                    )}
+                  >
+                    <span className="font-medium">{t('query.runAsSelection')}</span>
+                    <span className="text-muted-foreground text-xs">
+                      {t('query.runAsSelectionDescription')}
+                    </span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          ) : null}
         </div>
       </div>
 
-      {/* History panel */}
-      {showHistory && (
-        <div className="border-t bg-muted/30 px-3 py-2">
-          <div className="mb-2 flex items-center justify-between">
-            <span className="font-medium text-sm">{t('query.queryHistory')}</span>
-            {history.length > 0 && (
+      {/* History panel — a full-screen sheet on mobile (no hover affordances
+          there), an inline dropdown panel on desktop. */}
+      {showHistory && !mobile && (
+        <div className="border-t bg-muted/30 px-3 py-2">{historyPanelBody}</div>
+      )}
+      {mobile && (
+        <Dialog open={showHistory} onOpenChange={setShowHistory}>
+          <DialogContent className={mobileFullscreenDialogClass('overflow-hidden')} hideCloseButton>
+            <DialogTitle className="sr-only">{t('query.queryHistory')}</DialogTitle>
+            <div className="flex h-12 shrink-0 items-center justify-between gap-2 border-border border-b px-2">
+              <span className="pl-1 font-medium text-base">{t('query.queryHistory')}</span>
               <Button
+                type="button"
                 variant="ghost"
-                size="sm"
-                className="h-6 gap-1 text-destructive"
-                onClick={handleClearHistory}
+                size="icon"
+                className="h-11 w-11"
+                onClick={() => setShowHistory(false)}
+                aria-label={t('common.close')}
               >
-                <Trash2 className="h-3 w-3" />
-                {t('query.clearAll')}
+                <X className="h-4 w-4" />
               </Button>
-            )}
-          </div>
-          {history.length === 0 ? (
-            <EmptyPanel
-              icon={History}
-              title={t('query.noQueryHistoryYet')}
-              description={t('query.noQueryHistoryDescription')}
-              ghost="rows"
-              bordered
-              size="sm"
-            />
-          ) : (
-            <ScrollArea className="max-h-[200px]">
-              <div className="space-y-1">
-                {history.map((item) => (
-                  <div
-                    key={item.id}
-                    className="group flex items-center gap-2 rounded-md p-2 hover:bg-muted"
-                  >
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className="min-w-0 flex-1 justify-start text-left"
-                      onClick={() => handleApplyHistory(item)}
-                    >
-                      <code className="block truncate font-mono text-xs">
-                        {formatQuery(item.query)}
-                      </code>
-                      <span className="text-muted-foreground text-xs">
-                        {formatTime(item.timestamp, locale)}
-                        {item.resultsCount !== undefined && ` · ${item.resultsCount} results`}
-                      </span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6 shrink-0 opacity-0 group-hover:opacity-100"
-                      onClick={() => handleRemoveHistory(item.id)}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          )}
-        </div>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto px-3 py-2">{historyPanelBody}</div>
+          </DialogContent>
+        </Dialog>
       )}
 
       {/* Expanded content — capped by default; height becomes resizable via EntityList handle */}
@@ -863,7 +967,7 @@ export function QueryBuilder() {
         <div
           className={cn(
             'space-y-3 overflow-y-auto overscroll-contain px-3 pb-3',
-            queryPanelHeight != null ? 'min-h-0 flex-1' : 'max-h-[min(45vh,28rem)]'
+            mobile || queryPanelHeight != null ? 'min-h-0 flex-1' : 'max-h-[min(45vh,28rem)]'
           )}
         >
           {/* Entity set ID */}
@@ -981,7 +1085,9 @@ export function QueryBuilder() {
               </div>
             </div>
             {entitySetError && <p className="text-destructive text-xs">{entitySetError}</p>}
-            <p className="text-muted-foreground text-xs">{t('query.entitySetIdHelp')}</p>
+            <p className="text-muted-foreground text-xs">
+              {mobile ? t('query.entitySetIdHelpMobile') : t('query.entitySetIdHelp')}
+            </p>
           </div>
 
           {/* Filter */}
@@ -1117,9 +1223,71 @@ export function QueryBuilder() {
             />
           </div>
 
-          <p className="text-muted-foreground text-xs">{t('query.runQueryShortcut')}</p>
+          {!mobile ? (
+            <p className="text-muted-foreground text-xs">{t('query.runQueryShortcut')}</p>
+          ) : null}
         </div>
       )}
+
+      {/* Mobile Run bar — pinned under the scrollable fields so Close / Run stay tappable */}
+      {mobile && isExpanded ? (
+        <div className="flex shrink-0 items-stretch gap-2 border-t bg-background p-2 pb-[max(0.5rem,var(--app-safe-bottom))]">
+          <Button
+            type="button"
+            variant="outline"
+            className="h-11 shrink-0 gap-2 px-3 text-sm"
+            onClick={handleCollapse}
+            aria-label={t('common.close')}
+          >
+            <X className="h-4 w-4" />
+            {t('common.close')}
+          </Button>
+          <Button
+            variant="default"
+            className="h-11 min-w-0 flex-1 gap-2 text-sm"
+            onClick={() => handleRun()}
+            disabled={entitiesLoading}
+          >
+            <Play className="h-4 w-4" />
+            {defaultCreateEntitySet ? t('query.runAsSelection') : t('query.run')}
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="default"
+                className="h-11 w-11 shrink-0 border-primary-foreground/20 border-l px-0"
+                disabled={entitiesLoading}
+                aria-label={t('query.runOptions')}
+              >
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              side="top"
+              className={mobileMenuContentClass()}
+              {...mobileMenuCollisionProps}
+            >
+              <DropdownMenuItem
+                onClick={() => handleRun(false)}
+                className={mobileMenuItemClass('flex flex-col items-start gap-0.5')}
+              >
+                <span className="font-medium">{t('query.run')}</span>
+                <span className="text-muted-foreground text-xs">{t('query.runDescription')}</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleRun(true)}
+                className={mobileMenuItemClass('flex flex-col items-start gap-0.5')}
+              >
+                <span className="font-medium">{t('query.runAsSelection')}</span>
+                <span className="text-muted-foreground text-xs">
+                  {t('query.runAsSelectionDescription')}
+                </span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      ) : null}
 
       {selectedDataclass ? (
         <AiGenerateQueryModal

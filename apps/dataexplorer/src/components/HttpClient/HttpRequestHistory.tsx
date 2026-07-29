@@ -8,11 +8,11 @@ import {
   SelectValue,
   useConfirm,
 } from '@4d/ui'
-import { History, Trash2 } from 'lucide-react'
+import { History, Trash2, X } from 'lucide-react'
 import { EmptyPanel } from '~/components/EmptyPanel'
 import { useTranslation } from '~/i18n'
 import { joinOriginAndPath, resolveHttpMethod } from '~/lib/http-client'
-import { getBaseUrl } from '~/lib/platform'
+import { getBaseUrl, isMobileShell } from '~/lib/platform'
 import type { HttpClientSeed } from '~/store/http-client-types'
 import {
   HTTP_REQUEST_HISTORY_LIMIT_OPTIONS,
@@ -108,10 +108,12 @@ function HistoryRequestRow({
   item,
   onOpen,
   onRemove,
+  mobile,
 }: {
   item: HttpRequestHistoryItem
   onOpen: () => void
   onRemove: () => void
+  mobile?: boolean
 }) {
   const { t } = useTranslation()
   const { method, path, fullUrl, isCustomOrigin } = historyRequestLabel(item.seed)
@@ -119,7 +121,12 @@ function HistoryRequestRow({
   const absoluteTime = new Date(item.timestamp).toLocaleString()
 
   return (
-    <div className="group relative flex items-center gap-2 border-border/50 border-b px-2 py-1 last:border-b-0 hover:bg-muted/35">
+    <div
+      className={cn(
+        'group relative flex items-center gap-2 border-border/50 border-b px-2 py-1 last:border-b-0 hover:bg-muted/35',
+        mobile && 'py-1.5'
+      )}
+    >
       <span
         aria-hidden
         className={cn(
@@ -130,7 +137,10 @@ function HistoryRequestRow({
 
       <button
         type="button"
-        className="flex min-w-0 flex-1 items-center gap-2 py-0.5 pl-1.5 text-left"
+        className={cn(
+          'flex min-w-0 flex-1 items-center gap-2 py-0.5 pl-1.5 text-left',
+          mobile && 'min-h-11'
+        )}
         onClick={onOpen}
         title={fullUrl}
       >
@@ -144,7 +154,12 @@ function HistoryRequestRow({
           {method}
         </span>
 
-        <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-foreground/90">
+        <span
+          className={cn(
+            'min-w-0 flex-1 truncate font-mono text-[11px] text-foreground/90',
+            mobile && 'text-xs'
+          )}
+        >
           {isCustomOrigin ? <span className="text-muted-foreground">{fullUrl}</span> : path}
         </span>
 
@@ -176,19 +191,24 @@ function HistoryRequestRow({
             </span>
           ) : null}
 
-          <span
-            className="w-14 truncate text-right text-[10px] text-muted-foreground/80 tabular-nums"
-            title={absoluteTime}
-          >
-            {formatRelativeTime(item.timestamp)}
-          </span>
+          {!mobile ? (
+            <span
+              className="w-14 truncate text-right text-[10px] text-muted-foreground/80 tabular-nums"
+              title={absoluteTime}
+            >
+              {formatRelativeTime(item.timestamp)}
+            </span>
+          ) : null}
         </span>
       </button>
 
       <Button
         variant="ghost"
         size="icon"
-        className="h-6 w-6 shrink-0 text-muted-foreground opacity-0 transition-opacity hover:text-destructive focus-visible:opacity-100 group-hover:opacity-100"
+        className={cn(
+          'shrink-0 text-muted-foreground transition-opacity hover:text-destructive focus-visible:opacity-100 group-hover:opacity-100',
+          mobile ? 'h-9 w-9' : 'h-6 w-6 opacity-0'
+        )}
         onClick={onRemove}
         aria-label={t('httpClient.removeHistoryItem')}
         title={t('httpClient.removeHistoryItem')}
@@ -218,6 +238,7 @@ export function HttpRequestHistory({
 }) {
   const { t } = useTranslation()
   const { confirm, ConfirmDialog } = useConfirm()
+  const mobile = isMobileShell()
 
   const handleClearAll = async () => {
     const ok = await confirm({
@@ -233,26 +254,57 @@ export function HttpRequestHistory({
   }
 
   return (
-    <div className="overflow-hidden rounded-md border border-border/70 bg-muted/10 shadow-xs">
+    <div
+      className={cn(
+        'overflow-hidden border-border/70 bg-muted/10 shadow-xs',
+        mobile ? 'flex h-full min-h-0 flex-col border-0' : 'rounded-md border'
+      )}
+    >
       <ConfirmDialog />
-      <div className="flex items-center gap-2 border-border/60 border-b bg-muted/25 px-2 py-1">
-        <div className="flex min-w-0 flex-1 items-center gap-2">
-          <History className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-          <p className="font-medium text-xs">{t('httpClient.lastRequests')}</p>
-          {requests.length > 0 ? (
-            <span className="rounded-full border bg-background/80 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground tabular-nums">
-              {requests.length}
-              <span className="text-muted-foreground/60">/{maxCount}</span>
-            </span>
+      <div
+        className={cn(
+          'flex items-center gap-2 border-border/60 border-b bg-muted/25 px-2 py-1',
+          mobile && 'shrink-0 flex-col items-stretch gap-2 px-3 py-2'
+        )}
+      >
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <History className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <p
+              id={mobile ? 'http-request-history-title' : undefined}
+              className={cn('font-medium text-xs', mobile && 'text-sm')}
+            >
+              {t('httpClient.lastRequests')}
+            </p>
+            {requests.length > 0 ? (
+              <span className="rounded-full border bg-background/80 px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground tabular-nums">
+                {requests.length}
+                <span className="text-muted-foreground/60">/{maxCount}</span>
+              </span>
+            ) : null}
+          </div>
+          {mobile ? (
+            <Button
+              variant="ghost"
+              className="h-9 shrink-0 px-3 text-sm"
+              onClick={onClose}
+              aria-label={t('common.close')}
+            >
+              <X className="mr-1 h-4 w-4" />
+              {t('common.close')}
+            </Button>
           ) : null}
         </div>
-        <div className="flex shrink-0 items-center gap-1">
+        <div className={cn('flex shrink-0 items-center gap-1', mobile && 'justify-between')}>
           <Select
             value={String(maxCount)}
             onValueChange={(value) => onMaxCountChange(Number(value))}
           >
             <SelectTrigger
-              className="h-6 w-auto gap-1 border-dashed bg-background/50 px-1.5 text-[10px] text-muted-foreground"
+              className={cn(
+                'h-6 w-auto gap-1 border-dashed bg-background/50 px-1.5 text-[10px] text-muted-foreground',
+                mobile && 'h-9 px-2 text-xs'
+              )}
               aria-label={t('httpClient.historyLimit')}
             >
               <span className="text-muted-foreground/70">{t('httpClient.historyLimit')}</span>
@@ -269,7 +321,7 @@ export function HttpRequestHistory({
           <Button
             variant="ghost"
             size="sm"
-            className="h-6 px-2 text-[11px] text-muted-foreground"
+            className={cn('h-6 px-2 text-[11px] text-muted-foreground', mobile && 'h-9 text-xs')}
             onClick={() => void handleClearAll()}
             disabled={requests.length === 0}
           >
@@ -291,11 +343,17 @@ export function HttpRequestHistory({
           />
         </div>
       ) : (
-        <div className="max-h-56 overflow-y-auto overscroll-contain bg-background/40">
+        <div
+          className={cn(
+            'overflow-y-auto overscroll-contain bg-background/40',
+            mobile ? 'min-h-0 flex-1' : 'max-h-56'
+          )}
+        >
           {requests.map((item) => (
             <HistoryRequestRow
               key={item.id}
               item={item}
+              mobile={mobile}
               onOpen={() => onOpenRequest(item.seed)}
               onRemove={() => onRemoveRequest(item.id)}
             />

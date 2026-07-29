@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "paths": {
+      "~/*": ["../dataexplorer/src/*"],
+      "~desktop/*": ["../desktop/src/*"],
+      "~mobile/*": ["./src/*"]
+    }
+  },
+  "include": ["src", "../dataexplorer/src", "../desktop/src/lib", "../desktop/src/components"],
+  "exclude": [
+    "../dataexplorer/src/**/*.test.ts",
+    "../dataexplorer/src/**/*.test.tsx",
+    "../dataexplorer/src/**/*test-helper*",
+    "../dataexplorer/src/test-setup.ts",
+    "../dataexplorer/src/test-rest-mock.ts",
+    "**/*.test.ts",
+    "**/*.test.tsx"
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ]
+}

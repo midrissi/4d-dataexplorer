@@ -1,0 +1,199 @@
+name: Mobile
+
+on:
+  push:
+    branches: [main, feat/mobile]
+    paths:
+      - 'apps/mobile/**'
+      - 'apps/dataexplorer/**'
+      - 'apps/desktop/src/**'
+      - 'packages/**'
+      - 'bun.lockb'
+      - '.github/workflows/mobile.yml'
+      - '.github/actions/setup-bun/**'
+  pull_request:
+    branches: [main, feat/mobile]
+    paths:
+      - 'apps/mobile/**'
+      - 'apps/dataexplorer/**'
+      - 'apps/desktop/src/**'
+      - 'packages/**'
+      - 'bun.lockb'
+      - '.github/workflows/mobile.yml'
+      - '.github/actions/setup-bun/**'
+  workflow_dispatch:
+
+concurrency:
+  group: mobile-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-android:
+    name: Build Android
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Bun + install
+        uses: ./.github/actions/setup-bun
+
+      - name: Install Linux native deps (Tauri Android host)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            curl \
+            wget \
+            file \
+            libssl-dev \
+            libgtk-3-dev \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libglib2.0-dev
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/mobile/src-tauri -> target
+          key: mobile-android
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+
+      - name: Setup Android NDK
+        id: setup-ndk
+        uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r27c
+          link-to-sdk: true
+
+      - name: Init Android project
+        working-directory: apps/mobile
+        run: bunx tauri android init --ci --skip-targets-install
+
+      - name: Patch Android splash screen
+        working-directory: apps/mobile
+        run: bash ./scripts/patch-mobile-splash.sh
+
+      - name: Build Android APK (debug, aarch64)
+        working-directory: apps/mobile
+        env:
+          NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+          CI: true
+        run: bunx tauri android build --ci --debug --apk --target aarch64 --verbose
+
+      - name: Collect Android APKs
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="apps/mobile/ci-artifacts/android"
+          mkdir -p "$OUT"
+          found=0
+          while IFS= read -r -d '' path; do
+            cp "$path" "$OUT/"
+            found=1
+          done < <(find apps/mobile/src-tauri/gen/android -type f -name '*.apk' -print0 2>/dev/null || true)
+          if [ "$found" -eq 0 ]; then
+            echo "::error::No APK produced under gen/android"
+            find apps/mobile/src-tauri/gen/android -maxdepth 6 -type f 2>/dev/null | head -n 200 || true
+            exit 1
+          fi
+          ls -lah "$OUT"
+
+      - name: Upload Android APK
+        uses: actions/upload-artifact@v7
+        with:
+          name: mobile-android-apk
+          path: apps/mobile/ci-artifacts/android/**
+          retention-days: 14
+          if-no-files-found: error
+  build-ios:
+    name: Build iOS (simulator)
+    runs-on: macos-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Untap unused Homebrew taps
+        run: |
+          # macOS runners ship aws/tap pre-installed; Homebrew 6+ warns on every
+          # brew invocation until untrusted taps are removed or trusted.
+          brew untap aws/tap 2>/dev/null || true
+
+      - name: Setup Bun + install
+        uses: ./.github/actions/setup-bun
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-ios-sim,aarch64-apple-ios
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/mobile/src-tauri -> target
+          key: mobile-ios-sim
+
+      - name: Install CocoaPods
+        run: |
+          gem install cocoapods --no-document
+          pod --version
+
+      - name: Build iOS (simulator, debug, unsigned)
+        working-directory: apps/mobile
+        env:
+          CI: true
+          TAURI_IOS_TMPDIR: /tmp/tauri-ios-build-${{ github.run_id }}
+          # Unsigned simulator builds — no Apple Developer credentials required.
+          CODE_SIGNING_ALLOWED: 'NO'
+          CODE_SIGNING_REQUIRED: 'NO'
+          CODE_SIGN_IDENTITY: ''
+          AD_HOC_CODE_SIGNING_ALLOWED: 'YES'
+        run: bun run tauri:ios:build -- --debug --target aarch64-sim --ci --verbose
+      - name: Collect iOS artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT="apps/mobile/ci-artifacts/ios"
+          mkdir -p "$OUT"
+          # Prefer .app / .ipa under the generated Xcode project and cargo target.
+          while IFS= read -r -d '' path; do
+            cp -R "$path" "$OUT/"
+          done < <(
+            find apps/mobile/src-tauri/gen/apple apps/mobile/src-tauri/target \
+              \( -name '*.app' -o -name '*.ipa' \) -print0 2>/dev/null || true
+          )
+          if [ -z "$(ls -A "$OUT" 2>/dev/null || true)" ]; then
+            echo "::warning::No .app/.ipa found; uploading build tree listing for debugging"
+            find apps/mobile/src-tauri/gen/apple apps/mobile/src-tauri/target \
+              -maxdepth 5 \( -type d -o -name '*.a' -o -name '*.app' -o -name '*.ipa' \) \
+              2>/dev/null | head -n 200 | tee "$OUT/find-listing.txt" || true
+          fi
+          ls -laR "$OUT"
+
+      - name: Upload iOS build products
+        uses: actions/upload-artifact@v7
+        with:
+          name: mobile-ios-sim
+          path: apps/mobile/ci-artifacts/ios/**
+          retention-days: 14
+          if-no-files-found: error

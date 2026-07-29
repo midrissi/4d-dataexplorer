@@ -27,6 +27,14 @@ describe('classifyPlatform', () => {
     expect(classifyPlatform('DataExplorer.zip')).toBe('web')
     expect(classifyPlatform('DataBrowser.zip')).toBe('web')
   })
+
+  it('maps mobile packages to android and ios', () => {
+    expect(classifyPlatform('DataExplorer_1.0.0_arm64-v8a.apk')).toBe('android')
+    expect(classifyPlatform('app-release.aab')).toBe('android')
+    expect(classifyPlatform('DataExplorer_1.0.0.ipa')).toBe('ios')
+    expect(classifyPlatform('dataexplorer-android-1.0.0.zip')).toBe('android')
+    expect(classifyPlatform('dataexplorer-ios-1.0.0.zip')).toBe('ios')
+  })
 })
 
 describe('parseDownloadStatsSnapshot', () => {
@@ -45,6 +53,8 @@ describe('parseDownloadStatsSnapshot', () => {
         { id: 'macos', label: 'macOS', downloads: 10 },
         { id: 'windows', label: 'Windows', downloads: 0 },
         { id: 'linux', label: 'Linux', downloads: 0 },
+        { id: 'android', label: 'Android', downloads: 0 },
+        { id: 'ios', label: 'iOS', downloads: 0 },
         { id: 'web', label: 'Web', downloads: 0 },
       ],
       fetchedAt: '2026-07-23T12:00:00.000Z',
@@ -71,6 +81,8 @@ describe('aggregateDownloads', () => {
           { name: 'latest.json', download_count: 99 },
           { name: 'app.dmg.sig', download_count: 50 },
           { name: 'DataExplorer.zip', download_count: 7 },
+          { name: 'app.apk', download_count: 5 },
+          { name: 'app.ipa', download_count: 1 },
         ],
       },
       {
@@ -81,12 +93,14 @@ describe('aggregateDownloads', () => {
       },
     ])
 
-    expect(result.total).toBe(28)
+    expect(result.total).toBe(34)
     expect(result.releaseCount).toBe(2)
     expect(result.platforms).toEqual([
       { id: 'macos', label: 'macOS', downloads: 13 },
       { id: 'windows', label: 'Windows', downloads: 4 },
       { id: 'linux', label: 'Linux', downloads: 2 },
+      { id: 'android', label: 'Android', downloads: 5 },
+      { id: 'ios', label: 'iOS', downloads: 1 },
       { id: 'web', label: 'Web', downloads: 9 },
     ])
   })
@@ -124,6 +138,8 @@ describe('buildReleaseDetail', () => {
       { id: 'macos', label: 'macOS', downloads: 10 },
       { id: 'windows', label: 'Windows', downloads: 0 },
       { id: 'linux', label: 'Linux', downloads: 0 },
+      { id: 'android', label: 'Android', downloads: 0 },
+      { id: 'ios', label: 'iOS', downloads: 0 },
       { id: 'web', label: 'Web', downloads: 3 },
     ])
   })

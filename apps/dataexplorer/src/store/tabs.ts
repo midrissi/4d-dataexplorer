@@ -4,6 +4,7 @@ import {
   releaseEntitySetIfOrphaned,
   releaseEntitySetsFromRemovedTabs,
 } from '~/lib/entity-set-lifecycle'
+import { isMobileShell } from '~/lib/platform'
 import {
   columnPresetTableNames,
   getBaseSettings,
@@ -506,6 +507,7 @@ type TabsState = {
   notifyGraphTabReady: () => void
   closeTab: (tabId: string) => void
   closeOtherTabs: (tabId: string) => void
+  closeTabsToLeft: (tabId: string) => void
   closeTabsToRight: (tabId: string) => void
   closeAllTabs: () => void
   closeUnpinnedTabs: () => void
@@ -756,6 +758,7 @@ export const useTabsStore = create<TabsState>()(
          * Returns a Promise that resolves when the graph tab content is mounted and ready.
          */
         openGraphTab: () => {
+          if (isMobileShell()) return Promise.resolve()
           const { tabs, activeTabId } = get()
           const existingGraphTab = tabs.find(isGraphTab)
           const graphTabId = existingGraphTab?.id
@@ -802,6 +805,7 @@ export const useTabsStore = create<TabsState>()(
          * Opens the Schema Builder tab. If a schema builder tab already exists, activates it.
          */
         openSchemaBuilderTab: () => {
+          if (isMobileShell()) return
           const { tabs } = get()
           const existingTab = tabs.find((t) => t.type === 'schema-builder')
           if (existingTab) {
@@ -922,6 +926,23 @@ export const useTabsStore = create<TabsState>()(
           // Keep the target tab, pinned tabs, and non-closable tabs
           const newTabs = tabs.filter((t) => t.id === tabId || t.isPinned || t.isClosable === false)
           commitTabsUpdate(set, get, newTabs, tabId)
+        },
+
+        closeTabsToLeft: (tabId) => {
+          const { tabs, activeTabId } = get()
+          const tabIndex = tabs.findIndex((t) => t.id === tabId)
+          if (tabIndex === -1) return
+          // Keep this tab and tabs to the right, plus pinned / non-closable
+          const newTabs = tabs.filter(
+            (t, i) => i >= tabIndex || t.isPinned || t.isClosable === false
+          )
+
+          let newActiveTabId = activeTabId
+          if (!newTabs.find((t) => t.id === activeTabId)) {
+            newActiveTabId = newTabs[0]?.id || null
+          }
+
+          commitTabsUpdate(set, get, newTabs, newActiveTabId)
         },
 
         closeTabsToRight: (tabId) => {

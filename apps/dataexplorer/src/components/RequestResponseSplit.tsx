@@ -1,5 +1,6 @@
 import { cn } from '@4d/ui'
 import { type ReactNode, useCallback, useEffect, useState } from 'react'
+import { isMobileShell } from '~/lib/platform'
 import {
   getHttpClientRequestHeight,
   getHttpClientRequestWidth,
@@ -46,11 +47,14 @@ type RequestResponseSplitProps = {
   requestClassName?: string
   responseClassName?: string
   className?: string
+  /** On mobile shell: show only one full-height pane at a time (request→response stack). */
+  mobilePane?: 'request' | 'response'
 }
 
 /**
  * Request | response layout: stacked below 1200px (vertically resizable),
  * side-by-side and horizontally resizable at 1200px+.
+ * On mobile shell with `mobilePane`, only one pane is shown full-height.
  * Sizes are stored as percentages of the container (same pattern as dataclass list/viewer).
  */
 export function RequestResponseSplit({
@@ -60,7 +64,10 @@ export function RequestResponseSplit({
   requestClassName,
   responseClassName,
   className,
+  mobilePane,
 }: RequestResponseSplitProps) {
+  const mobile = isMobileShell()
+  const stackMobile = mobile && mobilePane != null
   const config = SPLIT_CONFIG[kind]
   const [widthPercent, setWidthPercent] = useState(() => {
     if (typeof window === 'undefined') return config.defaultWidthPercent
@@ -128,11 +135,36 @@ export function RequestResponseSplit({
     setHeightPercent(config.defaultHeightPercent)
   }, [config.defaultHeightPercent])
 
+  if (stackMobile) {
+    return (
+      <div
+        {...{ [config.dataAttr]: '' }}
+        className={cn('flex h-full min-h-0 flex-col overflow-hidden', className)}
+      >
+        {mobilePane === 'request' ? (
+          <section className={cn('min-h-0 flex-1 overflow-y-auto', requestClassName)}>
+            {request}
+          </section>
+        ) : (
+          <section
+            className={cn(
+              'flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden',
+              responseClassName
+            )}
+          >
+            {response}
+          </section>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div
       {...{ [config.dataAttr]: '' }}
       className={cn(
-        'flex h-full min-h-0 flex-col overflow-hidden min-[1200px]:flex-row',
+        'flex h-full min-h-0 flex-col overflow-hidden',
+        !mobile && 'min-[1200px]:flex-row',
         className
       )}
       style={
@@ -144,24 +176,32 @@ export function RequestResponseSplit({
     >
       <section
         className={cn(
-          'min-h-0 w-full shrink-0 overflow-y-auto max-[1199px]:h-(--request-pane-height) min-[1200px]:w-(--request-pane-width) min-[1200px]:border-b-0',
+          'min-h-0 w-full shrink-0 overflow-y-auto',
+          mobile
+            ? 'h-(--request-pane-height)'
+            : 'max-[1199px]:h-(--request-pane-height) min-[1200px]:w-(--request-pane-width) min-[1200px]:border-b-0',
           requestClassName
         )}
       >
         {request}
       </section>
 
-      <ResizableVerticalHandle
-        className="min-[1200px]:hidden"
-        onResize={handleVerticalResize}
-        onDoubleClick={handleVerticalDoubleClick}
-      />
+      {/* Drag-to-resize doesn't work with touch; hide the handle on mobile. */}
+      {!mobile ? (
+        <ResizableVerticalHandle
+          className="min-[1200px]:hidden"
+          onResize={handleVerticalResize}
+          onDoubleClick={handleVerticalDoubleClick}
+        />
+      ) : null}
 
-      <ResizableHandle
-        className="hidden min-[1200px]:flex"
-        onResize={handleHorizontalResize}
-        onDoubleClick={handleHorizontalDoubleClick}
-      />
+      {!mobile ? (
+        <ResizableHandle
+          className="hidden min-[1200px]:flex"
+          onResize={handleHorizontalResize}
+          onDoubleClick={handleHorizontalDoubleClick}
+        />
+      ) : null}
 
       <section
         className={cn('flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden', responseClassName)}

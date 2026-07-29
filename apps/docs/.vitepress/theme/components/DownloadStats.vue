@@ -96,9 +96,10 @@ const fetchedLabel = computed(() => {
   }
 })
 
-function platformIcon(id: PlatformId): 'apple' | 'windows' | 'linux' | 'web' {
-  if (id === 'macos') return 'apple'
+function platformIcon(id: PlatformId): 'apple' | 'windows' | 'linux' | 'android' | 'web' {
+  if (id === 'macos' || id === 'ios') return 'apple'
   if (id === 'windows') return 'windows'
+  if (id === 'android') return 'android'
   if (id === 'web') return 'web'
   return 'linux'
 }
@@ -187,6 +188,8 @@ onUnmounted(() => {
             <i data-platform="macos" />
             <i data-platform="windows" />
             <i data-platform="linux" />
+            <i data-platform="android" />
+            <i data-platform="ios" />
             <i data-platform="web" />
           </span>
           Syncing
@@ -315,6 +318,17 @@ onUnmounted(() => {
                 />
               </svg>
               <svg
+                v-else-if="platformIcon(platform.id) === 'android'"
+                viewBox="0 0 24 24"
+                width="13"
+                height="13"
+                fill="currentColor"
+              >
+                <path
+                  d="M17.6 9.48 19.44 6.3a.65.65 0 1 0-1.12-.65l-1.87 3.24a7.8 7.8 0 0 0-9 0L5.58 5.65a.65.65 0 1 0-1.12.65L6.3 9.48C3.9 11.28 2.35 14.1 2.35 17.3h19.3c0-3.2-1.55-6.02-4.05-7.82ZM8.55 14.55a1.05 1.05 0 1 1 0-2.1 1.05 1.05 0 0 1 0 2.1Zm6.9 0a1.05 1.05 0 1 1 0-2.1 1.05 1.05 0 0 1 0 2.1Z"
+                />
+              </svg>
+              <svg
                 v-else-if="platformIcon(platform.id) === 'web'"
                 viewBox="0 0 24 24"
                 width="13"
@@ -367,9 +381,9 @@ onUnmounted(() => {
 
     <footer class="download-stats__footer">
       <p class="download-stats__footnote">
-        Desktop installers + web zip
+        Desktop installers + web zip + mobile
         <span class="download-stats__footnote-formats"
-          >DMG · ZIP · EXE · AppImage · deb · rpm · DataExplorer.zip</span
+          >DMG · ZIP · EXE · AppImage · deb · rpm · APK · IPA · DataExplorer.zip</span
         >
       </p>
       <a

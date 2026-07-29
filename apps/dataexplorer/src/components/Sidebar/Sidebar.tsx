@@ -1,6 +1,7 @@
 import { TooltipProvider } from '@4d/ui'
 import { useCallback, useMemo, useState } from 'react'
 import { eventBus } from '~/lib/eventBus'
+import { isMobileShell } from '~/lib/platform'
 import { useDataExplorerStore } from '~/store'
 import {
   useDataclassCustomizations,
@@ -16,7 +17,7 @@ import { SidebarHeader } from './SidebarHeader'
 import { SidebarList } from './SidebarList'
 import type { SidebarProps } from './types'
 
-export function Sidebar({ collapsed = false }: SidebarProps) {
+export function Sidebar({ collapsed = false, onDataclassOpened, onClose }: SidebarProps) {
   const { dataclasses, dataclassesLoading, dataclassesError } = useDataExplorerStore()
   const { tabs, openTab, openAllDataclasses, openHomeTab, openGraphTab } = useTabsStore()
   const activeDataclassName = useActiveDataclassName()
@@ -38,12 +39,14 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
   const handleDataclassClick = useCallback(
     (dataclassName: string) => {
       openTab(dataclassName)
+      onDataclassOpened?.()
     },
-    [openTab]
+    [openTab, onDataclassOpened]
   )
 
   const handleHighlightInGraph = useCallback(
     (dataclassName: string) => {
+      if (isMobileShell()) return
       openGraphTab().then(() => {
         eventBus.emit('highlight-dataclass-in-graph', dataclassName)
       })
@@ -120,6 +123,7 @@ export function Sidebar({ collapsed = false }: SidebarProps) {
           setSortOption={setSortOption}
           openHomeTab={openHomeTab}
           handleOpenAllDataclasses={handleOpenAllDataclasses}
+          onClose={onClose}
         />
 
         <SidebarList

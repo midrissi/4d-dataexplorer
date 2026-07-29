@@ -14,7 +14,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  Label,
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -25,9 +24,9 @@ import {
   Braces,
   ChevronsRight,
   Command,
-  Database,
   Eye,
   Keyboard,
+  List,
   Loader2,
   LogOut,
   Network,
@@ -52,7 +51,13 @@ import { useTranslation } from '~/i18n'
 import type { CommandPaletteMode } from '~/lib/eventBus'
 import { eventBus } from '~/lib/eventBus'
 import { resolveLucideIcon } from '~/lib/lucide-icon'
-import { isDesktop } from '~/lib/platform'
+import {
+  mobileCenteredDialogClass,
+  mobileMenuCollisionProps,
+  mobileMenuContentClass,
+  mobileMenuItemClass,
+} from '~/lib/mobile-menu'
+import { isDesktop, isMobileShell } from '~/lib/platform'
 import { getConsoleHeight, setConsoleHeight as saveConsoleHeight } from '~/lib/storage'
 import { useKeyboardShortcutsContext } from '~/providers/KeyboardShortcutsProvider'
 import { useShortcutController } from '~/providers/ShortcutController'
@@ -69,6 +74,7 @@ import {
 } from '~/store/settings'
 import { RELEASE_NOTES_STATIC_ID, useActiveDataclassTab, useTabsStore } from '~/store/tabs'
 import { AiTasksFooterControl } from './AiActions'
+import { AppBrandIcon } from './AppBrandIcon'
 import { AppearanceControls } from './AppearanceControls'
 import { AssistantSparklesIcon } from './AssistantSparklesIcon'
 import { CommandPalette } from './CommandPalette'
@@ -77,6 +83,8 @@ import { DatabaseIdentityHeaderChip } from './DatabaseIdentityPanel'
 import { DesktopSslWarningFooterControl } from './DesktopSslWarningFooterControl'
 import { DesktopUpdateFooterControl } from './DesktopUpdateFooterControl'
 import { KeyboardShortcutsModal } from './KeyboardShortcutsModal'
+import { MobileAppFooter } from './MobileAppFooter'
+import { useMobileCatalog } from './MobileCatalogContext'
 import { ResizableVerticalHandle } from './ResizablePanel'
 import { ViewportWarningFooterControl } from './ViewportWarningFooterControl'
 
@@ -92,6 +100,8 @@ export function Layout({
   onEditConnection?: () => void
 }) {
   const { t } = useTranslation()
+  const mobile = isMobileShell()
+  const { catalogOpen, toggleCatalog } = useMobileCatalog()
   const { toggleTheme } = useTheme()
   const { showShortcuts, isShortcutsModalOpen, hideShortcuts } = useKeyboardShortcutsContext()
   const { registerShortcutHandler, chordBuffer, formatKeyCombo } = useShortcutController()
@@ -157,6 +167,11 @@ export function Layout({
   useEffect(() => {
     saveConsoleHeight(consoleHeight)
   }, [consoleHeight])
+
+  // Chat assistant is desktop-only; keep state closed in the mobile shell.
+  useEffect(() => {
+    if (isMobileShell() && assistantOpen) setAssistantOpen(false)
+  }, [assistantOpen, setAssistantOpen])
 
   // Listen for go-to-entity / go-to-page with no payload to open the palette in that mode
   useEffect(() => {
@@ -245,16 +260,20 @@ export function Layout({
       registerShortcutHandler('toggle-theme', toggleTheme),
       registerShortcutHandler('open-settings', openSettingsTab),
       registerShortcutHandler('toggle-readonly', toggleReadonlyMode),
-      registerShortcutHandler('toggle-assistant', toggleAssistantOpen),
       registerShortcutHandler('open-home', openHomeTab),
-      registerShortcutHandler('open-structure', () => {
-        const dataclassToHighlight = activeDataclassTab?.dataclassName
-        openGraphTab().then(() => {
-          if (dataclassToHighlight) {
-            eventBus.emit('highlight-dataclass-in-graph', dataclassToHighlight)
-          }
-        })
-      }),
+      ...(isMobileShell()
+        ? []
+        : [
+            registerShortcutHandler('toggle-assistant', toggleAssistantOpen),
+            registerShortcutHandler('open-structure', () => {
+              const dataclassToHighlight = activeDataclassTab?.dataclassName
+              openGraphTab().then(() => {
+                if (dataclassToHighlight) {
+                  eventBus.emit('highlight-dataclass-in-graph', dataclassToHighlight)
+                }
+              })
+            }),
+          ]),
       registerShortcutHandler('open-assistant-metadata', openAssistantMetadataTab),
       registerShortcutHandler('tab-next', () => {
         if (tabs.length > 1) {
@@ -313,12 +332,28 @@ export function Layout({
   }, [showShortcuts])
 
   return (
-    <div className="flex h-screen flex-col bg-background">
+    <div className={cn('flex flex-col bg-background', mobile ? 'h-full' : 'h-screen')}>
       {/* Header */}
-      <header className="relative z-50 flex h-10 items-center justify-between gap-3 border-border/60 border-b bg-background px-3">
-        {/* Left side - Logo (+ expand when sidebar is collapsed) */}
-        <div className="flex shrink-0 items-center gap-2">
-          {sidebarCollapsed ? (
+      <header
+        className={cn(
+          'relative z-50 flex items-center justify-between gap-2 border-border/60 border-b bg-background px-3',
+          mobile ? 'min-h-11 gap-2 pt-[max(0.5rem,var(--app-safe-top))] pb-1.5' : 'h-10 gap-3'
+        )}
+      >
+        {/* Left side - Logo (+ expand when sidebar is collapsed on desktop) */}
+        <div className={cn('flex min-w-0 items-center', mobile ? 'gap-1.5' : 'gap-2')}>
+          {mobile ? (
+            <Button
+              variant={catalogOpen ? 'secondary' : 'ghost'}
+              size="icon"
+              className="h-9 w-9 shrink-0"
+              onClick={toggleCatalog}
+              aria-label={t('mobile.openCatalog')}
+              aria-pressed={catalogOpen}
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          ) : sidebarCollapsed ? (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -346,45 +381,76 @@ export function Layout({
               </Tooltip>
             </TooltipProvider>
           ) : null}
-          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary shadow-xs">
-            <Database className="h-3.5 w-3.5 text-primary-foreground" />
+          <div className={cn('shrink-0 shadow-xs', mobile ? 'h-8 w-8' : 'h-7 w-7')}>
+            <AppBrandIcon className="h-full w-full" />
           </div>
-          <div>
-            <h1 className="font-semibold text-sm leading-tight tracking-tight">{t('app.title')}</h1>
-            <p className="text-muted-foreground text-xs leading-tight">{t('app.subtitle')}</p>
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5">
+              <h1 className="truncate font-semibold text-sm leading-tight tracking-tight">
+                {t('app.title')}
+              </h1>
+              {mobile ? (
+                <span className="shrink-0 rounded-sm bg-amber-500/15 px-1 py-px font-medium text-[9px] text-amber-700 uppercase tracking-wide dark:text-amber-400">
+                  {t('mobile.betaBadge')}
+                </span>
+              ) : null}
+            </div>
+            {!mobile ? (
+              <p className="text-muted-foreground text-xs leading-tight">{t('app.subtitle')}</p>
+            ) : null}
           </div>
         </div>
 
-        {/* Center - Global search bar (opens command palette on click) */}
-        <div className="flex min-w-0 flex-1 justify-center px-2">
-          <div
-            ref={headerSearchBarRef}
-            className="flex h-8 w-full min-w-56 max-w-2xl items-center gap-2 rounded-sm border bg-muted/50 px-2.5 transition-colors focus-within:bg-background focus-within:ring-1 focus-within:ring-ring hover:bg-muted/70"
-          >
-            <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-            <input
-              type="text"
-              readOnly
-              placeholder={t('layout.searchPlaceholder')}
-              className="h-full flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground"
+        {/* Center - Global search (desktop field only; mobile lives in the right cluster) */}
+        {!mobile ? (
+          <div className="flex min-w-0 flex-1 justify-center px-2">
+            <div
+              ref={headerSearchBarRef}
+              className="flex h-8 w-full min-w-56 max-w-2xl items-center gap-2 rounded-sm border bg-muted/50 px-2.5 transition-colors focus-within:bg-background focus-within:ring-1 focus-within:ring-ring hover:bg-muted/70"
+            >
+              <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              <input
+                type="text"
+                readOnly
+                placeholder={t('layout.searchPlaceholder')}
+                className="h-full flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground"
+                onClick={() => setCommandPaletteOpen(true)}
+                onFocus={() => setCommandPaletteOpen(true)}
+                aria-label={t('layout.openCommandPaletteAria')}
+              />
+              {(() => {
+                const sc = getShortcut('command-palette')
+                return sc?.enabled ? (
+                  <kbd className="hidden shrink-0 rounded bg-muted px-1 py-0.5 font-mono text-muted-foreground text-xs sm:inline">
+                    {formatShortcut(sc)}
+                  </kbd>
+                ) : null
+              })()}
+            </div>
+          </div>
+        ) : null}
+
+        {/* Right side - actions */}
+        <div
+          className={cn(
+            'flex shrink-0 items-center',
+            mobile ? 'gap-0.5 rounded-md border border-border/70 bg-muted/30 p-0.5' : 'gap-1.5'
+          )}
+        >
+          {mobile ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9"
               onClick={() => setCommandPaletteOpen(true)}
-              onFocus={() => setCommandPaletteOpen(true)}
               aria-label={t('layout.openCommandPaletteAria')}
-            />
-            {(() => {
-              const sc = getShortcut('command-palette')
-              return sc?.enabled ? (
-                <kbd className="hidden shrink-0 rounded bg-muted px-1 py-0.5 font-mono text-muted-foreground text-xs sm:inline">
-                  {formatShortcut(sc)}
-                </kbd>
-              ) : null
-            })()}
-          </div>
-        </div>
-
-        {/* Right side - database id + connection + readonly actions */}
-        <div className="flex items-center gap-1.5">
-          <DatabaseIdentityHeaderChip />
+            >
+              <Search className="h-4 w-4" />
+            </Button>
+          ) : (
+            <DatabaseIdentityHeaderChip />
+          )}
           {isDesktop() && onDisconnect && (
             <DropdownMenu>
               <TooltipProvider>
@@ -392,30 +458,46 @@ export function Layout({
                   <TooltipTrigger asChild>
                     <DropdownMenuTrigger asChild>
                       <Button
-                        variant="outline"
+                        variant={mobile ? 'ghost' : 'outline'}
                         size="icon"
-                        className="h-7 w-7"
+                        className={mobile ? 'h-9 w-9' : 'h-7 w-7'}
                         aria-label={t('layout.connectionMenuAria')}
                       >
-                        <Plug className="h-3.5 w-3.5" />
+                        <Plug className={mobile ? 'h-4 w-4' : 'h-3.5 w-3.5'} />
                       </Button>
                     </DropdownMenuTrigger>
                   </TooltipTrigger>
                   <TooltipContent>{t('layout.connectionMenu')}</TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-              <DropdownMenuContent align="end" className="w-52">
-                <DropdownMenuLabel>{t('layout.connectionMenu')}</DropdownMenuLabel>
+              <DropdownMenuContent
+                align="end"
+                side={mobile ? 'bottom' : undefined}
+                className={cn(mobile ? mobileMenuContentClass() : 'w-52')}
+                {...(mobile ? mobileMenuCollisionProps : { collisionPadding: 12 })}
+              >
+                <DropdownMenuLabel className={mobile ? 'px-3 py-2.5 text-sm' : undefined}>
+                  {t('layout.connectionMenu')}
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={onSwitchConnection ?? onDisconnect}>
+                <DropdownMenuItem
+                  className={mobile ? mobileMenuItemClass() : undefined}
+                  onClick={onSwitchConnection ?? onDisconnect}
+                >
                   <RefreshCcw className="mr-2 h-4 w-4" />
                   {t('layout.switchConnection')}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={onEditConnection}>
+                <DropdownMenuItem
+                  className={mobile ? mobileMenuItemClass() : undefined}
+                  onClick={onEditConnection}
+                >
                   <Pencil className="mr-2 h-4 w-4" />
                   {t('layout.editConnection')}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => window.location.reload()}>
+                <DropdownMenuItem
+                  className={mobile ? mobileMenuItemClass() : undefined}
+                  onClick={() => window.location.reload()}
+                >
                   <RefreshCw className="mr-2 h-4 w-4" />
                   {t('layout.refreshInterface')}
                 </DropdownMenuItem>
@@ -429,7 +511,10 @@ export function Layout({
                     }
                     onDisconnect?.()
                   }}
-                  className="text-destructive focus:text-destructive"
+                  className={cn(
+                    'text-destructive focus:text-destructive',
+                    mobile && mobileMenuItemClass()
+                  )}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
                   {t('layout.disconnect')}
@@ -442,25 +527,27 @@ export function Layout({
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  variant={readonlyMode ? 'default' : 'outline'}
-                  size="sm"
+                  variant={readonlyMode ? 'default' : mobile ? 'ghost' : 'outline'}
+                  size={mobile ? 'icon' : 'sm'}
                   className={cn(
-                    'h-7 gap-1.5 px-2 text-xs',
+                    mobile ? 'h-9 w-9' : 'h-7 gap-1.5 px-2 text-xs',
                     readonlyMode && 'bg-amber-500 text-white hover:bg-amber-600'
                   )}
                   onClick={toggleReadonlyMode}
+                  aria-label={readonlyMode ? t('layout.readOnly') : t('layout.editMode')}
                 >
                   {readonlyMode ? (
-                    <>
-                      <Eye className="h-3.5 w-3.5" />
-                      {t('layout.readOnly')}
-                    </>
+                    <Eye className={mobile ? 'h-4 w-4' : 'h-3.5 w-3.5'} />
                   ) : (
-                    <>
-                      <Pencil className="h-3.5 w-3.5" />
-                      {t('layout.editMode')}
-                    </>
+                    <Pencil className={mobile ? 'h-4 w-4' : 'h-3.5 w-3.5'} />
                   )}
+                  {!mobile ? (
+                    readonlyMode ? (
+                      <span>{t('layout.readOnly')}</span>
+                    ) : (
+                      <span>{t('layout.editMode')}</span>
+                    )
+                  ) : null}
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
@@ -478,384 +565,403 @@ export function Layout({
       </header>
 
       {/* Main content + docked console */}
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
-        {consoleOpen ? (
+      <div className="relative z-0 flex min-h-0 flex-1 flex-col overflow-hidden">
+        {mobile && consoleOpen ? (
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <ConsolePanel />
+          </div>
+        ) : (
           <>
-            <ResizableVerticalHandle
-              onResize={(delta) =>
-                setConsoleHeight((height) =>
-                  Math.min(window.innerHeight * 0.5, Math.max(120, height - delta))
-                )
-              }
-              onDoubleClick={() => setConsoleHeight(220)}
-            />
-            <div className="shrink-0 overflow-hidden border-t" style={{ height: consoleHeight }}>
-              <ConsolePanel />
-            </div>
-          </>
-        ) : null}
-      </div>
-
-      {/* Status bar - full width, small height */}
-      <footer className="grid h-8 w-full shrink-0 grid-cols-[1fr_auto_1fr] items-center border-border/60 border-t bg-muted/30 px-2 text-muted-foreground">
-        {/* Left: console + chord buffer hint */}
-        <div className="flex min-w-0 items-center gap-1">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={consoleOpen ? 'secondary' : 'ghost'}
-                  size="sm"
-                  className="h-6 gap-1.5 px-2 text-[11px]"
-                  onClick={toggleConsoleOpen}
-                  aria-label={consoleOpen ? t('console.close') : t('console.open')}
-                  aria-pressed={consoleOpen}
-                >
-                  <PanelBottom className="h-3 w-3" />
-                  <span>{t('console.title')}</span>
-                  {consoleErrorCount > 0 ? (
-                    <span className="text-destructive">{consoleErrorCount}</span>
-                  ) : null}
-                  {consoleWarnCount > 0 ? (
-                    <span className="text-amber-600">{consoleWarnCount}</span>
-                  ) : null}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top">
-                {consoleOpen ? t('console.close') : t('console.open')}
-                {(() => {
-                  const sc = getShortcut('toggle-console')
-                  return sc?.enabled ? (
-                    <kbd className="ml-2 rounded bg-muted px-1 text-[10px]">
-                      {formatShortcut(sc)}
-                    </kbd>
-                  ) : null
-                })()}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <AiTasksFooterControl />
-          <ViewportWarningFooterControl />
-          <DesktopSslWarningFooterControl />
-          <DesktopUpdateFooterControl />
-
-          <output
-            className={cn(
-              'flex min-w-0 flex-1 items-center gap-1.5 font-mono text-[11px]',
-              chordBuffer ? 'text-muted-foreground' : 'text-muted-foreground/50'
-            )}
-            aria-live="polite"
-          >
-            {chordBuffer ? (
+            <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
+            {consoleOpen ? (
               <>
-                <kbd className="shrink-0 rounded bg-muted px-1 py-0.5">
-                  {formatKeyCombo(chordBuffer)}
-                </kbd>
-                <span className="truncate">{t('layout.waitingForSecondKey')}</span>
-                <span className="shrink-0 text-muted-foreground/70">{t('layout.escToCancel')}</span>
+                <ResizableVerticalHandle
+                  onResize={(delta) =>
+                    setConsoleHeight((height) =>
+                      Math.min(window.innerHeight * 0.5, Math.max(120, height - delta))
+                    )
+                  }
+                  onDoubleClick={() => setConsoleHeight(220)}
+                />
+                <div
+                  className="shrink-0 overflow-hidden border-t"
+                  style={{ height: consoleHeight }}
+                >
+                  <ConsolePanel />
+                </div>
               </>
             ) : null}
-          </output>
-        </div>
+          </>
+        )}
+      </div>
 
-        {/* Center: version link to release notes */}
-        <div className="flex justify-center">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="link"
-                  size="sm"
-                  className="h-auto p-0 text-[11px] text-muted-foreground hover:text-foreground"
-                  onClick={() => openStaticTab(RELEASE_NOTES_STATIC_ID)}
-                  aria-label={t('layout.releaseNotesAria')}
-                >
-                  v{__APP_VERSION__}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top">{t('layout.releaseNotes')}</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-
-        {/* Right: small icon buttons */}
-        <div className="flex justify-end gap-0.5">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant={assistantOpen ? 'default' : 'ghost'}
-                  size="icon"
-                  className={cn(
-                    'h-6 w-6',
-                    assistantOpen &&
-                      'bg-primary text-primary-foreground shadow-md shadow-primary/25'
-                  )}
-                  onClick={() => setAssistantOpen(!assistantOpen)}
-                  aria-label={
-                    assistantOpen ? t('layout.closeAssistant') : t('layout.openAssistant')
-                  }
-                  aria-pressed={assistantOpen}
-                  aria-busy={assistantLoading}
-                >
-                  {assistantLoading ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
-                    <AssistantSparklesIcon className="h-3 w-3" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top">
-                {assistantOpen ? t('layout.closeAssistant') : t('layout.openAssistant')}
-                {(() => {
-                  const sc = getShortcut('toggle-assistant')
-                  return sc?.enabled ? (
-                    <kbd className="ml-2 rounded bg-muted px-1 text-[10px]">
-                      {formatShortcut(sc)}
-                    </kbd>
-                  ) : null
-                })()}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={() => setCommandPaletteOpen(true)}
-                  aria-label={t('layout.openCommandPaletteAria')}
-                >
-                  <Command className="h-3 w-3" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top">
-                {t('layout.commandPalette')}
-                {(() => {
-                  const sc = getShortcut('command-palette')
-                  return sc?.enabled ? (
-                    <kbd className="ml-2 rounded bg-muted px-1 text-[10px]">
-                      {formatShortcut(sc)}
-                    </kbd>
-                  ) : null
-                })()}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={showShortcuts}
-                  aria-label={t('layout.keyboardShortcutsAria')}
-                >
-                  <Keyboard className="h-3 w-3" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top">
-                {t('layout.keyboardShortcuts')}
-                {(() => {
-                  const sc = getShortcut('show-shortcuts')
-                  return sc?.enabled ? (
-                    <kbd className="ml-2 rounded bg-muted px-1 text-[10px]">
-                      {formatShortcut(sc)}
-                    </kbd>
-                  ) : null
-                })()}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={() => {
-                    const dataclassToHighlight = activeDataclassTab?.dataclassName
-                    openGraphTab().then(() => {
-                      if (dataclassToHighlight) {
-                        eventBus.emit('highlight-dataclass-in-graph', dataclassToHighlight)
-                      }
-                    })
-                  }}
-                  aria-label={t('tabs.structure')}
-                >
-                  <Network className="h-3 w-3" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top">
-                {t('tabs.structure')}
-                {(() => {
-                  const sc = getShortcut('open-structure')
-                  return sc?.enabled ? (
-                    <kbd className="ml-2 rounded bg-muted px-1 text-[10px]">
-                      {formatShortcut(sc)}
-                    </kbd>
-                  ) : null
-                })()}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <DropdownMenu>
+      {/* Status bar */}
+      {mobile ? (
+        <MobileAppFooter />
+      ) : (
+        <footer className="relative z-20 grid h-8 w-full shrink-0 grid-cols-[1fr_auto_1fr] items-center border-border/60 border-t bg-muted/30 px-2 text-muted-foreground">
+          {/* Left: console + warnings */}
+          <div className="flex min-w-0 items-center gap-1">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6"
-                      aria-label={t('layout.toolsAria')}
-                    >
-                      <Wrench className="h-3 w-3" />
-                    </Button>
-                  </DropdownMenuTrigger>
+                  <Button
+                    variant={consoleOpen ? 'secondary' : 'ghost'}
+                    size="sm"
+                    className="relative h-6 gap-1.5 px-2 text-[11px]"
+                    onClick={toggleConsoleOpen}
+                    aria-label={consoleOpen ? t('console.close') : t('console.open')}
+                    aria-pressed={consoleOpen}
+                  >
+                    <PanelBottom className="h-3 w-3" />
+                    <span>{t('console.title')}</span>
+                    {consoleErrorCount > 0 ? (
+                      <span className="text-destructive">{consoleErrorCount}</span>
+                    ) : null}
+                    {consoleWarnCount > 0 ? (
+                      <span className="text-amber-600">{consoleWarnCount}</span>
+                    ) : null}
+                  </Button>
                 </TooltipTrigger>
-                <TooltipContent side="top">{t('layout.tools')}</TooltipContent>
+                <TooltipContent side="top">
+                  {consoleOpen ? t('console.close') : t('console.open')}
+                  {(() => {
+                    const sc = getShortcut('toggle-console')
+                    return sc?.enabled ? (
+                      <kbd className="ml-2 rounded bg-muted px-1 text-[10px]">
+                        {formatShortcut(sc)}
+                      </kbd>
+                    ) : null
+                  })()}
+                </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <DropdownMenuContent align="end" side="top" className="w-48">
-              <DropdownMenuItem onClick={openSchemaBuilderTab}>
-                <Braces className="mr-2 h-4 w-4" />
-                {t('tabs.schemaBuilder')}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={openAssistantMetadataTab}>
-                <BookText className="mr-2 h-4 w-4" />
-                {t('tabs.assistantMetadata')}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => openMethodExecutorTab()}>
-                <Play className="mr-2 h-4 w-4" />
-                {t('tabs.methodExecutor')}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => openHttpClientTab()}>
-                <Send className="mr-2 h-4 w-4" />
-                {t('tabs.httpClient')}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
 
-          <DropdownMenu>
+            <AiTasksFooterControl />
+            <ViewportWarningFooterControl />
+            <DesktopSslWarningFooterControl />
+            <DesktopUpdateFooterControl />
+
+            <output
+              className={cn(
+                'flex min-w-0 flex-1 items-center gap-1.5 font-mono text-[11px]',
+                chordBuffer ? 'text-muted-foreground' : 'text-muted-foreground/50'
+              )}
+              aria-live="polite"
+            >
+              {chordBuffer ? (
+                <>
+                  <kbd className="shrink-0 rounded bg-muted px-1 py-0.5">
+                    {formatKeyCombo(chordBuffer)}
+                  </kbd>
+                  <span className="truncate">{t('layout.waitingForSecondKey')}</span>
+                  <span className="shrink-0 text-muted-foreground/70">
+                    {t('layout.escToCancel')}
+                  </span>
+                </>
+              ) : null}
+            </output>
+          </div>
+
+          {/* Center: version link to release notes */}
+          <div className="flex justify-center">
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className={cn(profiles.length <= 1 && 'inline-flex')}>
+                  <Button
+                    variant="link"
+                    size="sm"
+                    className="h-auto p-0 text-[11px] text-muted-foreground hover:text-foreground"
+                    onClick={() => openStaticTab(RELEASE_NOTES_STATIC_ID)}
+                    aria-label={t('layout.releaseNotesAria')}
+                  >
+                    v{__APP_VERSION__}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">{t('layout.releaseNotes')}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+
+          {/* Right: small icon buttons */}
+          <div className="flex shrink-0 justify-end gap-0.5">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={assistantOpen ? 'default' : 'ghost'}
+                    size="icon"
+                    className={cn(
+                      'h-6 w-6',
+                      assistantOpen &&
+                        'bg-primary text-primary-foreground shadow-md shadow-primary/25'
+                    )}
+                    onClick={() => setAssistantOpen(!assistantOpen)}
+                    aria-label={
+                      assistantOpen ? t('layout.closeAssistant') : t('layout.openAssistant')
+                    }
+                    aria-pressed={assistantOpen}
+                    aria-busy={assistantLoading}
+                  >
+                    {assistantLoading ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <AssistantSparklesIcon className="h-3 w-3" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  {assistantOpen ? t('layout.closeAssistant') : t('layout.openAssistant')}
+                  {(() => {
+                    const sc = getShortcut('toggle-assistant')
+                    return sc?.enabled ? (
+                      <kbd className="ml-2 rounded bg-muted px-1 text-[10px]">
+                        {formatShortcut(sc)}
+                      </kbd>
+                    ) : null
+                  })()}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => setCommandPaletteOpen(true)}
+                    aria-label={t('layout.openCommandPaletteAria')}
+                  >
+                    <Command className="h-3 w-3" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  {t('layout.commandPalette')}
+                  {(() => {
+                    const sc = getShortcut('command-palette')
+                    return sc?.enabled ? (
+                      <kbd className="ml-2 rounded bg-muted px-1 text-[10px]">
+                        {formatShortcut(sc)}
+                      </kbd>
+                    ) : null
+                  })()}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={showShortcuts}
+                    aria-label={t('layout.keyboardShortcutsAria')}
+                  >
+                    <Keyboard className="h-3 w-3" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  {t('layout.keyboardShortcuts')}
+                  {(() => {
+                    const sc = getShortcut('show-shortcuts')
+                    return sc?.enabled ? (
+                      <kbd className="ml-2 rounded bg-muted px-1 text-[10px]">
+                        {formatShortcut(sc)}
+                      </kbd>
+                    ) : null
+                  })()}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => {
+                      const dataclassToHighlight = activeDataclassTab?.dataclassName
+                      openGraphTab().then(() => {
+                        if (dataclassToHighlight) {
+                          eventBus.emit('highlight-dataclass-in-graph', dataclassToHighlight)
+                        }
+                      })
+                    }}
+                    aria-label={t('tabs.structure')}
+                  >
+                    <Network className="h-3 w-3" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  {t('tabs.structure')}
+                  {(() => {
+                    const sc = getShortcut('open-structure')
+                    return sc?.enabled ? (
+                      <kbd className="ml-2 rounded bg-muted px-1 text-[10px]">
+                        {formatShortcut(sc)}
+                      </kbd>
+                    ) : null
+                  })()}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <DropdownMenu>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
                     <DropdownMenuTrigger asChild>
                       <Button
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6"
-                        aria-label={t('layout.switchProfileAria')}
-                        disabled={profiles.length <= 1}
+                        aria-label={t('layout.toolsAria')}
                       >
-                        {(() => {
-                          const current = profiles.find((p) => p.id === currentProfileId)
-                          if (!current) return <UserCircle className="h-3 w-3" />
-                          const iconName = current.icon || 'UserCircle'
-                          const Icon = resolveLucideIcon(iconName) ?? UserCircle
-                          const colorPreset =
-                            current.color && current.color in COLOR_PRESETS
-                              ? COLOR_PRESETS[current.color as ColorPreset]
-                              : null
-                          const bgClass = colorPreset?.bg ?? 'bg-primary'
-                          return (
-                            <div
-                              className={cn(
-                                'flex h-5 w-5 items-center justify-center rounded-full',
-                                bgClass
-                              )}
-                            >
-                              <Icon className="h-3 w-3 text-white" />
-                            </div>
-                          )
-                        })()}
+                        <Wrench className="h-3 w-3" />
                       </Button>
                     </DropdownMenuTrigger>
-                  </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">{t('layout.tools')}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <DropdownMenuContent align="end" side="top" className="w-48" collisionPadding={12}>
+                <DropdownMenuItem onClick={openSchemaBuilderTab}>
+                  <Braces className="mr-2 h-4 w-4" />
+                  {t('tabs.schemaBuilder')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={openAssistantMetadataTab}>
+                  <BookText className="mr-2 h-4 w-4" />
+                  {t('tabs.assistantMetadata')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => openMethodExecutorTab()}>
+                  <Play className="mr-2 h-4 w-4" />
+                  {t('tabs.methodExecutor')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => openHttpClientTab()}>
+                  <Send className="mr-2 h-4 w-4" />
+                  {t('tabs.httpClient')}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className={cn(profiles.length <= 1 && 'inline-flex')}>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          aria-label={t('layout.switchProfileAria')}
+                          disabled={profiles.length <= 1}
+                        >
+                          {(() => {
+                            const current = profiles.find((p) => p.id === currentProfileId)
+                            if (!current) return <UserCircle className="h-3 w-3" />
+                            const iconName = current.icon || 'UserCircle'
+                            const Icon = resolveLucideIcon(iconName) ?? UserCircle
+                            const colorPreset =
+                              current.color && current.color in COLOR_PRESETS
+                                ? COLOR_PRESETS[current.color as ColorPreset]
+                                : null
+                            const bgClass = colorPreset?.bg ?? 'bg-primary'
+                            return (
+                              <div
+                                className={cn(
+                                  'flex h-5 w-5 items-center justify-center rounded-full',
+                                  bgClass
+                                )}
+                              >
+                                <Icon className="h-3 w-3 text-white" />
+                              </div>
+                            )
+                          })()}
+                        </Button>
+                      </DropdownMenuTrigger>
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    {profiles.length <= 1 ? t('layout.onlyOneProfile') : t('layout.switchProfile')}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <DropdownMenuContent align="end" side="top" className="w-48" collisionPadding={12}>
+                <div className="px-2 py-1.5">
+                  <p className="font-medium text-sm">{t('settings.profiles')}</p>
+                </div>
+                <DropdownMenuSeparator />
+                {profiles.map((p) => {
+                  const iconName = p.icon || 'UserCircle'
+                  const Icon = resolveLucideIcon(iconName) ?? UserCircle
+                  const colorPreset =
+                    p.color && p.color in COLOR_PRESETS
+                      ? COLOR_PRESETS[p.color as ColorPreset]
+                      : null
+                  const bgClass = colorPreset?.bg ?? 'bg-primary'
+                  return (
+                    <DropdownMenuItem
+                      key={p.id}
+                      onClick={() => p.id !== currentProfileId && switchProfile(p.id)}
+                      className={cn(
+                        'flex items-center gap-2',
+                        p.id === currentProfileId && 'bg-primary text-primary-foreground'
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          'flex h-5 w-5 shrink-0 items-center justify-center rounded-full',
+                          bgClass
+                        )}
+                      >
+                        <Icon className="h-3 w-3 text-white" />
+                      </div>
+                      <span className="min-w-0 flex-1 truncate">{p.name}</span>
+                      {p.id === currentProfileId && <span className="shrink-0 text-xs">✓</span>}
+                    </DropdownMenuItem>
+                  )
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={openSettingsTab}
+                    aria-label={t('layout.settingsAria')}
+                  >
+                    <Settings className="h-3 w-3" />
+                  </Button>
                 </TooltipTrigger>
                 <TooltipContent side="top">
-                  {profiles.length <= 1 ? t('layout.onlyOneProfile') : t('layout.switchProfile')}
+                  {t('layout.settings')}
+                  {(() => {
+                    const sc = getShortcut('open-settings')
+                    return sc?.enabled ? (
+                      <kbd className="ml-2 rounded bg-muted px-1 text-[10px]">
+                        {formatShortcut(sc)}
+                      </kbd>
+                    ) : null
+                  })()}
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <DropdownMenuContent align="end" side="top" className="w-48">
-              <div className="px-2 py-1.5">
-                <p className="font-medium text-sm">{t('settings.profiles')}</p>
-              </div>
-              <DropdownMenuSeparator />
-              {profiles.map((p) => {
-                const iconName = p.icon || 'UserCircle'
-                const Icon = resolveLucideIcon(iconName) ?? UserCircle
-                const colorPreset =
-                  p.color && p.color in COLOR_PRESETS ? COLOR_PRESETS[p.color as ColorPreset] : null
-                const bgClass = colorPreset?.bg ?? 'bg-primary'
-                return (
-                  <DropdownMenuItem
-                    key={p.id}
-                    onClick={() => p.id !== currentProfileId && switchProfile(p.id)}
-                    className={cn(
-                      'flex items-center gap-2',
-                      p.id === currentProfileId && 'bg-primary text-primary-foreground'
-                    )}
-                  >
-                    <div
-                      className={cn(
-                        'flex h-5 w-5 shrink-0 items-center justify-center rounded-full',
-                        bgClass
-                      )}
-                    >
-                      <Icon className="h-3 w-3 text-white" />
-                    </div>
-                    <span className="min-w-0 flex-1 truncate">{p.name}</span>
-                    {p.id === currentProfileId && <span className="shrink-0 text-xs">✓</span>}
-                  </DropdownMenuItem>
-                )
-              })}
-            </DropdownMenuContent>
-          </DropdownMenu>
 
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={openSettingsTab}
-                  aria-label={t('layout.settingsAria')}
-                >
-                  <Settings className="h-3 w-3" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top">
-                {t('layout.settings')}
-                {(() => {
-                  const sc = getShortcut('open-settings')
-                  return sc?.enabled ? (
-                    <kbd className="ml-2 rounded bg-muted px-1 text-[10px]">
-                      {formatShortcut(sc)}
-                    </kbd>
-                  ) : null
-                })()}
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <AppearanceControls side="top" align="end" />
-        </div>
-      </footer>
+            <AppearanceControls side="top" align="end" size="sm" />
+          </div>
+        </footer>
+      )}
 
       {/* Keyboard Shortcuts Modal */}
       <KeyboardShortcutsModal open={isShortcutsModalOpen} onOpenChange={hideShortcuts} />
@@ -868,31 +974,53 @@ export function Layout({
           if (!open) setSkipDisconnectConfirm(false)
         }}
       >
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{t('layout.disconnectConfirmTitle')}</DialogTitle>
-            <DialogDescription>{t('layout.disconnectConfirmMessage')}</DialogDescription>
+        <DialogContent
+          className={cn('gap-4 sm:max-w-sm', mobile && mobileCenteredDialogClass('gap-5'))}
+        >
+          <DialogHeader className={cn(mobile && 'gap-2 space-y-0 text-left')}>
+            <DialogTitle className={cn(mobile && 'text-lg leading-snug')}>
+              {t('layout.disconnectConfirmTitle')}
+            </DialogTitle>
+            <DialogDescription className={cn(mobile && 'text-sm leading-relaxed')}>
+              {t('layout.disconnectConfirmMessage')}
+            </DialogDescription>
           </DialogHeader>
-          <div className="flex items-start gap-2 py-1">
+          <label
+            htmlFor="skip-disconnect-confirm"
+            className={cn(
+              'flex cursor-pointer items-start gap-2.5 rounded-lg',
+              mobile &&
+                'min-h-11 items-center gap-3 rounded-xl border border-border/80 bg-muted/30 px-3 py-2.5'
+            )}
+          >
             <Checkbox
               id="skip-disconnect-confirm"
               checked={skipDisconnectConfirm}
               onCheckedChange={(checked) => setSkipDisconnectConfirm(checked === true)}
+              className={cn(mobile && 'mt-0 size-5')}
             />
-            <Label
-              htmlFor="skip-disconnect-confirm"
-              className="cursor-pointer font-normal text-sm leading-snug"
+            <span
+              className={cn(
+                'font-normal text-sm leading-snug',
+                mobile && 'text-[15px] leading-snug'
+              )}
             >
               {t('layout.disconnectSkipConfirm')}
-            </Label>
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setDisconnectConfirmOpen(false)}>
+            </span>
+          </label>
+          <DialogFooter className={cn(mobile && 'flex-col-reverse gap-2 sm:flex-col-reverse')}>
+            <Button
+              type="button"
+              variant="outline"
+              className={cn(mobile && 'h-12 w-full text-base')}
+              onClick={() => setDisconnectConfirmOpen(false)}
+            >
               {t('common.cancel')}
             </Button>
             <Button
               type="button"
               variant="destructive"
+              className={cn(mobile && 'h-12 w-full text-base')}
               onClick={() => {
                 if (skipDisconnectConfirm) {
                   setConfirmDisconnect(false)
@@ -901,7 +1029,7 @@ export function Layout({
                 onDisconnect?.()
               }}
             >
-              <LogOut className="mr-2 h-4 w-4" />
+              <LogOut className={cn('mr-2', mobile ? 'h-5 w-5' : 'h-4 w-4')} />
               {t('layout.disconnect')}
             </Button>
           </DialogFooter>
@@ -930,11 +1058,13 @@ export function Layout({
         startInSwitchTabsMode={startInSwitchTabsMode}
       />
 
-      <AssistantChatbot
-        open={assistantOpen}
-        onOpenChange={setAssistantOpen}
-        onLoadingChange={setAssistantLoading}
-      />
+      {!mobile ? (
+        <AssistantChatbot
+          open={assistantOpen}
+          onOpenChange={setAssistantOpen}
+          onLoadingChange={setAssistantLoading}
+        />
+      ) : null}
     </div>
   )
 }

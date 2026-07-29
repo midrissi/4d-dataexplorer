@@ -37,6 +37,7 @@ import {
 import { useTranslation } from '~/i18n'
 import { mapNetworkDetailsToSeed } from '~/lib/network-to-http-seed'
 import { parseDecodedQueryParams } from '~/lib/parse-decoded-query-params'
+import { isMobileShell } from '~/lib/platform'
 import type { ConsoleEntry, ConsoleFilter, NetworkDetails } from '~/store/console'
 import { useConsoleStore } from '~/store/console'
 import { useSettingsStore } from '~/store/settings'
@@ -114,9 +115,19 @@ function networkMethodToneClass(method: string): string {
   }
 }
 
-function NetworkEntry({ details, open }: { details: NetworkDetails; open: boolean }) {
+function NetworkEntry({
+  details,
+  open,
+  timestamp,
+}: {
+  details: NetworkDetails
+  open: boolean
+  timestamp?: number
+}) {
   const { t } = useTranslation()
+  const mobile = isMobileShell()
   const openHttpClientTab = useTabsStore((state) => state.openHttpClientTab)
+  const setConsoleOpen = useSettingsStore((state) => state.setConsoleOpen)
   const [sectionsEpoch, setSectionsEpoch] = useState(0)
   const [sectionsExpanded, setSectionsExpanded] = useState(open)
   const rootRef = useRef<HTMLDivElement>(null)
@@ -124,6 +135,7 @@ function NetworkEntry({ details, open }: { details: NetworkDetails; open: boolea
     details.error !== undefined || (details.status !== undefined && details.status >= 400)
   const queryParams = open ? parseDecodedQueryParams(details.url) : null
   const { origin, pathWithQuery } = splitNetworkUrl(details.url)
+  const hostLabel = origin ? origin.replace(/^https?:\/\//, '') : ''
 
   useLayoutEffect(() => {
     if (!open) return
@@ -160,119 +172,189 @@ function NetworkEntry({ details, open }: { details: NetworkDetails; open: boolea
   const openInHttpClient = (event: ReactMouseEvent) => {
     event.stopPropagation()
     openHttpClientTab(mapNetworkDetailsToSeed(details))
+    if (mobile) setConsoleOpen(false)
   }
+
+  const statusBadge =
+    details.status !== undefined ? (
+      <span
+        className={cn(
+          'shrink-0 rounded px-1.5 py-px font-semibold text-[10px] tabular-nums',
+          failed
+            ? 'bg-destructive/15 text-destructive'
+            : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
+        )}
+      >
+        {details.status}
+      </span>
+    ) : details.error !== undefined ? (
+      <span className="shrink-0 rounded bg-destructive/15 px-1.5 py-px font-semibold text-[10px] text-destructive">
+        ERR
+      </span>
+    ) : null
+
+  const sendButton = (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            data-network-send
+            className={cn(
+              'shrink-0 text-muted-foreground hover:text-foreground',
+              mobile
+                ? 'h-8 w-8 opacity-100'
+                : 'h-4 w-4 opacity-100 sm:opacity-0 sm:group-hover/network:opacity-100 sm:group-focus-within/network:opacity-100'
+            )}
+            onClick={openInHttpClient}
+            aria-label={t('console.openInHttpClient')}
+          >
+            <Send className={mobile ? 'h-3.5 w-3.5' : 'h-2.5 w-2.5'} />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="top">{t('console.openInHttpClient')}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  )
 
   return (
     <div ref={rootRef} className="group/network min-w-0 flex-1">
-      <div className="flex w-full min-w-0 items-center gap-1.5">
-        <div
-          aria-hidden="true"
-          className={cn(
-            'h-3.5 w-0.5 shrink-0 rounded-full',
-            failed ? 'bg-destructive' : 'bg-emerald-500/60'
-          )}
-        />
-
-        <span className="flex shrink-0 items-center gap-1">
-          <ChevronRight
+      {mobile ? (
+        <div className="flex w-full min-w-0 gap-2">
+          <div
+            aria-hidden="true"
             className={cn(
-              'h-3 w-3 shrink-0 text-muted-foreground transition-transform duration-150',
-              open && 'rotate-90'
+              'mt-1 h-8 w-0.5 shrink-0 rounded-full',
+              failed ? 'bg-destructive' : 'bg-emerald-500/60'
             )}
           />
-          <span
-            className={cn(
-              'rounded px-1.5 py-px font-semibold text-[10px] uppercase tracking-wide',
-              networkMethodToneClass(details.method)
-            )}
-          >
-            {details.method}
-          </span>
-        </span>
-
-        {details.status !== undefined ? (
-          <span
-            className={cn(
-              'shrink-0 rounded px-1.5 py-px font-semibold text-[10px] tabular-nums',
-              failed
-                ? 'bg-destructive/15 text-destructive'
-                : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
-            )}
-          >
-            {details.status}
-          </span>
-        ) : details.error !== undefined ? (
-          <span className="shrink-0 rounded bg-destructive/15 px-1.5 py-px font-semibold text-[10px] text-destructive">
-            ERR
-          </span>
-        ) : null}
-
-        <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,max-content)_auto_minmax(0.5rem,1fr)_auto] items-center gap-x-1">
-          <span
-            className="min-w-0 truncate px-0.5 font-mono text-[11px] text-foreground"
-            title={details.url}
-          >
-            {pathWithQuery}
-          </span>
-
-          <div className="flex shrink-0 items-center gap-0.5">
-            <span className="rounded bg-muted/80 px-1.5 py-px text-[10px] text-muted-foreground tabular-nums">
-              {details.durationMs.toFixed(0)} ms
-            </span>
-            {details.responseSizeBytes !== undefined ? (
-              <span className="rounded bg-muted/80 px-1.5 py-px text-[10px] text-muted-foreground tabular-nums">
-                {formatByteSize(details.responseSizeBytes)}
+          <div className="min-w-0 flex-1 space-y-1">
+            <div className="flex min-w-0 items-center gap-1.5">
+              <ChevronRight
+                className={cn(
+                  'h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform duration-150',
+                  open && 'rotate-90'
+                )}
+              />
+              <span
+                className={cn(
+                  'rounded px-1.5 py-px font-semibold text-[10px] uppercase tracking-wide',
+                  networkMethodToneClass(details.method)
+                )}
+              >
+                {details.method}
               </span>
-            ) : null}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    data-network-send
-                    className={cn(
-                      'h-4 w-4 shrink-0 text-muted-foreground hover:text-foreground',
-                      'opacity-100 sm:opacity-0 sm:group-hover/network:opacity-100 sm:group-focus-within/network:opacity-100'
-                    )}
-                    onClick={openInHttpClient}
-                    aria-label={t('console.openInHttpClient')}
-                  >
-                    <Send className="h-2.5 w-2.5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="top">{t('console.openInHttpClient')}</TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+              {statusBadge}
+              <span
+                className="min-w-0 flex-1 truncate font-mono text-[11px] text-foreground"
+                title={details.url}
+              >
+                {pathWithQuery}
+              </span>
+              {sendButton}
+            </div>
+            <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 pl-5 text-[10px] text-muted-foreground tabular-nums">
+              <span>{details.durationMs.toFixed(0)} ms</span>
+              {details.responseSizeBytes !== undefined ? (
+                <span>{formatByteSize(details.responseSizeBytes)}</span>
+              ) : null}
+              {hostLabel ? (
+                <span className="min-w-0 truncate font-mono" title={origin}>
+                  {hostLabel}
+                </span>
+              ) : null}
+              {timestamp !== undefined ? (
+                <time dateTime={new Date(timestamp).toISOString()} className="ml-auto shrink-0">
+                  {formatTimestamp(timestamp)}
+                </time>
+              ) : null}
+            </div>
           </div>
-
-          <div aria-hidden="true" />
-
-          {origin ? (
-            <span
-              className="max-w-[10rem] justify-self-end truncate font-mono text-[10px] text-muted-foreground"
-              title={origin}
-            >
-              {origin.replace(/^https?:\/\//, '')}
-            </span>
-          ) : (
-            <span />
-          )}
         </div>
-      </div>
+      ) : (
+        <div className="flex w-full min-w-0 items-center gap-1.5">
+          <div
+            aria-hidden="true"
+            className={cn(
+              'h-3.5 w-0.5 shrink-0 rounded-full',
+              failed ? 'bg-destructive' : 'bg-emerald-500/60'
+            )}
+          />
+
+          <span className="flex shrink-0 items-center gap-1">
+            <ChevronRight
+              className={cn(
+                'h-3 w-3 shrink-0 text-muted-foreground transition-transform duration-150',
+                open && 'rotate-90'
+              )}
+            />
+            <span
+              className={cn(
+                'rounded px-1.5 py-px font-semibold text-[10px] uppercase tracking-wide',
+                networkMethodToneClass(details.method)
+              )}
+            >
+              {details.method}
+            </span>
+          </span>
+
+          {statusBadge}
+
+          <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,max-content)_auto_minmax(0.5rem,1fr)_auto] items-center gap-x-1">
+            <span
+              className="min-w-0 truncate px-0.5 font-mono text-[11px] text-foreground"
+              title={details.url}
+            >
+              {pathWithQuery}
+            </span>
+
+            <div className="flex shrink-0 items-center gap-0.5">
+              <span className="rounded bg-muted/80 px-1.5 py-px text-[10px] text-muted-foreground tabular-nums">
+                {details.durationMs.toFixed(0)} ms
+              </span>
+              {details.responseSizeBytes !== undefined ? (
+                <span className="rounded bg-muted/80 px-1.5 py-px text-[10px] text-muted-foreground tabular-nums">
+                  {formatByteSize(details.responseSizeBytes)}
+                </span>
+              ) : null}
+              {sendButton}
+            </div>
+
+            <div aria-hidden="true" />
+
+            {hostLabel ? (
+              <span
+                className="max-w-[10rem] justify-self-end truncate font-mono text-[10px] text-muted-foreground"
+                title={origin}
+              >
+                {hostLabel}
+              </span>
+            ) : (
+              <span />
+            )}
+          </div>
+        </div>
+      )}
 
       {open ? (
         <div
           data-network-details
-          className="fade-in-0 slide-in-from-top-1 mt-0.5 ml-2 animate-in space-y-0 border-border/40 border-l pb-0.5 pl-2 duration-150"
+          className={cn(
+            'fade-in-0 slide-in-from-top-1 mt-0.5 animate-in space-y-0 border-border/40 border-l pb-0.5 pl-2 duration-150',
+            mobile ? 'ml-3' : 'ml-2'
+          )}
         >
           <div className="mb-0.5 flex items-center gap-0.5">
             <Button
               type="button"
               variant="ghost"
               size="sm"
-              className="h-5 gap-1 px-1.5 text-[10px] text-muted-foreground"
+              className={cn(
+                'gap-1 text-[10px] text-muted-foreground',
+                mobile ? 'h-8 px-2' : 'h-5 px-1.5'
+              )}
               onClick={expandAllSections}
             >
               <ChevronsUpDown className="h-3 w-3" />
@@ -282,7 +364,10 @@ function NetworkEntry({ details, open }: { details: NetworkDetails; open: boolea
               type="button"
               variant="ghost"
               size="sm"
-              className="h-5 gap-1 px-1.5 text-[10px] text-muted-foreground"
+              className={cn(
+                'gap-1 text-[10px] text-muted-foreground',
+                mobile ? 'h-8 px-2' : 'h-5 px-1.5'
+              )}
               onClick={collapseAllSections}
             >
               <ChevronsDownUp className="h-3 w-3" />
@@ -348,6 +433,7 @@ function LogEntry({
   entry: ConsoleEntry
   defaultExpanded?: boolean
 }) {
+  const mobile = isMobileShell()
   const [networkOpen, setNetworkOpen] = useState(defaultExpanded)
   const toggleNetwork = (event: ReactMouseEvent) => {
     const target = event.target
@@ -366,7 +452,10 @@ function LogEntry({
         tabIndex={0}
         aria-expanded={networkOpen}
         className={cn(
-          'flex min-w-0 cursor-pointer items-start gap-1.5 border-b px-2 py-0.5 font-mono text-xs [contain-intrinsic-size:auto_22px] [content-visibility:auto]',
+          'flex min-w-0 cursor-pointer items-start gap-1.5 border-b font-mono text-xs [content-visibility:auto]',
+          mobile
+            ? 'px-3 py-2.5 [contain-intrinsic-size:auto_52px]'
+            : 'px-2 py-0.5 [contain-intrinsic-size:auto_22px]',
           'transition-colors hover:bg-muted/50',
           failedNetworkBackground(entry)
         )}
@@ -378,13 +467,19 @@ function LogEntry({
           }
         }}
       >
-        <NetworkEntry details={entry.network} open={networkOpen} />
-        <time
-          dateTime={new Date(entry.timestamp).toISOString()}
-          className="mt-0.5 shrink-0 text-[10px] text-muted-foreground"
-        >
-          {formatTimestamp(entry.timestamp)}
-        </time>
+        <NetworkEntry
+          details={entry.network}
+          open={networkOpen}
+          timestamp={mobile ? entry.timestamp : undefined}
+        />
+        {!mobile ? (
+          <time
+            dateTime={new Date(entry.timestamp).toISOString()}
+            className="mt-0.5 shrink-0 text-[10px] text-muted-foreground"
+          >
+            {formatTimestamp(entry.timestamp)}
+          </time>
+        ) : null}
       </div>
     )
   }
@@ -392,25 +487,40 @@ function LogEntry({
   return (
     <div
       className={cn(
-        'flex min-w-0 items-center gap-1.5 border-b px-2 py-0.5 font-mono text-xs [contain-intrinsic-size:auto_22px] [content-visibility:auto]',
+        'flex min-w-0 items-start gap-1.5 border-b font-mono text-xs [content-visibility:auto]',
+        mobile
+          ? 'flex-col px-3 py-2.5 [contain-intrinsic-size:auto_44px]'
+          : 'items-center px-2 py-0.5 [contain-intrinsic-size:auto_22px]',
         'transition-colors hover:bg-muted/50',
         entry.level === 'error' && 'bg-destructive/5 hover:bg-destructive/10',
         entry.level === 'warn' && 'bg-amber-500/5 hover:bg-amber-500/10'
       )}
     >
-      <span className="shrink-0" aria-hidden="true">
-        <LevelIcon entry={entry} />
-      </span>
-      <div className="wrap-break-word min-w-0 flex-1 space-x-2">
-        <InlineValue value={entry.message} />
-        {entry.args ? <ArgumentValues values={entry.args} /> : null}
+      <div className={cn('flex w-full min-w-0 gap-1.5', mobile ? 'items-start' : 'items-center')}>
+        <span className="mt-0.5 shrink-0" aria-hidden="true">
+          <LevelIcon entry={entry} />
+        </span>
+        <div className="wrap-break-word min-w-0 flex-1 space-x-2">
+          <InlineValue value={entry.message} />
+          {entry.args ? <ArgumentValues values={entry.args} /> : null}
+        </div>
+        {!mobile ? (
+          <time
+            dateTime={new Date(entry.timestamp).toISOString()}
+            className="shrink-0 text-[10px] text-muted-foreground"
+          >
+            {formatTimestamp(entry.timestamp)}
+          </time>
+        ) : null}
       </div>
-      <time
-        dateTime={new Date(entry.timestamp).toISOString()}
-        className="shrink-0 text-[10px] text-muted-foreground"
-      >
-        {formatTimestamp(entry.timestamp)}
-      </time>
+      {mobile ? (
+        <time
+          dateTime={new Date(entry.timestamp).toISOString()}
+          className="pl-5 text-[10px] text-muted-foreground"
+        >
+          {formatTimestamp(entry.timestamp)}
+        </time>
+      ) : null}
     </div>
   )
 }
@@ -498,6 +608,7 @@ function ConsoleEmptyState({
 
 export function ConsolePanel() {
   const { t } = useTranslation()
+  const mobile = isMobileShell()
   const entries = useConsoleStore((state) => state.entries)
   const filter = useConsoleStore((state) => state.filter)
   const setFilter = useConsoleStore((state) => state.setFilter)
@@ -530,18 +641,42 @@ export function ConsolePanel() {
   }, [lastEntryId])
 
   return (
-    <section className="flex h-full min-h-0 flex-col bg-background" aria-label={t('console.title')}>
-      <div className="flex h-8 shrink-0 items-center justify-between border-b bg-muted/20 px-2">
-        <div className="flex items-center gap-2">
-          <span className="font-medium text-xs">{t('console.title')}</span>
+    <section
+      className="flex h-full min-h-0 flex-1 flex-col bg-background"
+      aria-label={t('console.title')}
+    >
+      <div
+        className={cn(
+          'flex shrink-0 items-center justify-between gap-2 border-b bg-muted/20 px-2',
+          mobile ? 'h-11 px-3' : 'h-8'
+        )}
+      >
+        <div className="flex min-w-0 items-center gap-2">
+          {mobile ? (
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-9 shrink-0 gap-1.5 px-2.5 text-sm"
+              onClick={() => setConsoleOpen(false)}
+              aria-label={t('console.close')}
+            >
+              <X className="h-4 w-4" aria-hidden />
+              {t('console.done')}
+            </Button>
+          ) : (
+            <span className="font-medium text-xs">{t('console.title')}</span>
+          )}
           <span className="rounded bg-muted px-1.5 py-px text-[10px] text-muted-foreground tabular-nums">
             {entries.length}
           </span>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           <Select value={filter} onValueChange={(value) => setFilter(value as ConsoleFilter)}>
             <SelectTrigger
-              className="h-6 min-w-28 border-none bg-transparent px-2 text-[11px] shadow-none"
+              className={cn(
+                'min-w-28 border-none bg-transparent px-2 shadow-none',
+                mobile ? 'h-9 text-xs' : 'h-6 text-[11px]'
+              )}
               aria-label={t('console.filter')}
             >
               <SelectValue />
@@ -562,7 +697,7 @@ export function ConsolePanel() {
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6"
+                  className={mobile ? 'h-9 w-9' : 'h-6 w-6'}
                   onClick={expandAll}
                   disabled={filteredEntries.length === 0}
                   aria-label={t('console.expandAll')}
@@ -581,7 +716,7 @@ export function ConsolePanel() {
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6"
+                  className={mobile ? 'h-9 w-9' : 'h-6 w-6'}
                   onClick={collapseAll}
                   disabled={filteredEntries.length === 0}
                   aria-label={t('console.collapseAll')}
@@ -600,7 +735,7 @@ export function ConsolePanel() {
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6"
+                  className={mobile ? 'h-9 w-9' : 'h-6 w-6'}
                   onClick={clear}
                   disabled={entries.length === 0}
                   aria-label={t('console.clear')}
@@ -612,23 +747,25 @@ export function ConsolePanel() {
             </Tooltip>
           </TooltipProvider>
 
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-6 w-6"
-                  onClick={() => setConsoleOpen(false)}
-                  aria-label={t('console.close')}
-                >
-                  <X className="h-3.5 w-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top">{t('console.close')}</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+          {!mobile ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => setConsoleOpen(false)}
+                    aria-label={t('console.close')}
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">{t('console.close')}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : null}
         </div>
       </div>
 

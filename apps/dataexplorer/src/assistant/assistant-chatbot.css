@@ -20,6 +20,19 @@
   z-index: 60;
 }
 
+/* Mobile: always full-screen, edge-to-edge, safe-area aware. */
+.assistant-chatbot--mobile.assistant-chatbot--fullscreen {
+  inset: 0;
+}
+
+.assistant-chatbot--mobile .assistant-panel__header {
+  padding-top: max(0.5rem, var(--app-safe-top));
+}
+
+.assistant-chatbot--mobile .assistant-panel__footer {
+  padding-bottom: max(0.5rem, var(--app-safe-bottom));
+}
+
 .assistant-chatbot__resize-handle {
   position: absolute;
   top: 0;
@@ -167,6 +180,21 @@
   color: var(--accent-foreground);
   border-color: var(--border);
   background: var(--accent);
+}
+
+.assistant-chatbot--mobile .assistant-chatbot__frame {
+  border-radius: 0;
+  border-width: 0;
+}
+
+.assistant-chatbot--mobile .assistant-chatbot__actions {
+  top: max(0.5rem, var(--app-safe-top));
+  right: max(0.5rem, env(safe-area-inset-right, 0px));
+}
+
+.assistant-chatbot--mobile .assistant-chatbot__action {
+  height: 2.75rem;
+  width: 2.75rem;
 }
 
 /* Embedded @4djs/assistant panel */

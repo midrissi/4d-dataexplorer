@@ -36,6 +36,7 @@ Point `BACKEND_URL` at a real 4D REST host instead of the mock when needed.
 | --- | --- | --- |
 | `apps/dataexplorer` | `@4d/dataexplorer` | Web UI (Vite + React) |
 | `apps/desktop` | `@4d/desktop` | Tauri desktop shell |
+| `apps/mobile` | `@4d/mobile` | Tauri mobile shell (iOS/Android beta) |
 | `apps/docs` | `@4d/docs` | User docs (VitePress) |
 | `packages/rest` | `@4d/rest` | REST client |
 | `packages/rest-server` | `@4d/rest-server` | Mock REST API for local/e2e |
@@ -125,6 +126,16 @@ Build the web app first if you want `/dataexplorer/` served from the mock server
 ```bash
 bun --filter @4d/desktop tauri:dev
 bun --filter @4d/desktop tauri:build
+```
+
+### `@4d/mobile` (Beta)
+
+See [apps/mobile/README.md](apps/mobile/README.md) for Android/iOS prerequisites, LAN/cleartext notes, and scripts.
+
+```bash
+bun --filter @4d/mobile dev                 # Vite UI on :3005
+bun --filter @4d/mobile tauri:android:dev
+bun --filter @4d/mobile tauri:ios:dev
 ```
 
 ### `@4d/docs`

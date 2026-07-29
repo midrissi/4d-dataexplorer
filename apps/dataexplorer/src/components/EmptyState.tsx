@@ -1,6 +1,7 @@
 import { FolderOpen, RefreshCw, Sparkles } from 'lucide-react'
 import { EmptyPanel, EmptyPanelAction } from '~/components/EmptyPanel'
 import { useTranslation } from '~/i18n'
+import { isMobileShell } from '~/lib/platform'
 
 type EmptyStateProps = {
   onRetry: () => void
@@ -9,7 +10,14 @@ type EmptyStateProps = {
 export function EmptyState({ onRetry }: EmptyStateProps) {
   const { t } = useTranslation()
   return (
-    <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
+    <div
+      className={
+        isMobileShell()
+          ? 'flex h-full w-full flex-col items-center justify-center overflow-y-auto bg-background px-4 pt-[var(--app-safe-top)] pb-[var(--app-safe-bottom)]'
+          : 'flex h-screen w-full flex-col items-center justify-center bg-background'
+      }
+    >
+      {' '}
       <EmptyPanel
         icon={FolderOpen}
         badgeIcon={Sparkles}

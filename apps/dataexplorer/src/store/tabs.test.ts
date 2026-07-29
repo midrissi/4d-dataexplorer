@@ -563,6 +563,20 @@ describe('store/tabs', () => {
       expect(useTabsStore.getState().tabs.some((t) => t.id === employeeId)).toBe(true)
     })
 
+    it('closeTabsToLeft keeps tabs to the right and pinned', () => {
+      useTabsStore.getState().openTab('Employee')
+      useTabsStore.getState().openTab('Company')
+      const companyId = useTabsStore.getState().tabs[0]?.id
+      const employeeId = useTabsStore.getState().tabs[1]?.id
+      expect(companyId).toBeDefined()
+      expect(employeeId).toBeDefined()
+      if (employeeId !== undefined) {
+        useTabsStore.getState().closeTabsToLeft(employeeId)
+      }
+      expect(useTabsStore.getState().tabs.some((t) => t.id === employeeId)).toBe(true)
+      expect(useTabsStore.getState().tabs.some((t) => t.id === companyId)).toBe(false)
+    })
+
     it('closeAllTabs keeps only pinned and non-closable', () => {
       useTabsStore.getState().openHomeTab()
       useTabsStore.getState().openTab('Employee')

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover"
+  />
+  <title>4D Data Explorer</title>
+  <style>
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      background-color: #12141c;
+    }
+
+    html:not(.dark) {
+      background-color: #f5f6f8;
+    }
+
+    /* Bridges native launch screen → first React paint (avoids a black flash). */
+    #boot-splash {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #12141c;
+      transition: opacity 0.28s ease;
+    }
+
+    #boot-splash.is-hiding {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #boot-splash img {
+      width: 7.5rem;
+      height: 7.5rem;
+      border-radius: 1.75rem;
+      box-shadow: 0 12px 40px -18px rgb(234 88 12 / 55%);
+    }
+  </style>
+  <script>
+    (() => {
+      let theme = 'dark';
+      let themeName = 'tangerine';
+      try {
+        const raw = localStorage.getItem('dataexplorer:profiles');
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          const current = parsed?.current ? parsed.current : 'default';
+          const settings = parsed?.profiles?.[current] ? parsed.profiles[current].settings : null;
+          if (settings) {
+            if (settings.theme === 'light' || settings.theme === 'dark') theme = settings.theme;
+            if (settings.themeName) themeName = settings.themeName;
+          }
+        }
+        const root = document.documentElement;
+        root.setAttribute('data-theme', themeName);
+        if (theme === 'dark') root.classList.add('dark');
+        else root.classList.remove('dark');
+      } catch {
+        // Fall back to the default dark theme already applied via CSS above.
+      }
+    })();
+  </script>
+</head>
+
+<body>
+  <div id="boot-splash" aria-hidden="true">
+    <img src="/splash-logo.svg" alt="" width="120" height="120" />
+  </div>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
+</html>

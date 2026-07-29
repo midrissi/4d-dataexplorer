@@ -83,7 +83,8 @@
       "!apps/frontend/dist",
       "!**/views/**/*.html",
       "!**/src-tauri/target",
-      "!**/packages/base64-decoder"
+      "!**/packages/base64-decoder",
+      "!**/userPreferences.*"
     ]
   },
   "overrides": [

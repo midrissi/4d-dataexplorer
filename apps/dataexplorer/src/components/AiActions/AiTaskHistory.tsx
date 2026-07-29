@@ -24,6 +24,7 @@ import { EmptyPanel } from '~/components/EmptyPanel'
 import { useTranslation } from '~/i18n'
 import { getAssistantLabelOverrides } from '~/i18n/assistant-ui'
 import { cancelAiTask, cancelAllAiTasks, resolveAiTaskResultValue } from '~/lib/ai-task-runner'
+import { isMobileShell } from '~/lib/platform'
 import {
   type AiAskInput,
   type AiGenerateInput,
@@ -624,6 +625,7 @@ function clearStoredSize(): void {
 
 export function AiTaskHistoryDialog() {
   const { t } = useTranslation()
+  const mobile = isMobileShell()
   const historyOpen = useAiTasksStore((state) => state.historyOpen)
   const setHistoryOpen = useAiTasksStore((state) => state.setHistoryOpen)
   const selectedTaskId = useAiTasksStore((state) => state.selectedTaskId)
@@ -716,8 +718,10 @@ export function AiTaskHistoryDialog() {
 
   if (!historyOpen) return null
 
+  // Drag-to-resize doesn't work with touch, and mobile always shows the sheet
+  // full-height (safe-area aware) instead of a desktop-style floating panel.
   const panelStyle =
-    size != null
+    !mobile && size != null
       ? {
           width: `min(${size.width}px, 96vw)`,
           height: `min(${size.height}px, 90vh)`,
@@ -727,7 +731,12 @@ export function AiTaskHistoryDialog() {
       : undefined
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
+    <div
+      className={cn(
+        'fixed inset-0 z-50 flex justify-center',
+        mobile ? 'items-end' : 'items-end sm:items-center'
+      )}
+    >
       <button
         type="button"
         className="absolute inset-0 bg-black/50"
@@ -740,13 +749,21 @@ export function AiTaskHistoryDialog() {
         aria-modal="true"
         aria-label={t('aiActions.historyTitle')}
         className={cn(
-          'ai-task-history-dialog relative z-10 flex w-full min-w-0 flex-col overflow-hidden rounded-t-2xl border border-border bg-background shadow-xl sm:rounded-2xl',
-          size == null && 'h-[min(560px,85vh)] max-w-lg',
+          'ai-task-history-dialog relative z-10 flex w-full min-w-0 flex-col overflow-hidden border border-border bg-background shadow-xl',
+          mobile
+            ? 'h-[calc(100dvh-var(--app-safe-top))] max-w-full rounded-t-2xl'
+            : 'rounded-t-2xl sm:rounded-2xl',
+          !mobile && size == null && 'h-[min(560px,85vh)] max-w-lg',
           resizeAxis && 'ai-task-history-dialog--resizing'
         )}
         style={panelStyle}
       >
-        <div className="flex items-center justify-between border-border border-b px-4 py-3.5">
+        <div
+          className={cn(
+            'flex items-center justify-between border-border border-b px-4 py-3.5',
+            mobile && 'pt-[max(0.875rem,var(--app-safe-top))]'
+          )}
+        >
           <div className="flex items-center gap-2.5">
             <div className="relative flex h-8 w-8 items-center justify-center rounded-lg border border-primary/25 bg-primary/10">
               <History className="h-4 w-4 text-primary" />
@@ -768,7 +785,13 @@ export function AiTaskHistoryDialog() {
               ) : null}
             </div>
           </div>
-          <Button type="button" variant="ghost" size="iconXs" onClick={() => setHistoryOpen(false)}>
+          <Button
+            type="button"
+            variant="ghost"
+            size={mobile ? 'icon' : 'iconXs'}
+            className={mobile ? 'h-9 w-9' : undefined}
+            onClick={() => setHistoryOpen(false)}
+          >
             <XCircle className="h-4 w-4" />
           </Button>
         </div>
@@ -786,39 +809,43 @@ export function AiTaskHistoryDialog() {
           <AiTaskList />
         )}
 
-        <button
-          type="button"
-          className={cn(
-            'ai-task-history-dialog__resize-edge ai-task-history-dialog__resize-edge--right',
-            resizeAxis === 'width' && 'ai-task-history-dialog__resize-edge--active'
-          )}
-          onMouseDown={(event) => beginResize('width', event)}
-          onDoubleClick={resetSize}
-          aria-label={t('aiActions.resizeWidthAria')}
-          title={t('aiActions.resizeHint')}
-        />
-        <button
-          type="button"
-          className={cn(
-            'ai-task-history-dialog__resize-edge ai-task-history-dialog__resize-edge--bottom',
-            resizeAxis === 'height' && 'ai-task-history-dialog__resize-edge--active'
-          )}
-          onMouseDown={(event) => beginResize('height', event)}
-          onDoubleClick={resetSize}
-          aria-label={t('aiActions.resizeHeightAria')}
-          title={t('aiActions.resizeHint')}
-        />
-        <button
-          type="button"
-          className={cn(
-            'ai-task-history-dialog__resize-corner',
-            resizeAxis === 'both' && 'ai-task-history-dialog__resize-corner--active'
-          )}
-          onMouseDown={(event) => beginResize('both', event)}
-          onDoubleClick={resetSize}
-          aria-label={t('aiActions.resizeAria')}
-          title={t('aiActions.resizeHint')}
-        />
+        {!mobile ? (
+          <>
+            <button
+              type="button"
+              className={cn(
+                'ai-task-history-dialog__resize-edge ai-task-history-dialog__resize-edge--right',
+                resizeAxis === 'width' && 'ai-task-history-dialog__resize-edge--active'
+              )}
+              onMouseDown={(event) => beginResize('width', event)}
+              onDoubleClick={resetSize}
+              aria-label={t('aiActions.resizeWidthAria')}
+              title={t('aiActions.resizeHint')}
+            />
+            <button
+              type="button"
+              className={cn(
+                'ai-task-history-dialog__resize-edge ai-task-history-dialog__resize-edge--bottom',
+                resizeAxis === 'height' && 'ai-task-history-dialog__resize-edge--active'
+              )}
+              onMouseDown={(event) => beginResize('height', event)}
+              onDoubleClick={resetSize}
+              aria-label={t('aiActions.resizeHeightAria')}
+              title={t('aiActions.resizeHint')}
+            />
+            <button
+              type="button"
+              className={cn(
+                'ai-task-history-dialog__resize-corner',
+                resizeAxis === 'both' && 'ai-task-history-dialog__resize-corner--active'
+              )}
+              onMouseDown={(event) => beginResize('both', event)}
+              onDoubleClick={resetSize}
+              aria-label={t('aiActions.resizeAria')}
+              title={t('aiActions.resizeHint')}
+            />
+          </>
+        ) : null}
       </div>
     </div>
   )

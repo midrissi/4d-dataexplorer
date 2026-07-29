@@ -1,4 +1,4 @@
-export type PlatformId = 'macos' | 'windows' | 'linux' | 'web'
+export type PlatformId = 'macos' | 'windows' | 'linux' | 'android' | 'ios' | 'web'
 
 export interface PlatformStat {
   id: PlatformId
@@ -103,10 +103,16 @@ export function classifyPlatform(name: string): PlatformId | null {
   // 4D web assets (exact names) — before the broader "dataexplorer" desktop zip match
   if (isWebBuildZip(n)) return 'web'
 
+  // Mobile packages before desktop zip heuristics
+  if (n.endsWith('.apk') || n.endsWith('.aab')) return 'android'
+  if (n.endsWith('.ipa')) return 'ios'
+
   if (n.endsWith('.exe') || n.endsWith('.msi')) return 'windows'
   if (n.endsWith('.appimage') || n.endsWith('.deb') || n.endsWith('.rpm')) return 'linux'
   if (n.endsWith('.dmg') || n.endsWith('.app.tar.gz')) return 'macos'
   if (n.endsWith('.zip')) {
+    if (n.includes('android')) return 'android'
+    if (n.includes('ios') || n.includes('iphone') || n.includes('ipad')) return 'ios'
     if (n.includes('data-explorer') || n.includes('data.explorer') || n.includes('dataexplorer')) {
       return 'macos'
     }
@@ -114,16 +120,18 @@ export function classifyPlatform(name: string): PlatformId | null {
   return null
 }
 
-const PLATFORM_ORDER: PlatformId[] = ['macos', 'windows', 'linux', 'web']
+const PLATFORM_ORDER: PlatformId[] = ['macos', 'windows', 'linux', 'android', 'ios', 'web']
 const PLATFORM_LABELS: Record<PlatformId, string> = {
   macos: 'macOS',
   windows: 'Windows',
   linux: 'Linux',
+  android: 'Android',
+  ios: 'iOS',
   web: 'Web',
 }
 
 function emptyPlatformBuckets(): Record<PlatformId, number> {
-  return { macos: 0, windows: 0, linux: 0, web: 0 }
+  return { macos: 0, windows: 0, linux: 0, android: 0, ios: 0, web: 0 }
 }
 
 function platformsFromBuckets(byPlatform: Record<PlatformId, number>): PlatformStat[] {
@@ -218,12 +226,14 @@ export const EMPTY_DOWNLOAD_STATS: DownloadStatsSnapshot = {
 
 /** Placeholder shown when `releases/download-stats.json` is missing on the stats branch. */
 export const MOCK_DOWNLOAD_STATS: DownloadStatsSnapshot = {
-  total: 1_284,
+  total: 1_372,
   releaseCount: 32,
   platforms: [
     { id: 'macos', label: 'macOS', downloads: 812 },
     { id: 'windows', label: 'Windows', downloads: 268 },
     { id: 'linux', label: 'Linux', downloads: 141 },
+    { id: 'android', label: 'Android', downloads: 52 },
+    { id: 'ios', label: 'iOS', downloads: 36 },
     { id: 'web', label: 'Web', downloads: 63 },
   ],
   fetchedAt: null,

@@ -16,6 +16,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from '~/i18n'
 import { AI_GENERATE_STYLES } from '~/lib/ai-actions'
 import { startGenerateAiTask } from '~/lib/ai-task-runner'
+import { isMobileShell } from '~/lib/platform'
 import type { AiGenerateStyle } from '~/store/ai-tasks'
 import { useAiTasksStore } from '~/store/ai-tasks'
 import {
@@ -49,6 +50,7 @@ export function AiGenerateDataModal({
   dataclassName,
 }: AiGenerateDataModalProps) {
   const { t } = useTranslation()
+  const mobile = isMobileShell()
   const openTask = useAiTasksStore((state) => state.openTask)
   const [count, setCount] = useState(DEFAULT_COUNT)
   const [prompt, setPrompt] = useState('')
@@ -94,7 +96,14 @@ export function AiGenerateDataModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg gap-0 overflow-hidden border-border p-0 sm:rounded-2xl">
+      <DialogContent
+        className={cn(
+          'gap-0 overflow-hidden border-border p-0',
+          mobile
+            ? 'inset-0 top-0 left-0 h-dvh max-h-dvh w-full max-w-full translate-x-0 translate-y-0 rounded-none border-0'
+            : 'max-w-lg sm:rounded-2xl'
+        )}
+      >
         <DialogTitle className="sr-only">{t('aiActions.generateTitle')}</DialogTitle>
         <DialogDescription className="sr-only">
           {t('aiActions.generateSubtitle', { dataclass: dataclassName })}

@@ -9,6 +9,7 @@ import {
   type DesktopConnectionInfo,
   getConnectionStoreAPI,
   isDesktop,
+  isMobileShell,
   resetConnectionConfig,
 } from '~/lib/platform'
 
@@ -18,6 +19,7 @@ type ServerConnectionSettingsProps = {
 
 export function ServerConnectionSettings({ onDisconnect }: ServerConnectionSettingsProps) {
   const desktop = isDesktop()
+  const mobile = isMobileShell()
   const [connection, setConnection] = useState<DesktopConnectionInfo | null>(null)
   const [editing, setEditing] = useState(false)
   const [editUrl, setEditUrl] = useState('')
@@ -103,7 +105,7 @@ export function ServerConnectionSettings({ onDisconnect }: ServerConnectionSetti
         <h2 className="font-semibold text-sm">Server Connection</h2>
       </div>
 
-      {!editing ? (
+      {!editing || mobile ? (
         <div className="space-y-3">
           <div className="rounded-md border bg-muted/30 p-3">
             <div className="flex items-center justify-between">
@@ -126,21 +128,34 @@ export function ServerConnectionSettings({ onDisconnect }: ServerConnectionSetti
               </div>
             </div>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="xs" className="h-6 gap-1 px-2" onClick={startEditing}>
-              <Pencil className="h-3.5 w-3.5" />
-              Edit
-            </Button>
+          <div className={cn('flex gap-2', mobile && 'flex-col')}>
+            {/* Deep connection editing needs a full keyboard-driven form; on mobile,
+                disconnecting and reconnecting is the simpler, less error-prone path. */}
+            {!mobile ? (
+              <Button variant="outline" size="xs" className="h-6 gap-1 px-2" onClick={startEditing}>
+                <Pencil className="h-3.5 w-3.5" />
+                Edit
+              </Button>
+            ) : null}
             <Button
               variant="outline"
-              size="xs"
-              className="h-6 gap-1 border-destructive px-2 text-destructive hover:bg-destructive/10"
+              size={mobile ? 'default' : 'xs'}
+              className={cn(
+                'gap-1 border-destructive text-destructive hover:bg-destructive/10',
+                mobile ? 'h-11 px-3' : 'h-6 px-2'
+              )}
               onClick={handleDisconnect}
             >
               <LogOut className="h-3.5 w-3.5" />
               Disconnect
             </Button>
           </div>
+          {mobile ? (
+            <p className="text-muted-foreground text-xs leading-relaxed">
+              To change the server URL, credentials, or other connection details, disconnect and
+              reconnect.
+            </p>
+          ) : null}
         </div>
       ) : (
         <div className="space-y-3">

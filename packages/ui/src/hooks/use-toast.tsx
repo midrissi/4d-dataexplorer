@@ -10,6 +10,7 @@ import {
   useRef,
   useState,
 } from 'react'
+import { createPortal } from 'react-dom'
 import { Toast, type ToastProps, type ToastVariant, ToastViewport } from '../components/toast'
 
 export type ToastInput = {
@@ -124,20 +125,25 @@ export function ToastProvider({
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <ToastViewport>
-        {toasts.map((item) => (
-          <Toast
-            key={item.id}
-            variant={item.variant}
-            title={item.title}
-            description={item.description}
-            icon={item.icon}
-            duration={item.duration}
-            closeLabel={item.closeLabel ?? closeLabel}
-            onClose={() => dismiss(item.id)}
-          />
-        ))}
-      </ToastViewport>
+      {typeof document !== 'undefined'
+        ? createPortal(
+            <ToastViewport>
+              {toasts.map((item) => (
+                <Toast
+                  key={item.id}
+                  variant={item.variant}
+                  title={item.title}
+                  description={item.description}
+                  icon={item.icon}
+                  duration={item.duration}
+                  closeLabel={item.closeLabel ?? closeLabel}
+                  onClose={() => dismiss(item.id)}
+                />
+              ))}
+            </ToastViewport>,
+            document.body
+          )
+        : null}
     </ToastContext.Provider>
   )
 }

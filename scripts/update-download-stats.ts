@@ -24,6 +24,8 @@ const PLATFORM_EMOJI: Record<PlatformId, string> = {
   macos: '🍎',
   windows: '🪟',
   linux: '🐧',
+  android: '🤖',
+  ios: '📱',
   web: '🌐',
 }
 

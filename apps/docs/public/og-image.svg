@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
   <title>4D Data Explorer — Open Graph image</title>
   <!--
     Source art for og-image.png. Rasterize with:
@@ -8,8 +8,13 @@
   -->
   <defs>
     <linearGradient id="logoGrad" x1="64" y1="52" x2="112" y2="100" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#f37f5f"/>
-      <stop offset="1" stop-color="#df5e3b"/>
+      <stop offset="0" stop-color="#ffc078"/>
+      <stop offset="0.4" stop-color="#f97316"/>
+      <stop offset="1" stop-color="#9a3412"/>
+    </linearGradient>
+    <linearGradient id="logoBody" x1="88" y1="62" x2="88" y2="98" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#fff1e0"/>
     </linearGradient>
     <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1020 520) rotate(90) scale(460 400)">
       <stop offset="0" stop-color="#df5e3b" stop-opacity="0.28"/>
@@ -28,12 +33,9 @@
   <rect width="1200" height="630" fill="url(#dots2)"/>
   <rect width="1200" height="630" fill="url(#glow)"/>
 
-  <rect x="64" y="52" width="48" height="48" rx="12" fill="url(#logoGrad)"/>
-  <g transform="translate(88 76) scale(1.35) translate(-12 -12)" fill="none" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-    <ellipse cx="12" cy="5" rx="9" ry="3"/>
-    <path d="M3 5V19A9 3 0 0 0 21 19V5"/>
-    <path d="M3 12A9 3 0 0 0 21 12"/>
-  </g>
+  <!-- BRAND_MARK_START -->
+  <image x="64" y="52" width="48" height="48" href="data:image/png;base64,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" xlink:href="data:image/png;base64,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" xmlns:xlink="http://www.w3.org/1999/xlink" />
+<!-- BRAND_MARK_END -->
   <text x="128" y="82" fill="#df5e3b" font-family="DM Sans, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" letter-spacing="3.4">4D REST DATA BROWSER</text>
 
   <text x="64" y="180" fill="#e7ebf2" font-family="Fraunces, Georgia, serif" font-size="78" font-weight="700">Data Explorer</text>

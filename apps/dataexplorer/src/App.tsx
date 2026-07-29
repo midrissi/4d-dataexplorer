@@ -1,17 +1,18 @@
 import { AuthenticationError, type RESTClientError } from '@4d/rest'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { AccessKeyScreen } from './components/AccessKeyScreen'
 import { DataclassView } from './components/DataclassView'
 import { EmptyState } from './components/EmptyState'
 import { Layout } from './components/Layout'
 import { LoadingScreen, type LoadingStep } from './components/LoadingScreen'
+import { MobileCatalogProvider, useMobileCatalog } from './components/MobileCatalogContext'
 import { ResizablePanel } from './components/ResizablePanel'
 import { Sidebar } from './components/Sidebar'
 import { TabBar } from './components/TabBar'
 import { useTranslation } from './i18n'
 import { api, clearCatalogCacheAndStorage, formatThrownError, isTransportError } from './lib/api'
 import '~/lib/assistant-llm-configured'
-import { getConnectionStoreAPI, isDesktop } from './lib/platform'
+import { getConnectionStoreAPI, isDesktop, isMobileShell } from './lib/platform'
 import { KeyboardShortcutsProvider } from './providers/KeyboardShortcutsProvider'
 import { ShortcutController } from './providers/ShortcutController'
 import { ThemeProvider } from './providers/ThemeProvider'
@@ -37,6 +38,7 @@ function AppContent({ onDisconnect, onSwitchConnection, onEditConnection }: AppC
   const [loadingError, setLoadingError] = useState<string | null>(null)
   const [savedAccessKey, setSavedAccessKey] = useState('')
   const [accessKeyReason, setAccessKeyReason] = useState<string | null>(null)
+  const loadGenerationRef = useRef(0)
 
   const syncActiveTab = useDataExplorerStore((state) => state.syncActiveTab)
   const activeTabId = useActiveTabId()
@@ -92,6 +94,7 @@ function AppContent({ onDisconnect, onSwitchConnection, onEditConnection }: AppC
 
   // Initialize the app
   const initializeApp = useCallback(async () => {
+    const generation = ++loadGenerationRef.current
     setAppState('loading')
     setLoadingError(null)
     setAccessKeyReason(null)
@@ -102,6 +105,7 @@ function AppContent({ onDisconnect, onSwitchConnection, onEditConnection }: AppC
 
     try {
       const sessionOk = await ensureSession()
+      if (generation !== loadGenerationRef.current) return
       if (!sessionOk) {
         setAppState('needsAccessKey')
         return
@@ -110,11 +114,13 @@ function AppContent({ onDisconnect, onSwitchConnection, onEditConnection }: AppC
       // Step 1: Initialize storage (fetches catalog BASEID)
       updateStep('catalog', { status: 'loading', detail: t('loading.fetchingCatalog') })
       await api.initializeStorage()
+      if (generation !== loadGenerationRef.current) return
       updateStep('catalog', { status: 'done', detail: t('loading.connected') })
 
       // Step 2: Fetch dataclasses
       updateStep('dataclasses', { status: 'loading', detail: t('loading.fetchingMetadata') })
       const fetchedDataclasses = await api.getDataclasses()
+      if (generation !== loadGenerationRef.current) return
 
       // Update store directly
       useDataExplorerStore.setState({
@@ -135,12 +141,14 @@ function AppContent({ onDisconnect, onSwitchConnection, onEditConnection }: AppC
         setAppState('ready')
       }
     } catch (error) {
+      if (generation !== loadGenerationRef.current) return
       const is401 =
         error instanceof AuthenticationError ||
         (error && typeof error === 'object' && (error as RESTClientError).statusCode === 401)
       if (is401) {
         const storeApi = getConnectionStoreAPI()
         const connection = await storeApi?.getActiveConnection()
+        if (generation !== loadGenerationRef.current) return
         const key = connection?.accessKey?.trim()
         if (key) setSavedAccessKey(key)
         setAccessKeyReason(formatThrownError(error, t('loading.accessKeyAuthRequired')))
@@ -160,6 +168,12 @@ function AppContent({ onDisconnect, onSwitchConnection, onEditConnection }: AppC
     }
   }, [t, updateStep, ensureSession])
 
+  const leaveToConnections = onDisconnect ?? onSwitchConnection ?? onEditConnection
+
+  const handleCancelLoading = useCallback(() => {
+    loadGenerationRef.current += 1
+    leaveToConnections?.()
+  }, [leaveToConnections])
   const handleAccessKeySubmit = useCallback(
     async (accessKey: string) => {
       await api.loginWithAccessKey(accessKey)
@@ -205,7 +219,8 @@ function AppContent({ onDisconnect, onSwitchConnection, onEditConnection }: AppC
         steps={loadingSteps}
         error={loadingError}
         onRetry={appState === 'error' ? initializeApp : undefined}
-        onDisconnect={appState === 'error' ? onDisconnect : undefined}
+        onCancel={appState === 'loading' && leaveToConnections ? handleCancelLoading : undefined}
+        onDisconnect={appState === 'error' ? leaveToConnections : undefined}
       />
     )
   }
@@ -221,32 +236,87 @@ function AppContent({ onDisconnect, onSwitchConnection, onEditConnection }: AppC
       onSwitchConnection={onSwitchConnection}
       onEditConnection={onEditConnection}
     >
-      <div className="flex h-full">
-        <ResizablePanel
-          defaultSize={325}
-          minSize={325}
-          maxSize={450}
-          direction="left"
-          storageKey="sidebar"
-          className="border-r"
-          collapsible
-          collapsedSize={52}
-          collapsed={sidebarCollapsed}
-          onCollapsedChange={setSidebarCollapsed}
-        >
-          <Sidebar collapsed={sidebarCollapsed} />
-        </ResizablePanel>
-        <main
-          className="flex min-w-0 flex-1 flex-col overflow-hidden"
-          aria-label={t('app.entityExplorerAria')}
-        >
-          <TabBar />
-          <div className="flex-1 overflow-hidden">
-            <DataclassView />
-          </div>
-        </main>
-      </div>
+      {isMobileShell() ? (
+        <MobileExplorerShell />
+      ) : (
+        <div className="flex h-full">
+          <ResizablePanel
+            defaultSize={325}
+            minSize={325}
+            maxSize={450}
+            direction="left"
+            storageKey="sidebar"
+            className="border-r"
+            collapsible
+            collapsedSize={52}
+            collapsed={sidebarCollapsed}
+            onCollapsedChange={setSidebarCollapsed}
+          >
+            <Sidebar collapsed={sidebarCollapsed} />
+          </ResizablePanel>
+          <main
+            className="flex min-w-0 flex-1 flex-col overflow-hidden"
+            aria-label={t('app.entityExplorerAria')}
+          >
+            <TabBar />
+            <div className="flex-1 overflow-hidden">
+              <DataclassView />
+            </div>
+          </main>
+        </div>
+      )}
     </Layout>
+  )
+}
+
+/** Mobile: full-width content with a slide-over dataclass drawer. */
+function MobileExplorerShell() {
+  const { t } = useTranslation()
+  const { catalogOpen, closeCatalog } = useMobileCatalog()
+  const activeTabId = useActiveTabId()
+  const sidebarCollapsed = useSettingsStore((state) => state.sidebarCollapsed)
+  const setSidebarCollapsed = useSettingsStore((state) => state.setSidebarCollapsed)
+
+  // Keep settings store in sync so shortcuts / assistant tools still work.
+  useEffect(() => {
+    if (!sidebarCollapsed) setSidebarCollapsed(true)
+  }, [sidebarCollapsed, setSidebarCollapsed])
+
+  // Settings / tools / other pages open as tabs under the catalog overlay.
+  // Close the drawer whenever navigation changes so it doesn't stay on top.
+  useEffect(() => {
+    if (activeTabId == null) return
+    closeCatalog()
+  }, [activeTabId, closeCatalog])
+
+  return (
+    <div className="relative flex h-full min-h-0 flex-col">
+      <main
+        className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+        aria-label={t('app.entityExplorerAria')}
+      >
+        <TabBar />
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <DataclassView />
+        </div>
+      </main>
+
+      {catalogOpen ? (
+        <div className="absolute inset-0 z-40 flex">
+          <button
+            type="button"
+            className="absolute inset-0 bg-black/40"
+            aria-label={t('mobile.closeCatalog')}
+            onClick={closeCatalog}
+          />
+          <div className="relative z-10 flex h-full w-full max-w-full flex-col bg-background shadow-lg">
+            <div className="min-h-0 flex-1">
+              <Sidebar collapsed={false} onDataclassOpened={closeCatalog} onClose={closeCatalog} />
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </div>
   )
 }
 
@@ -263,11 +333,13 @@ function App({
     <ThemeProvider>
       <ShortcutController>
         <KeyboardShortcutsProvider>
-          <AppContent
-            onDisconnect={onDisconnect}
-            onSwitchConnection={onSwitchConnection}
-            onEditConnection={onEditConnection}
-          />
+          <MobileCatalogProvider>
+            <AppContent
+              onDisconnect={onDisconnect}
+              onSwitchConnection={onSwitchConnection}
+              onEditConnection={onEditConnection}
+            />
+          </MobileCatalogProvider>
         </KeyboardShortcutsProvider>
       </ShortcutController>
     </ThemeProvider>

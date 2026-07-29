@@ -36,6 +36,7 @@ import {
 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { eventBus } from '~/lib/eventBus'
+import { isMobileShell } from '~/lib/platform'
 import { formatShortcut, getShortcutById, type KeyboardShortcut } from '~/store/settings'
 
 // ============================================================================
@@ -157,8 +158,9 @@ function getShortcutDisplay(ctx: CommandContext, id: string): string | undefined
 // ============================================================================
 
 function buildHelpCommands(ctx: CommandContext): Command[] {
-  return [
-    {
+  const commands: Command[] = []
+  if (!isMobileShell()) {
+    commands.push({
       id: 'show-assistant',
       label: ctx.assistantOpen ? ctx.t('command.closeAssistant') : ctx.t('command.openAssistant'),
       description: ctx.t('commandDesc.toggleAssistant'),
@@ -170,21 +172,22 @@ function buildHelpCommands(ctx: CommandContext): Command[] {
         ctx.toggleAssistantOpen()
         ctx.onClose()
       },
+    })
+  }
+  commands.push({
+    id: 'help',
+    label: ctx.t('command.showShortcuts'),
+    description: ctx.t('commandDesc.showShortcuts'),
+    shortcut: getShortcutDisplay(ctx, 'show-shortcuts'),
+    keywords: ['hotkeys', 'keybindings', 'keys', 'bindings'],
+    icon: <Keyboard className="h-4 w-4" />,
+    category: 'Help',
+    action: () => {
+      ctx.onClose()
+      ctx.onShowHelp()
     },
-    {
-      id: 'help',
-      label: ctx.t('command.showShortcuts'),
-      description: ctx.t('commandDesc.showShortcuts'),
-      shortcut: getShortcutDisplay(ctx, 'show-shortcuts'),
-      keywords: ['hotkeys', 'keybindings', 'keys', 'bindings'],
-      icon: <Keyboard className="h-4 w-4" />,
-      category: 'Help',
-      action: () => {
-        ctx.onClose()
-        ctx.onShowHelp()
-      },
-    },
-  ]
+  })
+  return commands
 }
 
 function buildAppearanceCommands(ctx: CommandContext): Command[] {
@@ -341,7 +344,7 @@ function buildViewCommands(ctx: CommandContext): Command[] {
 }
 
 function buildNavigationCommands(ctx: CommandContext): Command[] {
-  return [
+  const cmds: Command[] = [
     {
       id: 'open-home',
       label: ctx.t('command.openHome'),
@@ -354,7 +357,10 @@ function buildNavigationCommands(ctx: CommandContext): Command[] {
         ctx.onClose()
       },
     },
-    {
+  ]
+
+  if (!isMobileShell()) {
+    cmds.push({
       id: 'open-structure',
       label: ctx.t('command.displayStructure'),
       description: ctx.t('commandDesc.displayStructure'),
@@ -371,20 +377,28 @@ function buildNavigationCommands(ctx: CommandContext): Command[] {
           ctx.onClose()
         })
       },
+    })
+  }
+
+  cmds.push({
+    id: 'open-assistant-metadata',
+    label: ctx.t('command.openAssistantMetadata'),
+    description: ctx.t('commandDesc.openAssistantMetadata'),
+    shortcut: getShortcutDisplay(ctx, 'open-assistant-metadata'),
+    keywords: ['metadata', 'assistant', 'documentation', 'schema', 'ai'],
+    icon: <BookText className="h-4 w-4" />,
+    category: 'Navigation',
+    action: () => {
+      ctx.openAssistantMetadataTab()
+      ctx.onClose()
     },
-    {
-      id: 'open-assistant-metadata',
-      label: ctx.t('command.openAssistantMetadata'),
-      description: ctx.t('commandDesc.openAssistantMetadata'),
-      shortcut: getShortcutDisplay(ctx, 'open-assistant-metadata'),
-      keywords: ['metadata', 'assistant', 'documentation', 'schema', 'ai'],
-      icon: <BookText className="h-4 w-4" />,
-      category: 'Navigation',
-      action: () => {
-        ctx.openAssistantMetadataTab()
-        ctx.onClose()
-      },
-    },
+  })
+
+  return [...cmds, ...buildNavigationCommandsContinued(ctx)]
+}
+
+function buildNavigationCommandsContinued(ctx: CommandContext): Command[] {
+  return [
     {
       id: 'open-method-executor',
       label: ctx.t('command.openMethodExecutor'),

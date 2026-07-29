@@ -8,18 +8,9 @@ import {
   DialogTitle,
 } from '@4d/ui'
 import { openUrl } from '@tauri-apps/plugin-opener'
-import {
-  BookOpen,
-  Check,
-  Copy,
-  ExternalLink,
-  FileText,
-  Globe,
-  Info,
-  Package,
-  Sparkles,
-} from 'lucide-react'
+import { BookOpen, Check, Copy, ExternalLink, FileText, Globe, Info, Package } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { AppBrandIcon } from '~/components/AppBrandIcon'
 import { useTranslation } from '~/i18n'
 import { OPEN_ABOUT_DIALOG_EVENT, onOpenAboutDialog } from '~desktop/lib/menu'
 
@@ -142,7 +133,7 @@ export function AboutDialog() {
           <div className="absolute -top-8 -right-8 h-20 w-20 rounded-full bg-primary/20 blur-2xl" />
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-sm">
-              <Sparkles className="h-4 w-4 text-primary" />
+              <AppBrandIcon className="h-5 w-5" />
               {t('desktopAbout.title')}
             </DialogTitle>
             <DialogDescription className="text-xs">{t('desktopAbout.subtitle')}</DialogDescription>

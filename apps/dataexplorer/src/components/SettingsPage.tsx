@@ -11,6 +11,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
   Input,
   ScrollArea,
@@ -24,6 +26,7 @@ import {
 } from '@4d/ui'
 import {
   AlertTriangle,
+  Braces,
   Check,
   ChevronDown,
   ChevronDown as ChevronDownIcon,
@@ -37,6 +40,7 @@ import {
   LayoutGrid,
   LayoutTemplate,
   Moon,
+  MoreHorizontal,
   Palette,
   Pencil,
   Plus,
@@ -51,7 +55,14 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useEditorLabels, useTranslation } from '~/i18n'
 import { resolveLucideIcon } from '~/lib/lucide-icon'
-import { isDesktop } from '~/lib/platform'
+import {
+  mobileFullscreenDialogClass,
+  mobileMenuCollisionProps,
+  mobileMenuContentClass,
+  mobileMenuHeaderClass,
+  mobileMenuItemClass,
+} from '~/lib/mobile-menu'
+import { isDesktop, isMobileShell } from '~/lib/platform'
 import { useTheme, useThemeName } from '~/providers/ThemeProvider'
 import { useDataExplorerStore } from '~/store'
 import {
@@ -75,6 +86,7 @@ import {
   useUpdateCodeEditorPrefs,
 } from '~/store/settings'
 import { useActiveSettingsTab, useTabsStore } from '~/store/tabs'
+import { AssistantLlmSettingsPanel } from './AssistantLlmSettingsPanel'
 import { AssistantToolsSettings } from './AssistantToolsSettings'
 import { DatabaseIdentityPanel } from './DatabaseIdentityPanel'
 import {
@@ -85,6 +97,8 @@ import {
 import { CATEGORY_CONFIG, CATEGORY_ORDER } from './KeyboardShortcutsModal'
 import { ProfileAppearancePopover } from './ProfileAppearancePopover'
 import { ServerConnectionSettings } from './ServerConnectionSettings'
+import { SettingsField } from './SettingsField'
+import { SettingsSegmentedField } from './SettingsSegmentedField'
 import { ShortcutRecordModal } from './ShortcutRecordModal'
 import { WidgetSettings } from './WidgetSettings'
 
@@ -96,6 +110,7 @@ const CODE_EDITOR_PREVIEW_JSON = `{
 
 export function SettingsPage() {
   const { t } = useTranslation()
+  const mobile = isMobileShell()
   const { theme, setTheme } = useTheme()
   const { themeName, setThemeName, availableThemes } = useThemeName()
   const {
@@ -629,70 +644,142 @@ export function SettingsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <div className="mx-auto max-w-7xl p-3">
+      <div className={cn('mx-auto max-w-7xl', mobile ? 'flex flex-col gap-3 p-4 pb-6' : 'p-3')}>
         {/* Compact Header */}
-        <div className="mb-3 flex items-center justify-between">
-          <h1 className="font-bold text-lg">{t('settings.title')}</h1>
-          <div className="flex flex-nowrap items-center gap-1.5">
+        <div className={cn('flex items-center justify-between gap-3', !mobile && 'mb-3')}>
+          <h1 className={cn('font-bold', mobile ? 'text-xl tracking-tight' : 'text-lg')}>
+            {t('settings.title')}
+          </h1>
+          {mobile ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="xs" className="h-6 gap-1 px-2 text-xs">
-                  <Download className="h-3.5 w-3.5 shrink-0" />
-                  {t('settings.export')}
-                  <ChevronDownIcon className="h-3.5 w-3.5 shrink-0" />
+                <Button
+                  variant="outline"
+                  className="h-11 gap-2 px-3.5 text-sm"
+                  aria-label={t('settings.manage')}
+                  aria-haspopup="menu"
+                >
+                  <MoreHorizontal className="h-4 w-4" aria-hidden />
+                  {t('settings.manage')}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleExportCurrent}>
+              <DropdownMenuContent
+                align="end"
+                side="bottom"
+                className={mobileMenuContentClass('min-w-[min(calc(100vw-2rem),18rem)]')}
+                {...mobileMenuCollisionProps}
+              >
+                <DropdownMenuLabel className={mobileMenuHeaderClass('text-sm')}>
+                  {t('settings.exportProfiles')}
+                </DropdownMenuLabel>
+                <DropdownMenuItem className={mobileMenuItemClass()} onClick={handleExportCurrent}>
+                  <Download className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
                   {t('settings.currentProfile')}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleExportAll}>
+                <DropdownMenuItem className={mobileMenuItemClass()} onClick={handleExportAll}>
+                  <Download className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
                   {t('settings.allProfiles')}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setExportSelectOpen(true)}>
+                <DropdownMenuItem
+                  className={mobileMenuItemClass()}
+                  onClick={() => setExportSelectOpen(true)}
+                >
+                  <UserCircle className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
                   {t('settings.selectProfiles')}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className={mobileMenuItemClass()}
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+                  {t('settings.import')}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className={mobileMenuItemClass(
+                    'text-destructive focus:bg-destructive/10 focus:text-destructive'
+                  )}
+                  onClick={() => void handleResetAllSettings()}
+                >
+                  <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
+                  {t('settings.resetAllTitle')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".json"
-              onChange={handleImport}
-              className="hidden"
-            />
-            <Button
-              variant="outline"
-              size="xs"
-              onClick={() => fileInputRef.current?.click()}
-              className="h-6 gap-1 px-2 text-xs"
-            >
-              <Upload className="h-3.5 w-3.5 shrink-0" />
-              {t('settings.import')}
-            </Button>
-            <Button
-              variant="outline"
-              size="xs"
-              onClick={handleResetAllSettings}
-              className="h-6 gap-1 border-destructive px-2 text-destructive text-xs hover:bg-destructive/10 hover:text-destructive"
-            >
-              {t('settings.resetAllTitle')}
-            </Button>
-            {importSuccess && (
-              <span className="text-success text-xs">{t('settings.imported')}</span>
-            )}
-            {importError && <span className="text-destructive text-xs">{importError}</span>}
-          </div>
+          ) : (
+            <div className="flex flex-nowrap items-center gap-1.5">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="xs" className="h-6 gap-1 px-2 text-xs">
+                    <Download className="h-3.5 w-3.5 shrink-0" />
+                    {t('settings.export')}
+                    <ChevronDownIcon className="h-3.5 w-3.5 shrink-0" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleExportCurrent}>
+                    {t('settings.currentProfile')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportAll}>
+                    {t('settings.allProfiles')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setExportSelectOpen(true)}>
+                    {t('settings.selectProfiles')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button
+                variant="outline"
+                size="xs"
+                onClick={() => fileInputRef.current?.click()}
+                className="h-6 gap-1 px-2 text-xs"
+              >
+                <Upload className="h-3.5 w-3.5 shrink-0" />
+                {t('settings.import')}
+              </Button>
+              <Button
+                variant="outline"
+                size="xs"
+                onClick={handleResetAllSettings}
+                className="h-6 gap-1 border-destructive px-2 text-destructive text-xs hover:bg-destructive/10 hover:text-destructive"
+              >
+                {t('settings.resetAllTitle')}
+              </Button>
+            </div>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            onChange={handleImport}
+            className="hidden"
+          />
         </div>
+        {(importSuccess || importError) && (
+          <p
+            className={cn(
+              'text-xs',
+              importSuccess ? 'text-success' : 'text-destructive',
+              mobile && 'text-sm'
+            )}
+            role={importError ? 'alert' : undefined}
+          >
+            {importSuccess ? t('settings.imported') : importError}
+          </p>
+        )}
 
         {/* Top row: Profiles | Dataclass Appearance */}
-        <div className="mb-3 grid items-start gap-3 lg:grid-cols-2">
+        <div className={cn('mb-3 grid items-start gap-3 lg:grid-cols-2', mobile && 'order-3 mb-0')}>
           <Card className="mb-0">
             <Button
               type="button"
               variant="ghost"
               onClick={() => setProfilesListExpanded(!profilesListExpanded)}
-              className="flex h-auto w-full items-center justify-between rounded-none px-0 py-0 hover:bg-transparent"
+              className={cn(
+                'flex h-auto w-full items-center justify-between rounded-none px-0 py-0 hover:bg-transparent',
+                mobile && 'min-h-11'
+              )}
             >
               <CardHeader
                 icon={<UserCircle className="h-4 w-4" />}
@@ -708,7 +795,12 @@ export function SettingsPage() {
             {profilesListExpanded && (
               <div className="mt-3 space-y-3">
                 <p className="text-muted-foreground text-xs">{t('settings.profilesHelpFull')}</p>
-                <div className="flex flex-wrap items-center gap-2">
+                <div
+                  className={cn(
+                    'flex flex-wrap items-center gap-2',
+                    mobile && 'flex-col items-stretch'
+                  )}
+                >
                   <Input
                     placeholder={t('settings.newProfileName')}
                     value={newProfileName}
@@ -716,12 +808,12 @@ export function SettingsPage() {
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') handleAddProfile()
                     }}
-                    className="h-6 w-52 text-xs"
+                    className={cn(mobile ? 'h-11 w-full text-sm' : 'h-6 w-52 text-xs')}
                   />
                   <Button
                     variant="outline"
                     size="xs"
-                    className="h-6 gap-1 px-2"
+                    className={cn(mobile ? 'h-11 w-full gap-1.5 px-3 text-sm' : 'h-6 gap-1 px-2')}
                     onClick={handleAddProfile}
                   >
                     <Plus className="h-3.5 w-3.5" />
@@ -877,7 +969,10 @@ export function SettingsPage() {
               type="button"
               variant="ghost"
               onClick={() => setDataclassesExpanded(!dataclassesExpanded)}
-              className="flex h-auto w-full items-center justify-between rounded-none px-0 py-0 hover:bg-transparent"
+              className={cn(
+                'flex h-auto w-full items-center justify-between rounded-none px-0 py-0 hover:bg-transparent',
+                mobile && 'min-h-11'
+              )}
             >
               <CardHeader
                 icon={<Database className="h-4 w-4" />}
@@ -901,7 +996,10 @@ export function SettingsPage() {
                     <div
                       key={dataclass.name}
                       style={colorClasses.style}
-                      className="group flex items-center justify-between rounded-md px-2 py-1.5 hover:bg-muted/50"
+                      className={cn(
+                        'group flex items-center justify-between rounded-md px-2 hover:bg-muted/50',
+                        mobile ? 'min-h-12 py-2' : 'py-1.5'
+                      )}
                     >
                       <div className="flex items-center gap-2">
                         <div
@@ -920,7 +1018,12 @@ export function SettingsPage() {
                         </div>
                         <span className="text-xs">{dataclass.name}</span>
                       </div>
-                      <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                      <div
+                        className={cn(
+                          'flex items-center gap-1 transition-opacity',
+                          mobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                        )}
+                      >
                         <Button
                           variant="ghost"
                           size="xs"
@@ -987,16 +1090,30 @@ export function SettingsPage() {
 
         {/* Export Select Profiles Dialog */}
         <Dialog open={exportSelectOpen} onOpenChange={setExportSelectOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>{t('settings.exportProfilesTitle')}</DialogTitle>
+          <DialogContent
+            className={cn(
+              mobile ? mobileFullscreenDialogClass('gap-0 bg-background p-0') : 'sm:max-w-md'
+            )}
+          >
+            <DialogHeader className={cn(mobile && 'shrink-0 border-b px-4 py-3')}>
+              <DialogTitle className={cn(mobile && 'text-base')}>
+                {t('settings.exportProfilesTitle')}
+              </DialogTitle>
             </DialogHeader>
-            <div className="space-y-2 py-2">
+            <div
+              className={cn(
+                'space-y-1 py-2',
+                mobile && 'min-h-0 flex-1 overflow-y-auto overscroll-contain px-2'
+              )}
+            >
               {profiles.map((p) => (
                 <label
                   key={p.id}
                   htmlFor={`export-profile-${p.id}`}
-                  className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-muted/50"
+                  className={cn(
+                    'flex cursor-pointer items-center gap-2 rounded-md px-2 hover:bg-muted/50',
+                    mobile ? 'min-h-12 gap-3 px-3 py-3' : 'py-1.5'
+                  )}
                 >
                   <Checkbox
                     id={`export-profile-${p.id}`}
@@ -1010,15 +1127,16 @@ export function SettingsPage() {
                       })
                     }}
                   />
-                  <span className="text-sm">
+                  <span className={cn(mobile ? 'text-sm' : 'text-sm')}>
                     {p.id === DEFAULT_PROFILE_ID ? t(DEFAULT_PROFILE_NAME_KEY) : p.name}
                   </span>
                 </label>
               ))}
             </div>
-            <DialogFooter>
+            <DialogFooter className={cn(mobile && 'shrink-0 gap-2 border-t px-4 py-3 sm:flex-col')}>
               <Button
                 variant="outline"
+                className={cn(mobile && 'h-11 w-full')}
                 onClick={() => {
                   setExportSelectOpen(false)
                   setExportSelectedIds(new Set())
@@ -1026,7 +1144,11 @@ export function SettingsPage() {
               >
                 {t('settings.cancel')}
               </Button>
-              <Button onClick={handleExportSelected} disabled={exportSelectedIds.size === 0}>
+              <Button
+                className={cn(mobile && 'h-11 w-full')}
+                onClick={handleExportSelected}
+                disabled={exportSelectedIds.size === 0}
+              >
                 {t('settings.export')}{' '}
                 {exportSelectedIds.size > 0 ? `(${exportSelectedIds.size})` : ''}
               </Button>
@@ -1034,303 +1156,303 @@ export function SettingsPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Keyboard shortcuts - full width */}
-        <Card className="mb-3">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => setShortcutsExpanded(!shortcutsExpanded)}
-            className="flex h-auto w-full items-center justify-between rounded-none px-0 py-0 hover:bg-transparent"
-          >
-            <CardHeader
-              icon={<Keyboard className="h-4 w-4" />}
-              title={t('settings.keyboardShortcuts')}
-            />
-            <ChevronDown
-              className={cn(
-                'h-4 w-4 text-muted-foreground transition-transform',
-                shortcutsExpanded && 'rotate-180'
-              )}
-            />
-          </Button>
-          {shortcutsExpanded && (
-            <div className="mt-3">
-              {/* Preset Selector */}
-              <div className="mb-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="pl-1 font-medium text-sm">{t('settings.preset')}</span>
-                  <Select
-                    value={activeShortcutPreset}
-                    onValueChange={(value) => {
-                      if (value !== 'custom') {
-                        applyShortcutPreset(value as ShortcutPresetId)
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="h-6 w-[140px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SHORTCUT_PRESETS.map((preset) => (
-                        <SelectItem key={preset.id} value={preset.id}>
-                          {t(preset.nameKey)}
-                        </SelectItem>
-                      ))}
-                      {activeShortcutPreset === 'custom' && (
-                        <SelectItem value="custom" disabled>
-                          {t('preset.custom')}
-                        </SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <p className="pl-1 text-[10px] text-muted-foreground">
-                  {activeShortcutPreset === 'custom'
-                    ? t('settings.usingCustomShortcuts')
-                    : t(
-                        SHORTCUT_PRESETS.find((p) => p.id === activeShortcutPreset)
-                          ?.descriptionKey ?? 'preset.defaultDescription'
-                      )}
-                </p>
-              </div>
-
-              {/* Master toggle */}
-              <div className="mb-3 flex items-center justify-between rounded-md bg-muted/50 px-2 py-2">
-                <span className="pl-1 font-medium text-sm">{t('settings.enableAllShortcuts')}</span>
-                <div className="mr-3 flex min-w-[70px] justify-end">
-                  <Checkbox
-                    checked={getShortcutsCheckState(shortcuts)}
-                    onCheckedChange={() => {
-                      const state = getShortcutsCheckState(shortcuts)
-                      setAllShortcutsEnabled(state !== true)
-                    }}
-                  />
-                </div>
-              </div>
-
-              {visibleShortcutCategories.length > 1 ? (
-                <div className="mb-3">
-                  <p className="mb-1.5 pl-1 text-muted-foreground text-xs">
-                    {t('settings.jumpToSection')}
-                  </p>
-                  <nav
-                    className="flex gap-1.5 overflow-x-auto pb-1"
-                    aria-label={t('settings.jumpToSection')}
-                  >
-                    {visibleShortcutCategories.map((category) => {
-                      const config = CATEGORY_CONFIG[category]
-                      const Icon = config.icon
-                      const active = activeShortcutCategory === category
-                      return (
-                        <Button
-                          key={category}
-                          type="button"
-                          variant={active ? 'secondary' : 'ghost'}
-                          size="xs"
-                          className={cn('h-6 shrink-0 gap-1 px-2 text-xs', active && 'bg-muted')}
-                          onClick={() => scrollToShortcutCategory(category)}
-                          aria-current={active ? 'true' : undefined}
-                        >
-                          <Icon className={cn('h-3 w-3', config.iconColor)} />
-                          {t(`category.${category}`)}
-                        </Button>
-                      )
-                    })}
-                  </nav>
-                </div>
-              ) : null}
-
-              {/* Shortcuts by category (same layout as Keyboard Shortcuts modal) */}
-              <div ref={shortcutsListRef} className="max-h-[410px] space-y-3 overflow-y-auto pr-1">
-                {CATEGORY_ORDER.map((category) => {
-                  const groupShortcuts = shortcuts.filter((s) => s.category === category)
-                  if (groupShortcuts.length === 0) return null
-
-                  const config = CATEGORY_CONFIG[category]
-                  const Icon = config.icon
-
-                  return (
-                    <div
-                      key={category}
-                      ref={(node) => setShortcutSectionRef(category, node)}
-                      data-shortcut-category={category}
-                      className="rounded-md border border-border bg-card/30"
+        {/* Keyboard shortcuts - full width (desktop only; recording shortcuts needs a physical keyboard) */}
+        {!mobile && (
+          <Card className="mb-3">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setShortcutsExpanded(!shortcutsExpanded)}
+              className="flex h-auto w-full items-center justify-between rounded-none px-0 py-0 hover:bg-transparent"
+            >
+              <CardHeader
+                icon={<Keyboard className="h-4 w-4" />}
+                title={t('settings.keyboardShortcuts')}
+              />
+              <ChevronDown
+                className={cn(
+                  'h-4 w-4 text-muted-foreground transition-transform',
+                  shortcutsExpanded && 'rotate-180'
+                )}
+              />
+            </Button>
+            {shortcutsExpanded && (
+              <div className="mt-3">
+                {/* Preset Selector */}
+                <div className="mb-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="pl-1 font-medium text-sm">{t('settings.preset')}</span>
+                    <Select
+                      value={activeShortcutPreset}
+                      onValueChange={(value) => {
+                        if (value !== 'custom') {
+                          applyShortcutPreset(value as ShortcutPresetId)
+                        }
+                      }}
                     >
-                      {/* Category Header */}
-                      <div className="flex items-center gap-2 border-border/50 border-b px-3 py-2">
-                        <div
-                          className={cn(
-                            'flex h-6 w-6 shrink-0 items-center justify-center rounded-sm',
-                            config.bgColor
-                          )}
-                        >
-                          <Icon className={cn('h-3.5 w-3.5', config.iconColor)} />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <h3 className="font-medium text-sm">{t(`category.${category}`)}</h3>
-                          <p className="text-muted-foreground text-xs">
-                            {t(`categoryDesc.${category}`)}
-                          </p>
-                        </div>
-                        <div className="shrink-0">
-                          <Checkbox
-                            checked={getShortcutsCheckState(groupShortcuts)}
-                            onCheckedChange={() => {
-                              const state = getShortcutsCheckState(groupShortcuts)
-                              setCategoryShortcutsEnabled(category, state !== true)
-                            }}
-                          />
-                        </div>
-                      </div>
+                      <SelectTrigger className="h-6 w-[140px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SHORTCUT_PRESETS.map((preset) => (
+                          <SelectItem key={preset.id} value={preset.id}>
+                            {t(preset.nameKey)}
+                          </SelectItem>
+                        ))}
+                        {activeShortcutPreset === 'custom' && (
+                          <SelectItem value="custom" disabled>
+                            {t('preset.custom')}
+                          </SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <p className="pl-1 text-[10px] text-muted-foreground">
+                    {activeShortcutPreset === 'custom'
+                      ? t('settings.usingCustomShortcuts')
+                      : t(
+                          SHORTCUT_PRESETS.find((p) => p.id === activeShortcutPreset)
+                            ?.descriptionKey ?? 'preset.defaultDescription'
+                        )}
+                  </p>
+                </div>
 
-                      {/* Shortcuts List */}
-                      <div className="grid grid-cols-2 gap-x-2 p-2">
-                        {groupShortcuts.map((shortcut) => {
-                          const isModalOpen = recordingShortcutId === shortcut.id
-                          return (
-                            <div
-                              key={shortcut.id}
-                              className={cn(
-                                'flex items-center justify-between gap-3 rounded-md px-2 py-1.5 transition-colors hover:bg-muted/50',
-                                isModalOpen && 'bg-primary/10 ring-1 ring-primary'
-                              )}
-                            >
-                              <div className="flex min-w-0 flex-1 items-center gap-2">
-                                <Switch
-                                  checked={shortcut.enabled}
-                                  onCheckedChange={(enabled) =>
-                                    updateShortcut(shortcut.id, { enabled })
-                                  }
-                                  className="shrink-0"
-                                  disabled={isModalOpen}
-                                />
-                                <span
-                                  className={cn(
-                                    'min-w-0 truncate text-sm',
-                                    !shortcut.enabled && 'text-muted-foreground'
-                                  )}
-                                >
-                                  {t(`shortcut.${shortcut.id}`) || shortcut.label}
-                                  {shortcut.chord && shortcut.chord.length === 2 && (
-                                    <span className="ml-1.5 text-muted-foreground/70 text-xs">
-                                      {t('settings.twoStep')}
-                                    </span>
-                                  )}
-                                </span>
-                              </div>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="xs"
-                                disabled={!shortcut.enabled}
-                                onClick={() => {
-                                  if (!shortcut.enabled) return
-                                  setRecordingShortcutId(shortcut.id)
-                                  setRecordingConflict(null)
-                                }}
-                                className={cn(
-                                  'h-auto min-h-6 shrink-0 px-2 py-1 text-end font-mono text-xs transition-all',
-                                  isModalOpen && 'animate-pulse ring-2 ring-primary ring-inset',
-                                  !shortcut.enabled && 'cursor-not-allowed opacity-50'
-                                )}
-                                title={
-                                  !shortcut.enabled
-                                    ? t('settings.enableShortcutToChange')
-                                    : t('settings.clickToChangeShortcut')
-                                }
-                              >
-                                {shortcut.chord && shortcut.chord.length === 2 ? (
-                                  <span className="inline-flex items-center gap-1.5">
-                                    <kbd className="rounded border border-border px-1.5 py-0.5 font-mono text-[11px]">
-                                      {formatKeyCombo(shortcut.chord[0])}
-                                    </kbd>
-                                    <span className="text-[10px] text-muted-foreground/80">
-                                      {t('settings.shortcutThen')}
-                                    </span>
-                                    <kbd className="rounded border border-border px-1.5 py-0.5 font-mono text-[11px]">
-                                      {formatKeyCombo(shortcut.chord[1])}
-                                    </kbd>
-                                  </span>
-                                ) : (
-                                  formatShortcut(shortcut)
-                                )}
-                              </Button>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
+                {/* Master toggle */}
+                <div className="mb-3 flex items-center justify-between rounded-md bg-muted/50 px-2 py-2">
+                  <span className="pl-1 font-medium text-sm">
+                    {t('settings.enableAllShortcuts')}
+                  </span>
+                  <div className="mr-3 flex min-w-[70px] justify-end">
+                    <Checkbox
+                      checked={getShortcutsCheckState(shortcuts)}
+                      onCheckedChange={() => {
+                        const state = getShortcutsCheckState(shortcuts)
+                        setAllShortcutsEnabled(state !== true)
+                      }}
+                    />
+                  </div>
+                </div>
 
-              <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t pt-2">
-                <p className="text-[10px] text-muted-foreground">
-                  {t('settings.clickShortcutToChange')}
-                </p>
-                <Button
-                  variant="ghost"
-                  size="xs"
-                  onClick={resetShortcuts}
-                  className="h-6 gap-1 text-xs"
+                {visibleShortcutCategories.length > 1 ? (
+                  <div className="mb-3">
+                    <p className="mb-1.5 pl-1 text-muted-foreground text-xs">
+                      {t('settings.jumpToSection')}
+                    </p>
+                    <nav
+                      className="flex gap-1.5 overflow-x-auto pb-1"
+                      aria-label={t('settings.jumpToSection')}
+                    >
+                      {visibleShortcutCategories.map((category) => {
+                        const config = CATEGORY_CONFIG[category]
+                        const Icon = config.icon
+                        const active = activeShortcutCategory === category
+                        return (
+                          <Button
+                            key={category}
+                            type="button"
+                            variant={active ? 'secondary' : 'ghost'}
+                            size="xs"
+                            className={cn('h-6 shrink-0 gap-1 px-2 text-xs', active && 'bg-muted')}
+                            onClick={() => scrollToShortcutCategory(category)}
+                            aria-current={active ? 'true' : undefined}
+                          >
+                            <Icon className={cn('h-3 w-3', config.iconColor)} />
+                            {t(`category.${category}`)}
+                          </Button>
+                        )
+                      })}
+                    </nav>
+                  </div>
+                ) : null}
+
+                {/* Shortcuts by category (same layout as Keyboard Shortcuts modal) */}
+                <div
+                  ref={shortcutsListRef}
+                  className="max-h-[410px] space-y-3 overflow-y-auto pr-1"
                 >
-                  <RefreshCw className="h-3 w-3" />
-                  {t('settings.reset')}
-                </Button>
+                  {CATEGORY_ORDER.map((category) => {
+                    const groupShortcuts = shortcuts.filter((s) => s.category === category)
+                    if (groupShortcuts.length === 0) return null
+
+                    const config = CATEGORY_CONFIG[category]
+                    const Icon = config.icon
+
+                    return (
+                      <div
+                        key={category}
+                        ref={(node) => setShortcutSectionRef(category, node)}
+                        data-shortcut-category={category}
+                        className="rounded-md border border-border bg-card/30"
+                      >
+                        {/* Category Header */}
+                        <div className="flex items-center gap-2 border-border/50 border-b px-3 py-2">
+                          <div
+                            className={cn(
+                              'flex h-6 w-6 shrink-0 items-center justify-center rounded-sm',
+                              config.bgColor
+                            )}
+                          >
+                            <Icon className={cn('h-3.5 w-3.5', config.iconColor)} />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <h3 className="font-medium text-sm">{t(`category.${category}`)}</h3>
+                            <p className="text-muted-foreground text-xs">
+                              {t(`categoryDesc.${category}`)}
+                            </p>
+                          </div>
+                          <div className="shrink-0">
+                            <Checkbox
+                              checked={getShortcutsCheckState(groupShortcuts)}
+                              onCheckedChange={() => {
+                                const state = getShortcutsCheckState(groupShortcuts)
+                                setCategoryShortcutsEnabled(category, state !== true)
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Shortcuts List */}
+                        <div className="grid grid-cols-2 gap-x-2 p-2">
+                          {groupShortcuts.map((shortcut) => {
+                            const isModalOpen = recordingShortcutId === shortcut.id
+                            return (
+                              <div
+                                key={shortcut.id}
+                                className={cn(
+                                  'flex items-center justify-between gap-3 rounded-md px-2 py-1.5 transition-colors hover:bg-muted/50',
+                                  isModalOpen && 'bg-primary/10 ring-1 ring-primary'
+                                )}
+                              >
+                                <div className="flex min-w-0 flex-1 items-center gap-2">
+                                  <Switch
+                                    checked={shortcut.enabled}
+                                    onCheckedChange={(enabled) =>
+                                      updateShortcut(shortcut.id, { enabled })
+                                    }
+                                    className="shrink-0"
+                                    disabled={isModalOpen}
+                                  />
+                                  <span
+                                    className={cn(
+                                      'min-w-0 truncate text-sm',
+                                      !shortcut.enabled && 'text-muted-foreground'
+                                    )}
+                                  >
+                                    {t(`shortcut.${shortcut.id}`) || shortcut.label}
+                                    {shortcut.chord && shortcut.chord.length === 2 && (
+                                      <span className="ml-1.5 text-muted-foreground/70 text-xs">
+                                        {t('settings.twoStep')}
+                                      </span>
+                                    )}
+                                  </span>
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="xs"
+                                  disabled={!shortcut.enabled}
+                                  onClick={() => {
+                                    if (!shortcut.enabled) return
+                                    setRecordingShortcutId(shortcut.id)
+                                    setRecordingConflict(null)
+                                  }}
+                                  className={cn(
+                                    'h-auto min-h-6 shrink-0 px-2 py-1 text-end font-mono text-xs transition-all',
+                                    isModalOpen && 'animate-pulse ring-2 ring-primary ring-inset',
+                                    !shortcut.enabled && 'cursor-not-allowed opacity-50'
+                                  )}
+                                  title={
+                                    !shortcut.enabled
+                                      ? t('settings.enableShortcutToChange')
+                                      : t('settings.clickToChangeShortcut')
+                                  }
+                                >
+                                  {shortcut.chord && shortcut.chord.length === 2 ? (
+                                    <span className="inline-flex items-center gap-1.5">
+                                      <kbd className="rounded border border-border px-1.5 py-0.5 font-mono text-[11px]">
+                                        {formatKeyCombo(shortcut.chord[0])}
+                                      </kbd>
+                                      <span className="text-[10px] text-muted-foreground/80">
+                                        {t('settings.shortcutThen')}
+                                      </span>
+                                      <kbd className="rounded border border-border px-1.5 py-0.5 font-mono text-[11px]">
+                                        {formatKeyCombo(shortcut.chord[1])}
+                                      </kbd>
+                                    </span>
+                                  ) : (
+                                    formatShortcut(shortcut)
+                                  )}
+                                </Button>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t pt-2">
+                  <p className="text-[10px] text-muted-foreground">
+                    {t('settings.clickShortcutToChange')}
+                  </p>
+                  <Button
+                    variant="ghost"
+                    size="xs"
+                    onClick={resetShortcuts}
+                    className="h-6 gap-1 text-xs"
+                  >
+                    <RefreshCw className="h-3 w-3" />
+                    {t('settings.reset')}
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
+            {!shortcutsExpanded && (
+              <p className="mt-2 text-muted-foreground text-xs">
+                {t('settings.shortcutsEnabledCount', {
+                  enabled: shortcuts.filter((s) => s.enabled).length,
+                  total: shortcuts.length,
+                })}
+              </p>
+            )}
+          </Card>
+        )}
+
+        {mobile ? (
+          <div className="order-2">
+            <AssistantLlmSettingsPanel />
+          </div>
+        ) : null}
+
+        {!mobile && <AssistantToolsSettings />}
+
+        {!mobile && <WidgetSettings />}
+
+        {/* Appearance | Default Views — first on mobile for quick prefs */}
+        <div
+          className={cn(
+            'mb-3 grid items-start gap-3 lg:grid-cols-2',
+            mobile && 'order-1 mb-0 gap-3'
           )}
-          {!shortcutsExpanded && (
-            <p className="mt-2 text-muted-foreground text-xs">
-              {t('settings.shortcutsEnabledCount', {
-                enabled: shortcuts.filter((s) => s.enabled).length,
-                total: shortcuts.length,
-              })}
-            </p>
-          )}
-        </Card>
-
-        <AssistantToolsSettings />
-
-        <WidgetSettings />
-
-        {/* Bottom row: Appearance | Default Views */}
-        <div className="mb-3 grid items-start gap-3 lg:grid-cols-2">
+        >
           {/* Appearance Card */}
           <Card>
             <CardHeader icon={<Palette className="h-4 w-4" />} title={t('settings.appearance')} />
-            <div className="space-y-3">
-              {/* Theme Mode */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm">{t('settings.mode')}</span>
-                <div className="flex h-6 items-center rounded-sm border border-border p-px">
-                  <Button
-                    type="button"
-                    variant={theme === 'light' ? 'default' : 'ghost'}
-                    size="xs"
-                    onClick={() => setTheme('light')}
-                    className={cn('flex h-5 flex-1 gap-1 px-2 text-xs', theme !== 'light' && '')}
-                  >
-                    <Sun className="h-3.5 w-3.5" />
-                    {t('settings.light')}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={theme === 'dark' ? 'default' : 'ghost'}
-                    size="xs"
-                    onClick={() => setTheme('dark')}
-                    className={cn('flex h-5 flex-1 gap-1 px-2 text-xs', theme !== 'dark' && '')}
-                  >
-                    <Moon className="h-3.5 w-3.5" />
-                    {t('settings.dark')}
-                  </Button>
-                </div>
-              </div>
+            <div className={cn('space-y-3', mobile && 'mt-3 space-y-4')}>
+              <SettingsSegmentedField
+                label={t('settings.mode')}
+                value={theme}
+                onValueChange={setTheme}
+                options={[
+                  { value: 'light', label: t('settings.light'), icon: Sun },
+                  { value: 'dark', label: t('settings.dark'), icon: Moon },
+                ]}
+              />
 
               {/* Color Theme */}
-              <div className="space-y-1.5">
-                <span className="text-sm">{t('settings.colorTheme')}</span>
-                <div className="grid grid-cols-4 gap-1.5">
+              <SettingsField label={t('settings.colorTheme')}>
+                <div className={cn('grid gap-1.5', mobile ? 'grid-cols-3' : 'grid-cols-4')}>
                   {Object.entries(availableThemes).map(([key, themeOption]) => (
                     <Button
                       type="button"
@@ -1339,14 +1461,15 @@ export function SettingsPage() {
                       size="xs"
                       onClick={() => setThemeName(key as typeof themeName)}
                       className={cn(
-                        'relative h-auto flex-col gap-1 rounded-md border p-1.5 transition-all',
+                        'relative h-auto flex-col gap-1 rounded-md border transition-all',
+                        mobile ? 'min-h-16 gap-1.5 p-2.5' : 'p-1.5',
                         themeName === key
                           ? 'border-primary bg-primary/5 ring-1 ring-primary'
                           : 'border-border'
                       )}
                     >
                       <div
-                        className="h-6 w-6 rounded-full shadow-inner"
+                        className={cn('rounded-full shadow-inner', mobile ? 'h-7 w-7' : 'h-6 w-6')}
                         style={{
                           background:
                             key === 'slate'
@@ -1361,19 +1484,22 @@ export function SettingsPage() {
                                       ? '#3f3f46'
                                       : '#171717',
                         }}
+                        aria-hidden
                       />
-                      <span className="text-xs">{themeOption.name}</span>
+                      <span className={cn(mobile ? 'text-xs' : 'text-xs')}>{themeOption.name}</span>
                       {themeName === key && (
                         <Check className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-primary p-0.5 text-primary-foreground" />
                       )}
                     </Button>
                   ))}
                 </div>
-              </div>
+              </SettingsField>
 
               {/* Code editor — live preview with JSON example; toolbar controls persist to profile */}
               <div className="border-border border-t pt-3">
-                <span className="font-medium text-sm">{t('settings.codeEditor')}</span>
+                <span className={cn('font-medium', mobile ? 'text-sm' : 'text-sm')}>
+                  {t('settings.codeEditor')}
+                </span>
                 <p className="mt-0.5 text-muted-foreground text-xs">
                   {t('settings.codeEditorPreviewHint')}
                 </p>
@@ -1382,7 +1508,7 @@ export function SettingsPage() {
                     defaultValue={CODE_EDITOR_PREVIEW_JSON}
                     language="json"
                     toolbar
-                    height={160}
+                    height={mobile ? 128 : 160}
                     readOnly
                     showLineNumbers
                     editorPrefs={codeEditorPrefs}
@@ -1400,177 +1526,53 @@ export function SettingsPage() {
               icon={<LayoutGrid className="h-4 w-4" />}
               title={t('settings.defaultViews')}
             />
-            <div className="grid grid-cols-2 gap-2.5">
-              {/* Entity List View */}
-              <div className="space-y-1.5">
-                <span className="text-muted-foreground text-xs">{t('settings.listView')}</span>
-                <div className="flex h-6 items-center rounded-sm border border-border p-px">
-                  <Button
-                    type="button"
-                    variant={defaultViewMode === 'cards' ? 'default' : 'ghost'}
-                    size="xs"
-                    onClick={() => setDefaultViewMode('cards')}
-                    className={cn(
-                      'flex h-5 flex-1 gap-1 text-xs',
-                      defaultViewMode !== 'cards' && ''
-                    )}
-                  >
-                    <LayoutGrid className="h-3.5 w-3.5" />
-                    {t('settings.cards')}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={defaultViewMode === 'table' ? 'default' : 'ghost'}
-                    size="xs"
-                    onClick={() => setDefaultViewMode('table')}
-                    className={cn(
-                      'flex h-5 flex-1 gap-1 text-xs',
-                      defaultViewMode !== 'table' && ''
-                    )}
-                  >
-                    <Table2 className="h-3.5 w-3.5" />
-                    {t('settings.table')}
-                  </Button>
-                </div>
-              </div>
+            <div className={cn('grid gap-2.5', mobile ? 'mt-3 grid-cols-1 gap-4' : 'grid-cols-2')}>
+              <SettingsSegmentedField
+                label={t('settings.listView')}
+                value={defaultViewMode}
+                onValueChange={setDefaultViewMode}
+                options={[
+                  { value: 'cards', label: t('settings.cards'), icon: LayoutGrid },
+                  { value: 'table', label: t('settings.table'), icon: Table2 },
+                ]}
+              />
 
-              {/* Entity Viewer */}
-              <div className="space-y-1.5">
-                <span className="text-muted-foreground text-xs">{t('settings.entityView')}</span>
-                <div className="flex h-6 items-center rounded-sm border border-border p-px">
-                  <Button
-                    type="button"
-                    variant={defaultEntityViewMode === 'tree' ? 'default' : 'ghost'}
-                    size="xs"
-                    onClick={() => setDefaultEntityViewMode('tree')}
-                    className={cn(
-                      'flex h-5 flex-1 gap-1 text-xs',
-                      defaultEntityViewMode !== 'tree' && ''
-                    )}
-                  >
-                    <TreeDeciduous className="h-3.5 w-3.5" />
-                    {t('settings.tree')}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={defaultEntityViewMode === 'form' ? 'default' : 'ghost'}
-                    size="xs"
-                    onClick={() => setDefaultEntityViewMode('form')}
-                    className={cn(
-                      'flex h-5 flex-1 gap-1 text-xs',
-                      defaultEntityViewMode !== 'form' && ''
-                    )}
-                  >
-                    <FileText className="h-3.5 w-3.5" />
-                    {t('settings.form')}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={defaultEntityViewMode === 'json' ? 'default' : 'ghost'}
-                    size="xs"
-                    onClick={() => setDefaultEntityViewMode('json')}
-                    className={cn(
-                      'flex h-5 flex-1 gap-1 text-xs',
-                      defaultEntityViewMode !== 'json' && ''
-                    )}
-                  >
-                    {'{}'}
-                    <span>{t('createEntity.json')}</span>
-                  </Button>
-                </div>
-              </div>
+              <SettingsSegmentedField
+                label={t('settings.entityView')}
+                value={defaultEntityViewMode}
+                onValueChange={setDefaultEntityViewMode}
+                options={[
+                  { value: 'tree', label: t('settings.tree'), icon: TreeDeciduous },
+                  { value: 'form', label: t('settings.form'), icon: FileText },
+                  { value: 'json', label: t('createEntity.json'), icon: Braces },
+                ]}
+              />
 
-              {/* Default Edit Mode */}
-              <div className="space-y-1.5">
-                <span className="text-muted-foreground text-xs">
-                  {t('settings.defaultEditMode')}
-                </span>
-                <div className="flex h-6 items-center rounded-sm border border-border p-px">
-                  <Button
-                    type="button"
-                    variant={defaultEditMode === 'form' ? 'default' : 'ghost'}
-                    size="xs"
-                    onClick={() => setDefaultEditMode('form')}
-                    className={cn(
-                      'flex h-5 flex-1 gap-1 text-xs',
-                      defaultEditMode !== 'form' && ''
-                    )}
-                  >
-                    <FileText className="h-3.5 w-3.5" />
-                    {t('settings.form')}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={defaultEditMode === 'json' ? 'default' : 'ghost'}
-                    size="xs"
-                    onClick={() => setDefaultEditMode('json')}
-                    className={cn(
-                      'flex h-5 flex-1 gap-1 text-xs',
-                      defaultEditMode !== 'json' && ''
-                    )}
-                  >
-                    {'{}'}
-                    <span>{t('createEntity.json')}</span>
-                  </Button>
-                </div>
-              </div>
+              <SettingsSegmentedField
+                label={t('settings.defaultEditMode')}
+                value={defaultEditMode}
+                onValueChange={setDefaultEditMode}
+                options={[
+                  { value: 'form', label: t('settings.form'), icon: FileText },
+                  { value: 'json', label: t('createEntity.json'), icon: Braces },
+                ]}
+              />
 
-              {/* Default sidebar view (how dataclasses are listed) */}
-              <div className="space-y-1.5">
-                <span className="text-muted-foreground text-xs">
-                  {t('settings.defaultSidebarView')}
-                </span>
-                <p className="text-muted-foreground text-xs leading-tight">
-                  {t('settings.defaultSidebarViewHelp')}
-                </p>
-                <div className="flex h-6 items-center rounded-sm border border-border p-px">
-                  <Button
-                    type="button"
-                    variant={sidebarViewMode === 'cards' ? 'default' : 'ghost'}
-                    size="xs"
-                    onClick={() => setSidebarViewMode('cards')}
-                    className={cn(
-                      'flex h-5 flex-1 gap-1 text-xs',
-                      sidebarViewMode !== 'cards' && ''
-                    )}
-                  >
-                    <LayoutGrid className="h-3.5 w-3.5" />
-                    {t('settings.cards')}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={sidebarViewMode === 'tables' ? 'default' : 'ghost'}
-                    size="xs"
-                    onClick={() => setSidebarViewMode('tables')}
-                    className={cn(
-                      'flex h-5 flex-1 gap-1 text-xs',
-                      sidebarViewMode !== 'tables' && ''
-                    )}
-                  >
-                    <Table2 className="h-3.5 w-3.5" />
-                    {t('settings.tables')}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant={sidebarViewMode === 'icons' ? 'default' : 'ghost'}
-                    size="xs"
-                    onClick={() => setSidebarViewMode('icons')}
-                    className={cn(
-                      'flex h-5 flex-1 gap-1 text-xs',
-                      sidebarViewMode !== 'icons' && ''
-                    )}
-                  >
-                    <LayoutTemplate className="h-3.5 w-3.5" />
-                    {t('settings.icons')}
-                  </Button>
-                </div>
-              </div>
+              <SettingsSegmentedField
+                label={t('settings.defaultSidebarView')}
+                description={t('settings.defaultSidebarViewHelp')}
+                value={sidebarViewMode}
+                onValueChange={setSidebarViewMode}
+                options={[
+                  { value: 'cards', label: t('settings.cards'), icon: LayoutGrid },
+                  { value: 'tables', label: t('settings.tables'), icon: Table2 },
+                  { value: 'icons', label: t('settings.icons'), icon: LayoutTemplate },
+                ]}
+              />
 
-              {/* Page Size */}
-              <div className="space-y-1.5">
-                <span className="text-muted-foreground text-xs">{t('settings.pageSize')}</span>
+              <SettingsField label={t('settings.pageSize')}>
                 <Select value={String(pageSize)} onValueChange={(v) => setPageSize(Number(v))}>
-                  <SelectTrigger className="h-6">
+                  <SelectTrigger className={cn(mobile ? 'h-11' : 'h-6')}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1580,18 +1582,17 @@ export function SettingsPage() {
                     <SelectItem value="100">100</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
+              </SettingsField>
 
-              {/* Default query run mode */}
-              <div className="space-y-1.5">
-                <span className="text-muted-foreground text-xs">
-                  {t('settings.defaultQueryRunMode')}
-                </span>
+              <SettingsField
+                label={t('settings.defaultQueryRunMode')}
+                description={t('settings.defaultQueryRunModeHelp')}
+              >
                 <Select
                   value={defaultQueryRunMode}
                   onValueChange={(v) => setDefaultQueryRunMode(v as 'run' | 'runAsSelection')}
                 >
-                  <SelectTrigger className="h-6">
+                  <SelectTrigger className={cn(mobile ? 'h-11' : 'h-6')}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1599,39 +1600,40 @@ export function SettingsPage() {
                     <SelectItem value="runAsSelection">{t('query.runAsSelection')}</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-[11px] text-muted-foreground">
-                  {t('settings.defaultQueryRunModeHelp')}
-                </p>
-              </div>
+              </SettingsField>
 
               {/* Read-Only Mode */}
-              <div className="space-y-1.5">
-                <span className="text-muted-foreground text-xs">{t('settings.editMode')}</span>
+              <SettingsField label={t('settings.editMode')}>
                 <div
                   className={cn(
-                    'flex h-6 items-center justify-between rounded-sm border border-border px-2',
+                    'flex items-center justify-between rounded-md border border-border px-3',
+                    mobile ? 'min-h-11' : 'h-6 px-2',
                     readonlyMode && 'border-amber-500/50 bg-amber-500/10'
                   )}
                 >
                   <div className="flex items-center gap-1.5">
                     {readonlyMode ? (
-                      <Eye className="h-3.5 w-3.5 text-amber-500" />
+                      <Eye className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" aria-hidden />
                     ) : (
-                      <Pencil className="h-3.5 w-3.5" />
+                      <Pencil className="h-3.5 w-3.5" aria-hidden />
                     )}
-                    <span className="text-xs">
+                    <span className={cn(mobile ? 'text-sm' : 'text-xs')}>
                       {readonlyMode ? t('settings.readOnly') : t('settings.edit')}
                     </span>
                   </div>
-                  <Switch checked={readonlyMode} onCheckedChange={setReadonlyMode} />
+                  <Switch
+                    checked={readonlyMode}
+                    onCheckedChange={setReadonlyMode}
+                    aria-label={t('settings.editMode')}
+                  />
                 </div>
-              </div>
+              </SettingsField>
             </div>
           </Card>
         </div>
 
-        {/* Database identity + Server Connection (desktop-only) */}
-        <div className="space-y-3">
+        {/* Database identity + Server Connection */}
+        <div className={cn('space-y-3', mobile && 'order-4')}>
           <DatabaseIdentityPanel className="rounded-md" />
           <ServerConnectionSettings />
           {isDesktop() ? (
@@ -1671,18 +1673,30 @@ export function SettingsPage() {
 // =============================================================================
 
 function Card({ children, className }: { children: React.ReactNode; className?: string }) {
+  const mobile = isMobileShell()
   return (
-    <div className={cn('rounded-md border border-border bg-card p-3', className)}>{children}</div>
+    <div
+      className={cn('rounded-md border border-border bg-card', mobile ? 'p-4' : 'p-3', className)}
+    >
+      {children}
+    </div>
   )
 }
 
 function CardHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
+  const mobile = isMobileShell()
   return (
     <div className="flex items-center gap-2">
-      <div className="flex h-6 w-6 items-center justify-center rounded-sm bg-muted text-muted-foreground">
+      <div
+        className={cn(
+          'flex items-center justify-center rounded-sm bg-muted text-muted-foreground',
+          mobile ? 'h-8 w-8' : 'h-6 w-6'
+        )}
+        aria-hidden
+      >
         {icon}
       </div>
-      <h2 className="font-semibold text-sm">{title}</h2>
+      <h2 className={cn('font-semibold', mobile ? 'text-base' : 'text-sm')}>{title}</h2>
     </div>
   )
 }

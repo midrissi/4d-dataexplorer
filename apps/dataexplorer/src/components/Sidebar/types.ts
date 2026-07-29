@@ -3,6 +3,10 @@ import type { SidebarSortOption } from '~/store/settings'
 
 export type SidebarProps = {
   collapsed?: boolean
+  /** Called after a dataclass tab is opened (e.g. close mobile catalog drawer). */
+  onDataclassOpened?: () => void
+  /** Mobile drawer close control rendered in the sidebar header. */
+  onClose?: () => void
 }
 
 export type SortOption = SidebarSortOption
