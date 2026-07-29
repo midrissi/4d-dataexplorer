@@ -525,7 +525,7 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
       kind="httpClient"
       mobilePane={mobile ? mobilePane : undefined}
       requestClassName="bg-background p-3"
-      responseClassName="min-h-105 bg-muted/10 p-3 lg:min-h-0"
+      responseClassName={cn('bg-muted/10 lg:min-h-0', mobile ? 'min-h-0 p-2.5' : 'min-h-105 p-3')}
       request={
         <div className="flex flex-col gap-3">
           <div className="flex items-start justify-between gap-3">
@@ -1099,20 +1099,27 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
         <>
           <div className="mb-2 shrink-0">
             {mobile ? (
-              <div className="mb-3 space-y-1">
+              <div className="flex items-center gap-1">
                 <Button
                   type="button"
                   variant="ghost"
-                  className="-ml-2 h-11 gap-2 px-3"
+                  size="icon"
+                  className="h-10 w-10 shrink-0"
+                  aria-label={t('common.back')}
                   onClick={() => setMobilePane('request')}
                 >
                   <ArrowLeft className="h-4 w-4" aria-hidden />
-                  {t('common.back')}
                 </Button>
-                <h2 className="font-semibold text-xl tracking-tight">{t('httpClient.response')}</h2>
-                <p className="text-muted-foreground text-sm leading-snug">
-                  {t('httpClient.responseHint')}
-                </p>
+                <div className="min-w-0 flex-1">
+                  <h2 className="truncate font-semibold text-base tracking-tight">
+                    {t('httpClient.response')}
+                  </h2>
+                  {!response ? (
+                    <p className="truncate text-muted-foreground text-xs leading-snug">
+                      {t('httpClient.responseHint')}
+                    </p>
+                  ) : null}
+                </div>
               </div>
             ) : (
               <>

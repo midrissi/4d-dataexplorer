@@ -36,6 +36,7 @@ const PATHS = {
   desktopIcons: join(ROOT, 'apps/desktop/src-tauri/icons'),
   mobileIcons: join(ROOT, 'apps/mobile/src-tauri/icons'),
   mobileGenApple: join(ROOT, 'apps/mobile/src-tauri/gen/apple'),
+  mobileGenAndroid: join(ROOT, 'apps/mobile/src-tauri/gen/android'),
   brandMark: join(ROOT, 'apps/dataexplorer/src/assets/brand-mark.svg'),
   favicon: join(ROOT, 'apps/dataexplorer/public/favicon.svg'),
   docsLogo: join(ROOT, 'apps/docs/public/logo.svg'),
@@ -347,10 +348,54 @@ async function syncIosAppIcons(dryRun: boolean) {
   ok('📲 Synced iOS AppIcon → gen/apple Assets.xcassets')
 }
 
+async function syncAndroidAppIcons(dryRun: boolean) {
+  const mobileAndroid = join(PATHS.mobileIcons, 'android')
+  const genRes = join(PATHS.mobileGenAndroid, 'app/src/main/res')
+
+  if (dryRun) {
+    log('[dry-run] sync Android launcher icons → gen/android')
+    return
+  }
+
+  if (!existsSync(mobileAndroid)) {
+    log('⏭️  skip Android icon sync: no icons/android')
+    return
+  }
+  if (!existsSync(genRes)) {
+    log('⏭️  skip Android icon sync: gen/android missing (run tauri android init)')
+    return
+  }
+
+  const densities = [
+    'mipmap-mdpi',
+    'mipmap-hdpi',
+    'mipmap-xhdpi',
+    'mipmap-xxhdpi',
+    'mipmap-xxxhdpi',
+    'mipmap-anydpi-v26',
+  ]
+  for (const density of densities) {
+    const src = join(mobileAndroid, density)
+    if (!existsSync(src)) continue
+    const dst = join(genRes, density)
+    mkdirSync(dst, { recursive: true })
+    await $`bash -lc ${`cp -f "${src}"/* "${dst}/"`}`.quiet()
+  }
+  const bgSrc = join(mobileAndroid, 'values/ic_launcher_background.xml')
+  if (existsSync(bgSrc)) {
+    const bgDst = join(genRes, 'values')
+    mkdirSync(bgDst, { recursive: true })
+    await $`bash -lc ${`cp -f "${bgSrc}" "${bgDst}/"`}`.quiet()
+  }
+  ok('🤖 Synced Android launcher icons → gen/android')
+}
+
 async function patchMobileSplash(dryRun: boolean) {
   if (!existsSync(PATHS.splashPatch)) return
-  if (!existsSync(PATHS.mobileGenApple)) {
-    log('⏭️  skip splash patch: gen/apple missing')
+  const hasApple = existsSync(PATHS.mobileGenApple)
+  const hasAndroid = existsSync(PATHS.mobileGenAndroid)
+  if (!hasApple && !hasAndroid) {
+    log('⏭️  skip splash patch: gen/apple and gen/android missing')
     return
   }
   if (dryRun) {
@@ -510,6 +555,7 @@ print(a)
   ok('💧 Updated mobile splash PNGs (native LaunchScreen)')
 
   await syncIosAppIcons(args.dryRun)
+  await syncAndroidAppIcons(args.dryRun)
   await patchMobileSplash(args.dryRun)
 
   if (existsSync(PATHS.ogSvg)) {

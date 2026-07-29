@@ -84,7 +84,8 @@
       "!**/views/**/*.html",
       "!**/src-tauri/target",
       "!**/packages/base64-decoder",
-      "!**/userPreferences.*"
+      "!**/userPreferences.*",
+      "!**/DerivedData"
     ]
   },
   "overrides": [

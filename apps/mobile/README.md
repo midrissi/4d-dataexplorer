@@ -1,4 +1,4 @@
-# 4D Data Explorer Mobile
+# Data Explorer Mobile
 
 Tauri 2 shell for **iOS** and **Android**. Reuses `@4d/dataexplorer` with a mobile connection screen, CORS-free native HTTP (same as desktop), and a **Beta** badge. Schema graph and JSON Schema Builder are omitted in this first version.
 
@@ -50,9 +50,9 @@ bun run tauri:ios:build               # simulator (aarch64-sim) via scripts/ios-
 bun run tauri:ios:build:device        # physical device / IPA
 ```
 
-`tauri:ios:dev` and `tauri:ios:build` wrap the Tauri CLI so the Xcode “Build Rust Code” phase can reach the CLI options WebSocket (pins `TMPDIR`, runs the script from `gen/apple`). Without that, builds often fail with `Connection refused` / wrong app identifier in this monorepo. They also re-sync `icons/ios` into `Assets.xcassets/AppIcon` so the home-screen icon matches desktop (orange database mark), and apply the branded splash (`#12141c` + logo) via `scripts/patch-mobile-splash.sh`. The SpringBoard label uses a short `CFBundleDisplayName` (`4D Explorer`) so it isn’t truncated; the full `productName` remains `4D Data Explorer` for the `.app` bundle.
+`tauri:ios:dev` and `tauri:ios:build` wrap the Tauri CLI so the Xcode “Build Rust Code” phase can reach the CLI options WebSocket (pins `TMPDIR`, runs the script from `gen/apple`). Without that, builds often fail with `Connection refused` / wrong app identifier in this monorepo. They also re-sync `icons/ios` into `Assets.xcassets/AppIcon` so the home-screen icon matches desktop (orange database mark), and apply the branded splash (`#12141c` + logo) via `scripts/patch-mobile-splash.sh`. The home-screen label is `Data Explorer` (`CFBundleDisplayName` / `productName`).
 
-`tauri:android:dev` / `tauri:android:build` similarly init the Android project if needed and patch the splash theme before invoking Tauri.
+`tauri:android:dev` / `tauri:android:build` run `scripts/android-prepare.sh` first: sync launcher mipmaps + `app_name` from `icons/android` / `tauri.conf.json`, then patch splash, then invoke Tauri. After a brand change, uninstall the old APK once so Android refreshes the cached launcher icon.
 
 If deploy fails with `Unable to lookup in current state: Shutdown` / `simctl install` exit 149, the chosen simulator was not booted. `tauri:ios:dev` boots and waits before install. You can also boot manually:
 
