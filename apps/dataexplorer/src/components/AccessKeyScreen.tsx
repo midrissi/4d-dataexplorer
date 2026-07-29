@@ -1,6 +1,7 @@
 import { Button, cn, PasswordInput } from '@4d/ui'
-import { AlertCircle, ArrowLeft, Database } from 'lucide-react'
+import { AlertCircle, ArrowLeft } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { AppBrandIcon } from '~/components/AppBrandIcon'
 import { useTranslation } from '~/i18n'
 import { formatThrownError } from '~/lib/api'
 import { isMobileShell } from '~/lib/platform'
@@ -59,8 +60,8 @@ export function AccessKeyScreen({
     >
       {' '}
       <div className="mb-4 flex flex-col items-center">
-        <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-md bg-primary shadow-primary/20 shadow-sm">
-          <Database className="h-5 w-5 text-primary-foreground" />
+        <div className="mb-2 h-10 w-10 shadow-primary/20 shadow-sm">
+          <AppBrandIcon className="h-full w-full" />
         </div>
         <h1 className="font-bold text-xl tracking-tight">{t('loading.title')}</h1>
         <p className="text-muted-foreground text-xs">{t('loading.subtitle')}</p>

@@ -579,18 +579,32 @@ export function BinaryObjectViewer({
           )}
 
           {meta && mobile ? (
-            // Mobile keeps only the format-aware preview (or a download-only
-            // gate when no preview applies) — hex dumps and decoded-object
-            // trees are dev tooling that doesn't fit a touch screen.
-            canPreview ? (
+            // Mobile: prefer the decoded 4D object view when available (most
+            // private binaries), then format-aware media preview, else download.
+            hasDecoded && decodedValue ? (
+              <div className="mt-0.5 min-h-0 overflow-auto">
+                <DecodedBinaryContent value={decodedValue} className="max-h-[min(60vh,28rem)]" />
+              </div>
+            ) : canPreview ? (
               <div className="mt-0.5">{previewContent}</div>
             ) : (
-              <BinaryGate
-                title={t('entity.binaryPreviewUnavailableTitle')}
-                description={t('entity.binaryPreviewUnavailable')}
-                onDownload={handleDownload}
-                downloadLabel={t('entity.binaryDownload')}
-              />
+              <div className="mt-0.5 space-y-2">
+                <div className="flex items-center gap-2 overflow-hidden rounded border bg-muted/25 px-2 py-1.5 font-mono text-[11px] leading-none">
+                  <span className="w-8 shrink-0 text-muted-foreground">0000</span>
+                  <code className="min-w-0 flex-1 overflow-x-auto text-foreground/85">
+                    {meta.hex}
+                  </code>
+                  <span className="shrink-0 border-border/50 border-l pl-1.5 text-emerald-700 dark:text-emerald-400">
+                    {meta.ascii}
+                  </span>
+                </div>
+                <BinaryGate
+                  title={t('entity.binaryPreviewUnavailableTitle')}
+                  description={t('entity.binaryPreviewUnavailable')}
+                  onDownload={handleDownload}
+                  downloadLabel={t('entity.binaryDownload')}
+                />
+              </div>
             )
           ) : (
             meta && (
@@ -716,21 +730,34 @@ function BinaryGate({
   onDownload: () => void
   downloadLabel: string
 }) {
+  const mobile = isMobileShell()
   return (
-    <div className="flex flex-col items-center gap-1.5 rounded border border-dashed bg-muted/20 px-3 py-4 text-center">
-      <FileWarning className="h-4 w-4 text-muted-foreground" />
+    <div
+      className={cn(
+        'flex flex-col items-center gap-1.5 rounded border border-dashed bg-muted/20 px-3 py-4 text-center',
+        mobile && 'gap-2 rounded-xl px-4 py-5'
+      )}
+    >
+      <FileWarning className={cn('text-muted-foreground', mobile ? 'h-5 w-5' : 'h-4 w-4')} />
       <div className="space-y-0.5">
-        <p className="font-medium text-[11px]">{title}</p>
-        <p className="max-w-xs text-[10px] text-muted-foreground">{description}</p>
+        <p className={cn('font-medium', mobile ? 'text-sm' : 'text-[11px]')}>{title}</p>
+        <p
+          className={cn(
+            'max-w-xs text-muted-foreground',
+            mobile ? 'text-xs leading-relaxed' : 'text-[10px]'
+          )}
+        >
+          {description}
+        </p>
       </div>
       <Button
         type="button"
         variant="outline"
         size="sm"
-        className="mt-0.5 h-6 gap-1 text-[10px]"
+        className={cn('mt-0.5 gap-1', mobile ? 'h-11 px-4 text-sm' : 'h-6 text-[10px]')}
         onClick={onDownload}
       >
-        <Download className="h-3 w-3" />
+        <Download className={cn(mobile ? 'h-4 w-4' : 'h-3 w-3')} />
         {downloadLabel}
       </Button>
     </div>

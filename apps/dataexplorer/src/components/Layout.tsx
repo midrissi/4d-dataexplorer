@@ -14,7 +14,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  Label,
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -25,7 +24,6 @@ import {
   Braces,
   ChevronsRight,
   Command,
-  Database,
   Eye,
   Keyboard,
   List,
@@ -54,6 +52,7 @@ import type { CommandPaletteMode } from '~/lib/eventBus'
 import { eventBus } from '~/lib/eventBus'
 import { resolveLucideIcon } from '~/lib/lucide-icon'
 import {
+  mobileCenteredDialogClass,
   mobileMenuCollisionProps,
   mobileMenuContentClass,
   mobileMenuItemClass,
@@ -75,6 +74,7 @@ import {
 } from '~/store/settings'
 import { RELEASE_NOTES_STATIC_ID, useActiveDataclassTab, useTabsStore } from '~/store/tabs'
 import { AiTasksFooterControl } from './AiActions'
+import { AppBrandIcon } from './AppBrandIcon'
 import { AppearanceControls } from './AppearanceControls'
 import { AssistantSparklesIcon } from './AssistantSparklesIcon'
 import { CommandPalette } from './CommandPalette'
@@ -381,13 +381,8 @@ export function Layout({
               </Tooltip>
             </TooltipProvider>
           ) : null}
-          <div
-            className={cn(
-              'flex shrink-0 items-center justify-center rounded-md bg-primary shadow-xs',
-              mobile ? 'h-8 w-8' : 'h-7 w-7'
-            )}
-          >
-            <Database className="h-3.5 w-3.5 text-primary-foreground" />
+          <div className={cn('shrink-0 shadow-xs', mobile ? 'h-8 w-8' : 'h-7 w-7')}>
+            <AppBrandIcon className="h-full w-full" />
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
@@ -571,41 +566,33 @@ export function Layout({
 
       {/* Main content + docked console */}
       <div className="relative z-0 flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
-        {consoleOpen ? (
-          mobile ? (
-            <div className="fixed inset-0 z-50 flex min-h-0 flex-col bg-background pt-(--app-safe-top) pb-(--app-safe-bottom)">
-              <div className="flex h-12 shrink-0 items-center justify-between border-border border-b px-3">
-                <p className="font-medium text-sm">{t('console.title')}</p>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="h-9 px-3 text-sm"
-                  onClick={toggleConsoleOpen}
+        {mobile && consoleOpen ? (
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <ConsolePanel />
+          </div>
+        ) : (
+          <>
+            <div className="min-h-0 flex-1 overflow-hidden">{children}</div>
+            {consoleOpen ? (
+              <>
+                <ResizableVerticalHandle
+                  onResize={(delta) =>
+                    setConsoleHeight((height) =>
+                      Math.min(window.innerHeight * 0.5, Math.max(120, height - delta))
+                    )
+                  }
+                  onDoubleClick={() => setConsoleHeight(220)}
+                />
+                <div
+                  className="shrink-0 overflow-hidden border-t"
+                  style={{ height: consoleHeight }}
                 >
-                  {t('console.close')}
-                </Button>
-              </div>
-              <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-                <ConsolePanel />
-              </div>
-            </div>
-          ) : (
-            <>
-              <ResizableVerticalHandle
-                onResize={(delta) =>
-                  setConsoleHeight((height) =>
-                    Math.min(window.innerHeight * 0.5, Math.max(120, height - delta))
-                  )
-                }
-                onDoubleClick={() => setConsoleHeight(220)}
-              />
-              <div className="shrink-0 overflow-hidden border-t" style={{ height: consoleHeight }}>
-                <ConsolePanel />
-              </div>
-            </>
-          )
-        ) : null}
+                  <ConsolePanel />
+                </div>
+              </>
+            ) : null}
+          </>
+        )}
       </div>
 
       {/* Status bar */}
@@ -987,31 +974,53 @@ export function Layout({
           if (!open) setSkipDisconnectConfirm(false)
         }}
       >
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{t('layout.disconnectConfirmTitle')}</DialogTitle>
-            <DialogDescription>{t('layout.disconnectConfirmMessage')}</DialogDescription>
+        <DialogContent
+          className={cn('gap-4 sm:max-w-sm', mobile && mobileCenteredDialogClass('gap-5'))}
+        >
+          <DialogHeader className={cn(mobile && 'gap-2 space-y-0 text-left')}>
+            <DialogTitle className={cn(mobile && 'text-lg leading-snug')}>
+              {t('layout.disconnectConfirmTitle')}
+            </DialogTitle>
+            <DialogDescription className={cn(mobile && 'text-sm leading-relaxed')}>
+              {t('layout.disconnectConfirmMessage')}
+            </DialogDescription>
           </DialogHeader>
-          <div className="flex items-start gap-2 py-1">
+          <label
+            htmlFor="skip-disconnect-confirm"
+            className={cn(
+              'flex cursor-pointer items-start gap-2.5 rounded-lg',
+              mobile &&
+                'min-h-11 items-center gap-3 rounded-xl border border-border/80 bg-muted/30 px-3 py-2.5'
+            )}
+          >
             <Checkbox
               id="skip-disconnect-confirm"
               checked={skipDisconnectConfirm}
               onCheckedChange={(checked) => setSkipDisconnectConfirm(checked === true)}
+              className={cn(mobile && 'mt-0 size-5')}
             />
-            <Label
-              htmlFor="skip-disconnect-confirm"
-              className="cursor-pointer font-normal text-sm leading-snug"
+            <span
+              className={cn(
+                'font-normal text-sm leading-snug',
+                mobile && 'text-[15px] leading-snug'
+              )}
             >
               {t('layout.disconnectSkipConfirm')}
-            </Label>
-          </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setDisconnectConfirmOpen(false)}>
+            </span>
+          </label>
+          <DialogFooter className={cn(mobile && 'flex-col-reverse gap-2 sm:flex-col-reverse')}>
+            <Button
+              type="button"
+              variant="outline"
+              className={cn(mobile && 'h-12 w-full text-base')}
+              onClick={() => setDisconnectConfirmOpen(false)}
+            >
               {t('common.cancel')}
             </Button>
             <Button
               type="button"
               variant="destructive"
+              className={cn(mobile && 'h-12 w-full text-base')}
               onClick={() => {
                 if (skipDisconnectConfirm) {
                   setConfirmDisconnect(false)
@@ -1020,7 +1029,7 @@ export function Layout({
                 onDisconnect?.()
               }}
             >
-              <LogOut className="mr-2 h-4 w-4" />
+              <LogOut className={cn('mr-2', mobile ? 'h-5 w-5' : 'h-4 w-4')} />
               {t('layout.disconnect')}
             </Button>
           </DialogFooter>

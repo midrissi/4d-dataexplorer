@@ -29,14 +29,30 @@ export function mobileMenuHeaderClass(extra?: string) {
 
 /**
  * Full-viewport dialog surface for mobile. Resets the kit Dialog’s centered
- * `left/top 50% + translate(-50%)` so content isn’t clipped, and replaces the
- * corner slide with a center zoom.
+ * `left/top 50% + translate(-50%)` so content isn’t clipped, and zeroes the
+ * enter/exit slide offsets that only exist to keep centered dialogs stable.
  */
 export function mobileFullscreenDialogClass(extra?: string) {
   return cn(
     'inset-0 top-0 left-0 flex h-dvh max-h-dvh w-full max-w-full',
     'translate-x-0 translate-y-0 flex-col gap-0 rounded-none border-0 p-0',
     'pt-(--app-safe-top) pb-(--app-safe-bottom)',
+    'data-[state=open]:slide-in-from-left-0 data-[state=open]:slide-in-from-top-0',
+    'data-[state=closed]:slide-out-to-left-0 data-[state=closed]:slide-out-to-top-0',
+    extra
+  )
+}
+
+/**
+ * Centered modal on mobile — keep kit centering, but kill the corner slide so
+ * the dialog scales in from the middle of the viewport.
+ */
+export function mobileCenteredDialogClass(extra?: string) {
+  return cn(
+    'top-1/2 left-1/2 w-[min(calc(100vw-2rem),24rem)] max-w-[calc(100vw-2rem)]',
+    'translate-x-[-50%] translate-y-[-50%] rounded-2xl border-border p-5 shadow-lg',
+    'data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0',
+    'data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95',
     'data-[state=open]:slide-in-from-left-0 data-[state=open]:slide-in-from-top-0',
     'data-[state=closed]:slide-out-to-left-0 data-[state=closed]:slide-out-to-top-0',
     extra

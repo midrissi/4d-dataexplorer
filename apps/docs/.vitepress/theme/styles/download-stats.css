@@ -4,11 +4,13 @@
   --ds-macos: var(--vp-c-brand-2);
   --ds-windows: oklch(0.62 0.1 250);
   --ds-linux: oklch(0.62 0.09 155);
+  --ds-android: oklch(0.65 0.14 145);
+  --ds-ios: oklch(0.6 0.08 220);
   --ds-web: oklch(0.68 0.08 85);
   position: relative;
   box-sizing: border-box;
   width: 100%;
-  min-height: 540px;
+  min-height: 640px;
   max-width: none;
   margin: 0;
   padding: 1.35rem 0 0;
@@ -122,9 +124,19 @@
   animation-delay: 240ms;
 }
 
+.download-stats__signal i[data-platform="android"] {
+  background: var(--ds-android);
+  animation-delay: 360ms;
+}
+
+.download-stats__signal i[data-platform="ios"] {
+  background: var(--ds-ios);
+  animation-delay: 480ms;
+}
+
 .download-stats__signal i[data-platform="web"] {
   background: var(--ds-web);
-  animation-delay: 360ms;
+  animation-delay: 600ms;
 }
 
 @keyframes download-stats-signal {
@@ -158,8 +170,10 @@
   background: linear-gradient(
     90deg,
     var(--ds-macos) 0%,
-    var(--ds-windows) 34%,
-    var(--ds-linux) 68%,
+    var(--ds-windows) 20%,
+    var(--ds-linux) 40%,
+    var(--ds-android) 60%,
+    var(--ds-ios) 80%,
     var(--ds-web) 100%
   );
   mask-image: linear-gradient(90deg, transparent 0%, #000 12%, #000 88%, transparent 100%);
@@ -381,6 +395,14 @@
   background: var(--ds-linux);
 }
 
+.download-stats__ribbon-seg[data-platform="android"] {
+  background: var(--ds-android);
+}
+
+.download-stats__ribbon-seg[data-platform="ios"] {
+  background: var(--ds-ios);
+}
+
 .download-stats__ribbon-seg[data-platform="web"] {
   background: var(--ds-web);
 }
@@ -431,6 +453,14 @@
 
 .download-stats__platform[data-platform="linux"] .download-stats__platform-icon {
   color: var(--ds-linux);
+}
+
+.download-stats__platform[data-platform="android"] .download-stats__platform-icon {
+  color: var(--ds-android);
+}
+
+.download-stats__platform[data-platform="ios"] .download-stats__platform-icon {
+  color: var(--ds-ios);
 }
 
 .download-stats__platform[data-platform="web"] .download-stats__platform-icon {
@@ -490,6 +520,14 @@
 
 .download-stats__platform[data-platform="linux"] .download-stats__fill {
   background: linear-gradient(90deg, var(--ds-linux), oklch(0.7 0.08 155));
+}
+
+.download-stats__platform[data-platform="android"] .download-stats__fill {
+  background: linear-gradient(90deg, var(--ds-android), oklch(0.72 0.12 145));
+}
+
+.download-stats__platform[data-platform="ios"] .download-stats__fill {
+  background: linear-gradient(90deg, var(--ds-ios), oklch(0.72 0.07 220));
 }
 
 .download-stats__platform[data-platform="web"] .download-stats__fill {

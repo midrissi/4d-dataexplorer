@@ -42,7 +42,8 @@ import {
   X,
   Zap,
 } from 'lucide-react'
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
+import { AppBrandIcon } from '~/components/AppBrandIcon'
 import { AppearanceControls } from '~/components/AppearanceControls'
 import { DesktopUpdateFooterControl } from '~/components/DesktopUpdateFooterControl'
 import { VirtualIconGrid } from '~/components/VirtualIconGrid'
@@ -88,6 +89,7 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
   const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const testAbortRef = useRef<AbortController | null>(null)
 
   // Form fields
   const [name, setName] = useState('')
@@ -169,6 +171,11 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
   const handleTestConnection = useCallback(async () => {
     const url = baseUrl.trim()
     if (!url) return
+
+    testAbortRef.current?.abort()
+    const controller = new AbortController()
+    testAbortRef.current = controller
+
     setTesting(true)
     setTestResult(null)
     // Honor the form's skip-SSL toggle for this test request
@@ -176,6 +183,7 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
     const timeoutMs = timeout ? Number.parseInt(timeout, 10) : undefined
     const fetchInit = {
       skipSsl: skipSSL,
+      signal: controller.signal,
       connectTimeout:
         typeof timeoutMs === 'number' && Number.isFinite(timeoutMs) && timeoutMs > 0
           ? timeoutMs
@@ -207,6 +215,7 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
           credentials: 'include',
           ...fetchInit,
         })
+        if (controller.signal.aborted) return
         const loginData = (await loginResponse.json().catch(() => ({}))) as {
           isLogged?: boolean
           errors?: string[]
@@ -238,6 +247,7 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
         credentials: 'include',
         ...fetchInit,
       })
+      if (controller.signal.aborted) return
       if (response.ok) {
         setTestResult({ ok: true, message: 'Connection successful' })
       } else if (response.status === 401) {
@@ -249,15 +259,32 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
         setTestResult({ ok: false, message: `Server returned ${response.status}` })
       }
     } catch (err) {
+      if (
+        controller.signal.aborted ||
+        (err instanceof DOMException && err.name === 'AbortError') ||
+        (err instanceof Error && err.name === 'AbortError')
+      ) {
+        return
+      }
       setTestResult({
         ok: false,
         message: formatThrownError(err, 'Connection failed'),
       })
     } finally {
-      setTesting(false)
+      if (testAbortRef.current === controller) {
+        testAbortRef.current = null
+      }
+      if (!controller.signal.aborted) {
+        setTesting(false)
+      }
     }
   }, [baseUrl, accessKey, headers, cookies, username, password, skipSSL, timeout])
 
+  const handleCancelTest = useCallback(() => {
+    testAbortRef.current?.abort()
+    testAbortRef.current = null
+    setTesting(false)
+  }, [])
   const handleConnect = useCallback(
     async (connection: ConnectionConfig) => {
       setSubmitting(true)
@@ -324,6 +351,9 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
 
   // Cancel the form and return to the home / connections view
   const handleCancel = useCallback(() => {
+    testAbortRef.current?.abort()
+    testAbortRef.current = null
+    setTesting(false)
     resetForm()
     setShowForm(false)
   }, [resetForm])
@@ -795,8 +825,8 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
               >
                 <div className="flex items-center gap-3">
                   <div className="relative shrink-0">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary shadow-primary/25 shadow-sm sm:h-11 sm:w-11">
-                      <Database className="h-5 w-5 text-primary-foreground" />
+                    <div className="h-10 w-10 shadow-primary/25 shadow-sm sm:h-11 sm:w-11">
+                      <AppBrandIcon className="h-full w-full" />
                     </div>
                     <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-background shadow-xs ring-1 ring-border">
                       <Sparkles className="h-3 w-3 text-primary" />
@@ -1310,28 +1340,37 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
 
                   <div className="flex flex-col gap-2 border-border/60 border-t bg-background/50 px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex flex-wrap gap-1.5">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-6 text-xs"
-                        onClick={handleTestConnection}
-                        disabled={!baseUrl.trim() || testing}
-                      >
-                        {testing ? (
-                          <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                        ) : (
+                      {testing ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-6 text-xs"
+                          onClick={handleCancelTest}
+                        >
+                          <X className="mr-1.5 h-3.5 w-3.5" />
+                          {t('connectionScreen.formCancelRequest')}
+                        </Button>
+                      ) : (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-6 text-xs"
+                          onClick={handleTestConnection}
+                          disabled={!baseUrl.trim()}
+                        >
                           <Wifi className="mr-1.5 h-3.5 w-3.5" />
-                        )}
-                        {t('connectionScreen.formTest')}
-                      </Button>
+                          {t('connectionScreen.formTest')}
+                        </Button>
+                      )}
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         className="h-6 text-xs"
                         onClick={handleSave}
-                        disabled={!baseUrl.trim() || submitting}
+                        disabled={!baseUrl.trim() || submitting || testing}
                       >
                         <Save className="mr-1.5 h-3.5 w-3.5" />
                         {t('connectionScreen.formSave')}
@@ -1344,7 +1383,7 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
                         size="sm"
                         className="h-6 text-xs"
                         onClick={handleQuickConnect}
-                        disabled={!baseUrl.trim() || submitting}
+                        disabled={!baseUrl.trim() || submitting || testing}
                       >
                         <Zap className="mr-1.5 h-3.5 w-3.5" />
                         {t('connectionScreen.formQuickConnect')}
@@ -1353,7 +1392,7 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
                         type="submit"
                         size="sm"
                         className="h-6 min-w-32 text-xs"
-                        disabled={!baseUrl.trim() || submitting}
+                        disabled={!baseUrl.trim() || submitting || testing}
                       >
                         {submitting ? (
                           <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />

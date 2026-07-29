@@ -40,7 +40,8 @@
     "release": "bun scripts/release.ts",
     "release:patch": "bun scripts/release.ts patch",
     "release:minor": "bun scripts/release.ts minor",
-    "release:major": "bun scripts/release.ts major"
+    "release:major": "bun scripts/release.ts major",
+    "branding": "bun scripts/update-branding.ts branding/icon-source.svg"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.3",

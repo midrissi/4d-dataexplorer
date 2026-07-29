@@ -7,6 +7,11 @@ declare module '*.md?raw' {
   export default content
 }
 
+declare module '*.svg?url' {
+  const src: string
+  export default src
+}
+
 declare module 'react-syntax-highlighter' {
   import type { ComponentType } from 'react'
   export interface SyntaxHighlighterProps {

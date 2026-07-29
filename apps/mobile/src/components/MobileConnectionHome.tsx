@@ -1,5 +1,6 @@
 import { Alert, AlertDescription, Button, cn } from '@4d/ui'
 import { ArrowRight, Database, Info, Loader2, Pencil, Plus, Trash2 } from 'lucide-react'
+import { AppBrandIcon } from '~/components/AppBrandIcon'
 import { AppearanceControls } from '~/components/AppearanceControls'
 import { useTranslation } from '~/i18n'
 import { resolveLucideIcon } from '~/lib/lucide-icon'
@@ -32,11 +33,8 @@ export function MobileConnectionHome({
     <div className="flex h-full min-h-0 flex-col bg-background">
       <header className="relative z-20 shrink-0 px-5 pt-[max(1.25rem,var(--app-safe-top))] pb-3">
         <div className="flex items-center gap-3">
-          <div
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary shadow-xs"
-            aria-hidden
-          >
-            <Database className="h-5 w-5 text-primary-foreground" />
+          <div className="h-11 w-11 shrink-0 shadow-xs" aria-hidden>
+            <AppBrandIcon className="h-full w-full" />
           </div>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
@@ -58,11 +56,8 @@ export function MobileConnectionHome({
           </div>
         ) : empty ? (
           <div className="flex flex-1 flex-col items-center justify-center px-2 py-8 text-center">
-            <div
-              className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10"
-              aria-hidden
-            >
-              <Database className="h-8 w-8 text-primary" />
+            <div className="mb-5 h-16 w-16" aria-hidden>
+              <AppBrandIcon className="h-full w-full" />
             </div>
             <h2 className="max-w-[18rem] font-semibold text-foreground text-xl tracking-tight">
               {t('connectionScreen.emptyTitle')}

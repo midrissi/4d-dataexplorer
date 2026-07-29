@@ -2,7 +2,7 @@
 name = "dataexplorer-mobile"
 version = "1.3.4"
 edition = "2021"
-description = "4D Data Explorer Mobile Application (Beta)"
+description = "4D Data Explorer Mobile Application"
 
 [lib]
 name = "dataexplorer_mobile_lib"

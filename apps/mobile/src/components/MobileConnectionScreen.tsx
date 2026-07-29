@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from '~/i18n'
 import { formatThrownError } from '~/lib/api'
 import { setSkipSSL as setPlatformSkipSSL } from '~/lib/platform'
+import { COLOR_PRESETS, type ColorPreset, ICON_PRESETS } from '~/store/settings'
 import {
   type ConnectionConfig,
   getConnections,
@@ -12,16 +13,26 @@ import {
 import { desktopFetch } from '~desktop/lib/http'
 import { MobileConnectionForm } from './MobileConnectionForm'
 import { MobileConnectionHome } from './MobileConnectionHome'
+import type { KeyValueEntry } from './MobileKeyValueEntries'
 
 type MobileConnectionScreenProps = {
   onConnect: (connection: ConnectionConfig) => void
   initialEdit?: ConnectionConfig | null
 }
 
-type HeaderEntry = { id: string; key: string; value: string }
-
-function newHeaderEntry(key = '', value = ''): HeaderEntry {
+function newHeaderEntry(key = '', value = ''): KeyValueEntry {
   return { id: `h_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`, key, value }
+}
+
+function isAbortError(error: unknown): boolean {
+  return (
+    (error instanceof DOMException && error.name === 'AbortError') ||
+    (error instanceof Error && error.name === 'AbortError')
+  )
+}
+
+function isColorPreset(value: string | undefined): value is ColorPreset {
+  return Boolean(value && value in COLOR_PRESETS)
 }
 
 export function MobileConnectionScreen({ onConnect, initialEdit }: MobileConnectionScreenProps) {
@@ -33,6 +44,7 @@ export function MobileConnectionScreen({ onConnect, initialEdit }: MobileConnect
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const testAbortRef = useRef<AbortController | null>(null)
 
   const [editingId, setEditingId] = useState<string | null>(null)
   const [name, setName] = useState('')
@@ -40,12 +52,27 @@ export function MobileConnectionScreen({ onConnect, initialEdit }: MobileConnect
   const [accessKey, setAccessKey] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [headers, setHeaders] = useState<HeaderEntry[]>([])
-  const [cookies, setCookies] = useState<HeaderEntry[]>([])
+  const [headers, setHeaders] = useState<KeyValueEntry[]>([])
+  const [cookies, setCookies] = useState<KeyValueEntry[]>([])
+  const [icon, setIcon] = useState('Database')
+  const [color, setColor] = useState<ColorPreset>('default')
+  const [iconScrollNonce, setIconScrollNonce] = useState(0)
   const [skipSSL, setSkipSSL] = useState(false)
   const [timeout, setTimeoutMs] = useState('')
   const [readonly, setReadonly] = useState(false)
   const [showAdvanced, setShowAdvanced] = useState(false)
+
+  const abortActiveTest = useCallback(() => {
+    testAbortRef.current?.abort()
+    testAbortRef.current = null
+  }, [])
+
+  const randomizeAppearance = useCallback(() => {
+    const colorPool = (Object.keys(COLOR_PRESETS) as ColorPreset[]).filter((c) => c !== 'default')
+    setIcon(ICON_PRESETS[Math.floor(Math.random() * ICON_PRESETS.length)])
+    setColor(colorPool[Math.floor(Math.random() * colorPool.length)])
+    setIconScrollNonce((n) => n + 1)
+  }, [])
 
   const refresh = useCallback(async () => {
     const list = await getConnections()
@@ -57,33 +84,40 @@ export function MobileConnectionScreen({ onConnect, initialEdit }: MobileConnect
     void refresh()
   }, [refresh])
 
-  const fillForm = useCallback((connection: ConnectionConfig) => {
-    setEditingId(connection.id)
-    setName(connection.name)
-    setBaseUrl(connection.baseUrl)
-    setAccessKey(connection.accessKey ?? '')
-    setUsername(connection.username ?? '')
-    setPassword(connection.password ?? '')
-    setHeaders(
-      connection.headers
+  useEffect(() => () => abortActiveTest(), [abortActiveTest])
+
+  const fillForm = useCallback(
+    (connection: ConnectionConfig) => {
+      abortActiveTest()
+      setEditingId(connection.id)
+      setName(connection.name)
+      setBaseUrl(connection.baseUrl)
+      setAccessKey(connection.accessKey ?? '')
+      setUsername(connection.username ?? '')
+      setPassword(connection.password ?? '')
+      const nextHeaders = connection.headers
         ? Object.entries(connection.headers).map(([key, value]) => newHeaderEntry(key, value))
         : []
-    )
-    setCookies(
-      connection.cookies
+      const nextCookies = connection.cookies
         ? Object.entries(connection.cookies).map(([key, value]) => newHeaderEntry(key, value))
         : []
-    )
-    setSkipSSL(Boolean(connection.skipSSL))
-    setTimeoutMs(connection.timeout ? String(connection.timeout) : '')
-    setReadonly(Boolean(connection.readonly))
-    setShowAdvanced(false)
-    setTestResult(null)
-    setError(null)
-    setSubmitting(false)
-    setTesting(false)
-    setShowForm(true)
-  }, [])
+      setHeaders(nextHeaders)
+      setCookies(nextCookies)
+      setIcon(connection.icon ?? 'Database')
+      setColor(isColorPreset(connection.color) ? connection.color : 'default')
+      setIconScrollNonce((n) => n + 1)
+      setSkipSSL(Boolean(connection.skipSSL))
+      setTimeoutMs(connection.timeout ? String(connection.timeout) : '')
+      setReadonly(Boolean(connection.readonly))
+      setShowAdvanced(nextHeaders.length > 0 || nextCookies.length > 0)
+      setTestResult(null)
+      setError(null)
+      setSubmitting(false)
+      setTesting(false)
+      setShowForm(true)
+    },
+    [abortActiveTest]
+  )
 
   useEffect(() => {
     if (initialEdit) fillForm(initialEdit)
@@ -98,6 +132,9 @@ export function MobileConnectionScreen({ onConnect, initialEdit }: MobileConnect
     setPassword('')
     setHeaders([])
     setCookies([])
+    setIcon('Database')
+    setColor('default')
+    setIconScrollNonce(0)
     setSkipSSL(false)
     setTimeoutMs('')
     setReadonly(false)
@@ -107,21 +144,46 @@ export function MobileConnectionScreen({ onConnect, initialEdit }: MobileConnect
   }, [])
 
   const openNewForm = useCallback(() => {
+    abortActiveTest()
     resetForm()
+    randomizeAppearance()
     setSubmitting(false)
     setTesting(false)
     setShowForm(true)
-  }, [resetForm])
+  }, [abortActiveTest, randomizeAppearance, resetForm])
+
+  const updateHeader = useCallback((index: number, field: 'key' | 'value', value: string) => {
+    setHeaders((prev) =>
+      prev.map((entry, i) => (i === index ? { ...entry, [field]: value } : entry))
+    )
+  }, [])
+
+  const updateCookie = useCallback((index: number, field: 'key' | 'value', value: string) => {
+    setCookies((prev) =>
+      prev.map((entry, i) => (i === index ? { ...entry, [field]: value } : entry))
+    )
+  }, [])
+
+  const handleCancelTest = useCallback(() => {
+    abortActiveTest()
+    setTesting(false)
+  }, [abortActiveTest])
 
   const handleTestConnection = useCallback(async () => {
     const url = baseUrl.trim()
     if (!url) return
+
+    abortActiveTest()
+    const controller = new AbortController()
+    testAbortRef.current = controller
+
     setTesting(true)
     setTestResult(null)
     setPlatformSkipSSL(skipSSL)
     const timeoutMs = timeout ? Number.parseInt(timeout, 10) : undefined
     const fetchInit = {
       skipSsl: skipSSL,
+      signal: controller.signal,
       connectTimeout:
         typeof timeoutMs === 'number' && Number.isFinite(timeoutMs) && timeoutMs > 0
           ? timeoutMs
@@ -151,6 +213,7 @@ export function MobileConnectionScreen({ onConnect, initialEdit }: MobileConnect
           credentials: 'include',
           ...fetchInit,
         })
+        if (controller.signal.aborted) return
         const loginData = (await loginResponse.json().catch(() => ({}))) as {
           isLogged?: boolean
           errors?: string[]
@@ -182,6 +245,7 @@ export function MobileConnectionScreen({ onConnect, initialEdit }: MobileConnect
         credentials: 'include',
         ...fetchInit,
       })
+      if (controller.signal.aborted) return
       if (response.ok) {
         setTestResult({ ok: true, message: t('mobile.testSuccess') })
       } else if (response.status === 401) {
@@ -196,14 +260,31 @@ export function MobileConnectionScreen({ onConnect, initialEdit }: MobileConnect
         })
       }
     } catch (err) {
+      if (isAbortError(err) || controller.signal.aborted) return
       setTestResult({
         ok: false,
         message: formatThrownError(err, t('mobile.testFailed')),
       })
     } finally {
-      setTesting(false)
+      if (testAbortRef.current === controller) {
+        testAbortRef.current = null
+      }
+      if (!controller.signal.aborted) {
+        setTesting(false)
+      }
     }
-  }, [baseUrl, accessKey, headers, cookies, username, password, skipSSL, timeout, t])
+  }, [
+    abortActiveTest,
+    baseUrl,
+    accessKey,
+    headers,
+    cookies,
+    username,
+    password,
+    skipSSL,
+    timeout,
+    t,
+  ])
 
   const buildConnectionInput = useCallback((): Omit<ConnectionConfig, 'id' | 'lastUsed'> & {
     id?: string
@@ -235,6 +316,8 @@ export function MobileConnectionScreen({ onConnect, initialEdit }: MobileConnect
       skipSSL: skipSSL || undefined,
       timeout: timeout ? Number.parseInt(timeout, 10) : undefined,
       readonly: readonly || undefined,
+      color: color !== 'default' ? color : undefined,
+      icon: icon !== 'Database' ? icon : undefined,
     }
   }, [
     baseUrl,
@@ -248,6 +331,8 @@ export function MobileConnectionScreen({ onConnect, initialEdit }: MobileConnect
     timeout,
     readonly,
     editingId,
+    color,
+    icon,
   ])
 
   const handleConnectSaved = useCallback(
@@ -268,6 +353,8 @@ export function MobileConnectionScreen({ onConnect, initialEdit }: MobileConnect
 
   const handleSaveAndConnect = useCallback(async () => {
     if (!baseUrl.trim()) return
+    abortActiveTest()
+    setTesting(false)
     setSubmitting(true)
     setError(null)
     try {
@@ -279,7 +366,7 @@ export function MobileConnectionScreen({ onConnect, initialEdit }: MobileConnect
     } finally {
       setSubmitting(false)
     }
-  }, [baseUrl, buildConnectionInput, onConnect, t])
+  }, [abortActiveTest, baseUrl, buildConnectionInput, onConnect, t])
 
   const handleSaveOnly = useCallback(async () => {
     if (!baseUrl.trim()) return
@@ -305,15 +392,35 @@ export function MobileConnectionScreen({ onConnect, initialEdit }: MobileConnect
     [refresh]
   )
 
+  const recentUrls = useMemo(() => {
+    const seen = new Set<string>()
+    const urls: string[] = []
+    for (const connection of connections) {
+      const url = connection.baseUrl.trim().replace(/\/$/, '')
+      if (!url) continue
+      const key = url.toLowerCase()
+      if (seen.has(key)) continue
+      seen.add(key)
+      urls.push(url)
+    }
+    return urls
+  }, [connections])
+
   if (showForm) {
     return (
       <MobileConnectionForm
         editing={Boolean(editingId)}
         baseUrl={baseUrl}
+        recentUrls={recentUrls}
         name={name}
         accessKey={accessKey}
         username={username}
         password={password}
+        headers={headers}
+        cookies={cookies}
+        icon={icon}
+        color={color}
+        iconScrollNonce={iconScrollNonce}
         skipSSL={skipSSL}
         readonly={readonly}
         timeout={timeout}
@@ -330,12 +437,24 @@ export function MobileConnectionScreen({ onConnect, initialEdit }: MobileConnect
         onSkipSSLChange={setSkipSSL}
         onReadonlyChange={setReadonly}
         onTimeoutChange={setTimeoutMs}
+        onIconChange={setIcon}
+        onColorChange={setColor}
+        onRandomizeAppearance={randomizeAppearance}
+        onAddHeader={() => setHeaders((prev) => [...prev, newHeaderEntry()])}
+        onRemoveHeader={(index) => setHeaders((prev) => prev.filter((_, i) => i !== index))}
+        onChangeHeader={updateHeader}
+        onAddCookie={() => setCookies((prev) => [...prev, newHeaderEntry()])}
+        onRemoveCookie={(index) => setCookies((prev) => prev.filter((_, i) => i !== index))}
+        onChangeCookie={updateCookie}
         onToggleAdvanced={() => setShowAdvanced((v) => !v)}
         onCancel={() => {
+          abortActiveTest()
+          setTesting(false)
           resetForm()
           setShowForm(false)
         }}
         onTest={() => void handleTestConnection()}
+        onCancelTest={handleCancelTest}
         onSave={() => void handleSaveOnly()}
         onConnect={() => void handleSaveAndConnect()}
       />

@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # Boot an iOS Simulator, wait until ready, then run `tauri ios:dev`.
 # Avoids: simctl install → "Unable to lookup in current state: Shutdown" (code 149/405).
+#
+# Also pins TMPDIR + patches the Xcode Build Rust Code phase (same as ios-build.sh)
+# so xcode-script can reach the CLI options WebSocket. Without that, builds fail with:
+#   failed to build WebSocket client … Connection refused
 set -euo pipefail
 
 DEVICE_NAME="${1:-${IOS_SIMULATOR:-iPhone 16 Pro Max}}"
@@ -33,5 +37,10 @@ else
   echo "Simulator already booted: ${DEVICE_NAME} (${udid})"
 fi
 
-cd "$(dirname "$0")/.."
-exec bunx tauri ios dev "$DEVICE_NAME"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# shellcheck source=ios-prepare-xcode.sh
+source "$SCRIPT_DIR/ios-prepare-xcode.sh"
+
+shift || true
+echo "Running: bunx tauri ios dev ${DEVICE_NAME} $*"
+exec bunx tauri ios dev "$DEVICE_NAME" "$@"

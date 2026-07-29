@@ -652,7 +652,20 @@ export function ConsolePanel() {
         )}
       >
         <div className="flex min-w-0 items-center gap-2">
-          {!mobile ? <span className="font-medium text-xs">{t('console.title')}</span> : null}
+          {mobile ? (
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-9 shrink-0 gap-1.5 px-2.5 text-sm"
+              onClick={() => setConsoleOpen(false)}
+              aria-label={t('console.close')}
+            >
+              <X className="h-4 w-4" aria-hidden />
+              {t('console.done')}
+            </Button>
+          ) : (
+            <span className="font-medium text-xs">{t('console.title')}</span>
+          )}
           <span className="rounded bg-muted px-1.5 py-px text-[10px] text-muted-foreground tabular-nums">
             {entries.length}
           </span>

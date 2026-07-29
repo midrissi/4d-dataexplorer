@@ -1,5 +1,5 @@
 import { AuthenticationError, type RESTClientError } from '@4d/rest'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { AccessKeyScreen } from './components/AccessKeyScreen'
 import { DataclassView } from './components/DataclassView'
 import { EmptyState } from './components/EmptyState'
@@ -38,6 +38,7 @@ function AppContent({ onDisconnect, onSwitchConnection, onEditConnection }: AppC
   const [loadingError, setLoadingError] = useState<string | null>(null)
   const [savedAccessKey, setSavedAccessKey] = useState('')
   const [accessKeyReason, setAccessKeyReason] = useState<string | null>(null)
+  const loadGenerationRef = useRef(0)
 
   const syncActiveTab = useDataExplorerStore((state) => state.syncActiveTab)
   const activeTabId = useActiveTabId()
@@ -93,6 +94,7 @@ function AppContent({ onDisconnect, onSwitchConnection, onEditConnection }: AppC
 
   // Initialize the app
   const initializeApp = useCallback(async () => {
+    const generation = ++loadGenerationRef.current
     setAppState('loading')
     setLoadingError(null)
     setAccessKeyReason(null)
@@ -103,6 +105,7 @@ function AppContent({ onDisconnect, onSwitchConnection, onEditConnection }: AppC
 
     try {
       const sessionOk = await ensureSession()
+      if (generation !== loadGenerationRef.current) return
       if (!sessionOk) {
         setAppState('needsAccessKey')
         return
@@ -111,11 +114,13 @@ function AppContent({ onDisconnect, onSwitchConnection, onEditConnection }: AppC
       // Step 1: Initialize storage (fetches catalog BASEID)
       updateStep('catalog', { status: 'loading', detail: t('loading.fetchingCatalog') })
       await api.initializeStorage()
+      if (generation !== loadGenerationRef.current) return
       updateStep('catalog', { status: 'done', detail: t('loading.connected') })
 
       // Step 2: Fetch dataclasses
       updateStep('dataclasses', { status: 'loading', detail: t('loading.fetchingMetadata') })
       const fetchedDataclasses = await api.getDataclasses()
+      if (generation !== loadGenerationRef.current) return
 
       // Update store directly
       useDataExplorerStore.setState({
@@ -136,12 +141,14 @@ function AppContent({ onDisconnect, onSwitchConnection, onEditConnection }: AppC
         setAppState('ready')
       }
     } catch (error) {
+      if (generation !== loadGenerationRef.current) return
       const is401 =
         error instanceof AuthenticationError ||
         (error && typeof error === 'object' && (error as RESTClientError).statusCode === 401)
       if (is401) {
         const storeApi = getConnectionStoreAPI()
         const connection = await storeApi?.getActiveConnection()
+        if (generation !== loadGenerationRef.current) return
         const key = connection?.accessKey?.trim()
         if (key) setSavedAccessKey(key)
         setAccessKeyReason(formatThrownError(error, t('loading.accessKeyAuthRequired')))
@@ -161,6 +168,12 @@ function AppContent({ onDisconnect, onSwitchConnection, onEditConnection }: AppC
     }
   }, [t, updateStep, ensureSession])
 
+  const leaveToConnections = onDisconnect ?? onSwitchConnection ?? onEditConnection
+
+  const handleCancelLoading = useCallback(() => {
+    loadGenerationRef.current += 1
+    leaveToConnections?.()
+  }, [leaveToConnections])
   const handleAccessKeySubmit = useCallback(
     async (accessKey: string) => {
       await api.loginWithAccessKey(accessKey)
@@ -206,7 +219,8 @@ function AppContent({ onDisconnect, onSwitchConnection, onEditConnection }: AppC
         steps={loadingSteps}
         error={loadingError}
         onRetry={appState === 'error' ? initializeApp : undefined}
-        onDisconnect={appState === 'error' ? onDisconnect : undefined}
+        onCancel={appState === 'loading' && leaveToConnections ? handleCancelLoading : undefined}
+        onDisconnect={appState === 'error' ? leaveToConnections : undefined}
       />
     )
   }
@@ -259,6 +273,7 @@ function AppContent({ onDisconnect, onSwitchConnection, onEditConnection }: AppC
 function MobileExplorerShell() {
   const { t } = useTranslation()
   const { catalogOpen, closeCatalog } = useMobileCatalog()
+  const activeTabId = useActiveTabId()
   const sidebarCollapsed = useSettingsStore((state) => state.sidebarCollapsed)
   const setSidebarCollapsed = useSettingsStore((state) => state.setSidebarCollapsed)
 
@@ -266,6 +281,13 @@ function MobileExplorerShell() {
   useEffect(() => {
     if (!sidebarCollapsed) setSidebarCollapsed(true)
   }, [sidebarCollapsed, setSidebarCollapsed])
+
+  // Settings / tools / other pages open as tabs under the catalog overlay.
+  // Close the drawer whenever navigation changes so it doesn't stay on top.
+  useEffect(() => {
+    if (activeTabId == null) return
+    closeCatalog()
+  }, [activeTabId, closeCatalog])
 
   return (
     <div className="relative flex h-full min-h-0 flex-col">

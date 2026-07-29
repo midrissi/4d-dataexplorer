@@ -88,6 +88,10 @@ jobs:
         working-directory: apps/mobile
         run: bunx tauri android init --ci --skip-targets-install
 
+      - name: Patch Android splash screen
+        working-directory: apps/mobile
+        run: bash ./scripts/patch-mobile-splash.sh
+
       - name: Build Android APK (debug, aarch64)
         working-directory: apps/mobile
         env:

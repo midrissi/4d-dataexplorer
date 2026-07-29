@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import DataExplorerApp from '~/App'
+import { AppBrandIcon } from '~/components/AppBrandIcon'
 import { useTranslation } from '~/i18n'
 import { reconfigureClient } from '~/lib/api'
 import {
@@ -122,9 +123,9 @@ export function MobileApp() {
     <div className="flex h-full min-h-0 w-full flex-col">
       {state === 'loading' ? (
         <ThemeProvider>
-          <div className="flex h-full w-full flex-col items-center justify-center gap-3 bg-background">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            <p className="text-muted-foreground text-xs">{t('mobile.loading')}</p>
+          <div className="flex h-full w-full flex-col items-center justify-center gap-4 bg-[#12141c]">
+            <AppBrandIcon className="h-24 w-24 shadow-[0_12px_40px_-18px_rgb(234_88_12_/_.55)]" />
+            <p className="text-white/55 text-xs">{t('mobile.loading')}</p>
           </div>
         </ThemeProvider>
       ) : state === 'connection-screen' ? (

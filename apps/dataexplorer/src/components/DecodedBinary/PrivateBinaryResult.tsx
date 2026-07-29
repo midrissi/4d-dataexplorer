@@ -6,6 +6,7 @@ import {
   PRIVATE_BINARY_OBJECT_KEY,
 } from '~/components/BinaryObjectViewer'
 import { useTranslation } from '~/i18n'
+import { isMobileShell } from '~/lib/platform'
 
 type BinaryResultView = 'binary' | 'json'
 
@@ -31,6 +32,7 @@ export function PrivateBinaryResult({
   className,
 }: PrivateBinaryResultProps) {
   const { t } = useTranslation()
+  const mobile = isMobileShell()
   const [view, setView] = useState<BinaryResultView>('binary')
 
   if (!isPrivateBinaryObject(value)) return null
@@ -41,7 +43,12 @@ export function PrivateBinaryResult({
     <div className={cn('flex h-full min-h-0 flex-1 flex-col gap-2 overflow-hidden', className)}>
       {showJsonToggle ? (
         <div className="flex shrink-0 justify-end">
-          <div className="inline-flex h-6 shrink-0 items-stretch overflow-hidden rounded-sm border p-px">
+          <div
+            className={cn(
+              'inline-flex shrink-0 items-stretch overflow-hidden rounded-sm border p-px',
+              mobile ? 'h-10 rounded-lg' : 'h-6'
+            )}
+          >
             {(
               [
                 ['binary', t('entity.binaryObject')],
@@ -52,7 +59,8 @@ export function PrivateBinaryResult({
                 key={id}
                 type="button"
                 className={cn(
-                  'inline-flex h-5 cursor-pointer items-center px-2 text-[11px] leading-none transition-colors',
+                  'inline-flex cursor-pointer items-center leading-none transition-colors',
+                  mobile ? 'h-9 px-3 text-sm' : 'h-5 px-2 text-[11px]',
                   view === id
                     ? 'bg-muted font-medium text-foreground'
                     : 'text-muted-foreground hover:text-foreground'

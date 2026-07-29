@@ -10,6 +10,13 @@ import './index.css'
 const rootElement = document.getElementById('root')
 if (!rootElement) throw new Error('Failed to find the root element')
 
+function dismissBootSplash(): void {
+  const splash = document.getElementById('boot-splash')
+  if (!splash) return
+  splash.classList.add('is-hiding')
+  window.setTimeout(() => splash.remove(), 320)
+}
+
 createRoot(rootElement).render(
   <StrictMode>
     <Suspense fallback={null}>
@@ -23,3 +30,8 @@ createRoot(rootElement).render(
     </Suspense>
   </StrictMode>
 )
+
+// First paint with React tree is enough to hand off from the HTML splash.
+requestAnimationFrame(() => {
+  requestAnimationFrame(dismissBootSplash)
+})

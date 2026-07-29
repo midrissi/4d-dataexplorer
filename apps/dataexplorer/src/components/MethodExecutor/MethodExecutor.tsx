@@ -42,7 +42,7 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
   const removeRun = useMethodRunHistoryStore((state) => state.removeRun)
   const clearRuns = useMethodRunHistoryStore((state) => state.clearRuns)
 
-  const [scope, setScope] = useState<MethodScope>(seed?.scope ?? 'dataclass')
+  const [scope, setScope] = useState<MethodScope>(seed?.scope ?? 'catalog')
   const [methodName, setMethodName] = useState(seed?.methodName ?? '')
   const [dataClass, setDataClass] = useState(seed?.dataClass ?? '')
   const [key, setKey] = useState(seed?.key === undefined ? '' : String(seed.key))

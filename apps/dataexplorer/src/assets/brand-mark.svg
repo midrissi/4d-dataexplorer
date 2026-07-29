@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+  <title>Data Explorer</title>
+  <defs>
+    <clipPath id="deBrandclip">
+      <rect width="1024" height="1024" rx="229.12" ry="229.12"/>
+    </clipPath>
+    <!-- Clip grooves to the cylinder body so bands never spill past the walls. -->
+        <clipPath id="deBrandcylinderBody">
+          <path
+            d="M-200 -152
+               C-200 -152 -200 180 -200 180
+               C-200 234 -110 278 0 278
+               C110 278 200 234 200 180
+               L200 -152
+               Z"
+          />
+        </clipPath>
+  </defs>
+  <g clip-path="url(#deBrandclip)">
+    <!-- Full-bleed solid fill: platform masks apply the squircle. -->
+      <rect width="1024" height="1024" fill="#f97316"/>
+
+      <!--
+        Cylinder local bounds: top ≈ -224, bottom ≈ 278 → mid ≈ 27.
+        Scale 1.42 so the mark stays readable at favicon / brand-mark sizes.
+        Center on canvas: translate → scale → nudge mid to origin.
+      -->
+      <g transform="translate(512 512) scale(1.42) translate(0 -27)">
+        <path
+          d="M-200 -152
+             C-200 -152 -200 180 -200 180
+             C-200 234 -110 278 0 278
+             C110 278 200 234 200 180
+             L200 -152
+             Z"
+          fill="#ffffff"
+        />
+
+        <g clip-path="url(#deBrandcylinderBody)">
+          <ellipse cx="0" cy="-24" rx="200" ry="52" fill="#9a3412" fill-opacity="0.22"/>
+          <ellipse cx="0" cy="96" rx="200" ry="52" fill="#9a3412" fill-opacity="0.22"/>
+        </g>
+
+        <!-- Top lid: sit above the body so the ellipse rim stays clean. -->
+        <ellipse cx="0" cy="-152" rx="200" ry="72" fill="#ffffff"/>
+        <ellipse
+          cx="0"
+          cy="-152"
+          rx="200"
+          ry="72"
+          fill="none"
+          stroke="#9a3412"
+          stroke-width="5"
+          stroke-opacity="0.28"
+        />
+      </g>
+  </g>
+</svg>

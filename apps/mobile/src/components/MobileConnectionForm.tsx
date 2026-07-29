@@ -1,4 +1,4 @@
-import { Alert, AlertDescription, Button, Input, Label, PasswordInput, Switch } from '@4d/ui'
+import { Alert, AlertDescription, Button, cn, Input, Label, PasswordInput, Switch } from '@4d/ui'
 import {
   ArrowLeft,
   ArrowRight,
@@ -8,20 +8,30 @@ import {
   Loader2,
   Save,
   Wifi,
+  X,
   XCircle,
 } from 'lucide-react'
+import { useEffect, useRef } from 'react'
 import { AppearanceControls } from '~/components/AppearanceControls'
 import { useTranslation } from '~/i18n'
-
-const PREDEFINED_URLS = ['http://localhost:7080', 'https://localhost:7443']
+import type { ColorPreset } from '~/store/settings'
+import { MobileConnectionAppearance } from './MobileConnectionAppearance'
+import { type KeyValueEntry, MobileKeyValueEntries } from './MobileKeyValueEntries'
+import { MobileServerUrlField } from './MobileServerUrlField'
 
 type MobileConnectionFormProps = {
   editing: boolean
   baseUrl: string
+  recentUrls?: string[]
   name: string
   accessKey: string
   username: string
   password: string
+  headers: KeyValueEntry[]
+  cookies: KeyValueEntry[]
+  icon: string
+  color: ColorPreset
+  iconScrollNonce: number
   skipSSL: boolean
   readonly: boolean
   timeout: string
@@ -38,9 +48,19 @@ type MobileConnectionFormProps = {
   onSkipSSLChange: (value: boolean) => void
   onReadonlyChange: (value: boolean) => void
   onTimeoutChange: (value: string) => void
+  onIconChange: (icon: string) => void
+  onColorChange: (color: ColorPreset) => void
+  onRandomizeAppearance: () => void
+  onAddHeader: () => void
+  onRemoveHeader: (index: number) => void
+  onChangeHeader: (index: number, field: 'key' | 'value', value: string) => void
+  onAddCookie: () => void
+  onRemoveCookie: (index: number) => void
+  onChangeCookie: (index: number, field: 'key' | 'value', value: string) => void
   onToggleAdvanced: () => void
   onCancel: () => void
   onTest: () => void
+  onCancelTest: () => void
   onSave: () => void
   onConnect: () => void
 }
@@ -48,10 +68,16 @@ type MobileConnectionFormProps = {
 export function MobileConnectionForm({
   editing,
   baseUrl,
+  recentUrls = [],
   name,
   accessKey,
   username,
   password,
+  headers,
+  cookies,
+  icon,
+  color,
+  iconScrollNonce,
   skipSSL,
   readonly,
   timeout,
@@ -68,14 +94,42 @@ export function MobileConnectionForm({
   onSkipSSLChange,
   onReadonlyChange,
   onTimeoutChange,
+  onIconChange,
+  onColorChange,
+  onRandomizeAppearance,
+  onAddHeader,
+  onRemoveHeader,
+  onChangeHeader,
+  onAddCookie,
+  onRemoveCookie,
+  onChangeCookie,
   onToggleAdvanced,
   onCancel,
   onTest,
+  onCancelTest,
   onSave,
   onConnect,
 }: MobileConnectionFormProps) {
   const { t } = useTranslation()
-  const canSubmit = Boolean(baseUrl.trim()) && !submitting
+  const canSubmit = Boolean(baseUrl.trim()) && !submitting && !testing
+  const advancedRef = useRef<HTMLDivElement>(null)
+  const shouldScrollToAdvancedRef = useRef(false)
+
+  useEffect(() => {
+    if (!showAdvanced || !shouldScrollToAdvancedRef.current) return
+    shouldScrollToAdvancedRef.current = false
+    const frame = window.requestAnimationFrame(() => {
+      advancedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [showAdvanced])
+
+  const handleToggleAdvanced = () => {
+    if (!showAdvanced) {
+      shouldScrollToAdvancedRef.current = true
+    }
+    onToggleAdvanced()
+  }
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-background">
@@ -105,35 +159,12 @@ export function MobileConnectionForm({
       </header>
 
       <div className="relative z-0 min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-5 py-5">
-        <div className="space-y-2">
-          <Label htmlFor="mobile-url">{t('connectionScreen.formUrlLabel')}</Label>
-          <Input
-            id="mobile-url"
-            className="h-11 text-base"
-            value={baseUrl}
-            onChange={(e) => onBaseUrlChange(e.target.value)}
-            placeholder="https://192.168.1.10:8080"
-            inputMode="url"
-            autoCapitalize="none"
-            autoCorrect="off"
-            autoComplete="url"
-          />
-          <div className="flex flex-wrap gap-2">
-            {PREDEFINED_URLS.map((url) => (
-              <Button
-                key={url}
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-9 px-3 text-xs"
-                onClick={() => onBaseUrlChange(url)}
-              >
-                {url.replace(/^https?:\/\//, '')}
-              </Button>
-            ))}
-          </div>
-          <p className="text-muted-foreground text-xs leading-relaxed">{t('mobile.lanHint')}</p>
-        </div>
+        <MobileServerUrlField
+          id="mobile-url"
+          value={baseUrl}
+          recentUrls={recentUrls}
+          onChange={onBaseUrlChange}
+        />
 
         <div className="space-y-2">
           <Label htmlFor="mobile-name">{t('connectionScreen.formNameLabel')}</Label>
@@ -180,8 +211,9 @@ export function MobileConnectionForm({
           type="button"
           variant="ghost"
           className="h-11 w-full justify-between px-1 text-sm"
-          onClick={onToggleAdvanced}
+          onClick={handleToggleAdvanced}
           aria-expanded={showAdvanced}
+          aria-controls="mobile-connection-advanced"
         >
           {t('connectionScreen.formAdvanced')}
           {showAdvanced ? (
@@ -192,42 +224,89 @@ export function MobileConnectionForm({
         </Button>
 
         {showAdvanced ? (
-          <div className="space-y-4 rounded-xl border border-border p-4">
-            <p className="font-medium text-sm">{t('connectionScreen.formBasicAuth')}</p>
-            <div className="space-y-2">
-              <Label htmlFor="mobile-user">{t('connectionScreen.formUsername')}</Label>
-              <Input
-                id="mobile-user"
-                className="h-11 text-base"
-                value={username}
-                onChange={(e) => onUsernameChange(e.target.value)}
-                autoCapitalize="none"
-                autoComplete="username"
+          <div
+            id="mobile-connection-advanced"
+            ref={advancedRef}
+            className={cn(
+              'scroll-mt-3 space-y-5 rounded-xl border border-border p-4',
+              'fade-in slide-in-from-top-1 animate-in duration-200'
+            )}
+          >
+            <MobileConnectionAppearance
+              icon={icon}
+              color={color}
+              iconScrollNonce={iconScrollNonce}
+              onIconChange={onIconChange}
+              onColorChange={onColorChange}
+              onRandomize={onRandomizeAppearance}
+            />
+
+            <div className="space-y-4 border-border border-t pt-4">
+              <p className="font-medium text-sm">{t('connectionScreen.formBasicAuth')}</p>
+              <div className="space-y-2">
+                <Label htmlFor="mobile-user">{t('connectionScreen.formUsername')}</Label>
+                <Input
+                  id="mobile-user"
+                  className="h-11 text-base"
+                  value={username}
+                  onChange={(e) => onUsernameChange(e.target.value)}
+                  autoCapitalize="none"
+                  autoComplete="username"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="mobile-pass">{t('connectionScreen.formPassword')}</Label>
+                <PasswordInput
+                  id="mobile-pass"
+                  className="h-11 text-base"
+                  value={password}
+                  onChange={(e) => onPasswordChange(e.target.value)}
+                  autoComplete="current-password"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="mobile-timeout">{t('connectionScreen.formTimeout')}</Label>
+                <Input
+                  id="mobile-timeout"
+                  className="h-11 text-base"
+                  value={timeout}
+                  onChange={(e) => onTimeoutChange(e.target.value)}
+                  inputMode="numeric"
+                  placeholder="30000"
+                />
+              </div>
+            </div>
+
+            <div className="border-border border-t pt-4">
+              <MobileKeyValueEntries
+                title={t('connectionScreen.formHeaders')}
+                hint={t('connectionScreen.formHeadersHint')}
+                keyPlaceholder={t('connectionScreen.formHeaderName')}
+                valuePlaceholder={t('connectionScreen.formHeaderValue')}
+                entries={headers}
+                onAdd={onAddHeader}
+                onRemove={onRemoveHeader}
+                onChange={onChangeHeader}
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="mobile-pass">{t('connectionScreen.formPassword')}</Label>
-              <PasswordInput
-                id="mobile-pass"
-                className="h-11 text-base"
-                value={password}
-                onChange={(e) => onPasswordChange(e.target.value)}
-                autoComplete="current-password"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="mobile-timeout">{t('connectionScreen.formTimeout')}</Label>
-              <Input
-                id="mobile-timeout"
-                className="h-11 text-base"
-                value={timeout}
-                onChange={(e) => onTimeoutChange(e.target.value)}
-                inputMode="numeric"
+
+            <div className="border-border border-t pt-4">
+              <MobileKeyValueEntries
+                title={t('connectionScreen.formCookies')}
+                hint={t('connectionScreen.formCookiesHint')}
+                keyPlaceholder={t('connectionScreen.formCookieName')}
+                valuePlaceholder={t('connectionScreen.formCookieValue')}
+                entries={cookies}
+                onAdd={onAddCookie}
+                onRemove={onRemoveCookie}
+                onChange={onChangeCookie}
               />
             </div>
           </div>
         ) : null}
+      </div>
 
+      <footer className="relative z-20 shrink-0 space-y-2.5 border-border border-t bg-background px-5 pt-3 pb-(--app-safe-bottom)">
         {testResult ? (
           <Alert variant={testResult.ok ? 'success' : 'destructive'}>
             {testResult.ok ? (
@@ -244,24 +323,25 @@ export function MobileConnectionForm({
             {error}
           </p>
         ) : null}
-      </div>
 
-      <footer className="relative z-20 shrink-0 space-y-2.5 border-border border-t bg-background px-5 pt-3 pb-[var(--app-safe-bottom)]">
         <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            className="h-11 flex-1"
-            disabled={!canSubmit || testing}
-            onClick={onTest}
-          >
-            {testing ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden />
-            ) : (
+          {testing ? (
+            <Button type="button" variant="outline" className="h-11 flex-1" onClick={onCancelTest}>
+              <X className="mr-2 h-4 w-4" aria-hidden />
+              {t('connectionScreen.formCancelRequest')}
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11 flex-1"
+              disabled={!canSubmit}
+              onClick={onTest}
+            >
               <Wifi className="mr-2 h-4 w-4" aria-hidden />
-            )}
-            {t('connectionScreen.formTest')}
-          </Button>
+              {t('connectionScreen.formTest')}
+            </Button>
+          )}
           <Button
             type="button"
             variant="outline"

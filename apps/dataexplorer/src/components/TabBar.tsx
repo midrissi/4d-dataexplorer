@@ -20,12 +20,12 @@ import {
   Database,
   FileText,
   Home,
-  MoreHorizontal,
   Network,
   Pin,
   Play,
   Send,
   Settings,
+  SquareStack,
   X,
 } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -59,6 +59,7 @@ import {
   useTabsStore,
 } from '~/store/tabs'
 import { DataclassIcon, getDataclassColorClasses } from './DataclassCustomizeModal'
+import { MobileTabOverview } from './MobileTabOverview'
 
 /** Translation keys for static tab IDs */
 const STATIC_TAB_TITLE_KEYS: Record<string, string> = {
@@ -148,6 +149,7 @@ export function TabBar() {
     setActiveTab,
     closeTab,
     closeOtherTabs,
+    closeTabsToLeft,
     closeTabsToRight,
     closeAllTabs,
     togglePinTab,
@@ -172,6 +174,7 @@ export function TabBar() {
   const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(
     null
   )
+  const [tabOverviewOpen, setTabOverviewOpen] = useState(false)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const tabRefs = useRef<Map<string, HTMLDivElement>>(new Map())
@@ -820,99 +823,54 @@ export function TabBar() {
             )}
           </div>
 
-          {mobile && tabs.length > 1 ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 shrink-0"
-                  aria-label={t('tabs.moreTabsAria')}
-                >
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className={cn(
-                  mobile
-                    ? mobileMenuContentClass('max-h-[min(70dvh,32rem)]')
-                    : 'max-h-[min(24rem,70vh)] w-72 overflow-y-auto'
-                )}
-                {...(mobile
-                  ? mobileMenuCollisionProps
-                  : { collisionPadding: 12, avoidCollisions: true })}
+          {mobile && tabs.length > 0 ? (
+            <>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="relative h-9 w-9 shrink-0"
+                aria-label={t('tabs.moreTabsAria')}
+                aria-haspopup="dialog"
+                aria-expanded={tabOverviewOpen}
+                onClick={() => setTabOverviewOpen(true)}
               >
-                <DropdownMenuLabel className={mobile ? 'px-3 py-2.5 text-sm' : undefined}>
-                  {t('tabs.allTabs')}
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {tabs.map((tab) => {
-                  const isActive = tab.id === activeTabId
-                  const displayName = getTabDisplayName(tab)
-                  const count = getTabCount(tab)
-                  const showCount = isDataclassTab(tab)
-                  const customization = isDataclassTab(tab)
-                    ? dataclassCustomizations[tab.dataclassName]
-                    : undefined
-                  const colorClasses = getDataclassColorClasses(customization)
-                  return (
-                    <DropdownMenuItem
-                      key={tab.id}
-                      className={cn(
-                        'flex items-center gap-2',
-                        mobile && 'min-h-12 gap-3 rounded-lg px-3 py-3 text-sm',
-                        isActive && 'bg-accent text-accent-foreground'
-                      )}
-                      onSelect={() => handleTabClick(tab)}
-                    >
-                      <span
-                        className={cn(
-                          'flex h-7 w-7 shrink-0 items-center justify-center rounded-md',
-                          isActive ? 'bg-background' : 'bg-muted/60'
-                        )}
-                        style={colorClasses.style}
-                      >
-                        {renderTabTypeIcon(
-                          tab,
-                          cn(
-                            'h-3.5 w-3.5',
-                            isDataclassTab(tab) && customization
-                              ? colorClasses.text
-                              : 'text-muted-foreground'
-                          )
-                        )}
-                      </span>
-                      <span className="min-w-0 flex-1 truncate font-medium text-sm">
-                        {displayName}
-                      </span>
-                      {showCount ? (
-                        <span className="shrink-0 font-mono text-muted-foreground text-xs tabular-nums">
-                          {formatCount(count)}
-                        </span>
-                      ) : null}
-                      {tab.isClosable !== false ? (
-                        <button
-                          type="button"
-                          className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                          aria-label={t('tabs.closeTab')}
-                          onClick={(event) => {
-                            event.preventDefault()
-                            event.stopPropagation()
-                            closeTab(tab.id)
-                          }}
-                        >
-                          <X className="h-3.5 w-3.5" />
-                        </button>
-                      ) : (
-                        <span className="w-7 shrink-0" aria-hidden />
-                      )}
-                    </DropdownMenuItem>
-                  )
-                })}
-              </DropdownMenuContent>
-            </DropdownMenu>
+                <SquareStack className="h-5 w-5" aria-hidden />
+                {tabs.length > 1 ? (
+                  <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 font-semibold text-[10px] text-primary-foreground tabular-nums">
+                    {tabs.length > 9 ? '9+' : tabs.length}
+                  </span>
+                ) : null}
+              </Button>
+              <MobileTabOverview
+                open={tabOverviewOpen}
+                onOpenChange={setTabOverviewOpen}
+                tabs={tabs}
+                activeTabId={activeTabId}
+                dataclassCustomizations={dataclassCustomizations}
+                getTabDisplayName={getTabDisplayName}
+                getTabCount={getTabCount}
+                renderTabIcon={renderTabTypeIcon}
+                onSelectTab={handleTabClick}
+                onCloseTab={(tabId) => {
+                  closeTab(tabId)
+                  if (tabs.length <= 1) setTabOverviewOpen(false)
+                }}
+                onCloseOtherTabs={(tabId) => {
+                  closeOtherTabs(tabId)
+                }}
+                onCloseTabsAbove={(tabId) => {
+                  closeTabsToLeft(tabId)
+                }}
+                onCloseTabsBelow={(tabId) => {
+                  closeTabsToRight(tabId)
+                }}
+                onCloseAllTabs={() => {
+                  closeAllTabs()
+                  setTabOverviewOpen(false)
+                }}
+              />
+            </>
           ) : null}
         </div>
       </div>

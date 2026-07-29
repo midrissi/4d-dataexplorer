@@ -32,6 +32,7 @@ import {
   useShortcuts,
 } from '~/store/settings'
 import { useTabsStore } from '~/store/tabs'
+import { AppBrandIcon } from './AppBrandIcon'
 import { DatabaseIdentityPanel } from './DatabaseIdentityPanel'
 import { DataclassIcon, getDataclassColorClasses } from './DataclassCustomizeModal'
 
@@ -283,12 +284,12 @@ export function WelcomeScreen() {
         <div className="text-center">
           <div className="relative mx-auto mb-4 h-20 w-20">
             <div className="absolute inset-0 animate-pulse rounded-3xl bg-primary/20" />
-            <div className="absolute inset-2 flex items-center justify-center rounded-2xl bg-background shadow-xl">
+            <div className="absolute inset-2 flex items-center justify-center">
               {isRefreshingDataclasses ? (
                 <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden />
               ) : (
-                <div className="relative">
-                  <Database className="h-8 w-8 text-primary" />
+                <div className="relative h-full w-full">
+                  <AppBrandIcon className="h-full w-full drop-shadow-xl" />
                   <div className="absolute -right-1 -bottom-1 rounded-full bg-background p-1 shadow">
                     <Layers className="h-3.5 w-3.5 text-violet-500" />
                   </div>
