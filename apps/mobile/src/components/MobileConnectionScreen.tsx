@@ -470,6 +470,7 @@ export function MobileConnectionScreen({ onConnect, initialEdit }: MobileConnect
       onConnect={(connection) => void handleConnectSaved(connection)}
       onEdit={fillForm}
       onDelete={(id) => void handleDelete(id)}
+      onRefresh={refresh}
     />
   )
 }

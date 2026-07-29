@@ -6,8 +6,15 @@
     "core:default",
     "store:default",
     "opener:default",
+    "dialog:default",
     "allow-list-http-jar-cookies",
     "allow-desktop-http-request",
+    {
+      "identifier": "fs:scope",
+      "allow": [{ "path": "$HOME/**" }, { "path": "$DOCUMENT/**" }, { "path": "$DOWNLOAD/**" }]
+    },
+    "fs:allow-write-file",
+    "fs:allow-write-text-file",
     {
       "identifier": "http:default",
       "allow": [

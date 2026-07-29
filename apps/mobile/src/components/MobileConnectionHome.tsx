@@ -2,6 +2,7 @@ import { Alert, AlertDescription, Button, cn } from '@4d/ui'
 import { ArrowRight, Database, Info, Loader2, Pencil, Plus, Trash2 } from 'lucide-react'
 import { AppBrandIcon } from '~/components/AppBrandIcon'
 import { AppearanceControls } from '~/components/AppearanceControls'
+import { PullToRefresh } from '~/components/PullToRefresh'
 import { useTranslation } from '~/i18n'
 import { resolveLucideIcon } from '~/lib/lucide-icon'
 import { COLOR_PRESETS, type ColorPreset } from '~/store/settings'
@@ -15,6 +16,7 @@ type MobileConnectionHomeProps = {
   onConnect: (connection: ConnectionConfig) => void
   onEdit: (connection: ConnectionConfig) => void
   onDelete: (id: string) => void
+  onRefresh: () => void | Promise<void>
 }
 
 export function MobileConnectionHome({
@@ -25,6 +27,7 @@ export function MobileConnectionHome({
   onConnect,
   onEdit,
   onDelete,
+  onRefresh,
 }: MobileConnectionHomeProps) {
   const { t } = useTranslation()
   const empty = !loading && connections.length === 0
@@ -48,7 +51,12 @@ export function MobileConnectionHome({
         </div>
       </header>
 
-      <div className="relative z-0 flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-5 pb-3">
+      <PullToRefresh
+        disabled={loading || submitting}
+        label={t('entity.pullToRefresh')}
+        onRefresh={onRefresh}
+        className="relative z-0 px-5 pb-3"
+      >
         {loading ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 py-16">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" aria-hidden />
@@ -164,7 +172,7 @@ export function MobileConnectionHome({
             </Alert>
           </div>
         )}
-      </div>
+      </PullToRefresh>
 
       <footer className="relative z-20 shrink-0 space-y-3 border-border border-t bg-background px-4 pt-3 pb-[var(--app-safe-bottom)]">
         {!empty ? (

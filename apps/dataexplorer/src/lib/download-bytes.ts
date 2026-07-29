@@ -1,9 +1,10 @@
 /**
- * Cross-platform binary download helper.
+ * Cross-platform binary download / share helpers.
  *
- * Web: triggers a browser download via a temporary object URL.
- * Desktop: the Tauri app registers a save-dialog + writeFile implementation
- * via {@link registerDownloadBytes}.
+ * Web: `<a download>` for save; Web Share API for share when available.
+ * Desktop/mobile Tauri: register a native save-dialog + writeFile via
+ * {@link registerDownloadBytes}. Share still uses the browser share sheet when
+ * the WebView exposes it.
  */
 
 export type DownloadBytesInput = {
@@ -18,20 +19,29 @@ export type DownloadBytesFn = (input: DownloadBytesInput) => Promise<void>
 let _downloadBytes: DownloadBytesFn | null = null
 
 /**
- * Register a desktop-native download implementation (called by the Tauri app).
+ * Register a native download implementation (called by the Tauri app).
  */
 export function registerDownloadBytes(fn: DownloadBytesFn): void {
   _downloadBytes = fn
 }
 
-function downloadBytesInBrowser({ filename, bytes, mime }: DownloadBytesInput): void {
-  const blob = new Blob([bytes.buffer as ArrayBuffer], {
+function toBlob({ bytes, mime }: DownloadBytesInput): Blob {
+  return new Blob([bytes.buffer as ArrayBuffer], {
     type: mime ?? 'application/octet-stream',
   })
+}
+
+function toFile(input: DownloadBytesInput): File {
+  const blob = toBlob(input)
+  return new File([blob], input.filename, { type: blob.type })
+}
+
+function downloadBytesInBrowser(input: DownloadBytesInput): void {
+  const blob = toBlob(input)
   const objectUrl = URL.createObjectURL(blob)
   const anchor = document.createElement('a')
   anchor.href = objectUrl
-  anchor.download = filename
+  anchor.download = input.filename
   document.body.appendChild(anchor)
   anchor.click()
   anchor.remove()
@@ -39,8 +49,51 @@ function downloadBytesInBrowser({ filename, bytes, mime }: DownloadBytesInput): 
 }
 
 /**
- * Save bytes to a user-chosen file. Uses the registered desktop handler when
- * available; otherwise falls back to a browser download.
+ * Whether the current environment can open a system share sheet for files.
+ * Requires both `navigator.share` and `navigator.canShare({ files })` — presence
+ * of `canShare` alone is not enough (some desktops expose a stub).
+ */
+export function canShareBytes(input: DownloadBytesInput): boolean {
+  if (typeof navigator === 'undefined') return false
+  if (typeof navigator.share !== 'function') return false
+  if (typeof navigator.canShare !== 'function') return false
+  if (typeof File === 'undefined') return false
+  try {
+    const file = toFile(input)
+    return navigator.canShare({ files: [file] })
+  } catch {
+    return false
+  }
+}
+
+/** Cached probe: is file sharing available in this browser/WebView at all? */
+let _canShareFiles: boolean | null = null
+
+export function canShareFiles(): boolean {
+  if (_canShareFiles !== null) return _canShareFiles
+  _canShareFiles = canShareBytes({
+    filename: 'probe.bin',
+    bytes: new Uint8Array([0]),
+    mime: 'application/octet-stream',
+  })
+  return _canShareFiles
+}
+
+/**
+ * Open the system share sheet for the given bytes (AirDrop, Mail, etc.).
+ * Throws if share is unavailable or the user cancels in a way that surfaces an error.
+ */
+export async function shareBytes(input: DownloadBytesInput): Promise<void> {
+  if (!canShareBytes(input)) {
+    throw new Error('Sharing is not available in this browser')
+  }
+  const file = toFile(input)
+  await navigator.share({ files: [file], title: input.filename })
+}
+
+/**
+ * Save bytes to a user-chosen file. Uses the registered native handler when
+ * available; otherwise triggers a browser download (not the share sheet).
  */
 export async function downloadBytes(input: DownloadBytesInput): Promise<void> {
   if (_downloadBytes) {

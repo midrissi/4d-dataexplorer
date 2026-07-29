@@ -3,7 +3,7 @@
   "dependencies": {
     "4D AIKit": {
       "github": "4d/4D-AIKit",
-      "version": "4d"
+      "tag": "21R3.4"
     }
   }
 }

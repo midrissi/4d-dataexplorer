@@ -11,6 +11,7 @@ import {
   Loader2,
   RefreshCw,
   ScanSearch,
+  Share,
 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
@@ -30,7 +31,7 @@ import {
   isPreviewableFormat,
   resolvePreviewFormat,
 } from '~/lib/detect-binary-format'
-import { downloadBytes } from '~/lib/download-bytes'
+import { canShareFiles, downloadBytes, shareBytes } from '~/lib/download-bytes'
 import { isMobileShell } from '~/lib/platform'
 import { formatBytes } from '~/lib/utils'
 
@@ -332,19 +333,49 @@ export function BinaryObjectViewer({
     [name]
   )
 
-  const handleDownload = useCallback(async () => {
+  const shareFileBytes = useCallback(
+    async (bytes: Uint8Array, format: DetectedFormat | null) => {
+      const mime = format?.mime ?? 'application/octet-stream'
+      const extension = format?.extension ?? 'bin'
+      const filename = `${name?.replace(/[^\w.-]+/g, '_') || 'binary-object'}.${extension}`
+      await shareBytes({ filename, bytes, mime })
+    },
+    [name]
+  )
+
+  const resolveBytes = useCallback(async (): Promise<{
+    bytes: Uint8Array
+    format: DetectedFormat | null
+  } | null> => {
     if (isUrlMode) {
       const bytes = await ensureBytes()
-      if (bytes) await saveBytes(bytes, detectFormat(bytes, name))
-      return
+      if (!bytes) return null
+      return { bytes, format: detectFormat(bytes, name) }
     }
     try {
       const bytes = decodeBase64(base64 ?? '')
-      await saveBytes(bytes, detectFormat(bytes, name))
+      return { bytes, format: detectFormat(bytes, name) }
     } catch {
-      // Malformed base64 — nothing to download.
+      return null
     }
-  }, [isUrlMode, ensureBytes, saveBytes, base64, name])
+  }, [isUrlMode, ensureBytes, base64, name])
+
+  const handleDownload = useCallback(async () => {
+    const resolved = await resolveBytes()
+    if (resolved) await saveBytes(resolved.bytes, resolved.format)
+  }, [resolveBytes, saveBytes])
+
+  const handleShare = useCallback(async () => {
+    try {
+      const resolved = await resolveBytes()
+      if (resolved) await shareFileBytes(resolved.bytes, resolved.format)
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return
+      if (err instanceof Error && err.name === 'AbortError') return
+    }
+  }, [resolveBytes, shareFileBytes])
+
+  const shareAvailable = canShareFiles()
 
   // Toggle details. In URL mode, expanding triggers the initial byte load so the
   // size/format/hex (and media preview) become available.
@@ -406,6 +437,8 @@ export function BinaryObjectViewer({
         })}
         onDownload={handleDownload}
         downloadLabel={t('entity.binaryDownload')}
+        onShare={shareAvailable ? () => void handleShare() : undefined}
+        shareLabel={shareAvailable ? t('entity.shareImage') : undefined}
       />
     ) : meta.format?.kind === 'text' && fullBytes ? (
       <TextPreviewPanel
@@ -460,6 +493,8 @@ export function BinaryObjectViewer({
         description={t('entity.binaryPreviewUnavailable')}
         onDownload={handleDownload}
         downloadLabel={t('entity.binaryDownload')}
+        onShare={shareAvailable ? () => void handleShare() : undefined}
+        shareLabel={shareAvailable ? t('entity.shareImage') : undefined}
       />
     ))
 
@@ -524,7 +559,7 @@ export function BinaryObjectViewer({
           variant="ghost"
           size="icon"
           className="h-5 w-5 shrink-0"
-          onClick={handleDownload}
+          onClick={() => void handleDownload()}
           disabled={loadState === 'loading'}
           aria-label={t('entity.binaryDownload')}
           title={t('entity.binaryDownload')}
@@ -535,6 +570,21 @@ export function BinaryObjectViewer({
             <Download className="h-3 w-3" />
           )}
         </Button>
+
+        {shareAvailable ? (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-5 w-5 shrink-0"
+            onClick={() => void handleShare()}
+            disabled={loadState === 'loading'}
+            aria-label={t('entity.shareImage')}
+            title={t('entity.shareImage')}
+          >
+            <Share className="h-3 w-3" />
+          </Button>
+        ) : null}
 
         {isUrlMode && (
           <Button
@@ -603,6 +653,8 @@ export function BinaryObjectViewer({
                   description={t('entity.binaryPreviewUnavailable')}
                   onDownload={handleDownload}
                   downloadLabel={t('entity.binaryDownload')}
+                  onShare={shareAvailable ? () => void handleShare() : undefined}
+                  shareLabel={shareAvailable ? t('entity.shareImage') : undefined}
                 />
               </div>
             )
@@ -689,6 +741,8 @@ export function BinaryObjectViewer({
                       })}
                       onDownload={handleDownload}
                       downloadLabel={t('entity.binaryDownload')}
+                      onShare={shareAvailable ? () => void handleShare() : undefined}
+                      shareLabel={shareAvailable ? t('entity.shareImage') : undefined}
                     />
                   ) : fullBytes ? (
                     <HexViewer bytes={fullBytes} className="h-56 shadow-none" />
@@ -698,6 +752,8 @@ export function BinaryObjectViewer({
                       description={t('entity.binaryDecodeError')}
                       onDownload={handleDownload}
                       downloadLabel={t('entity.binaryDownload')}
+                      onShare={shareAvailable ? () => void handleShare() : undefined}
+                      shareLabel={shareAvailable ? t('entity.shareImage') : undefined}
                     />
                   )}
                 </TabsContent>
@@ -724,11 +780,15 @@ function BinaryGate({
   description,
   onDownload,
   downloadLabel,
+  onShare,
+  shareLabel,
 }: {
   title: string
   description: string
   onDownload: () => void
   downloadLabel: string
+  onShare?: () => void
+  shareLabel?: string
 }) {
   const mobile = isMobileShell()
   return (
@@ -750,16 +810,32 @@ function BinaryGate({
           {description}
         </p>
       </div>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className={cn('mt-0.5 gap-1', mobile ? 'h-11 px-4 text-sm' : 'h-6 text-[10px]')}
-        onClick={onDownload}
-      >
-        <Download className={cn(mobile ? 'h-4 w-4' : 'h-3 w-3')} />
-        {downloadLabel}
-      </Button>
+      <div className={cn('mt-0.5 flex items-center gap-1.5', mobile && 'mt-1 gap-2')}>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className={cn(mobile ? 'h-11 w-11' : 'h-7 w-7')}
+          onClick={onDownload}
+          aria-label={downloadLabel}
+          title={downloadLabel}
+        >
+          <Download className={cn(mobile ? 'h-4 w-4' : 'h-3.5 w-3.5')} aria-hidden />
+        </Button>
+        {onShare && shareLabel ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className={cn(mobile ? 'h-11 w-11' : 'h-7 w-7')}
+            onClick={onShare}
+            aria-label={shareLabel}
+            title={shareLabel}
+          >
+            <Share className={cn(mobile ? 'h-4 w-4' : 'h-3.5 w-3.5')} aria-hidden />
+          </Button>
+        ) : null}
+      </div>
     </div>
   )
 }

@@ -3,6 +3,7 @@ import DataExplorerApp from '~/App'
 import { AppBrandIcon } from '~/components/AppBrandIcon'
 import { useTranslation } from '~/i18n'
 import { reconfigureClient } from '~/lib/api'
+import { registerDownloadBytes } from '~/lib/download-bytes'
 import {
   importHttpJarCookiesIfNeeded,
   registerConnectionStoreAPI,
@@ -21,10 +22,14 @@ import {
 } from '~desktop/lib/connection-store'
 import { desktopFetch } from '~desktop/lib/http'
 import { MobileConnectionScreen } from '~mobile/components/MobileConnectionScreen'
+import { tauriDownloadBytes } from '~mobile/lib/download-bytes'
 import { syncWebviewSafeAreaMode } from '~mobile/lib/webview-safe-area'
 
 // Route REST through Tauri HTTP plugin (CORS-free), same as desktop
 registerPlatformFetch(desktopFetch)
+
+// Browser <a download> is ignored in WebView — use a native save dialog instead
+registerDownloadBytes(tauriDownloadBytes)
 
 registerConnectionStoreAPI({
   getActiveConnection,

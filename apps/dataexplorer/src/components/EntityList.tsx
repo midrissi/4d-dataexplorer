@@ -42,6 +42,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AiActionsMenu } from '~/components/AiActions'
 import { DeferredImage } from '~/components/DeferredImage'
 import { EmptyPanel, EmptyPanelAction } from '~/components/EmptyPanel'
+import { PullToRefresh } from '~/components/PullToRefresh'
 import { getIntlLocale, useTranslation } from '~/i18n'
 import { api, formatThrownError } from '~/lib/api'
 import { sanitizeForDuplication } from '~/lib/entitySanitizer'
@@ -1081,6 +1082,62 @@ export function EntityList({ tabId }: { tabId: string }) {
             onUpdate={updateEntity}
           />
         </div>
+      ) : mobile ? (
+        <PullToRefresh
+          disabled={entitiesLoading}
+          label={t('entity.pullToRefresh')}
+          onRefresh={async () => {
+            const page = activeTab?.entitiesPage || 1
+            await fetchEntities(page)
+          }}
+        >
+          <div
+            ref={listRef}
+            className="space-y-3 p-4"
+            role="listbox"
+            aria-label={t('entity.entitiesInDataclass', { dataclass: selectedDataclass })}
+            aria-activedescendant={selectedEntityId ? `entity-${selectedEntityId}` : undefined}
+            tabIndex={0}
+          >
+            {entities.map((entity, index) => {
+              const id = entity.id
+              const isSelected = selectedEntityId === id
+              const isFocused = focusedEntityIndex === index
+
+              return (
+                <EntityCard
+                  key={id}
+                  entity={entity}
+                  index={index}
+                  isSelected={isSelected}
+                  isFocused={isFocused}
+                  readonlyMode={readonlyMode}
+                  cardFields={fieldConfig.cards}
+                  schema={schema}
+                  isExpanded={expandedCardId === id}
+                  onToggleExpand={() =>
+                    setExpandedCardId((current) => (current === id ? null : id))
+                  }
+                  onSelect={handleSelectEntity}
+                  onDuplicate={() => handleDuplicate(entity)}
+                  onDelete={() => handleDeleteEntity(entity)}
+                  cardRef={(el) => {
+                    if (el) entityRefs.current.set(id, el)
+                    else entityRefs.current.delete(id)
+                  }}
+                  duplicateShortcut={
+                    duplicateEntityShortcut?.enabled
+                      ? formatShortcut(duplicateEntityShortcut)
+                      : undefined
+                  }
+                  deleteShortcut={
+                    deleteEntityShortcut?.enabled ? formatShortcut(deleteEntityShortcut) : undefined
+                  }
+                />
+              )
+            })}
+          </div>
+        </PullToRefresh>
       ) : (
         <ScrollArea className="min-h-0 flex-1" type="auto">
           <div
