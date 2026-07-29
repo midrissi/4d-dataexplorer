@@ -12,9 +12,9 @@
     "tauri:android:build": "tauri android build",
     "tauri:ios:dev": "bash ./scripts/ios-dev.sh",
     "tauri:ios:dev:raw": "tauri ios dev",
-    "tauri:ios:build": "tauri ios build --target aarch64-sim",
-    "tauri:ios:build:device": "tauri ios build --target aarch64",
-    "tauri:ios:build:sim": "tauri ios build --target aarch64-sim"
+    "tauri:ios:build": "bash ./scripts/ios-build.sh",
+    "tauri:ios:build:device": "bash ./scripts/ios-build.sh --target aarch64 --ci",
+    "tauri:ios:build:sim": "bash ./scripts/ios-build.sh --target aarch64-sim --ci"
   },
   "dependencies": {
     "@4d/dataexplorer": "workspace:*",

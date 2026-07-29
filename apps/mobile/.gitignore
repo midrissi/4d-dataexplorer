@@ -5,3 +5,4 @@ src-tauri/android/
 src-tauri/ios/
 src-tauri/plugins/**/.tauri/
 .build/
+ci-artifacts/

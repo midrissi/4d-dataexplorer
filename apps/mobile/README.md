@@ -46,9 +46,11 @@ Phones and tablets cannot use `localhost` to reach a server on your computer. En
 cd apps/mobile
 bun run tauri:ios:dev                 # boots simulator first (default: iPhone 16 Pro Max)
 bun run tauri:ios:dev -- "iPhone 16"  # or pass another simulator name
-bun run tauri:ios:build               # simulator (aarch64-sim)
+bun run tauri:ios:build               # simulator (aarch64-sim) via scripts/ios-build.sh
 bun run tauri:ios:build:device        # physical device / IPA
 ```
+
+`tauri:ios:build` wraps `tauri ios build` so the Xcode “Build Rust Code” phase can reach the CLI options WebSocket (pins `TMPDIR`, runs the script from `gen/apple`). Without that, archive often fails with `Connection refused` / wrong app identifier in this monorepo.
 
 If deploy fails with `Unable to lookup in current state: Shutdown` / `simctl install` exit 149, the chosen simulator was not booted. `tauri:ios:dev` boots and waits before install. You can also boot manually:
 
@@ -67,6 +69,17 @@ For plain HTTP to a LAN host, App Transport Security may need exceptions in the 
 ## Themes
 
 Same as desktop/web: light/dark mode plus color themes Slate, Tangerine, Violet Bloom, Vercel, Graphite, Aurora (connection screen footer and Settings).
+
+## CI
+
+GitHub Actions workflow [`.github/workflows/mobile.yml`](../../.github/workflows/mobile.yml) builds on pushes and PRs to **`main`** and **`feat/mobile`** (path-filtered to mobile-related changes), plus `workflow_dispatch`:
+
+| Job | Runner | Output |
+| --- | --- | --- |
+| Android | `ubuntu-latest` | Debug APK (`aarch64`) artifact `mobile-android-apk` |
+| iOS | `macos-latest` | Simulator debug build (`aarch64-sim`, unsigned) artifact `mobile-ios-sim` |
+
+Generated `src-tauri/gen/` projects are created in CI via `tauri android|ios init --ci`. Store signing / App Store export is not configured yet — local device / release IPA builds still use `tauri:ios:build:device` with Xcode signing.
 
 ## Architecture notes
 
