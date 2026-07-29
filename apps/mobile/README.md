@@ -79,7 +79,7 @@ Mobile builds run inside the main [CI](../../.github/workflows/ci.yml) pipeline 
 | Job | Runner | When | Output |
 | --- | --- | --- | --- |
 | Build Android | `ubuntu-latest` | After E2E | Debug APK (`aarch64`) artifact `mobile-android-apk` |
-| Build iOS | `macos-latest` | After E2E | Simulator debug build artifact `mobile-ios-sim` |
+| Build iOS | `macos-latest` | After E2E | Simulator release build artifact `mobile-ios-sim` |
 | Upload mobile to release | `ubuntu-latest` | Push to **`main`** only | APK + iOS zip on the SHA-stamped GitHub Release |
 
 You can also run the Mobile workflow manually via `workflow_dispatch` (build only; no release upload).

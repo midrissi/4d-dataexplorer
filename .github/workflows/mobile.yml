@@ -83,13 +83,13 @@ jobs:
         working-directory: apps/mobile
         run: bash ./scripts/android-prepare.sh
 
-      - name: Build Android APK (debug, aarch64)
+      - name: Build Android APK (release, aarch64)
         working-directory: apps/mobile
         env:
           NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
           ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
           CI: true
-        run: bunx tauri android build --ci --debug --apk --target aarch64 --verbose
+        run: bunx tauri android build --ci --apk --target aarch64 --verbose
 
       - name: Collect Android APKs
         shell: bash
@@ -150,7 +150,7 @@ jobs:
           gem install cocoapods --no-document
           pod --version
 
-      - name: Build iOS (simulator, debug, unsigned)
+      - name: Build iOS (simulator, release, unsigned)
         working-directory: apps/mobile
         env:
           CI: true
@@ -160,7 +160,7 @@ jobs:
           CODE_SIGNING_REQUIRED: 'NO'
           CODE_SIGN_IDENTITY: ''
           AD_HOC_CODE_SIGNING_ALLOWED: 'YES'
-        run: bun run tauri:ios:build -- --debug --target aarch64-sim --ci --verbose
+        run: bun run tauri:ios:build -- --target aarch64-sim --ci --verbose
 
       - name: Collect iOS artifacts
         shell: bash
@@ -229,11 +229,11 @@ jobs:
             find release-assets/android -type f | head -n 50 || true
             exit 1
           fi
-          APK_NAME="Data-Explorer_${VERSION}_android-aarch64-debug.apk"
+          APK_NAME="Data-Explorer_${VERSION}_android-aarch64.apk"
           cp "$apk" "$OUT/$APK_NAME"
           echo "apk=$OUT/$APK_NAME" >> "$GITHUB_OUTPUT"
 
-          IOS_ZIP="$OUT/Data-Explorer_${VERSION}_ios-sim.zip"
+          IOS_ZIP="$OUT/Data-Explorer_${VERSION}_ios-sim-release.zip"
           ( cd release-assets/ios && zip -r "$IOS_ZIP" . )
           echo "ios_zip=$IOS_ZIP" >> "$GITHUB_OUTPUT"
           ls -lah "$OUT"

@@ -184,10 +184,30 @@ const primaryAsset = computed<ReleaseAsset | undefined>(() => {
     return list.find((a) => a.name.toLowerCase().endsWith('.zip')) ?? list[0]
   }
   if (activePlatform.value === 'android') {
-    return list.find((a) => a.name.toLowerCase().endsWith('.apk')) ?? list[0]
+    // Prefer the release APK (no "debug" in name) over any debug variant.
+    return (
+      list.find((a) => {
+        const n = a.name.toLowerCase()
+        return n.endsWith('.apk') && !n.includes('debug')
+      }) ??
+      list.find((a) => a.name.toLowerCase().endsWith('.apk')) ??
+      list[0]
+    )
   }
   if (activePlatform.value === 'ios') {
-    return list.find((a) => a.name.toLowerCase().endsWith('.ipa')) ?? list[0]
+    // Prefer release over debug when both happen to exist in the same release.
+    return (
+      list.find((a) => {
+        const n = a.name.toLowerCase()
+        return n.endsWith('.ipa') && !n.includes('debug')
+      }) ??
+      list.find((a) => a.name.toLowerCase().endsWith('.ipa')) ??
+      list.find((a) => {
+        const n = a.name.toLowerCase()
+        return n.endsWith('.zip') && !n.includes('debug')
+      }) ??
+      list[0]
+    )
   }
   return list[0]
 })
