@@ -1,12 +1,11 @@
 import { AuthenticationError, type RESTClientError } from '@4d/rest'
-import { Button } from '@4d/ui'
-import { Database } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { AccessKeyScreen } from './components/AccessKeyScreen'
 import { DataclassView } from './components/DataclassView'
 import { EmptyState } from './components/EmptyState'
 import { Layout } from './components/Layout'
 import { LoadingScreen, type LoadingStep } from './components/LoadingScreen'
+import { MobileCatalogProvider, useMobileCatalog } from './components/MobileCatalogContext'
 import { ResizablePanel } from './components/ResizablePanel'
 import { Sidebar } from './components/Sidebar'
 import { TabBar } from './components/TabBar'
@@ -259,7 +258,7 @@ function AppContent({ onDisconnect, onSwitchConnection, onEditConnection }: AppC
 /** Mobile: full-width content with a slide-over dataclass drawer. */
 function MobileExplorerShell() {
   const { t } = useTranslation()
-  const [catalogOpen, setCatalogOpen] = useState(false)
+  const { catalogOpen, closeCatalog } = useMobileCatalog()
   const sidebarCollapsed = useSettingsStore((state) => state.sidebarCollapsed)
   const setSidebarCollapsed = useSettingsStore((state) => state.setSidebarCollapsed)
 
@@ -269,28 +268,13 @@ function MobileExplorerShell() {
   }, [sidebarCollapsed, setSidebarCollapsed])
 
   return (
-    <div className="relative flex h-full flex-col">
-      <div className="flex items-center gap-2 border-border border-b bg-background px-2 py-1.5">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-8 gap-1.5 px-2.5 text-xs"
-          onClick={() => setCatalogOpen(true)}
-        >
-          <Database className="h-3.5 w-3.5" />
-          {t('mobile.openCatalog')}
-        </Button>
-        <p className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground">
-          {t('mobile.betaDisclaimer')}
-        </p>
-      </div>
+    <div className="relative flex h-full min-h-0 flex-col">
       <main
-        className="flex min-w-0 flex-1 flex-col overflow-hidden"
+        className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
         aria-label={t('app.entityExplorerAria')}
       >
         <TabBar />
-        <div className="flex-1 overflow-hidden">
+        <div className="min-h-0 flex-1 overflow-hidden">
           <DataclassView />
         </div>
       </main>
@@ -301,23 +285,11 @@ function MobileExplorerShell() {
             type="button"
             className="absolute inset-0 bg-black/40"
             aria-label={t('mobile.closeCatalog')}
-            onClick={() => setCatalogOpen(false)}
+            onClick={closeCatalog}
           />
-          <div className="relative z-10 flex h-full w-[min(100%,20rem)] flex-col bg-background shadow-lg">
-            <div className="flex items-center justify-between border-border border-b px-3 py-2">
-              <p className="font-medium text-sm">{t('sidebar.dataclasses')}</p>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-8"
-                onClick={() => setCatalogOpen(false)}
-              >
-                {t('mobile.closeCatalog')}
-              </Button>
-            </div>
+          <div className="relative z-10 flex h-full w-full max-w-full flex-col bg-background shadow-lg">
             <div className="min-h-0 flex-1">
-              <Sidebar collapsed={false} onDataclassOpened={() => setCatalogOpen(false)} />
+              <Sidebar collapsed={false} onDataclassOpened={closeCatalog} onClose={closeCatalog} />
             </div>
           </div>
         </div>
@@ -339,11 +311,13 @@ function App({
     <ThemeProvider>
       <ShortcutController>
         <KeyboardShortcutsProvider>
-          <AppContent
-            onDisconnect={onDisconnect}
-            onSwitchConnection={onSwitchConnection}
-            onEditConnection={onEditConnection}
-          />
+          <MobileCatalogProvider>
+            <AppContent
+              onDisconnect={onDisconnect}
+              onSwitchConnection={onSwitchConnection}
+              onEditConnection={onEditConnection}
+            />
+          </MobileCatalogProvider>
         </KeyboardShortcutsProvider>
       </ShortcutController>
     </ThemeProvider>

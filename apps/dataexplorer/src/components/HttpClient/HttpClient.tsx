@@ -16,8 +16,10 @@ import {
 import type { LucideIcon } from 'lucide-react'
 import {
   AlertTriangle,
+  ArrowLeft,
   Binary,
   Braces,
+  ChevronDown,
   CircleOff,
   Clock3,
   Cookie,
@@ -33,6 +35,7 @@ import {
 } from 'lucide-react'
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { EmptyPanel } from '~/components/EmptyPanel'
+import { MobileFullscreenSheet } from '~/components/MobileFullscreenSheet'
 import { RequestResponseSplit } from '~/components/RequestResponseSplit'
 import { SuggestInput } from '~/components/SuggestInput'
 import { useTranslation } from '~/i18n'
@@ -60,7 +63,7 @@ import {
   syncParamsFromPath,
   upsertBuiltInHeaderOverride,
 } from '~/lib/http-client'
-import { getBaseUrl, isDesktop, onConnectionChange } from '~/lib/platform'
+import { getBaseUrl, isDesktop, isMobileShell, onConnectionChange } from '~/lib/platform'
 import { useDataExplorerStore } from '~/store'
 import {
   createHttpId,
@@ -119,6 +122,10 @@ function SettingsSection({
   tone?: 'default' | 'amber' | 'cyan'
   children: ReactNode
 }) {
+  const mobile = isMobileShell()
+  // Advanced settings groups are collapsed by default on mobile to keep the
+  // page short; desktop keeps them always expanded.
+  const [open, setOpen] = useState(!mobile)
   const toneClass =
     tone === 'amber'
       ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300'
@@ -126,25 +133,48 @@ function SettingsSection({
         ? 'bg-cyan-500/10 text-cyan-700 dark:text-cyan-300'
         : 'bg-primary/10 text-primary'
 
+  const header = (
+    <div className="flex items-start gap-2.5 bg-muted/20 px-3 py-2">
+      <span
+        className={cn(
+          'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-sm',
+          toneClass
+        )}
+      >
+        <Icon className="h-3.5 w-3.5" />
+      </span>
+      <div className="min-w-0 flex-1">
+        <h3 className="font-medium text-xs leading-none">{title}</h3>
+        {description ? (
+          <p className="mt-1 text-muted-foreground text-xs leading-relaxed">{description}</p>
+        ) : null}
+      </div>
+      {mobile ? (
+        <ChevronDown
+          className={cn(
+            'mt-0.5 h-4 w-4 shrink-0 text-muted-foreground transition-transform',
+            open && 'rotate-180'
+          )}
+        />
+      ) : null}
+    </div>
+  )
+
   return (
     <section className="overflow-hidden rounded-md border border-border/70 bg-card/60 shadow-xs">
-      <div className="flex items-start gap-2.5 border-border/60 border-b bg-muted/20 px-3 py-2">
-        <span
-          className={cn(
-            'mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-sm',
-            toneClass
-          )}
+      {mobile ? (
+        <button
+          type="button"
+          className={cn('block min-h-11 w-full text-left', open && 'border-border/60 border-b')}
+          onClick={() => setOpen((value) => !value)}
+          aria-expanded={open}
         >
-          <Icon className="h-3.5 w-3.5" />
-        </span>
-        <div className="min-w-0">
-          <h3 className="font-medium text-xs leading-none">{title}</h3>
-          {description ? (
-            <p className="mt-1 text-muted-foreground text-xs leading-relaxed">{description}</p>
-          ) : null}
-        </div>
-      </div>
-      <div className="divide-y divide-border/60">{children}</div>
+          {header}
+        </button>
+      ) : (
+        <div className="border-border/60 border-b">{header}</div>
+      )}
+      {open ? <div className="divide-y divide-border/60">{children}</div> : null}
     </section>
   )
 }
@@ -185,6 +215,7 @@ function SettingsToggleRow({
 
 export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSeed }) {
   const { t } = useTranslation()
+  const mobile = isMobileShell()
   const editorPrefs = useCodeEditorPrefs()
   const updateEditorPrefs = useUpdateCodeEditorPrefs()
   const [draft, setDraft] = useState<HttpClientRequestDraft>(() => createEmptyHttpDraft(seed))
@@ -192,6 +223,7 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
   const [sending, setSending] = useState(false)
   const [response, setResponse] = useState<HttpClientResponse | null>(null)
   const [showHistory, setShowHistory] = useState(false)
+  const [mobilePane, setMobilePane] = useState<'request' | 'response'>('request')
   const [seedWarnings] = useState(() => seed?.warnings ?? [])
   const abortRef = useRef<AbortController | null>(null)
   const fileMapRef = useRef<Map<string, File>>(new Map())
@@ -414,6 +446,7 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
         binaryFile: binaryFileRef.current,
       })
       setResponse(result)
+      if (mobile) setMobilePane('response')
       if (!controller.signal.aborted) {
         addHistoryRequest(draftToHttpSeed(draft), {
           status: result.status,
@@ -490,6 +523,7 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
   return (
     <RequestResponseSplit
       kind="httpClient"
+      mobilePane={mobile ? mobilePane : undefined}
       requestClassName="bg-background p-3"
       responseClassName="min-h-105 bg-muted/10 p-3 lg:min-h-0"
       request={
@@ -510,7 +544,7 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
             </Button>
           </div>
 
-          {showHistory ? (
+          {showHistory && !mobile ? (
             <HttpRequestHistory
               requests={historyRequests}
               maxCount={historyMaxCount}
@@ -525,8 +559,27 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
             />
           ) : null}
 
-          <div className={cn('space-y-3', showHistory && 'border-border/70 border-t pt-4')}>
-            {showHistory ? (
+          {showHistory && mobile ? (
+            <MobileFullscreenSheet open labelledBy="http-request-history-title">
+              <HttpRequestHistory
+                requests={historyRequests}
+                maxCount={historyMaxCount}
+                onOpenRequest={(nextSeed) => {
+                  openHttpClientTab(nextSeed)
+                  setShowHistory(false)
+                }}
+                onRemoveRequest={removeHistoryRequest}
+                onClearRequests={clearHistoryRequests}
+                onMaxCountChange={setHistoryMaxCount}
+                onClose={() => setShowHistory(false)}
+              />
+            </MobileFullscreenSheet>
+          ) : null}
+
+          <div
+            className={cn('space-y-3', showHistory && !mobile && 'border-border/70 border-t pt-4')}
+          >
+            {showHistory && !mobile ? (
               <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
                 {t('httpClient.requestComposer')}
               </p>
@@ -549,7 +602,8 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
             <div className="space-y-1">
               <div
                 className={cn(
-                  'flex h-6 min-w-0 items-stretch overflow-hidden rounded-md border bg-muted/40 transition-colors',
+                  'flex min-w-0 items-stretch overflow-hidden rounded-md border bg-muted/40 transition-colors',
+                  mobile ? 'h-10' : 'h-6',
                   'hover:bg-muted/55',
                   'focus-within:border-ring/60 focus-within:bg-background focus-within:ring-1 focus-within:ring-ring/30'
                 )}
@@ -606,7 +660,10 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
                       type="button"
                       variant="destructive"
                       size="sm"
-                      className="h-5 gap-1 rounded-sm px-2 text-[11px]"
+                      className={cn(
+                        'gap-1 rounded-sm text-[11px]',
+                        mobile ? 'h-8 px-3' : 'h-5 px-2'
+                      )}
                       onClick={cancel}
                     >
                       <Square className="h-3 w-3" />
@@ -616,7 +673,10 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
                     <Button
                       type="button"
                       size="sm"
-                      className="h-5 gap-1 rounded-sm px-2 text-[11px] shadow-sm"
+                      className={cn(
+                        'gap-1 rounded-sm text-[11px] shadow-sm',
+                        mobile ? 'h-8 px-3' : 'h-5 px-2'
+                      )}
                       disabled={!canSend}
                       title={`${t('httpClient.send')} (⌘/Ctrl+Enter)`}
                       onClick={() => void send()}
@@ -659,16 +719,18 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
               </div>
             </div>
 
-            <div className="flex items-center gap-1 border-b">
+            <div className="flex items-center gap-1 overflow-x-auto border-b">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   type="button"
-                  className={`cursor-pointer border-b-2 px-3 py-1.5 text-xs transition-colors ${
+                  className={cn(
+                    'shrink-0 cursor-pointer whitespace-nowrap border-b-2 text-xs transition-colors',
+                    mobile ? 'min-h-11 px-3 py-2.5' : 'px-3 py-1.5',
                     requestTab === tab.id
                       ? 'border-primary font-medium text-foreground'
                       : 'border-transparent text-muted-foreground hover:text-foreground'
-                  }`}
+                  )}
                   onClick={() => setRequestTab(tab.id)}
                 >
                   {tab.label}
@@ -1036,8 +1098,28 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
       response={
         <>
           <div className="mb-2 shrink-0">
-            <h2 className="font-medium">{t('httpClient.response')}</h2>
-            <p className="text-muted-foreground text-xs">{t('httpClient.responseHint')}</p>
+            {mobile ? (
+              <div className="mb-3 space-y-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="-ml-2 h-11 gap-2 px-3"
+                  onClick={() => setMobilePane('request')}
+                >
+                  <ArrowLeft className="h-4 w-4" aria-hidden />
+                  {t('common.back')}
+                </Button>
+                <h2 className="font-semibold text-xl tracking-tight">{t('httpClient.response')}</h2>
+                <p className="text-muted-foreground text-sm leading-snug">
+                  {t('httpClient.responseHint')}
+                </p>
+              </div>
+            ) : (
+              <>
+                <h2 className="font-medium">{t('httpClient.response')}</h2>
+                <p className="text-muted-foreground text-xs">{t('httpClient.responseHint')}</p>
+              </>
+            )}
           </div>
           <div className="min-h-0 flex-1 overflow-hidden">
             <HttpResponsePanel response={response} />

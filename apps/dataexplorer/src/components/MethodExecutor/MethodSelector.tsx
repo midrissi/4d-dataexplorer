@@ -4,6 +4,7 @@ import { useEffect, useId, useMemo, useState } from 'react'
 import { getDataclassColorClasses } from '~/components/DataclassCustomizeModal'
 import { EmptyPanel } from '~/components/EmptyPanel'
 import { useTranslation } from '~/i18n'
+import { isMobileShell } from '~/lib/platform'
 import type { MethodScope } from '~/store/method-executor-types'
 import { useDataclassCustomizations } from '~/store/settings'
 import { EntitySelectionKeyInput } from './EntitySelectionKeyInput'
@@ -62,6 +63,7 @@ export function MethodSelector({
   onEntitySetIdChange: (value: string) => void
 }) {
   const { t } = useTranslation()
+  const mobile = isMobileShell()
   const customizations = useDataclassCustomizations()
   const [search, setSearch] = useState('')
   const [catalogDataClass, setCatalogDataClass] = useState('')
@@ -121,7 +123,10 @@ export function MethodSelector({
         <div
           role="tablist"
           aria-label={t('methodExecutor.scope')}
-          className="scrollbar-none flex h-6 w-fit max-w-full items-center gap-0.5 overflow-x-auto rounded border bg-muted/40 p-0.5 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+          className={cn(
+            'scrollbar-none flex w-fit max-w-full items-center gap-0.5 overflow-x-auto rounded border bg-muted/40 p-0.5 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden',
+            mobile ? 'h-9' : 'h-6'
+          )}
         >
           {SCOPES.map((item) => {
             const active = item === scope
@@ -134,13 +139,17 @@ export function MethodSelector({
                 aria-selected={active}
                 onClick={() => onScopeChange(item)}
                 className={cn(
-                  'inline-flex h-5 shrink-0 items-center gap-1 rounded-sm px-1.5 font-medium text-[10px] transition-colors',
+                  'inline-flex shrink-0 items-center gap-1 rounded-sm font-medium transition-colors',
+                  mobile ? 'h-7.5 px-2.5 text-xs' : 'h-5 px-1.5 text-[10px]',
                   active
                     ? 'bg-background text-foreground shadow-sm'
                     : 'text-muted-foreground hover:text-foreground'
                 )}
               >
-                <Icon className="h-2.5 w-2.5 shrink-0 opacity-70" aria-hidden />
+                <Icon
+                  className={cn('shrink-0 opacity-70', mobile ? 'h-3.5 w-3.5' : 'h-2.5 w-2.5')}
+                  aria-hidden
+                />
                 {scopeLabel(item, t)}
               </button>
             )
@@ -149,9 +158,19 @@ export function MethodSelector({
 
         {showPicker ? (
           <>
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 px-0.5">
+            <div
+              className={cn(
+                'flex items-center gap-x-2 gap-y-1 px-0.5',
+                mobile ? 'flex-col items-stretch' : 'flex-wrap'
+              )}
+            >
               {needsTarget ? (
-                <div className="flex min-w-0 items-center gap-1.5 text-xs">
+                <div
+                  className={cn(
+                    'flex min-w-0 items-center gap-1.5 text-xs',
+                    mobile && 'justify-between'
+                  )}
+                >
                   <span className="shrink-0 text-muted-foreground">
                     {t('methodExecutor.fromDataclass')}
                   </span>
@@ -176,11 +195,17 @@ export function MethodSelector({
                   placeholder={t('methodExecutor.searchPlaceholder')}
                   autoComplete="off"
                   spellCheck={false}
-                  className="h-8 border-0 bg-transparent pl-8 text-xs shadow-none focus-visible:ring-0"
+                  className={cn(
+                    'border-0 bg-transparent pl-8 shadow-none focus-visible:ring-0',
+                    // Keep ≤16px for iOS zoom safety via maximum-scale=1; match surrounding UI.
+                    mobile ? 'h-9 text-sm' : 'h-8 text-xs'
+                  )}
                 />
               </div>
             </div>
-            <div className="max-h-52 overflow-y-auto overscroll-contain">
+            <div
+              className={cn('overflow-y-auto overscroll-contain', mobile ? 'max-h-64' : 'max-h-52')}
+            >
               {catalogLoading ? (
                 <p className="px-2 py-4 text-center text-muted-foreground text-xs">
                   {t('methodExecutor.loadingMethods')}
@@ -210,7 +235,10 @@ export function MethodSelector({
                         setSearch('')
                       }}
                       style={colorClasses.style}
-                      className="flex w-full min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      className={cn(
+                        'flex w-full min-w-0 items-center gap-2 rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                        mobile ? 'min-h-11 px-2 py-2.5' : 'px-2 py-1.5'
+                      )}
                     >
                       <MethodCallExpression
                         scope={method.scope}

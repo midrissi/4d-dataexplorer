@@ -158,8 +158,9 @@ function getShortcutDisplay(ctx: CommandContext, id: string): string | undefined
 // ============================================================================
 
 function buildHelpCommands(ctx: CommandContext): Command[] {
-  return [
-    {
+  const commands: Command[] = []
+  if (!isMobileShell()) {
+    commands.push({
       id: 'show-assistant',
       label: ctx.assistantOpen ? ctx.t('command.closeAssistant') : ctx.t('command.openAssistant'),
       description: ctx.t('commandDesc.toggleAssistant'),
@@ -171,21 +172,22 @@ function buildHelpCommands(ctx: CommandContext): Command[] {
         ctx.toggleAssistantOpen()
         ctx.onClose()
       },
+    })
+  }
+  commands.push({
+    id: 'help',
+    label: ctx.t('command.showShortcuts'),
+    description: ctx.t('commandDesc.showShortcuts'),
+    shortcut: getShortcutDisplay(ctx, 'show-shortcuts'),
+    keywords: ['hotkeys', 'keybindings', 'keys', 'bindings'],
+    icon: <Keyboard className="h-4 w-4" />,
+    category: 'Help',
+    action: () => {
+      ctx.onClose()
+      ctx.onShowHelp()
     },
-    {
-      id: 'help',
-      label: ctx.t('command.showShortcuts'),
-      description: ctx.t('commandDesc.showShortcuts'),
-      shortcut: getShortcutDisplay(ctx, 'show-shortcuts'),
-      keywords: ['hotkeys', 'keybindings', 'keys', 'bindings'],
-      icon: <Keyboard className="h-4 w-4" />,
-      category: 'Help',
-      action: () => {
-        ctx.onClose()
-        ctx.onShowHelp()
-      },
-    },
-  ]
+  })
+  return commands
 }
 
 function buildAppearanceCommands(ctx: CommandContext): Command[] {

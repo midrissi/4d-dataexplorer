@@ -79,7 +79,7 @@ export function MobileConnectionForm({
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-background">
-      <header className="flex shrink-0 items-center gap-2 border-border border-b px-3 pt-[max(0.75rem,var(--app-safe-top))] pb-3">
+      <header className="relative z-20 flex shrink-0 items-center gap-2 border-border border-b px-3 pt-[max(0.75rem,var(--app-safe-top))] pb-3">
         <Button
           variant="ghost"
           size="icon"
@@ -104,12 +104,12 @@ export function MobileConnectionForm({
         </div>
       </header>
 
-      <div className="flex-1 space-y-5 overflow-y-auto px-5 py-5">
+      <div className="relative z-0 min-h-0 flex-1 space-y-5 overflow-y-auto overscroll-contain px-5 py-5">
         <div className="space-y-2">
           <Label htmlFor="mobile-url">{t('connectionScreen.formUrlLabel')}</Label>
           <Input
             id="mobile-url"
-            className="h-11"
+            className="h-11 text-base"
             value={baseUrl}
             onChange={(e) => onBaseUrlChange(e.target.value)}
             placeholder="https://192.168.1.10:8080"
@@ -139,7 +139,7 @@ export function MobileConnectionForm({
           <Label htmlFor="mobile-name">{t('connectionScreen.formNameLabel')}</Label>
           <Input
             id="mobile-name"
-            className="h-11"
+            className="h-11 text-base"
             value={name}
             onChange={(e) => onNameChange(e.target.value)}
           />
@@ -149,7 +149,7 @@ export function MobileConnectionForm({
           <Label htmlFor="mobile-key">{t('connectionScreen.formAccessKeyLabel')}</Label>
           <PasswordInput
             id="mobile-key"
-            className="h-11"
+            className="h-11 text-base"
             value={accessKey}
             onChange={(e) => onAccessKeyChange(e.target.value)}
             placeholder={t('connectionScreen.formAccessKeyPlaceholder')}
@@ -198,7 +198,7 @@ export function MobileConnectionForm({
               <Label htmlFor="mobile-user">{t('connectionScreen.formUsername')}</Label>
               <Input
                 id="mobile-user"
-                className="h-11"
+                className="h-11 text-base"
                 value={username}
                 onChange={(e) => onUsernameChange(e.target.value)}
                 autoCapitalize="none"
@@ -209,7 +209,7 @@ export function MobileConnectionForm({
               <Label htmlFor="mobile-pass">{t('connectionScreen.formPassword')}</Label>
               <PasswordInput
                 id="mobile-pass"
-                className="h-11"
+                className="h-11 text-base"
                 value={password}
                 onChange={(e) => onPasswordChange(e.target.value)}
                 autoComplete="current-password"
@@ -219,7 +219,7 @@ export function MobileConnectionForm({
               <Label htmlFor="mobile-timeout">{t('connectionScreen.formTimeout')}</Label>
               <Input
                 id="mobile-timeout"
-                className="h-11"
+                className="h-11 text-base"
                 value={timeout}
                 onChange={(e) => onTimeoutChange(e.target.value)}
                 inputMode="numeric"
@@ -246,7 +246,7 @@ export function MobileConnectionForm({
         ) : null}
       </div>
 
-      <footer className="shrink-0 space-y-2.5 border-border border-t bg-background/95 px-5 pt-3 pb-[var(--app-safe-bottom)] backdrop-blur-sm">
+      <footer className="relative z-20 shrink-0 space-y-2.5 border-border border-t bg-background px-5 pt-3 pb-[var(--app-safe-bottom)]">
         <div className="flex gap-2">
           <Button
             type="button"
@@ -273,7 +273,12 @@ export function MobileConnectionForm({
             {t('connectionScreen.formSave')}
           </Button>
         </div>
-        <Button type="button" className="h-12 w-full text-base" disabled={!canSubmit} onClick={onConnect}>
+        <Button
+          type="button"
+          className="h-12 w-full text-base"
+          disabled={!canSubmit}
+          onClick={onConnect}
+        >
           {submitting ? (
             <Loader2 className="mr-2 h-5 w-5 animate-spin" aria-hidden />
           ) : (

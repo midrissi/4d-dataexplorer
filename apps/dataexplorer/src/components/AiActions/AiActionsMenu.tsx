@@ -17,6 +17,7 @@ import { AssistantSparklesIcon } from '~/components/AssistantSparklesIcon'
 import { useAssistantLlmConfigured } from '~/hooks/useAssistantLlmConfigured'
 import { useTranslation } from '~/i18n'
 import { AI_ACTIONS, type AiActionId } from '~/lib/ai-actions'
+import { isMobileShell } from '~/lib/platform'
 import {
   useAiTasksStore,
   useHasRunningAiTaskForDataclass,
@@ -47,6 +48,7 @@ export function AiActionsMenu({
   className,
 }: AiActionsMenuProps) {
   const { t } = useTranslation()
+  const mobile = isMobileShell()
   const configured = useAssistantLlmConfigured()
   const readonlyMode = useReadonlyMode()
   const hasRunning = useHasRunningAiTaskForDataclass(dataclassName)
@@ -101,8 +103,13 @@ export function AiActionsMenu({
                   variant={isIcon ? 'ghost' : 'outline'}
                   size={isIcon ? 'iconXs' : 'xs'}
                   className={cn(
-                    isIcon ? 'h-6! w-6!' : 'h-6 gap-1 border-primary/20 px-2',
+                    isIcon
+                      ? mobile
+                        ? 'h-9! w-9!'
+                        : 'h-6! w-6!'
+                      : 'h-6 gap-1 border-primary/20 px-2',
                     !isIcon && 'bg-primary/5 hover:border-primary/35 hover:bg-primary/10',
+                    !isIcon && mobile && 'h-9',
                     hasRunning && 'text-primary',
                     className
                   )}

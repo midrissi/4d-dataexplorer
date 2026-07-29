@@ -2,6 +2,7 @@ import { Button, cn } from '@4d/ui'
 import { Database, Search } from 'lucide-react'
 import type { RefObject } from 'react'
 import { EmptyPanel } from '~/components/EmptyPanel'
+import { isMobileShell } from '~/lib/platform'
 import type { TFunction } from './utils'
 
 export type DataclassPickerModeProps = {
@@ -30,6 +31,7 @@ export function DataclassPickerModeHeader({
   t,
   className,
 }: DataclassPickerModeProps) {
+  const mobile = isMobileShell()
   return (
     <div className={cn('flex items-center gap-2', className)}>
       <Database className="h-4 w-4 shrink-0 text-primary" />
@@ -45,13 +47,16 @@ export function DataclassPickerModeHeader({
             : t('commandPalette.dataclassSearchPlaceholder')
         }
         className={cn(
-          'min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground',
-          className ? 'min-h-0' : 'h-8'
+          'min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground',
+          mobile ? 'text-sm' : 'text-xs',
+          className ? 'min-h-0' : mobile ? 'h-11' : 'h-8'
         )}
       />
-      <kbd className="hidden rounded bg-muted px-1 py-0.5 font-mono text-muted-foreground text-xs sm:inline">
-        esc
-      </kbd>
+      {!mobile ? (
+        <kbd className="hidden rounded bg-muted px-1 py-0.5 font-mono text-muted-foreground text-xs sm:inline">
+          esc
+        </kbd>
+      ) : null}
     </div>
   )
 }
@@ -66,6 +71,7 @@ export function DataclassPickerModeContent({
   onOpenDataclassData,
   t,
 }: DataclassPickerModeProps) {
+  const mobile = isMobileShell()
   return (
     <div className="min-h-0 flex-1 overflow-y-auto" data-command-palette-list>
       <div ref={listRef} className="p-1">
@@ -97,7 +103,8 @@ export function DataclassPickerModeContent({
                   onClick={onSelect}
                   onMouseEnter={() => setSelectedIndex(index)}
                   className={cn(
-                    'h-auto min-h-7 w-full items-start justify-start gap-2 whitespace-normal rounded-sm px-1.5 py-1.5 text-left',
+                    'h-auto w-full items-start justify-start gap-2 whitespace-normal rounded-sm text-left',
+                    mobile ? 'min-h-11 px-2 py-2.5' : 'min-h-7 px-1.5 py-1.5',
                     isSelected && 'bg-accent text-accent-foreground'
                   )}
                 >
@@ -110,7 +117,14 @@ export function DataclassPickerModeContent({
                     <Database className="h-3.5 w-3.5" />
                   </span>
                   <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-                    <div className="truncate font-medium text-xs leading-tight">{dc.name}</div>
+                    <div
+                      className={cn(
+                        'truncate font-medium leading-tight',
+                        mobile ? 'text-sm' : 'text-xs'
+                      )}
+                    >
+                      {dc.name}
+                    </div>
                     <div
                       className={cn(
                         'truncate text-[11px] leading-tight',

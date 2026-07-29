@@ -1,8 +1,9 @@
 import { Button, cn, useConfirm } from '@4d/ui'
-import { History, Trash2 } from 'lucide-react'
+import { History, Trash2, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { EmptyPanel } from '~/components/EmptyPanel'
 import { useTranslation } from '~/i18n'
+import { isMobileShell } from '~/lib/platform'
 import type { MethodExecutorSeed, MethodScope } from '~/store/method-executor-types'
 import type { MethodRunHistoryItem } from '~/store/method-run-history'
 import { isDataclassTab, useTabsStore } from '~/store/tabs'
@@ -143,17 +144,23 @@ function HistoryRunRow({
   run,
   onOpen,
   onRemove,
+  mobile,
 }: {
   run: MethodRunHistoryItem
   onOpen: () => void
   onRemove: () => void
+  mobile?: boolean
 }) {
   const { t } = useTranslation()
   const argCount = run.config.arguments?.length ?? 0
 
   return (
     <div className="group flex items-center gap-1 rounded-md px-1 py-1.5 transition-colors hover:bg-muted/40">
-      <button type="button" className="min-w-0 flex-1 overflow-x-auto text-left" onClick={onOpen}>
+      <button
+        type="button"
+        className={cn('min-w-0 flex-1 overflow-x-auto text-left', mobile && 'min-h-11 py-1')}
+        onClick={onOpen}
+      >
         <div className="flex flex-nowrap items-center gap-2">
           <HistoryMethodExpression config={run.config} />
           <span className="shrink-0 text-[10px] text-muted-foreground/80">
@@ -174,7 +181,10 @@ function HistoryRunRow({
       <Button
         variant="ghost"
         size="icon"
-        className="h-6 w-6 shrink-0 text-muted-foreground opacity-50 hover:text-destructive group-hover:opacity-100"
+        className={cn(
+          'shrink-0 text-muted-foreground hover:text-destructive group-hover:opacity-100',
+          mobile ? 'h-9 w-9' : 'h-6 w-6 opacity-50'
+        )}
         onClick={onRemove}
         aria-label={t('methodExecutor.removeRun')}
         title={t('methodExecutor.removeRun')}
@@ -200,6 +210,7 @@ export function MethodRunHistory({
 }) {
   const { t } = useTranslation()
   const { confirm, ConfirmDialog } = useConfirm()
+  const mobile = isMobileShell()
 
   const handleClearAll = async () => {
     const ok = await confirm({
@@ -215,36 +226,67 @@ export function MethodRunHistory({
   }
 
   return (
-    <div className="space-y-2 border-t pt-4">
+    <div className={cn('space-y-2', mobile ? 'flex h-full min-h-0 flex-col' : 'border-t pt-4')}>
       <ConfirmDialog />
-      <div className="flex items-center justify-between gap-2">
-        <p className="font-medium text-sm">{t('methodExecutor.lastRuns')}</p>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 text-xs"
-          onClick={() => void handleClearAll()}
-          disabled={runs.length === 0}
+      <div
+        className={cn(
+          'flex items-center justify-between gap-2',
+          mobile && 'shrink-0 border-b px-3 py-2'
+        )}
+      >
+        <p
+          id={mobile ? 'method-run-history-title' : undefined}
+          className={cn('min-w-0 flex-1 truncate font-medium text-sm', mobile && 'text-base')}
         >
-          {t('methodExecutor.clearAll')}
-        </Button>
+          {t('methodExecutor.lastRuns')}
+        </p>
+        <div className="flex shrink-0 items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn('h-7 text-xs', mobile && 'h-9 text-xs')}
+            onClick={() => void handleClearAll()}
+            disabled={runs.length === 0}
+          >
+            {t('methodExecutor.clearAll')}
+          </Button>
+          {mobile ? (
+            <Button
+              variant="ghost"
+              className="h-9 shrink-0 px-3 text-sm"
+              onClick={onClose}
+              aria-label={t('common.close')}
+            >
+              <X className="mr-1 h-4 w-4" />
+              {t('common.close')}
+            </Button>
+          ) : null}
+        </div>
       </div>
       {runs.length === 0 ? (
-        <EmptyPanel
-          icon={History}
-          badgeTone="muted"
-          title={t('methodExecutor.noRunsTitle')}
-          description={t('methodExecutor.noRunsDescription')}
-          ghost="rows"
-          bordered
-          size="sm"
-        />
+        <div className={mobile ? 'p-3' : undefined}>
+          <EmptyPanel
+            icon={History}
+            badgeTone="muted"
+            title={t('methodExecutor.noRunsTitle')}
+            description={t('methodExecutor.noRunsDescription')}
+            ghost="rows"
+            bordered
+            size="sm"
+          />
+        </div>
       ) : (
-        <div className="max-h-64 overflow-y-auto overscroll-contain rounded-md bg-muted/25 p-0.5">
+        <div
+          className={cn(
+            'overflow-y-auto overscroll-contain bg-muted/25 p-0.5',
+            mobile ? 'min-h-0 flex-1' : 'max-h-64 rounded-md'
+          )}
+        >
           {runs.map((run) => (
             <HistoryRunRow
               key={run.id}
               run={run}
+              mobile={mobile}
               onOpen={() => onOpenRun(run.config)}
               onRemove={() => onRemoveRun(run.id)}
             />

@@ -3,6 +3,7 @@ import { Dices, Palette, Search } from 'lucide-react'
 import { useCallback, useDeferredValue, useMemo, useRef, useState } from 'react'
 import { VirtualIconGrid } from '~/components/VirtualIconGrid'
 import { useTranslation } from '~/i18n'
+import { isMobileShell } from '~/lib/platform'
 import { COLOR_PRESETS, type ColorPreset, ICON_PRESETS, type Profile } from '~/store/settings'
 
 type ProfileAppearancePopoverProps = {
@@ -19,6 +20,7 @@ export function ProfileAppearancePopover({
   onUpdateAppearance,
 }: ProfileAppearancePopoverProps) {
   const { t } = useTranslation()
+  const mobile = isMobileShell()
   const selectedColorRef = useRef<HTMLButtonElement>(null)
   const [iconSearch, setIconSearch] = useState('')
   const [iconScrollNonce, setIconScrollNonce] = useState(0)
@@ -61,7 +63,18 @@ export function ProfileAppearancePopover({
           <Palette className="h-3 w-3" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-64 p-2">
+      <PopoverContent
+        align={mobile ? 'center' : 'start'}
+        side="bottom"
+        avoidCollisions
+        collisionPadding={mobile ? 16 : 12}
+        className={cn(
+          'p-2',
+          mobile
+            ? 'max-h-[min(70dvh,28rem)] w-[min(calc(100vw-2rem),22rem)] overflow-y-auto'
+            : 'w-64'
+        )}
+      >
         <p className="mb-2 font-medium text-muted-foreground text-xs">
           {t('settings.profileIconAndColor')}
         </p>
@@ -89,8 +102,8 @@ export function ProfileAppearancePopover({
           icons={filteredIcons}
           value={profile.icon}
           onSelect={(icon) => onUpdateAppearance({ icon })}
-          height={200}
-          cellSize={32}
+          height={mobile ? 260 : 200}
+          cellSize={mobile ? 44 : 32}
           className="mb-2"
           scrollNonce={iconScrollNonce}
         />
@@ -110,7 +123,8 @@ export function ProfileAppearancePopover({
                 variant="outline"
                 size="sm"
                 className={cn(
-                  'h-6! w-6! min-w-0! rounded-full p-0',
+                  'min-w-0! rounded-full p-0',
+                  mobile ? 'h-9! w-9!' : 'h-6! w-6!',
                   isSelected && 'ring-2 ring-primary ring-offset-2'
                 )}
                 onClick={() => onUpdateAppearance({ color: key })}
@@ -118,7 +132,8 @@ export function ProfileAppearancePopover({
               >
                 <div
                   className={cn(
-                    'h-3 w-3 rounded-full',
+                    'rounded-full',
+                    mobile ? 'h-4.5 w-4.5' : 'h-3 w-3',
                     key === 'default' ? 'bg-primary' : preset.bg
                   )}
                 />

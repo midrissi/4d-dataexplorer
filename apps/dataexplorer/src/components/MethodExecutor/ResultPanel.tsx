@@ -1,4 +1,4 @@
-import { Button, ClickToCopy, CodeEditor } from '@4d/ui'
+import { Button, ClickToCopy, CodeEditor, cn } from '@4d/ui'
 import {
   ExternalLink,
   FlaskConical,
@@ -16,6 +16,7 @@ import { EmptyPanel } from '~/components/EmptyPanel'
 import { EntityViewer } from '~/components/EntityViewer'
 import { useTranslation } from '~/i18n'
 import { getImageUri, isDeferredRelationValue } from '~/lib/fieldPaths'
+import { isMobileShell } from '~/lib/platform'
 import { useTabsStore } from '~/store/tabs'
 import type { DetectedMethodResult } from './detect-method-result'
 
@@ -67,6 +68,33 @@ function PreviewCell({ value }: { value: unknown }): ReactNode {
   )
 }
 
+function EntitySelectionKeyBar({ entitySetId }: { entitySetId: string }) {
+  const { t } = useTranslation()
+  const mobile = isMobileShell()
+  return (
+    <div
+      className={cn(
+        'flex shrink-0 flex-wrap items-center gap-2 rounded-md border bg-muted/20',
+        mobile ? 'px-3 py-2.5' : 'px-2.5 py-1.5'
+      )}
+    >
+      <span className="text-[11px] text-muted-foreground">{t('methodExecutor.selectionKey')}</span>
+      <ClickToCopy
+        value={entitySetId}
+        tooltipLabel={t('common.clickToCopy')}
+        tooltipCopiedLabel={t('common.copied')}
+        className={cn(
+          'inline-flex min-w-0 max-w-full items-center gap-1.5 rounded border bg-background font-mono text-foreground hover:bg-accent',
+          mobile ? 'min-h-10 px-2.5 py-2 text-xs' : 'px-2 py-0.5 text-xs'
+        )}
+      >
+        <KeyRound className="h-3 w-3 shrink-0 text-muted-foreground" aria-hidden />
+        <span className="min-w-0 truncate">{entitySetId}</span>
+      </ClickToCopy>
+    </div>
+  )
+}
+
 function EmptyEntitySelection({
   dataClass,
   entitySetId,
@@ -99,33 +127,15 @@ function EmptyEntitySelection({
   )
 }
 
-function EntitySelectionKeyBar({ entitySetId }: { entitySetId: string }) {
-  const { t } = useTranslation()
-  return (
-    <div className="flex shrink-0 flex-wrap items-center gap-2 rounded-md border bg-muted/20 px-2.5 py-1.5">
-      <span className="text-[11px] text-muted-foreground">{t('methodExecutor.selectionKey')}</span>
-      <ClickToCopy
-        value={entitySetId}
-        tooltipLabel={t('common.clickToCopy')}
-        tooltipCopiedLabel={t('common.copied')}
-        className="inline-flex min-w-0 max-w-full items-center gap-1.5 rounded border bg-background px-2 py-0.5 font-mono text-foreground text-xs hover:bg-accent"
-      >
-        <KeyRound className="h-3 w-3 shrink-0 text-muted-foreground" />
-        <span className="min-w-0 truncate">{entitySetId}</span>
-      </ClickToCopy>
-    </div>
-  )
-}
-
 function EntitySelectionResult({
   result,
   selectionTabTitle,
 }: {
   result: Extract<DetectedMethodResult, { kind: 'entitysel' }>
-  /** Custom title when opening the selection in a new tab. Defaults to "{dataClass} method result". */
   selectionTabTitle?: string
 }) {
   const { t } = useTranslation()
+  const mobile = isMobileShell()
   const openEntitySetTab = useTabsStore((state) => state.openEntitySetTab)
   const openTab = useTabsStore((state) => state.openTab)
   const previewLimit = 100
@@ -153,25 +163,46 @@ function EntitySelectionResult({
     openTab(result.dataClass)
   }
 
+  const summary = t('methodExecutor.showingFirst', {
+    name: result.dataClass ?? t('methodExecutor.entitySelection'),
+    count: result.count,
+    shown: preview.length,
+  })
+
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col gap-3 overflow-hidden">
+    <div
+      className={cn(
+        'flex h-full min-h-0 flex-1 flex-col overflow-hidden',
+        mobile ? 'gap-3' : 'gap-3'
+      )}
+    >
       {entitySetId ? <EntitySelectionKeyBar entitySetId={entitySetId} /> : null}
-      <div className="flex shrink-0 items-center justify-between gap-2">
-        <p className="text-muted-foreground text-sm">
-          {t('methodExecutor.showingFirst', {
-            name: result.dataClass ?? t('methodExecutor.entitySelection'),
-            count: result.count,
-            shown: preview.length,
-          })}
+
+      <div
+        className={cn('flex shrink-0 gap-2', mobile ? 'flex-col' : 'items-center justify-between')}
+      >
+        <p className={cn('text-muted-foreground', mobile ? 'text-sm leading-snug' : 'text-sm')}>
+          {summary}
         </p>
-        <Button size="xs" onClick={openAll} disabled={!result.dataClass}>
-          <ExternalLink />
+        <Button
+          size={mobile ? 'default' : 'xs'}
+          className={cn(mobile && 'h-11 w-full')}
+          onClick={openAll}
+          disabled={!result.dataClass}
+        >
+          <ExternalLink className="h-4 w-4" aria-hidden />
           {t('methodExecutor.openAll')}
         </Button>
       </div>
+
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-border/70 bg-muted/10">
-        <div className="flex shrink-0 items-center gap-2 border-border/50 border-b px-2.5 py-1 text-[10px] text-muted-foreground">
-          <TableProperties className="h-3 w-3" />
+        <div
+          className={cn(
+            'flex shrink-0 items-center gap-2 border-border/50 border-b text-muted-foreground',
+            mobile ? 'px-3 py-2 text-xs' : 'px-2.5 py-1 text-[10px]'
+          )}
+        >
+          <TableProperties className={mobile ? 'h-3.5 w-3.5' : 'h-3 w-3'} aria-hidden />
           <span>
             {t('httpClient.textPreviewCsvMeta', {
               rows: preview.length,
@@ -179,52 +210,94 @@ function EntitySelectionResult({
             })}
           </span>
         </div>
-        <div className="min-h-0 flex-1 overflow-auto">
-          <table className="w-max min-w-full border-collapse text-left text-xs">
-            <thead className="sticky top-0 z-10 bg-muted/95 backdrop-blur">
-              <tr>
-                <th className="w-10 border-border/60 border-r border-b px-2 py-1.5 text-center font-medium text-muted-foreground tabular-nums">
-                  #
-                </th>
-                <th className="max-w-72 truncate border-border/60 border-b px-2.5 py-1.5 font-semibold text-foreground">
-                  Key
-                </th>
-                {columns.map((column) => (
-                  <th
-                    key={column}
-                    className="max-w-72 truncate border-border/60 border-b px-2.5 py-1.5 font-semibold text-foreground"
-                    title={column}
-                  >
-                    {column}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {preview.map((entity, index) => (
-                <tr
-                  key={String(entity.__KEY ?? index)}
-                  className="odd:bg-background/40 even:bg-muted/20 hover:bg-muted/40"
+
+        {mobile ? (
+          <ul className="min-h-0 flex-1 space-y-2 overflow-auto overscroll-contain p-2">
+            {preview.map((entity, index) => {
+              const key = String(entity.__KEY ?? index)
+              return (
+                <li
+                  key={key}
+                  className="rounded-xl border border-border/60 bg-background/80 px-3.5 py-3"
                 >
-                  <td className="border-border/40 border-r px-2 py-1 text-center text-[10px] text-muted-foreground tabular-nums">
-                    {index + 1}
-                  </td>
-                  <td className="max-w-72 truncate border-border/30 border-b px-2.5 py-1 font-mono text-[11px] text-foreground/90">
-                    {String(entity.__KEY ?? '—')}
-                  </td>
-                  {columns.map((column) => (
-                    <td
-                      key={column}
-                      className="max-w-72 truncate border-border/30 border-b px-2.5 py-1"
+                  <div className="mb-2.5 flex items-baseline justify-between gap-2">
+                    <span className="font-medium text-muted-foreground text-xs tabular-nums">
+                      #{index + 1}
+                    </span>
+                    <span
+                      className="min-w-0 truncate font-mono text-foreground text-xs"
+                      title={key}
                     >
-                      <PreviewCell value={entity[column]} />
-                    </td>
+                      {t('methodExecutor.entityKey')}: {key}
+                    </span>
+                  </div>
+                  <dl className="space-y-2">
+                    {columns.map((column) => (
+                      <div key={column} className="grid grid-cols-[minmax(0,7.5rem)_1fr] gap-2">
+                        <dt
+                          className="truncate font-medium text-muted-foreground text-xs"
+                          title={column}
+                        >
+                          {column}
+                        </dt>
+                        <dd className="min-w-0">
+                          <PreviewCell value={entity[column]} />
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                </li>
+              )
+            })}
+          </ul>
+        ) : (
+          <div className="min-h-0 flex-1 overflow-auto">
+            <table className="w-max min-w-full border-collapse text-left text-xs">
+              <thead className="sticky top-0 z-10 bg-muted/95 backdrop-blur">
+                <tr>
+                  <th className="w-10 border-border/60 border-r border-b px-2 py-1.5 text-center font-medium text-muted-foreground tabular-nums">
+                    #
+                  </th>
+                  <th className="max-w-72 truncate border-border/60 border-b px-2.5 py-1.5 font-semibold text-foreground">
+                    {t('methodExecutor.entityKey')}
+                  </th>
+                  {columns.map((column) => (
+                    <th
+                      key={column}
+                      className="max-w-72 truncate border-border/60 border-b px-2.5 py-1.5 font-semibold text-foreground"
+                      title={column}
+                    >
+                      {column}
+                    </th>
                   ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {preview.map((entity, index) => (
+                  <tr
+                    key={String(entity.__KEY ?? index)}
+                    className="odd:bg-background/40 even:bg-muted/20 hover:bg-muted/40"
+                  >
+                    <td className="border-border/40 border-r px-2 py-1 text-center text-[10px] text-muted-foreground tabular-nums">
+                      {index + 1}
+                    </td>
+                    <td className="max-w-72 truncate border-border/30 border-b px-2.5 py-1 font-mono text-[11px] text-foreground/90">
+                      {String(entity.__KEY ?? '—')}
+                    </td>
+                    {columns.map((column) => (
+                      <td
+                        key={column}
+                        className="max-w-72 truncate border-border/30 border-b px-2.5 py-1"
+                      >
+                        <PreviewCell value={entity[column]} />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -235,7 +308,6 @@ export function ResultPanel({
   selectionTabTitle,
 }: {
   result: DetectedMethodResult | null
-  /** Custom title when opening an entity selection in a new tab. */
   selectionTabTitle?: string
 }) {
   const { t } = useTranslation()

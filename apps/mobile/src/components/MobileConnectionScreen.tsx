@@ -80,6 +80,8 @@ export function MobileConnectionScreen({ onConnect, initialEdit }: MobileConnect
     setShowAdvanced(false)
     setTestResult(null)
     setError(null)
+    setSubmitting(false)
+    setTesting(false)
     setShowForm(true)
   }, [])
 
@@ -106,6 +108,8 @@ export function MobileConnectionScreen({ onConnect, initialEdit }: MobileConnect
 
   const openNewForm = useCallback(() => {
     resetForm()
+    setSubmitting(false)
+    setTesting(false)
     setShowForm(true)
   }, [resetForm])
 
@@ -272,6 +276,7 @@ export function MobileConnectionScreen({ onConnect, initialEdit }: MobileConnect
       onConnect(saved)
     } catch (err) {
       setError(err instanceof Error ? err.message : t('mobile.connectFailed'))
+    } finally {
       setSubmitting(false)
     }
   }, [baseUrl, buildConnectionInput, onConnect, t])

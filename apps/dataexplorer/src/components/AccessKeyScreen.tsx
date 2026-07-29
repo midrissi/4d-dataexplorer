@@ -1,8 +1,9 @@
-import { Button, PasswordInput } from '@4d/ui'
+import { Button, cn, PasswordInput } from '@4d/ui'
 import { AlertCircle, ArrowLeft, Database } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from '~/i18n'
 import { formatThrownError } from '~/lib/api'
+import { isMobileShell } from '~/lib/platform'
 
 type AccessKeyScreenProps = {
   onSubmit: (accessKey: string) => Promise<void>
@@ -49,7 +50,14 @@ export function AccessKeyScreen({
   )
 
   return (
-    <div className="flex h-screen w-full flex-col items-center justify-center bg-background">
+    <div
+      className={
+        isMobileShell()
+          ? 'flex h-full w-full flex-col items-center justify-center overflow-y-auto bg-background px-4 pt-[var(--app-safe-top)] pb-[var(--app-safe-bottom)]'
+          : 'flex h-screen w-full flex-col items-center justify-center bg-background'
+      }
+    >
+      {' '}
       <div className="mb-4 flex flex-col items-center">
         <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-md bg-primary shadow-primary/20 shadow-sm">
           <Database className="h-5 w-5 text-primary-foreground" />
@@ -57,7 +65,6 @@ export function AccessKeyScreen({
         <h1 className="font-bold text-xl tracking-tight">{t('loading.title')}</h1>
         <p className="text-muted-foreground text-xs">{t('loading.subtitle')}</p>
       </div>
-
       <div className="w-full max-w-sm">
         {reason ? (
           <div
@@ -92,7 +99,7 @@ export function AccessKeyScreen({
               value={accessKey}
               onChange={(e) => setAccessKey(e.target.value)}
               disabled={submitting}
-              className="h-8 w-full text-xs"
+              className={cn('h-8 w-full text-xs', isMobileShell() && 'h-11 text-base')}
             />
           </div>
           {error && (

@@ -3,6 +3,7 @@ import { PanelLeft, Pin, Search, X } from 'lucide-react'
 import type { RefObject } from 'react'
 import { DataclassIcon, getDataclassColorClasses } from '~/components/DataclassCustomizeModal'
 import { EmptyPanel } from '~/components/EmptyPanel'
+import { isMobileShell } from '~/lib/platform'
 import type { DataclassCustomization } from '~/store/settings'
 import { isDataclassTab, type Tab } from '~/store/tabs'
 import type { TFunction } from './utils'
@@ -31,6 +32,7 @@ export function SwitchTabsModeHeader({
   t,
   className,
 }: SwitchTabsModeProps) {
+  const mobile = isMobileShell()
   return (
     <div className={cn('flex items-center gap-2', className)}>
       <PanelLeft className="h-4 w-4 shrink-0 text-primary" />
@@ -41,13 +43,16 @@ export function SwitchTabsModeHeader({
         onChange={(e) => setSwitchTabsSearch(e.target.value)}
         placeholder={t('commandPalette.switchTabPlaceholder')}
         className={cn(
-          'min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground',
-          className ? 'min-h-0' : 'h-8'
+          'min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground',
+          mobile ? 'text-sm' : 'text-xs',
+          className ? 'min-h-0' : mobile ? 'h-11' : 'h-8'
         )}
       />
-      <kbd className="hidden rounded bg-muted px-1 py-0.5 font-mono text-muted-foreground text-xs sm:inline">
-        {t('commandPalette.escKey')}
-      </kbd>
+      {!mobile ? (
+        <kbd className="hidden rounded bg-muted px-1 py-0.5 font-mono text-muted-foreground text-xs sm:inline">
+          {t('commandPalette.escKey')}
+        </kbd>
+      ) : null}
     </div>
   )
 }
@@ -63,6 +68,7 @@ export function SwitchTabsModeContent({
   onCloseTab,
   t,
 }: SwitchTabsModeProps) {
+  const mobile = isMobileShell()
   return (
     <div className="min-h-0 flex-1 overflow-y-auto" data-command-palette-list>
       <div ref={switchTabsGridRef} className="grid grid-cols-2 gap-1 px-1.5 py-2 sm:grid-cols-3">
@@ -120,7 +126,8 @@ export function SwitchTabsModeContent({
                 onMouseEnter={() => setSwitchTabsSelectedIndex(index)}
                 style={colorClasses.style}
                 className={cn(
-                  'group relative flex h-7 w-full cursor-pointer items-center gap-1.5 rounded-sm border border-l-2 bg-transparent px-1.5 py-0 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
+                  'group relative flex w-full cursor-pointer items-center gap-1.5 rounded-sm border border-l-2 bg-transparent px-1.5 py-0 text-left transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
+                  mobile ? 'h-11' : 'h-7',
                   isSelected ? 'border-primary bg-accent' : 'border-border',
                   !isSelected && isCurrentTab && 'border-l-primary'
                 )}
@@ -139,7 +146,8 @@ export function SwitchTabsModeContent({
                 </span>
                 <span
                   className={cn(
-                    'min-w-0 flex-1 truncate font-medium text-xs',
+                    'min-w-0 flex-1 truncate font-medium',
+                    mobile ? 'text-sm' : 'text-xs',
                     isSelected && 'text-primary',
                     !isSelected && isDataclass && customization && colorClasses.text
                   )}

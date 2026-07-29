@@ -1,6 +1,7 @@
 import { Button, cn } from '@4d/ui'
 import { FileStack, Hash } from 'lucide-react'
 import type { RefObject } from 'react'
+import { isMobileShell } from '~/lib/platform'
 import type { TFunction } from './utils'
 
 export type GoToVariant = 'entity' | 'page'
@@ -29,6 +30,7 @@ export function GoToModeHeader({
   t,
   className,
 }: GoToModeProps) {
+  const mobile = isMobileShell()
   const isPage = variant === 'page'
   const max = isPage ? (pagination?.totalPages ?? undefined) : (pagination?.total ?? undefined)
   const Icon = isPage ? FileStack : Hash
@@ -51,22 +53,25 @@ export function GoToModeHeader({
         onKeyDown={onKeyDown}
         placeholder={placeholder}
         className={cn(
-          'min-w-0 flex-1 bg-transparent text-xs outline-none [appearance:textfield] placeholder:text-muted-foreground [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
-          className ? 'min-h-0' : 'h-8'
+          'min-w-0 flex-1 bg-transparent outline-none [appearance:textfield] placeholder:text-muted-foreground [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none',
+          mobile ? 'text-sm' : 'text-xs',
+          className ? 'min-h-0' : mobile ? 'h-11' : 'h-8'
         )}
       />
       <Button
         variant="default"
-        size="sm"
-        className="h-7 px-2 text-xs"
+        size={mobile ? 'default' : 'sm'}
+        className={mobile ? 'h-9 px-3 text-sm' : 'h-7 px-2 text-xs'}
         onClick={onGoTo}
         disabled={!goToValue || Number.parseInt(goToValue, 10) < 1}
       >
         {t('commandPalette.go')}
       </Button>
-      <kbd className="hidden rounded bg-muted px-1 py-0.5 font-mono text-muted-foreground text-xs sm:inline">
-        esc
-      </kbd>
+      {!mobile ? (
+        <kbd className="hidden rounded bg-muted px-1 py-0.5 font-mono text-muted-foreground text-xs sm:inline">
+          esc
+        </kbd>
+      ) : null}
     </div>
   )
 }

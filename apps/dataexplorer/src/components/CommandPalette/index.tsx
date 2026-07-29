@@ -1,5 +1,5 @@
-import { Dialog, DialogContent, DialogTitle } from '@4d/ui'
-import { Clock } from 'lucide-react'
+import { Button, cn, Dialog, DialogContent, DialogTitle } from '@4d/ui'
+import { Clock, X } from 'lucide-react'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { getIntlLocale, useTranslation } from '~/i18n'
@@ -13,6 +13,7 @@ import {
   groupCommandsByCategory,
 } from '~/lib/commands'
 import { eventBus } from '~/lib/eventBus'
+import { isMobileShell } from '~/lib/platform'
 import { getRecentCommands, type RecentCommand, saveRecentCommand } from '~/lib/storage'
 import { useDataExplorerStore } from '~/store'
 import { useDataclassCustomizations, usePageSize } from '~/store/settings'
@@ -41,6 +42,7 @@ export function CommandPalette({
   startInDataclassDataMode = false,
   startInSwitchTabsMode = false,
 }: CommandPaletteProps) {
+  const mobile = isMobileShell()
   const [search, setSearch] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [anchorPosition, setAnchorPosition] = useState<{
@@ -544,17 +546,33 @@ export function CommandPalette({
   const headerClassNameWhenAnchored = 'h-full min-h-0 w-full'
 
   const renderPaletteHeader = (className?: string) => (
-    <>
-      {goToMode ? (
-        <GoToModeHeader {...goToModeProps} className={className} />
-      ) : switchTabsMode ? (
-        <SwitchTabsModeHeader {...switchTabsProps} className={className} />
-      ) : dataclassSelectMode || dataclassDataMode ? (
-        <DataclassPickerModeHeader {...dataclassPickerProps} className={className} />
-      ) : (
-        <CommandsModeHeader {...commandsModeProps} className={className} />
-      )}
-    </>
+    <div
+      className={cn(mobile && 'flex items-center gap-1 border-border/60 border-b px-2 pt-1 pb-1')}
+    >
+      <div className={cn('min-w-0', mobile ? 'flex-1' : 'w-full')}>
+        {goToMode ? (
+          <GoToModeHeader {...goToModeProps} className={className} />
+        ) : switchTabsMode ? (
+          <SwitchTabsModeHeader {...switchTabsProps} className={className} />
+        ) : dataclassSelectMode || dataclassDataMode ? (
+          <DataclassPickerModeHeader {...dataclassPickerProps} className={className} />
+        ) : (
+          <CommandsModeHeader {...commandsModeProps} className={className} />
+        )}
+      </div>
+      {mobile ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="h-11 w-11 shrink-0"
+          onClick={() => onOpenChange(false)}
+          aria-label={t('common.close')}
+        >
+          <X className="h-5 w-5" />
+        </Button>
+      ) : null}
+    </div>
   )
 
   const paletteBody = (
@@ -575,17 +593,20 @@ export function CommandPalette({
         <CommandsModeContent {...commandsModeProps} />
       )}
 
-      <div className="flex shrink-0 items-center justify-between border-border/60 border-t px-2 py-1.5 text-muted-foreground text-xs">
-        {goToMode ? (
-          <GoToModeFooter variant={goToVariant} t={t} />
-        ) : switchTabsMode ? (
-          <SwitchTabsModeFooter t={t} />
-        ) : dataclassSelectMode || dataclassDataMode ? (
-          <DataclassPickerModeFooter dataclassDataMode={dataclassDataMode} t={t} />
-        ) : (
-          <CommandsModeFooter t={t} />
-        )}
-      </div>
+      {/* Keyboard hints are irrelevant on touch; de-emphasize by hiding entirely. */}
+      {!mobile ? (
+        <div className="flex shrink-0 items-center justify-between border-border/60 border-t px-2 py-1.5 text-muted-foreground text-xs">
+          {goToMode ? (
+            <GoToModeFooter variant={goToVariant} t={t} />
+          ) : switchTabsMode ? (
+            <SwitchTabsModeFooter t={t} />
+          ) : dataclassSelectMode || dataclassDataMode ? (
+            <DataclassPickerModeFooter dataclassDataMode={dataclassDataMode} t={t} />
+          ) : (
+            <CommandsModeFooter t={t} />
+          )}
+        </div>
+      ) : null}
     </>
   )
 
@@ -601,7 +622,7 @@ export function CommandPalette({
     </>
   )
 
-  const useAnchoredPalette = open && anchorRef?.current && anchorPosition !== null
+  const useAnchoredPalette = !mobile && open && anchorRef?.current && anchorPosition !== null
 
   if (useAnchoredPalette && typeof document !== 'undefined') {
     const pos = anchorPosition
@@ -643,7 +664,12 @@ export function CommandPalette({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="command-palette flex h-[70vh] max-h-125 flex-col overflow-hidden p-0 sm:max-w-xl"
+        className={cn(
+          'command-palette flex flex-col overflow-hidden p-0',
+          mobile
+            ? 'inset-0 top-0 left-0 h-[100dvh] max-h-[100dvh] w-full max-w-full translate-x-0 translate-y-0 rounded-none border-0 pt-[var(--app-safe-top)] pb-[var(--app-safe-bottom)]'
+            : 'h-[70vh] max-h-125 sm:max-w-xl'
+        )}
         hideCloseButton
         aria-describedby={undefined}
       >

@@ -3,6 +3,7 @@ import { Command as CommandIcon, Search } from 'lucide-react'
 import type { RefObject } from 'react'
 import { EmptyPanel } from '~/components/EmptyPanel'
 import type { Command } from '~/lib/commands'
+import { isMobileShell } from '~/lib/platform'
 import type { TFunction } from './utils'
 import { formatRelativeTime } from './utils'
 
@@ -32,6 +33,7 @@ export function CommandsModeHeader({
   t,
   className,
 }: CommandsModeProps) {
+  const mobile = isMobileShell()
   return (
     <div className={cn('flex items-center gap-2', className)}>
       <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
@@ -46,13 +48,16 @@ export function CommandsModeHeader({
             : t('commandPalette.placeholderShort')
         }
         className={cn(
-          'min-w-0 flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground',
-          className ? 'min-h-0' : 'h-8'
+          'min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground',
+          mobile ? 'text-sm' : 'text-xs',
+          className ? 'min-h-0' : mobile ? 'h-11' : 'h-8'
         )}
       />
-      <kbd className="hidden rounded bg-muted px-1 py-0.5 font-mono text-muted-foreground text-xs sm:inline">
-        {t('commandPalette.escKey')}
-      </kbd>
+      {!mobile ? (
+        <kbd className="hidden rounded bg-muted px-1 py-0.5 font-mono text-muted-foreground text-xs sm:inline">
+          {t('commandPalette.escKey')}
+        </kbd>
+      ) : null}
     </div>
   )
 }
@@ -68,6 +73,7 @@ export function CommandsModeContent({
   t,
   locale,
 }: CommandsModeProps) {
+  const mobile = isMobileShell()
   return (
     <div className="min-h-0 flex-1 overflow-y-auto" data-command-palette-list>
       <div ref={listRef} className="p-1">
@@ -101,7 +107,8 @@ export function CommandsModeContent({
                     onClick={() => onExecuteCommand(cmd)}
                     onMouseEnter={() => setSelectedIndex(globalIndex)}
                     className={cn(
-                      'group h-auto min-h-7 w-full items-start justify-start gap-2 whitespace-normal rounded-sm px-1.5 py-1.5 text-left hover:bg-accent hover:text-accent-foreground',
+                      'group h-auto w-full items-start justify-start gap-2 whitespace-normal rounded-sm text-left hover:bg-accent hover:text-accent-foreground',
+                      mobile ? 'min-h-11 px-2 py-2.5' : 'min-h-7 px-1.5 py-1.5',
                       isSelected && 'bg-accent text-accent-foreground'
                     )}
                   >
@@ -118,7 +125,8 @@ export function CommandsModeContent({
                     <div className="flex min-w-0 flex-1 flex-col gap-0.5">
                       <div
                         className={cn(
-                          'truncate font-medium text-xs leading-tight',
+                          'truncate font-medium leading-tight',
+                          mobile ? 'text-sm' : 'text-xs',
                           isSelected
                             ? 'text-accent-foreground'
                             : 'group-hover:text-accent-foreground'
@@ -193,7 +201,7 @@ export function CommandsModeContent({
                         {formatRelativeTime(cmd.usedAt, t, locale)}
                       </span>
                     )}
-                    {cmd.shortcut && (
+                    {cmd.shortcut && !mobile && (
                       <kbd
                         className={cn(
                           'mt-0.5 shrink-0 rounded px-1 py-0.5 font-mono text-[10px] leading-none',

@@ -30,7 +30,7 @@ export function MobileConnectionHome({
 
   return (
     <div className="flex h-full min-h-0 flex-col bg-background">
-      <header className="shrink-0 px-5 pt-[max(1.25rem,var(--app-safe-top))] pb-3">
+      <header className="relative z-20 shrink-0 px-5 pt-[max(1.25rem,var(--app-safe-top))] pb-3">
         <div className="flex items-center gap-3">
           <div
             className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-primary shadow-xs"
@@ -50,7 +50,7 @@ export function MobileConnectionHome({
         </div>
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 pb-3">
+      <div className="relative z-0 flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-5 pb-3">
         {loading ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 py-16">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" aria-hidden />
@@ -70,7 +70,11 @@ export function MobileConnectionHome({
             <p className="mt-2 max-w-[20rem] text-muted-foreground text-sm leading-relaxed">
               {t('connectionScreen.emptyDescription')}
             </p>
-            <Button type="button" className="mt-6 h-12 w-full max-w-sm gap-2 text-base" onClick={onNew}>
+            <Button
+              type="button"
+              className="mt-6 h-12 w-full max-w-sm gap-2 text-base"
+              onClick={onNew}
+            >
               <Plus className="h-5 w-5" aria-hidden />
               {t('connectionScreen.newConnection')}
             </Button>
@@ -167,7 +171,7 @@ export function MobileConnectionHome({
         )}
       </div>
 
-      <footer className="shrink-0 space-y-3 border-border border-t bg-background/95 px-4 pt-3 pb-[var(--app-safe-bottom)] backdrop-blur-sm">
+      <footer className="relative z-20 shrink-0 space-y-3 border-border border-t bg-background px-4 pt-3 pb-[var(--app-safe-bottom)]">
         {!empty ? (
           <>
             <Button type="button" className="h-12 w-full gap-2 text-base" onClick={onNew}>

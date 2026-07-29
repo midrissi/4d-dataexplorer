@@ -4,7 +4,9 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuTrigger,
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -13,10 +15,12 @@ import {
 import {
   BookText,
   Braces,
+  ChevronDown,
   Copy,
   Database,
   FileText,
   Home,
+  MoreHorizontal,
   Network,
   Pin,
   Play,
@@ -27,6 +31,12 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from '~/i18n'
 import { eventBus } from '~/lib/eventBus'
+import {
+  mobileMenuCollisionProps,
+  mobileMenuContentClass,
+  mobileMenuItemClass,
+} from '~/lib/mobile-menu'
+import { isMobileShell } from '~/lib/platform'
 import { formatCount } from '~/lib/utils'
 import { useDataExplorerStore } from '~/store'
 import {
@@ -79,7 +89,8 @@ function tabSurfaceClasses(isActive: boolean, isDragging: boolean, base: string)
   return cn(
     base,
     // Keep geometry identical for active/inactive: same border box, weight, and -mb-px.
-    'relative -mb-px flex h-8 shrink-0 flex-col overflow-hidden rounded-none border font-medium text-xs transition-colors',
+    'relative -mb-px flex shrink-0 flex-col overflow-hidden rounded-none border font-medium text-xs transition-colors',
+    isMobileShell() ? 'h-11' : 'h-8',
     isActive
       ? 'z-10 border-border/50 border-b-background bg-muted text-foreground'
       : 'border-transparent text-muted-foreground hover:bg-muted/40 hover:text-foreground',
@@ -92,6 +103,7 @@ const TAB_LIST_SCROLL_CLASS =
 
 export function TabBar() {
   const { t } = useTranslation()
+  const mobile = isMobileShell()
 
   const getTabDisplayName = useCallback(
     (tab: Tab) => {
@@ -101,9 +113,11 @@ export function TabBar() {
       if (isSchemaBuilderTab(tab)) return t('tabs.schemaBuilder')
       if (isAssistantMetadataTab(tab)) return t('tabs.assistantMetadata')
       if (isMethodExecutorTab(tab)) {
-        return tab.seed
-          ? `${tab.seed.dataClass ? `${tab.seed.dataClass}.` : ''}${tab.seed.methodName}`
-          : t('tabs.methodExecutor')
+        if (tab.seed) {
+          return `${tab.seed.dataClass ? `${tab.seed.dataClass}.` : ''}${tab.seed.methodName}`
+        }
+        // Shorter chip label on mobile so more tabs fit in the strip
+        return mobile ? t('tabs.methodExecutorShort') : t('tabs.methodExecutor')
       }
       if (isHttpClientTab(tab)) {
         if (tab.seed?.label) return tab.seed.label
@@ -114,7 +128,7 @@ export function TabBar() {
               : tab.seed.method || 'GET'
           return `${method} ${tab.seed.path?.split('?')[0] || '/'}`
         }
-        return t('tabs.httpClient')
+        return mobile ? t('tabs.httpClientShort') : t('tabs.httpClient')
       }
       if (isStaticTab(tab)) return t(STATIC_TAB_TITLE_KEYS[tab.staticId] ?? 'tabs.releaseNotes')
       if (isDataclassTab(tab) && tab.customTitle) {
@@ -125,7 +139,7 @@ export function TabBar() {
       }
       return tab.dataclassName
     },
-    [t]
+    [t, mobile]
   )
 
   const {
@@ -164,10 +178,16 @@ export function TabBar() {
   const isDraggingRef = useRef(false)
   const dragStartIndexRef = useRef<number | null>(null)
   const dropTargetIndexRef = useRef<number | null>(null)
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const suppressNextClickRef = useRef(false)
 
   const handleTabClick = useCallback(
     (tab: Tab) => {
       if (isDraggingRef.current) return
+      if (suppressNextClickRef.current) {
+        suppressNextClickRef.current = false
+        return
+      }
       // Activating the tab triggers syncActiveTab (App.tsx), which restores the
       // tab's cached entity slice instantly or fetches it on first activation.
       // Do NOT call selectDataclass here: it would wipe the cached slice and
@@ -185,11 +205,47 @@ export function TabBar() {
     [closeTab]
   )
 
-  const handleContextMenu = useCallback((e: React.MouseEvent, tab: Tab) => {
-    e.preventDefault()
+  const openTabContextMenu = useCallback((tab: Tab, x: number, y: number) => {
     setContextMenuTabId(tab.id)
-    setContextMenuPosition({ x: e.clientX, y: e.clientY })
+    setContextMenuPosition({ x, y })
   }, [])
+
+  const handleContextMenu = useCallback(
+    (e: React.MouseEvent, tab: Tab) => {
+      e.preventDefault()
+      openTabContextMenu(tab, e.clientX, e.clientY)
+    },
+    [openTabContextMenu]
+  )
+
+  const clearLongPress = useCallback(() => {
+    if (longPressTimerRef.current != null) {
+      clearTimeout(longPressTimerRef.current)
+      longPressTimerRef.current = null
+    }
+  }, [])
+
+  const handleTabTouchStart = useCallback(
+    (e: React.TouchEvent, tab: Tab) => {
+      if (!mobile) return
+      clearLongPress()
+      const touch = e.touches[0]
+      if (!touch) return
+      const { clientX, clientY } = touch
+      longPressTimerRef.current = setTimeout(() => {
+        longPressTimerRef.current = null
+        suppressNextClickRef.current = true
+        openTabContextMenu(tab, clientX, clientY)
+      }, 450)
+    },
+    [clearLongPress, mobile, openTabContextMenu]
+  )
+
+  const handleTabTouchEnd = useCallback(() => {
+    clearLongPress()
+  }, [clearLongPress])
+
+  useEffect(() => () => clearLongPress(), [clearLongPress])
 
   // Scroll tab list so the active tab is visible when selection changes
   useEffect(() => {
@@ -346,9 +402,88 @@ export function TabBar() {
   const contextMenuEntitySetId =
     contextMenuTab && isDataclassTab(contextMenuTab) ? contextMenuTab.entitySetId : null
 
+  const renderTabCloseActions = (tab: Tab, onDone: () => void) => (
+    <>
+      {tab.isClosable !== false && !tab.isPinned ? (
+        <DropdownMenuItem
+          className={cn(
+            'flex w-full items-center gap-2 whitespace-nowrap',
+            mobile && mobileMenuItemClass()
+          )}
+          onClick={() => {
+            closeTab(tab.id)
+            onDone()
+          }}
+        >
+          <X className="h-4 w-4 shrink-0" />
+          <span className="min-w-0 flex-1">{t('tabs.closeTab')}</span>
+        </DropdownMenuItem>
+      ) : null}
+      <DropdownMenuItem
+        className={cn('whitespace-nowrap', mobile && mobileMenuItemClass())}
+        onClick={() => {
+          closeOtherTabs(tab.id)
+          onDone()
+        }}
+      >
+        {t('command.closeOtherTabs')}
+      </DropdownMenuItem>
+      <DropdownMenuItem
+        className={cn('whitespace-nowrap', mobile && mobileMenuItemClass())}
+        onClick={() => {
+          closeTabsToRight(tab.id)
+          onDone()
+        }}
+      >
+        {t('command.closeTabsToRight')}
+      </DropdownMenuItem>
+      <DropdownMenuSeparator />
+      <DropdownMenuItem
+        className={cn(
+          'whitespace-nowrap text-destructive focus:text-destructive',
+          mobile && mobileMenuItemClass()
+        )}
+        onClick={() => {
+          closeAllTabs()
+          onDone()
+        }}
+      >
+        {t('command.closeAllTabs')}
+      </DropdownMenuItem>
+    </>
+  )
+
+  const renderTabTypeIcon = useCallback(
+    (tab: Tab, className: string) => {
+      if (isHomeTab(tab)) return <Home className={className} />
+      if (isSettingsTab(tab)) return <Settings className={className} />
+      if (isGraphTab(tab)) return <Network className={className} />
+      if (isSchemaBuilderTab(tab)) return <Braces className={className} />
+      if (isAssistantMetadataTab(tab)) return <BookText className={className} />
+      if (isMethodExecutorTab(tab)) return <Play className={className} />
+      if (isHttpClientTab(tab)) return <Send className={className} />
+      if (isStaticTab(tab)) return <FileText className={className} />
+      if (isDataclassTab(tab)) {
+        return (
+          <DataclassIcon
+            customization={dataclassCustomizations[tab.dataclassName]}
+            className={className}
+          />
+        )
+      }
+      return <Database className={className} />
+    },
+    [dataclassCustomizations]
+  )
+
   if (tabs.length === 0) {
     return (
-      <div className="flex h-8 items-center border-b bg-muted/40 px-2">
+      <div
+        className={cn(
+          'flex items-center border-b bg-muted/40 px-2',
+          isMobileShell() ? 'h-11' : 'h-8'
+        )}
+      >
         <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
           <Database className="h-3.5 w-3.5" />
           {t('tabs.noTabsOpenHint')}
@@ -360,241 +495,429 @@ export function TabBar() {
   return (
     <>
       <div className="mt-1 shrink-0 border-border/60 border-b bg-muted/20">
-        <div
-          ref={containerRef}
-          role="tablist"
-          className={cn('flex h-8 items-center gap-0.5 px-1', TAB_LIST_SCROLL_CLASS)}
-        >
-          {tabs.map((tab, index) => {
-            const isActive = tab.id === activeTabId
-            const isDragging = tab.id === draggedTabId
-            const showDropIndicator =
-              dropTargetIndex === index && draggedTabId !== null && draggedTabId !== tab.id
-            const count = getTabCount(tab)
-            const displayName = getTabDisplayName(tab)
-            const isHome = isHomeTab(tab)
-            const isSettings = isSettingsTab(tab)
-            const isGraph = isGraphTab(tab)
-            const isStatic = isStaticTab(tab)
-            const isSchemaBuilder = isSchemaBuilderTab(tab)
-            const isAssistantMetadata = isAssistantMetadataTab(tab)
-            const isMethodExecutor = isMethodExecutorTab(tab)
-            const isHttpClient = isHttpClientTab(tab)
-            const isDataclass = isDataclassTab(tab)
-            const showCount =
-              !isHome &&
-              !isSettings &&
-              !isGraph &&
-              !isStatic &&
-              !isSchemaBuilder &&
-              !isAssistantMetadata &&
-              !isMethodExecutor &&
-              !isHttpClient
+        <div className={cn('flex items-center', mobile && 'pr-0.5')}>
+          <div
+            ref={containerRef}
+            role="tablist"
+            className={cn(
+              'flex items-center gap-0.5 px-1',
+              TAB_LIST_SCROLL_CLASS,
+              mobile ? 'h-11 min-w-0 flex-1' : 'h-8'
+            )}
+          >
+            {tabs.map((tab, index) => {
+              const isActive = tab.id === activeTabId
+              const isDragging = tab.id === draggedTabId
+              const showDropIndicator =
+                dropTargetIndex === index && draggedTabId !== null && draggedTabId !== tab.id
+              const count = getTabCount(tab)
+              const displayName = getTabDisplayName(tab)
+              const isHome = isHomeTab(tab)
+              const isSettings = isSettingsTab(tab)
+              const isGraph = isGraphTab(tab)
+              const isStatic = isStaticTab(tab)
+              const isSchemaBuilder = isSchemaBuilderTab(tab)
+              const isAssistantMetadata = isAssistantMetadataTab(tab)
+              const isMethodExecutor = isMethodExecutorTab(tab)
+              const isHttpClient = isHttpClientTab(tab)
+              const isDataclass = isDataclassTab(tab)
+              const showCount =
+                !isHome &&
+                !isSettings &&
+                !isGraph &&
+                !isStatic &&
+                !isSchemaBuilder &&
+                !isAssistantMetadata &&
+                !isMethodExecutor &&
+                !isHttpClient
 
-            // Get customization for dataclass tabs
-            const customization = isDataclass
-              ? dataclassCustomizations[tab.dataclassName]
-              : undefined
-            const colorClasses = getDataclassColorClasses(customization)
+              // Get customization for dataclass tabs
+              const customization = isDataclass
+                ? dataclassCustomizations[tab.dataclassName]
+                : undefined
+              const colorClasses = getDataclassColorClasses(customization)
 
-            // Render icon based on tab type
-            const renderTabIcon = (className: string) => {
-              if (isHome) return <Home className={className} />
-              if (isSettings) return <Settings className={className} />
-              if (isGraph) return <Network className={className} />
-              if (isSchemaBuilder) return <Braces className={className} />
-              if (isAssistantMetadata) return <BookText className={className} />
-              if (isMethodExecutor) return <Play className={className} />
-              if (isHttpClient) return <Send className={className} />
-              if (isStatic) return <FileText className={className} />
-              return <DataclassIcon customization={customization} className={className} />
-            }
+              // Render icon based on tab type
+              const renderTabIcon = (className: string) => renderTabTypeIcon(tab, className)
 
-            // Pinned tabs: show only icon with tooltip
-            if (tab.isPinned) {
+              // Pinned tabs: show only icon with tooltip
+              if (tab.isPinned) {
+                return (
+                  <div key={tab.id} className="relative flex shrink-0 items-center">
+                    {/* Drop indicator */}
+                    {showDropIndicator && (
+                      <div className="absolute top-1 bottom-1 -left-0.5 z-20 w-1 rounded-full bg-primary shadow-lg shadow-primary/50" />
+                    )}
+                    <TooltipProvider delayDuration={300}>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            ref={(el) => {
+                              if (el) tabRefs.current.set(tab.id, el)
+                              else tabRefs.current.delete(tab.id)
+                            }}
+                            role="tab"
+                            tabIndex={0}
+                            aria-selected={isActive}
+                            aria-label={
+                              isHome
+                                ? t('tabs.home')
+                                : showCount
+                                  ? `${displayName} (${formatCount(count)})`
+                                  : displayName
+                            }
+                            onMouseDown={(e) => handleMouseDown(e, tab, index)}
+                            onClick={() => handleTabClick(tab)}
+                            onTouchStart={(e) => handleTabTouchStart(e, tab)}
+                            onTouchEnd={handleTabTouchEnd}
+                            onTouchCancel={handleTabTouchEnd}
+                            onTouchMove={handleTabTouchEnd}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault()
+                                handleTabClick(tab)
+                              }
+                            }}
+                            onContextMenu={(e) => handleContextMenu(e, tab)}
+                            style={colorClasses.style}
+                            className={tabSurfaceClasses(
+                              isActive,
+                              isDragging,
+                              'group relative w-8 cursor-pointer select-none'
+                            )}
+                          >
+                            <TabTopIndicator colorClasses={colorClasses} visible={isActive} />
+                            <div className="flex min-h-0 flex-1 items-center justify-center">
+                              {renderTabIcon(
+                                cn(
+                                  'h-3.5 w-3.5 shrink-0',
+                                  isActive || (isDataclass && customization)
+                                    ? colorClasses.text
+                                    : 'text-muted-foreground group-hover:text-foreground'
+                                )
+                              )}
+                            </div>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom" className="flex items-center gap-2">
+                          <span className="font-medium">{displayName}</span>
+                          {showCount && (
+                            <span className="rounded-full bg-muted px-1.5 py-0.5 font-mono text-xs tabular-nums">
+                              {formatCount(count)}
+                            </span>
+                          )}
+                          <span className="text-muted-foreground text-xs">{t('tabs.pinned')}</span>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                )
+              }
+
+              // Regular tabs: show full content (desktop). On mobile, inactive tabs
+              // are icon-only chips so the strip fits; the active tab shows the label.
+              const mobileCompact = mobile && !isActive
               return (
                 <div key={tab.id} className="relative flex shrink-0 items-center">
                   {/* Drop indicator */}
                   {showDropIndicator && (
                     <div className="absolute top-1 bottom-1 -left-0.5 z-20 w-1 rounded-full bg-primary shadow-lg shadow-primary/50" />
                   )}
-                  <TooltipProvider delayDuration={300}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div
-                          ref={(el) => {
-                            if (el) tabRefs.current.set(tab.id, el)
-                            else tabRefs.current.delete(tab.id)
-                          }}
-                          role="tab"
-                          tabIndex={0}
-                          aria-selected={isActive}
-                          aria-label={
-                            isHome
-                              ? t('tabs.home')
-                              : showCount
-                                ? `${displayName} (${formatCount(count)})`
-                                : displayName
-                          }
-                          onMouseDown={(e) => handleMouseDown(e, tab, index)}
-                          onClick={() => handleTabClick(tab)}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                              e.preventDefault()
-                              handleTabClick(tab)
-                            }
-                          }}
-                          onContextMenu={(e) => handleContextMenu(e, tab)}
-                          style={colorClasses.style}
-                          className={tabSurfaceClasses(
-                            isActive,
-                            isDragging,
-                            'group relative w-8 cursor-pointer select-none'
-                          )}
-                        >
-                          <TabTopIndicator colorClasses={colorClasses} visible={isActive} />
-                          <div className="flex min-h-0 flex-1 items-center justify-center">
-                            {renderTabIcon(
-                              cn(
-                                'h-3.5 w-3.5 shrink-0',
-                                isActive || (isDataclass && customization)
-                                  ? colorClasses.text
-                                  : 'text-muted-foreground group-hover:text-foreground'
-                              )
-                            )}
-                          </div>
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent side="bottom" className="flex items-center gap-2">
-                        <span className="font-medium">{displayName}</span>
-                        {showCount && (
-                          <span className="rounded-full bg-muted px-1.5 py-0.5 font-mono text-xs tabular-nums">
-                            {formatCount(count)}
-                          </span>
+                  <div
+                    ref={(el) => {
+                      if (el) tabRefs.current.set(tab.id, el)
+                      else tabRefs.current.delete(tab.id)
+                    }}
+                    role="tab"
+                    tabIndex={0}
+                    aria-selected={isActive}
+                    aria-label={showCount ? `${displayName} (${formatCount(count)})` : displayName}
+                    title={displayName}
+                    onMouseDown={(e) => handleMouseDown(e, tab, index)}
+                    onClick={() => handleTabClick(tab)}
+                    onTouchStart={(e) => handleTabTouchStart(e, tab)}
+                    onTouchEnd={handleTabTouchEnd}
+                    onTouchCancel={handleTabTouchEnd}
+                    onTouchMove={handleTabTouchEnd}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        handleTabClick(tab)
+                      }
+                    }}
+                    onContextMenu={(e) => handleContextMenu(e, tab)}
+                    style={colorClasses.style}
+                    className={tabSurfaceClasses(
+                      isActive,
+                      isDragging,
+                      mobileCompact
+                        ? 'group relative w-10 cursor-pointer select-none'
+                        : mobile
+                          ? 'group relative min-w-0 max-w-36 cursor-pointer select-none'
+                          : 'group relative min-w-30 max-w-50 cursor-pointer select-none'
+                    )}
+                  >
+                    <TabTopIndicator colorClasses={colorClasses} visible={isActive} />
+                    {mobileCompact ? (
+                      <div className="flex min-h-0 flex-1 items-center justify-center">
+                        {renderTabIcon(
+                          cn(
+                            'h-4 w-4 shrink-0',
+                            isDataclass && customization
+                              ? colorClasses.text
+                              : 'text-muted-foreground'
+                          )
                         )}
-                        <span className="text-muted-foreground text-xs">{t('tabs.pinned')}</span>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-              )
-            }
-
-            // Regular tabs: show full content
-            return (
-              <div key={tab.id} className="relative flex shrink-0 items-center">
-                {/* Drop indicator */}
-                {showDropIndicator && (
-                  <div className="absolute top-1 bottom-1 -left-0.5 z-20 w-1 rounded-full bg-primary shadow-lg shadow-primary/50" />
-                )}
-                <div
-                  ref={(el) => {
-                    if (el) tabRefs.current.set(tab.id, el)
-                    else tabRefs.current.delete(tab.id)
-                  }}
-                  role="tab"
-                  tabIndex={0}
-                  aria-selected={isActive}
-                  onMouseDown={(e) => handleMouseDown(e, tab, index)}
-                  onClick={() => handleTabClick(tab)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault()
-                      handleTabClick(tab)
-                    }
-                  }}
-                  onContextMenu={(e) => handleContextMenu(e, tab)}
-                  style={colorClasses.style}
-                  className={tabSurfaceClasses(
-                    isActive,
-                    isDragging,
-                    'group relative min-w-30 max-w-50 cursor-pointer select-none'
-                  )}
-                >
-                  <TabTopIndicator colorClasses={colorClasses} visible={isActive} />
-                  <div className="flex min-h-0 min-w-0 flex-1 items-center gap-1 px-2">
-                    <TooltipProvider delayDuration={300}>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div className="flex min-w-0 flex-1 items-center gap-1.5">
-                            {renderTabIcon(
-                              cn(
-                                'h-3 w-3 shrink-0',
-                                isActive || (isDataclass && customization)
-                                  ? colorClasses.text
-                                  : 'text-muted-foreground group-hover:text-foreground'
-                              )
-                            )}
-                            <span className="truncate">{displayName}</span>
-                            {showCount ? (
-                              <span className="min-w-8 shrink-0 text-right font-mono text-muted-foreground text-xs tabular-nums">
-                                {formatCount(count)}
-                              </span>
-                            ) : (
-                              <span className="min-w-8 shrink-0" aria-hidden />
-                            )}
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom" className="flex max-w-sm items-center gap-2">
-                          <span className="font-medium">{displayName}</span>
-                          {showCount ? (
-                            <span className="rounded-full bg-muted px-1.5 py-0.5 font-mono text-xs tabular-nums">
-                              {formatCount(count)}
-                            </span>
-                          ) : null}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-
-                    {/* Close control: always reserve the same slot to avoid layout shift */}
-                    <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center">
-                      {tab.isClosable !== false ? (
-                        <TooltipProvider>
+                      </div>
+                    ) : (
+                      <div
+                        className={cn(
+                          'flex min-h-0 min-w-0 flex-1 items-center gap-1',
+                          mobile ? 'px-1.5' : 'px-2'
+                        )}
+                      >
+                        <TooltipProvider delayDuration={300}>
                           <Tooltip>
                             <TooltipTrigger asChild>
+                              <div className="flex min-w-0 flex-1 items-center gap-1.5">
+                                {renderTabIcon(
+                                  cn(
+                                    mobile ? 'h-3.5 w-3.5 shrink-0' : 'h-3 w-3 shrink-0',
+                                    isActive || (isDataclass && customization)
+                                      ? colorClasses.text
+                                      : 'text-muted-foreground group-hover:text-foreground'
+                                  )
+                                )}
+                                <span className="truncate">{displayName}</span>
+                                {showCount ? (
+                                  <span
+                                    className={cn(
+                                      'shrink-0 text-right font-mono text-muted-foreground text-xs tabular-nums',
+                                      mobile ? 'min-w-0' : 'min-w-8'
+                                    )}
+                                  >
+                                    {formatCount(count)}
+                                  </span>
+                                ) : mobile ? null : (
+                                  <span className="min-w-8 shrink-0" aria-hidden />
+                                )}
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent
+                              side="bottom"
+                              className="flex max-w-sm items-center gap-2"
+                            >
+                              <span className="font-medium">{displayName}</span>
+                              {showCount ? (
+                                <span className="rounded-full bg-muted px-1.5 py-0.5 font-mono text-xs tabular-nums">
+                                  {formatCount(count)}
+                                </span>
+                              ) : null}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        {/* Tab actions (mobile active) + close — reserve slots to avoid layout shift */}
+                        {mobile && isActive ? (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
                               <Button
                                 type="button"
                                 variant="ghost"
                                 size="iconXs"
-                                onClick={(e) => handleCloseTab(e, tab.id)}
-                                className={cn(
-                                  'h-5! w-5!',
-                                  isActive
-                                    ? 'opacity-70 hover:opacity-100'
-                                    : 'opacity-0 group-hover:opacity-100'
-                                )}
+                                className="h-7! w-7! shrink-0 opacity-80"
+                                aria-label={t('tabs.tabActionsAria')}
+                                onClick={(e) => e.stopPropagation()}
+                                onMouseDown={(e) => e.stopPropagation()}
                               >
-                                <X className="h-3 w-3" />
+                                <ChevronDown className="h-3.5 w-3.5" />
                               </Button>
-                            </TooltipTrigger>
-                            <TooltipContent side="top">
-                              Close tab
-                              {closeTabShortcut?.enabled && (
-                                <kbd className="ml-2 rounded bg-muted px-1.5 text-xs">
-                                  {formatShortcut(closeTabShortcut)}
-                                </kbd>
-                              )}
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      ) : null}
-                    </span>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent
+                              align="end"
+                              side="bottom"
+                              className={mobileMenuContentClass()}
+                              {...mobileMenuCollisionProps}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <DropdownMenuLabel className="px-3 py-2.5 text-sm">
+                                {displayName}
+                              </DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              {tab.index === undefined ? (
+                                <>
+                                  <DropdownMenuItem
+                                    className={mobileMenuItemClass()}
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      togglePinTab(tab.id)
+                                    }}
+                                  >
+                                    <Pin
+                                      className={cn(
+                                        'h-4 w-4 shrink-0',
+                                        tab.isPinned && '-rotate-45'
+                                      )}
+                                    />
+                                    {tab.isPinned ? t('tabs.unpinTab') : t('tabs.pinTab')}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                </>
+                              ) : null}
+                              {renderTabCloseActions(tab, () => undefined)}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        ) : null}
+                        <span
+                          className={cn(
+                            'inline-flex shrink-0 items-center justify-center',
+                            mobile ? 'h-7 w-7' : 'h-5 w-5'
+                          )}
+                        >
+                          {tab.isClosable !== false ? (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="iconXs"
+                                    onClick={(e) => handleCloseTab(e, tab.id)}
+                                    className={cn(
+                                      mobile ? 'h-7! w-7!' : 'h-5! w-5!',
+                                      isActive
+                                        ? 'opacity-70 hover:opacity-100'
+                                        : 'opacity-0 group-hover:opacity-100'
+                                    )}
+                                  >
+                                    <X className={mobile ? 'h-3.5 w-3.5' : 'h-3 w-3'} />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">
+                                  Close tab
+                                  {closeTabShortcut?.enabled && (
+                                    <kbd className="ml-2 rounded bg-muted px-1.5 text-xs">
+                                      {formatShortcut(closeTabShortcut)}
+                                    </kbd>
+                                  )}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          ) : null}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
-              </div>
-            )
-          })}
+              )
+            })}
 
-          {/* Drop indicator at end */}
-          {dropTargetIndex === tabs.length && draggedTabId !== null && (
-            <div className="relative flex shrink-0 items-center">
-              <div className="absolute top-1 bottom-1 -left-0.5 z-20 w-1 rounded-full bg-primary shadow-lg shadow-primary/50" />
-            </div>
-          )}
+            {/* Drop indicator at end */}
+            {dropTargetIndex === tabs.length && draggedTabId !== null && (
+              <div className="relative flex shrink-0 items-center">
+                <div className="absolute top-1 bottom-1 -left-0.5 z-20 w-1 rounded-full bg-primary shadow-lg shadow-primary/50" />
+              </div>
+            )}
+          </div>
+
+          {mobile && tabs.length > 1 ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 shrink-0"
+                  aria-label={t('tabs.moreTabsAria')}
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className={cn(
+                  mobile
+                    ? mobileMenuContentClass('max-h-[min(70dvh,32rem)]')
+                    : 'max-h-[min(24rem,70vh)] w-72 overflow-y-auto'
+                )}
+                {...(mobile
+                  ? mobileMenuCollisionProps
+                  : { collisionPadding: 12, avoidCollisions: true })}
+              >
+                <DropdownMenuLabel className={mobile ? 'px-3 py-2.5 text-sm' : undefined}>
+                  {t('tabs.allTabs')}
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {tabs.map((tab) => {
+                  const isActive = tab.id === activeTabId
+                  const displayName = getTabDisplayName(tab)
+                  const count = getTabCount(tab)
+                  const showCount = isDataclassTab(tab)
+                  const customization = isDataclassTab(tab)
+                    ? dataclassCustomizations[tab.dataclassName]
+                    : undefined
+                  const colorClasses = getDataclassColorClasses(customization)
+                  return (
+                    <DropdownMenuItem
+                      key={tab.id}
+                      className={cn(
+                        'flex items-center gap-2',
+                        mobile && 'min-h-12 gap-3 rounded-lg px-3 py-3 text-sm',
+                        isActive && 'bg-accent text-accent-foreground'
+                      )}
+                      onSelect={() => handleTabClick(tab)}
+                    >
+                      <span
+                        className={cn(
+                          'flex h-7 w-7 shrink-0 items-center justify-center rounded-md',
+                          isActive ? 'bg-background' : 'bg-muted/60'
+                        )}
+                        style={colorClasses.style}
+                      >
+                        {renderTabTypeIcon(
+                          tab,
+                          cn(
+                            'h-3.5 w-3.5',
+                            isDataclassTab(tab) && customization
+                              ? colorClasses.text
+                              : 'text-muted-foreground'
+                          )
+                        )}
+                      </span>
+                      <span className="min-w-0 flex-1 truncate font-medium text-sm">
+                        {displayName}
+                      </span>
+                      {showCount ? (
+                        <span className="shrink-0 font-mono text-muted-foreground text-xs tabular-nums">
+                          {formatCount(count)}
+                        </span>
+                      ) : null}
+                      {tab.isClosable !== false ? (
+                        <button
+                          type="button"
+                          className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                          aria-label={t('tabs.closeTab')}
+                          onClick={(event) => {
+                            event.preventDefault()
+                            event.stopPropagation()
+                            closeTab(tab.id)
+                          }}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      ) : (
+                        <span className="w-7 shrink-0" aria-hidden />
+                      )}
+                    </DropdownMenuItem>
+                  )
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : null}
         </div>
       </div>
 
-      {/* Context Menu */}
+      {/* Context Menu — right-click (desktop) or long-press (mobile) */}
       <DropdownMenu open={!!contextMenuTabId} onOpenChange={(open) => !open && closeContextMenu()}>
         <DropdownMenuContent
           style={{
@@ -602,7 +925,10 @@ export function TabBar() {
             left: contextMenuPosition?.x ?? 0,
             top: contextMenuPosition?.y ?? 0,
           }}
-          className="w-auto min-w-0 max-w-[min(20rem,100vw)]"
+          className={cn(
+            mobile ? mobileMenuContentClass('min-w-0') : 'w-auto min-w-0 max-w-[min(20rem,100vw)]'
+          )}
+          {...(mobile ? mobileMenuCollisionProps : { collisionPadding: 12, avoidCollisions: true })}
         >
           {contextMenuTab && (
             <>
@@ -614,7 +940,10 @@ export function TabBar() {
                       togglePinTab(contextMenuTab.id)
                       closeContextMenu()
                     }}
-                    className="flex w-full items-center gap-2 whitespace-nowrap"
+                    className={cn(
+                      'flex w-full items-center gap-2 whitespace-nowrap',
+                      mobile && mobileMenuItemClass()
+                    )}
                   >
                     <Pin
                       className={cn('h-4 w-4 shrink-0', contextMenuTab.isPinned && '-rotate-45')}
@@ -622,7 +951,7 @@ export function TabBar() {
                     <span className="min-w-0 flex-1">
                       {contextMenuTab.isPinned ? t('tabs.unpinTab') : t('tabs.pinTab')}
                     </span>
-                    {pinTabShortcut?.enabled && (
+                    {pinTabShortcut?.enabled && !mobile && (
                       <kbd className="shrink-0 rounded bg-muted px-1.5 text-xs">
                         {formatShortcut(pinTabShortcut)}
                       </kbd>
@@ -634,7 +963,10 @@ export function TabBar() {
                         pinAllTabs()
                         closeContextMenu()
                       }}
-                      className="flex w-full items-center gap-2 whitespace-nowrap"
+                      className={cn(
+                        'flex w-full items-center gap-2 whitespace-nowrap',
+                        mobile && mobileMenuItemClass()
+                      )}
                     >
                       <Pin className="h-4 w-4 shrink-0" />
                       {t('command.pinAllTabs')}
@@ -646,7 +978,10 @@ export function TabBar() {
                         unpinAllTabs()
                         closeContextMenu()
                       }}
-                      className="flex w-full items-center gap-2 whitespace-nowrap"
+                      className={cn(
+                        'flex w-full items-center gap-2 whitespace-nowrap',
+                        mobile && mobileMenuItemClass()
+                      )}
                     >
                       <Pin className="h-4 w-4 shrink-0 -rotate-45" />
                       {t('command.unpinAllTabs')}
@@ -656,7 +991,7 @@ export function TabBar() {
                 </>
               )}
               {/* Highlight in graph (dataclass tabs only) */}
-              {isDataclassTab(contextMenuTab) && (
+              {isDataclassTab(contextMenuTab) && !isMobileShell() && (
                 <DropdownMenuItem
                   onClick={() => {
                     const name = contextMenuTab.dataclassName
@@ -682,59 +1017,17 @@ export function TabBar() {
                     void navigator.clipboard.writeText(contextMenuEntitySetId)
                     closeContextMenu()
                   }}
-                  className="flex w-full items-center gap-2 whitespace-nowrap"
+                  className={cn(
+                    'flex w-full items-center gap-2 whitespace-nowrap',
+                    mobile && mobileMenuItemClass()
+                  )}
                 >
                   <Copy className="h-4 w-4 shrink-0" />
                   <span className="min-w-0 flex-1">{t('tabs.copyEntitySetId')}</span>
                 </DropdownMenuItem>
               ) : null}
               {isDataclassTab(contextMenuTab) && <DropdownMenuSeparator />}
-              {/* Close option (hidden for non-closable tabs and pinned tabs) */}
-              {contextMenuTab.isClosable !== false && !contextMenuTab.isPinned && (
-                <DropdownMenuItem
-                  onClick={() => {
-                    closeTab(contextMenuTab.id)
-                    closeContextMenu()
-                  }}
-                  className="flex w-full items-center gap-2 whitespace-nowrap"
-                >
-                  <X className="h-4 w-4 shrink-0" />
-                  <span className="min-w-0 flex-1">{t('tabs.closeTab')}</span>
-                  {closeTabShortcut?.enabled && (
-                    <kbd className="shrink-0 rounded bg-muted px-1.5 text-xs">
-                      {formatShortcut(closeTabShortcut)}
-                    </kbd>
-                  )}
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuItem
-                onClick={() => {
-                  closeOtherTabs(contextMenuTab.id)
-                  closeContextMenu()
-                }}
-                className="whitespace-nowrap"
-              >
-                {t('command.closeOtherTabs')}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  closeTabsToRight(contextMenuTab.id)
-                  closeContextMenu()
-                }}
-                className="whitespace-nowrap"
-              >
-                {t('command.closeTabsToRight')}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => {
-                  closeAllTabs()
-                  closeContextMenu()
-                }}
-                className="whitespace-nowrap text-destructive focus:text-destructive"
-              >
-                {t('command.closeAllTabs')}
-              </DropdownMenuItem>
+              {renderTabCloseActions(contextMenuTab, closeContextMenu)}
             </>
           )}
         </DropdownMenuContent>

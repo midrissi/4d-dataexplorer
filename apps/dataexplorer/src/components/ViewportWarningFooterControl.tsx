@@ -2,6 +2,7 @@ import { Button, cn, Popover, PopoverContent, PopoverTrigger } from '@4d/ui'
 import { Columns3, Maximize2, Monitor, PanelsLeftRight, Scaling, Scan } from 'lucide-react'
 import { useState, useSyncExternalStore } from 'react'
 import { useTranslation } from '~/i18n'
+import { isMobileShell } from '~/lib/platform'
 
 /** Minimum comfortable viewport width for the list + detail workspace. */
 export const VIEWPORT_MIN_WIDTH = 1800
@@ -28,6 +29,7 @@ export function ViewportWarningFooterControl() {
   const [open, setOpen] = useState(false)
   const width = useSyncExternalStore(subscribe, getWidthSnapshot, getServerSnapshot)
 
+  if (isMobileShell()) return null
   if (width >= VIEWPORT_MIN_WIDTH) return null
 
   const shortfall = VIEWPORT_MIN_WIDTH - width

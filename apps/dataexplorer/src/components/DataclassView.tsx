@@ -1,8 +1,10 @@
-import { Layers, PanelTop } from 'lucide-react'
+import { Button } from '@4d/ui'
+import { ArrowLeft, Layers, PanelTop } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { EmptyPanel } from '~/components/EmptyPanel'
 import { useTranslation } from '~/i18n'
 import { eventBus } from '~/lib/eventBus'
+import { isMobileShell } from '~/lib/platform'
 import {
   getEntityListHeight,
   getEntityListWidth,
@@ -70,6 +72,44 @@ function DataclassTabContent({
   onHorizontalDoubleClick: () => void
   onVerticalDoubleClick: () => void
 }) {
+  const { t } = useTranslation()
+  const mobile = isMobileShell()
+  const selectedEntityId = useTabsStore((state) => {
+    const tab = state.tabs.find((item) => item.id === tabId)
+    return tab && isDataclassTab(tab) ? tab.selectedEntityId : null
+  })
+  const setSelectedEntityId = useTabsStore((state) => state.setSelectedEntityId)
+  const showDetail = mobile && Boolean(selectedEntityId)
+
+  if (mobile) {
+    return (
+      <div className="flex h-full min-h-0 flex-col" data-dataclass-view>
+        {showDetail ? (
+          <div className="flex h-full min-h-0 flex-col">
+            <div className="flex h-12 shrink-0 items-center gap-2 border-border border-b px-2">
+              <Button
+                type="button"
+                variant="ghost"
+                className="h-11 gap-2 px-3"
+                onClick={() => setSelectedEntityId(tabId, null)}
+              >
+                <ArrowLeft className="h-4 w-4" />
+                {t('common.back')}
+              </Button>
+            </div>
+            <div className="min-h-0 flex-1 overflow-hidden">
+              <EntityViewer tabId={tabId} />
+            </div>
+          </div>
+        ) : (
+          <div className="min-h-0 flex-1 overflow-hidden">
+            <EntityList tabId={tabId} />
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div
       className="flex h-full min-h-0 max-[1199px]:flex-col"

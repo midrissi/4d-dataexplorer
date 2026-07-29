@@ -1,5 +1,6 @@
 import {
   Button,
+  cn,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -14,6 +15,13 @@ import {
 import { ChevronDown, Code2, Play } from 'lucide-react'
 import { EmptyPanel } from '~/components/EmptyPanel'
 import { useTranslation } from '~/i18n'
+import {
+  mobileMenuCollisionProps,
+  mobileMenuContentClass,
+  mobileMenuHeaderClass,
+  mobileMenuItemClass,
+} from '~/lib/mobile-menu'
+import { isMobileShell } from '~/lib/platform'
 import type { MethodScope } from '~/store/method-executor-types'
 import { useTabsStore } from '~/store/tabs'
 import { useMethodCatalog } from './useMethodCatalog'
@@ -32,6 +40,7 @@ export function MethodListPopover({
   compact?: boolean
 }) {
   const { t } = useTranslation()
+  const mobile = isMobileShell()
   const { methods, loading } = useMethodCatalog()
   const openMethodExecutorTab = useTabsStore((state) => state.openMethodExecutorTab)
   const methodsLabel = t('methodExecutor.methods')
@@ -43,7 +52,7 @@ export function MethodListPopover({
     <Button
       variant="outline"
       size="xs"
-      className="h-6 gap-1 px-2"
+      className={cn('h-6 gap-1 px-2 text-xs', mobile && 'h-9 px-2.5')}
       disabled={loading}
       aria-label={methodsLabel}
     >
@@ -67,8 +76,17 @@ export function MethodListPopover({
       ) : (
         <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
       )}
-      <DropdownMenuContent align="end" className="w-72">
-        <DropdownMenuLabel>
+      <DropdownMenuContent
+        align="end"
+        side="bottom"
+        className={cn(
+          mobile
+            ? mobileMenuContentClass('max-h-[min(70dvh,32rem)]')
+            : 'max-h-[min(24rem,70vh)] w-72 overflow-y-auto'
+        )}
+        {...(mobile ? mobileMenuCollisionProps : { collisionPadding: 12, avoidCollisions: true })}
+      >
+        <DropdownMenuLabel className={mobile ? mobileMenuHeaderClass('text-sm') : undefined}>
           {dataClass} · {t('methodExecutor.methods')}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
@@ -87,6 +105,7 @@ export function MethodListPopover({
             return (
               <DropdownMenuItem
                 key={method.id}
+                className={mobile ? mobileMenuItemClass('items-start') : undefined}
                 disabled={needsEntity && !entityKey}
                 onClick={() =>
                   openMethodExecutorTab({

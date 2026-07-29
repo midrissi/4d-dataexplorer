@@ -1,8 +1,9 @@
-import { Button, Dialog, DialogContent, DialogDescription, DialogTitle } from '@4d/ui'
+import { Button, cn, Dialog, DialogContent, DialogDescription, DialogTitle } from '@4d/ui'
 import { Filter, Info, MessageCircle, Trash2 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from '~/i18n'
 import { startAskAiTask } from '~/lib/ai-task-runner'
+import { isMobileShell } from '~/lib/platform'
 import { useAiTasksStore } from '~/store/ai-tasks'
 import {
   AiModalShell,
@@ -24,6 +25,7 @@ export function AiAskDataclassModal({
   dataclassName,
 }: AiAskDataclassModalProps) {
   const { t } = useTranslation()
+  const mobile = isMobileShell()
   const openTask = useAiTasksStore((state) => state.openTask)
   const [prompt, setPrompt] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -61,7 +63,14 @@ export function AiAskDataclassModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg gap-0 overflow-hidden border-border p-0 sm:rounded-2xl">
+      <DialogContent
+        className={cn(
+          'gap-0 overflow-hidden border-border p-0',
+          mobile
+            ? 'inset-0 top-0 left-0 h-dvh max-h-dvh w-full max-w-full translate-x-0 translate-y-0 rounded-none border-0'
+            : 'max-w-lg sm:rounded-2xl'
+        )}
+      >
         <DialogTitle className="sr-only">{t('aiActions.askTitle')}</DialogTitle>
         <DialogDescription className="sr-only">
           {t('aiActions.askSubtitle', { dataclass: dataclassName })}

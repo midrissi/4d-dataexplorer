@@ -31,6 +31,7 @@ import {
   resolvePreviewFormat,
 } from '~/lib/detect-binary-format'
 import { downloadBytes } from '~/lib/download-bytes'
+import { isMobileShell } from '~/lib/platform'
 import { formatBytes } from '~/lib/utils'
 
 /** The reserved key 4D uses to serialise a binary/blob value inside an object. */
@@ -143,6 +144,10 @@ export function BinaryObjectViewer({
   className,
 }: BinaryObjectViewerProps) {
   const { t } = useTranslation()
+  // Hex dumps and decoded-object trees are dev/debug tooling that doesn't
+  // translate well to touch screens — mobile keeps only the format-aware
+  // media preview and the download action.
+  const mobile = isMobileShell()
   const [expanded, setExpanded] = useState(defaultExpanded)
   const [activeTab, setActiveTab] = useState<BinaryTab>('hex-preview')
 
@@ -284,7 +289,17 @@ export function BinaryObjectViewer({
   const isFetching = loadState === 'loading' || isReloading
   const canPreview = isPreviewable(meta?.format)
   const hasDecoded = decodedValue != null
-  const defaultTab: BinaryTab = hasDecoded ? 'decoded' : canPreview ? 'preview' : 'hex-preview'
+  // Mobile only ever shows the preview tab, so prefer it over the (hidden)
+  // decoded/hex tabs to make sure full bytes get fetched for the preview.
+  const defaultTab: BinaryTab = mobile
+    ? canPreview
+      ? 'preview'
+      : 'hex-preview'
+    : hasDecoded
+      ? 'decoded'
+      : canPreview
+        ? 'preview'
+        : 'hex-preview'
 
   // Prefer hex preview (or media preview) once format is known on first expand only.
   const didAutoSelectPreview = useRef(false)
@@ -375,6 +390,78 @@ export function BinaryObjectViewer({
 
   const hexTooLarge = (meta?.byteSize ?? 0) > MAX_FULL_HEX_BYTES
   const previewTooLarge = (meta?.byteSize ?? 0) > MAX_MEDIA_PREVIEW_BYTES
+
+  const previewContent =
+    meta &&
+    (isDecoding || (isUrlMode && loadState === 'loading' && !fullBytes) ? (
+      <div className="flex h-28 items-center justify-center gap-1.5 rounded border bg-muted/20 text-muted-foreground">
+        <Loader2 className="h-3 w-3 animate-spin" />
+        {t('entity.binaryLoading')}
+      </div>
+    ) : previewTooLarge ? (
+      <BinaryGate
+        title={t('entity.binaryPreviewTooLargeTitle')}
+        description={t('entity.binaryPreviewTooLarge', {
+          size: formatBytes(meta.byteSize),
+        })}
+        onDownload={handleDownload}
+        downloadLabel={t('entity.binaryDownload')}
+      />
+    ) : meta.format?.kind === 'text' && fullBytes ? (
+      <TextPreviewPanel
+        text={bytesToText(fullBytes)}
+        className="h-[min(60vh,32rem)] rounded-md"
+        initialMode={
+          meta.format.extension === 'csv' || meta.format.extension === 'tsv'
+            ? 'csv'
+            : meta.format.extension === 'json'
+              ? 'json'
+              : meta.format.extension === 'html' || meta.format.extension === 'htm'
+                ? 'html'
+                : meta.format.extension === 'md' || meta.format.extension === 'markdown'
+                  ? 'markdown'
+                  : undefined
+        }
+      />
+    ) : meta.format?.kind === 'pdf' && fullBytes ? (
+      <div className="overflow-hidden rounded border bg-muted/20">
+        <PdfPreviewPanel
+          bytes={fullBytes}
+          title={name ?? typeLabel}
+          className="h-[min(70vh,40rem)] rounded-none border-0"
+        />
+      </div>
+    ) : meta.format?.kind === 'image' && previewUrl ? (
+      <div className="http-preview-checkerboard flex min-h-40 items-center justify-center overflow-hidden rounded border p-2">
+        <img
+          src={previewUrl}
+          alt={name ?? typeLabel}
+          className="max-h-[min(70vh,36rem)] max-w-full rounded-sm object-contain shadow-sm"
+        />
+      </div>
+    ) : meta.format?.kind === 'audio' && previewUrl ? (
+      <div className="flex min-h-20 items-center justify-center rounded border bg-muted/20 p-2">
+        {/* biome-ignore lint/a11y/useMediaCaption: binary audio has no captions track */}
+        <audio src={previewUrl} controls preload="metadata" className="w-full" />
+      </div>
+    ) : meta.format?.kind === 'video' && previewUrl ? (
+      <div className="flex min-h-40 items-center justify-center overflow-hidden rounded border bg-muted/30 p-2">
+        {/* biome-ignore lint/a11y/useMediaCaption: binary video has no captions track */}
+        <video
+          src={previewUrl}
+          controls
+          preload="metadata"
+          className="max-h-[min(70vh,36rem)] max-w-full rounded"
+        />
+      </div>
+    ) : (
+      <BinaryGate
+        title={t('entity.binaryPreviewUnavailableTitle')}
+        description={t('entity.binaryPreviewUnavailable')}
+        onDownload={handleDownload}
+        downloadLabel={t('entity.binaryDownload')}
+      />
+    ))
 
   return (
     <div className={cn('overflow-hidden rounded-md border bg-muted/15 text-[11px]', className)}>
@@ -491,179 +578,126 @@ export function BinaryObjectViewer({
             </div>
           )}
 
-          {meta && (
-            <Tabs
-              value={activeTab}
-              onValueChange={(v) => setActiveTab(v as BinaryTab)}
-              className="gap-0"
-            >
-              <TabsList className="h-6 w-fit justify-start gap-0.5 rounded border bg-muted/40 p-0.5">
-                <TabsTrigger
+          {meta && mobile ? (
+            // Mobile keeps only the format-aware preview (or a download-only
+            // gate when no preview applies) — hex dumps and decoded-object
+            // trees are dev tooling that doesn't fit a touch screen.
+            canPreview ? (
+              <div className="mt-0.5">{previewContent}</div>
+            ) : (
+              <BinaryGate
+                title={t('entity.binaryPreviewUnavailableTitle')}
+                description={t('entity.binaryPreviewUnavailable')}
+                onDownload={handleDownload}
+                downloadLabel={t('entity.binaryDownload')}
+              />
+            )
+          ) : (
+            meta && (
+              <Tabs
+                value={activeTab}
+                onValueChange={(v) => setActiveTab(v as BinaryTab)}
+                className="gap-0"
+              >
+                <TabsList className="h-6 w-fit justify-start gap-0.5 rounded border bg-muted/40 p-0.5">
+                  <TabsTrigger
+                    value="hex-preview"
+                    className="h-5 gap-1 rounded-sm px-1.5 text-[10px] data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+                  >
+                    <Hash className="h-2.5 w-2.5 shrink-0 opacity-70" />
+                    {t('entity.binaryTabHexPreview')}
+                  </TabsTrigger>
+                  {hasDecoded ? (
+                    <TabsTrigger
+                      value="decoded"
+                      className="h-5 gap-1 rounded-sm px-1.5 text-[10px] data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+                    >
+                      <Boxes className="h-2.5 w-2.5 shrink-0 opacity-70" />
+                      {t('entity.binaryTabDecoded')}
+                    </TabsTrigger>
+                  ) : null}
+                  <TabsTrigger
+                    value="full-hex"
+                    className="h-5 gap-1 rounded-sm px-1.5 text-[10px] data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+                  >
+                    <ScanSearch className="h-2.5 w-2.5 shrink-0 opacity-70" />
+                    {t('entity.binaryTabFullHex')}
+                  </TabsTrigger>
+                  {canPreview ? (
+                    <TabsTrigger
+                      value="preview"
+                      className="h-5 gap-1 rounded-sm px-1.5 text-[10px] data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
+                    >
+                      <Eye className="h-2.5 w-2.5 shrink-0 opacity-70" />
+                      {t('entity.binaryTabPreview')}
+                    </TabsTrigger>
+                  ) : null}
+                </TabsList>
+
+                <TabsContent
                   value="hex-preview"
-                  className="h-5 gap-1 rounded-sm px-1.5 text-[10px] data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
-                >
-                  <Hash className="h-2.5 w-2.5 shrink-0 opacity-70" />
-                  {t('entity.binaryTabHexPreview')}
-                </TabsTrigger>
-                {hasDecoded ? (
-                  <TabsTrigger
-                    value="decoded"
-                    className="h-5 gap-1 rounded-sm px-1.5 text-[10px] data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
-                  >
-                    <Boxes className="h-2.5 w-2.5 shrink-0 opacity-70" />
-                    {t('entity.binaryTabDecoded')}
-                  </TabsTrigger>
-                ) : null}
-                <TabsTrigger
-                  value="full-hex"
-                  className="h-5 gap-1 rounded-sm px-1.5 text-[10px] data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
-                >
-                  <ScanSearch className="h-2.5 w-2.5 shrink-0 opacity-70" />
-                  {t('entity.binaryTabFullHex')}
-                </TabsTrigger>
-                {canPreview ? (
-                  <TabsTrigger
-                    value="preview"
-                    className="h-5 gap-1 rounded-sm px-1.5 text-[10px] data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm"
-                  >
-                    <Eye className="h-2.5 w-2.5 shrink-0 opacity-70" />
-                    {t('entity.binaryTabPreview')}
-                  </TabsTrigger>
-                ) : null}
-              </TabsList>
-
-              <TabsContent
-                value="hex-preview"
-                className="mt-1.5 h-fit outline-none data-[state=inactive]:hidden"
-              >
-                <div className="flex items-center gap-2 overflow-hidden rounded border bg-muted/25 px-1.5 py-1 font-mono text-[10px] leading-none">
-                  <span className="w-8 shrink-0 text-muted-foreground">0000</span>
-                  <code className="min-w-0 flex-1 overflow-x-auto text-foreground/85">
-                    {meta.hex}
-                  </code>
-                  <span className="shrink-0 border-border/50 border-l pl-1.5 text-emerald-700 dark:text-emerald-400">
-                    {meta.ascii}
-                  </span>
-                </div>
-              </TabsContent>
-
-              {hasDecoded && decodedValue ? (
-                <TabsContent
-                  value="decoded"
                   className="mt-1.5 h-fit outline-none data-[state=inactive]:hidden"
                 >
-                  <DecodedBinaryContent value={decodedValue} />
-                </TabsContent>
-              ) : null}
-
-              <TabsContent
-                value="full-hex"
-                className="mt-1.5 h-fit outline-none data-[state=inactive]:hidden"
-              >
-                {isDecoding || (isUrlMode && loadState === 'loading') ? (
-                  <div className="flex h-28 items-center justify-center gap-1.5 rounded border bg-muted/20 text-muted-foreground">
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                    {t('entity.binaryLoading')}
+                  <div className="flex items-center gap-2 overflow-hidden rounded border bg-muted/25 px-1.5 py-1 font-mono text-[10px] leading-none">
+                    <span className="w-8 shrink-0 text-muted-foreground">0000</span>
+                    <code className="min-w-0 flex-1 overflow-x-auto text-foreground/85">
+                      {meta.hex}
+                    </code>
+                    <span className="shrink-0 border-border/50 border-l pl-1.5 text-emerald-700 dark:text-emerald-400">
+                      {meta.ascii}
+                    </span>
                   </div>
-                ) : hexTooLarge ? (
-                  <BinaryGate
-                    title={t('entity.binaryHexTooLargeTitle')}
-                    description={t('entity.binaryHexTooLarge', {
-                      size: formatBytes(meta.byteSize),
-                    })}
-                    onDownload={handleDownload}
-                    downloadLabel={t('entity.binaryDownload')}
-                  />
-                ) : fullBytes ? (
-                  <HexViewer bytes={fullBytes} className="h-56 shadow-none" />
-                ) : (
-                  <BinaryGate
-                    title={t('entity.binaryDecodeErrorTitle')}
-                    description={t('entity.binaryDecodeError')}
-                    onDownload={handleDownload}
-                    downloadLabel={t('entity.binaryDownload')}
-                  />
-                )}
-              </TabsContent>
+                </TabsContent>
 
-              {canPreview ? (
+                {hasDecoded && decodedValue ? (
+                  <TabsContent
+                    value="decoded"
+                    className="mt-1.5 h-fit outline-none data-[state=inactive]:hidden"
+                  >
+                    <DecodedBinaryContent value={decodedValue} />
+                  </TabsContent>
+                ) : null}
+
                 <TabsContent
-                  value="preview"
+                  value="full-hex"
                   className="mt-1.5 h-fit outline-none data-[state=inactive]:hidden"
                 >
-                  {isDecoding || (isUrlMode && loadState === 'loading' && !fullBytes) ? (
+                  {isDecoding || (isUrlMode && loadState === 'loading') ? (
                     <div className="flex h-28 items-center justify-center gap-1.5 rounded border bg-muted/20 text-muted-foreground">
                       <Loader2 className="h-3 w-3 animate-spin" />
                       {t('entity.binaryLoading')}
                     </div>
-                  ) : previewTooLarge ? (
+                  ) : hexTooLarge ? (
                     <BinaryGate
-                      title={t('entity.binaryPreviewTooLargeTitle')}
-                      description={t('entity.binaryPreviewTooLarge', {
+                      title={t('entity.binaryHexTooLargeTitle')}
+                      description={t('entity.binaryHexTooLarge', {
                         size: formatBytes(meta.byteSize),
                       })}
                       onDownload={handleDownload}
                       downloadLabel={t('entity.binaryDownload')}
                     />
-                  ) : meta.format?.kind === 'text' && fullBytes ? (
-                    <TextPreviewPanel
-                      text={bytesToText(fullBytes)}
-                      className="h-[min(60vh,32rem)] rounded-md"
-                      initialMode={
-                        meta.format.extension === 'csv' || meta.format.extension === 'tsv'
-                          ? 'csv'
-                          : meta.format.extension === 'json'
-                            ? 'json'
-                            : meta.format.extension === 'html' || meta.format.extension === 'htm'
-                              ? 'html'
-                              : meta.format.extension === 'md' ||
-                                  meta.format.extension === 'markdown'
-                                ? 'markdown'
-                                : undefined
-                      }
-                    />
-                  ) : meta.format?.kind === 'pdf' && fullBytes ? (
-                    <div className="overflow-hidden rounded border bg-muted/20">
-                      <PdfPreviewPanel
-                        bytes={fullBytes}
-                        title={name ?? typeLabel}
-                        className="h-[min(70vh,40rem)] rounded-none border-0"
-                      />
-                    </div>
-                  ) : meta.format?.kind === 'image' && previewUrl ? (
-                    <div className="http-preview-checkerboard flex min-h-40 items-center justify-center overflow-hidden rounded border p-2">
-                      <img
-                        src={previewUrl}
-                        alt={name ?? typeLabel}
-                        className="max-h-[min(70vh,36rem)] max-w-full rounded-sm object-contain shadow-sm"
-                      />
-                    </div>
-                  ) : meta.format?.kind === 'audio' && previewUrl ? (
-                    <div className="flex min-h-20 items-center justify-center rounded border bg-muted/20 p-2">
-                      {/* biome-ignore lint/a11y/useMediaCaption: binary audio has no captions track */}
-                      <audio src={previewUrl} controls preload="metadata" className="w-full" />
-                    </div>
-                  ) : meta.format?.kind === 'video' && previewUrl ? (
-                    <div className="flex min-h-40 items-center justify-center overflow-hidden rounded border bg-muted/30 p-2">
-                      {/* biome-ignore lint/a11y/useMediaCaption: binary video has no captions track */}
-                      <video
-                        src={previewUrl}
-                        controls
-                        preload="metadata"
-                        className="max-h-[min(70vh,36rem)] max-w-full rounded"
-                      />
-                    </div>
+                  ) : fullBytes ? (
+                    <HexViewer bytes={fullBytes} className="h-56 shadow-none" />
                   ) : (
                     <BinaryGate
-                      title={t('entity.binaryPreviewUnavailableTitle')}
-                      description={t('entity.binaryPreviewUnavailable')}
+                      title={t('entity.binaryDecodeErrorTitle')}
+                      description={t('entity.binaryDecodeError')}
                       onDownload={handleDownload}
                       downloadLabel={t('entity.binaryDownload')}
                     />
                   )}
                 </TabsContent>
-              ) : null}
-            </Tabs>
+
+                {canPreview ? (
+                  <TabsContent
+                    value="preview"
+                    className="mt-1.5 h-fit outline-none data-[state=inactive]:hidden"
+                  >
+                    {previewContent}
+                  </TabsContent>
+                ) : null}
+              </Tabs>
+            )
           )}
         </div>
       )}

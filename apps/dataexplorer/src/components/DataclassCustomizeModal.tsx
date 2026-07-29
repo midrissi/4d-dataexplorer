@@ -13,6 +13,7 @@ import { EmptyPanel } from '~/components/EmptyPanel'
 import { VirtualIconGrid } from '~/components/VirtualIconGrid'
 import { useTranslation } from '~/i18n'
 import { looksLikeLucideIconName, resolveLucideIcon } from '~/lib/lucide-icon'
+import { isMobileShell } from '~/lib/platform'
 import {
   COLOR_PRESETS,
   type ColorPreset,
@@ -35,6 +36,7 @@ export function DataclassCustomizeModal({
   currentCustomization,
 }: DataclassCustomizeModalProps) {
   const { t } = useTranslation()
+  const mobile = isMobileShell()
   const setDataclassCustomization = useSettingsStore((s) => s.setDataclassCustomization)
   const removeDataclassCustomization = useSettingsStore((s) => s.removeDataclassCustomization)
 
@@ -142,8 +144,20 @@ export function DataclassCustomizeModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-2xl" aria-describedby={undefined}>
-        <DialogTitle className="flex items-center gap-3">
+      <DialogContent
+        className={cn(
+          mobile
+            ? 'inset-0 top-0 left-0 flex h-dvh max-h-dvh w-full max-w-full translate-x-0 translate-y-0 flex-col overflow-hidden rounded-none border-0 p-0'
+            : 'max-w-2xl'
+        )}
+        aria-describedby={undefined}
+      >
+        <DialogTitle
+          className={cn(
+            'flex items-center gap-3',
+            mobile && 'shrink-0 px-4 pt-[max(1rem,var(--app-safe-top))]'
+          )}
+        >
           <div
             className={cn(
               'flex h-10 w-10 items-center justify-center rounded-lg',
@@ -164,7 +178,7 @@ export function DataclassCustomizeModal({
           </div>
         </DialogTitle>
 
-        <div className="space-y-4 py-4">
+        <div className={cn('space-y-4 py-4', mobile && 'min-h-0 flex-1 overflow-y-auto px-4')}>
           {/* Description - First */}
           <div className="space-y-2">
             <Label className="font-medium text-sm">{t('settings.description')}</Label>
@@ -173,12 +187,13 @@ export function DataclassCustomizeModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               maxLength={100}
+              className={mobile ? 'h-11 text-sm' : undefined}
             />
             <p className="text-muted-foreground text-xs">{t('settings.descriptionHelp')}</p>
           </div>
 
-          {/* Icon and Color side by side */}
-          <div className="grid grid-cols-2 gap-4">
+          {/* Icon and Color: stacked on mobile, side by side on desktop */}
+          <div className={cn('grid gap-4', mobile ? 'grid-cols-1' : 'grid-cols-2')}>
             {/* Icon Selection */}
             <div className="space-y-3">
               <Label className="font-medium text-sm">{t('settings.icon')}</Label>
@@ -188,7 +203,7 @@ export function DataclassCustomizeModal({
                   placeholder={t('settings.searchIcons')}
                   value={iconSearch}
                   onChange={(e) => setIconSearch(e.target.value)}
-                  className="h-9 pl-8"
+                  className={cn('pl-8', mobile ? 'h-11 text-sm' : 'h-9')}
                 />
               </div>
               {filteredIcons.length === 0 ? (
@@ -207,7 +222,8 @@ export function DataclassCustomizeModal({
                   icons={filteredIcons}
                   value={selectedIcon}
                   onSelect={setSelectedIcon}
-                  height={200}
+                  height={mobile ? 260 : 200}
+                  cellSize={mobile ? 44 : undefined}
                   scrollNonce={iconScrollNonce}
                 />
               )}
@@ -225,11 +241,11 @@ export function DataclassCustomizeModal({
                   placeholder={t('settings.searchColors')}
                   value={colorSearch}
                   onChange={(e) => setColorSearch(e.target.value)}
-                  className="h-9 pl-8"
+                  className={cn('pl-8', mobile ? 'h-11 text-sm' : 'h-9')}
                 />
               </div>
               <div className="scrollbar-none h-50 overflow-y-auto rounded-lg border p-2 [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                <div className="grid grid-cols-2 gap-2">
+                <div className={cn('grid gap-2', mobile ? 'grid-cols-1' : 'grid-cols-2')}>
                   {filteredColors.map(([key, preset]) => {
                     const isSelected =
                       selectedColor === key || (!selectedColor && key === 'default')
@@ -242,7 +258,8 @@ export function DataclassCustomizeModal({
                         size="sm"
                         onClick={() => setSelectedColor(key === 'default' ? undefined : key)}
                         className={cn(
-                          'h-9 justify-start gap-2 rounded-lg border px-3 transition-colors',
+                          'justify-start gap-2 rounded-lg border px-3 transition-colors',
+                          mobile ? 'h-11' : 'h-9',
                           isSelected ? 'border-primary bg-primary/10' : 'border-border'
                         )}
                         title={t(preset.nameKey)}
@@ -288,16 +305,32 @@ export function DataclassCustomizeModal({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center justify-between border-t pt-4">
-          <Button variant="ghost" size="sm" onClick={handleReset} className="gap-2">
+        <div
+          className={cn(
+            'flex items-center justify-between border-t pt-4',
+            mobile && 'shrink-0 px-4 pb-[max(1rem,var(--app-safe-bottom))]'
+          )}
+        >
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleReset}
+            className={cn('gap-2', mobile && 'h-11 px-3')}
+          >
             <RotateCcw className="h-4 w-4" />
             {t('settings.restoreDefaults')}
           </Button>
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className={mobile ? 'h-11 px-4' : undefined}
+            >
               {t('common.cancel')}
             </Button>
-            <Button onClick={handleSave}>{t('common.save')}</Button>
+            <Button onClick={handleSave} className={mobile ? 'h-11 px-4' : undefined}>
+              {t('common.save')}
+            </Button>
           </div>
         </div>
       </DialogContent>

@@ -52,6 +52,7 @@ import {
   getImageUri,
   isDeferredRelationValue,
 } from '~/lib/fieldPaths'
+import { isMobileShell } from '~/lib/platform'
 import {
   columnPresetTableNames,
   deleteColumnPreset,
@@ -124,7 +125,9 @@ export function EntityList({ tabId }: { tabId: string }) {
   const setEntitySetId = useTabsStore((s) => s.setEntitySetId)
   const setQueryPanelHeight = useTabsStore((s) => s.setQueryPanelHeight)
   const closeTab = useTabsStore((s) => s.closeTab)
-  const viewMode: ViewMode = activeTab?.viewMode ?? 'cards'
+  const mobile = isMobileShell()
+  // Mobile always browses in cards — table view is desktop-only real estate.
+  const viewMode: ViewMode = mobile ? 'cards' : (activeTab?.viewMode ?? 'cards')
   const queryExpanded = activeTab?.queryExpanded ?? false
   const queryPanelHeight = activeTab?.queryPanelHeight ?? null
   const queryTop = activeTab ? normalizeQueryOptions(activeTab.queryOptions).top : 100
@@ -692,34 +695,35 @@ export function EntityList({ tabId }: { tabId: string }) {
 
   return (
     <div className="@container/entity-list flex h-full min-h-0 flex-col overflow-hidden">
-      {/* Header */}
-      <div className="flex shrink-0 flex-wrap items-start justify-between gap-x-2 gap-y-1.5 border-b bg-background px-2 py-1.5">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-2 gap-y-1.5 border-b bg-background px-2 py-1.5">
         <div className="min-w-0 flex-1 basis-32">
           <div className="flex items-center gap-1.5">
             <h3 className="truncate font-semibold text-xs">{selectedDataclass}</h3>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="iconXs"
-                    className="h-6 w-6 shrink-0"
-                    onClick={handleHighlightInGraph}
-                  >
-                    <Network className="h-3.5 w-3.5 text-muted-foreground" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  Highlight in graph
-                  {openStructureShortcut?.enabled && (
-                    <kbd className="ml-2 rounded bg-muted px-1.5 text-xs">
-                      {formatShortcut(openStructureShortcut)}
-                    </kbd>
-                  )}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+            {!mobile && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="iconXs"
+                      className="h-6 w-6 shrink-0"
+                      onClick={handleHighlightInGraph}
+                    >
+                      <Network className="h-3.5 w-3.5 text-muted-foreground" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    Highlight in graph
+                    {openStructureShortcut?.enabled && (
+                      <kbd className="ml-2 rounded bg-muted px-1.5 text-xs">
+                        {formatShortcut(openStructureShortcut)}
+                      </kbd>
+                    )}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
           </div>
           <p className="text-[11px] text-muted-foreground leading-tight">
             {pagination
@@ -727,14 +731,22 @@ export function EntityList({ tabId }: { tabId: string }) {
               : t('entity.loading')}
           </p>
         </div>
-        <div className="flex max-w-full flex-wrap items-center justify-end gap-1">
+        <div
+          className={cn(
+            'flex max-w-full flex-wrap items-center justify-end gap-1',
+            mobile && 'gap-1.5'
+          )}
+        >
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="xs"
-                  className="h-6 gap-1 @[28rem]/entity-list:px-2 px-1.5"
+                  className={cn(
+                    'gap-1 @[28rem]/entity-list:px-2 px-1.5',
+                    mobile ? 'h-9 w-9 px-0' : 'h-6'
+                  )}
                   onClick={() => eventBus.emit('refresh-view')}
                   disabled={entitiesLoading}
                 >
@@ -760,89 +772,67 @@ export function EntityList({ tabId }: { tabId: string }) {
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-          {/* View mode toggle */}
-          <div className="flex h-6 items-center rounded-sm border bg-muted/40 p-px">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="iconXs"
-                    onClick={() => handleViewModeChange('cards')}
-                    className={cn(
-                      'h-5! w-5! rounded-sm p-0 transition-colors',
-                      viewMode === 'cards'
-                        ? 'bg-background text-foreground shadow-xs'
-                        : 'text-muted-foreground'
+          {/* View mode toggle — mobile always browses in cards, so hide it */}
+          {!mobile && (
+            <div className="flex h-6 items-center rounded-sm border bg-muted/40 p-px">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="iconXs"
+                      onClick={() => handleViewModeChange('cards')}
+                      className={cn(
+                        'h-5! w-5! rounded-sm p-0 transition-colors',
+                        viewMode === 'cards'
+                          ? 'bg-background text-foreground shadow-xs'
+                          : 'text-muted-foreground'
+                      )}
+                    >
+                      <LayoutGrid className="h-3.5 w-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {t('command.cardView')}
+                    {viewCardsShortcut?.enabled && (
+                      <kbd className="ml-2 rounded bg-muted px-1.5 text-xs">
+                        {formatShortcut(viewCardsShortcut)}
+                      </kbd>
                     )}
-                  >
-                    <LayoutGrid className="h-3.5 w-3.5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {t('command.cardView')}
-                  {viewCardsShortcut?.enabled && (
-                    <kbd className="ml-2 rounded bg-muted px-1.5 text-xs">
-                      {formatShortcut(viewCardsShortcut)}
-                    </kbd>
-                  )}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="iconXs"
-                    onClick={() => handleViewModeChange('table')}
-                    className={cn(
-                      'h-5! w-5! rounded-sm p-0 transition-colors',
-                      viewMode === 'table'
-                        ? 'bg-background text-foreground shadow-xs'
-                        : 'text-muted-foreground'
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="iconXs"
+                      onClick={() => handleViewModeChange('table')}
+                      className={cn(
+                        'h-5! w-5! rounded-sm p-0 transition-colors',
+                        viewMode === 'table'
+                          ? 'bg-background text-foreground shadow-xs'
+                          : 'text-muted-foreground'
+                      )}
+                    >
+                      <Table2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {t('command.tableView')}
+                    {viewTableShortcut?.enabled && (
+                      <kbd className="ml-2 rounded bg-muted px-1.5 text-xs">
+                        {formatShortcut(viewTableShortcut)}
+                      </kbd>
                     )}
-                  >
-                    <Table2 className="h-3.5 w-3.5" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {t('command.tableView')}
-                  {viewTableShortcut?.enabled && (
-                    <kbd className="ml-2 rounded bg-muted px-1.5 text-xs">
-                      {formatShortcut(viewTableShortcut)}
-                    </kbd>
-                  )}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-
-          {selectedDataclass && (
-            <FieldManager
-              dataclassName={selectedDataclass}
-              fieldConfig={fieldConfig}
-              initialView={viewMode}
-              onChangeFields={handleFieldsChange}
-              onResetView={handleResetFieldsView}
-              onSaveDefault={handleSaveFieldDefault}
-              isDirtyFromDefault={isFieldConfigDirtyFromDefault}
-            />
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           )}
-
-          <MethodListPopover
-            dataClass={selectedDataclass}
-            scopes={['dataclass', 'entitySelection', 'entity']}
-            entityKey={selectedEntityId}
-            entitySetId={activeTab?.entitySetId}
-            compact
-          />
-
-          {selectedDataclass ? (
-            <AiActionsMenu dataclassName={selectedDataclass} variant="icon" />
-          ) : null}
 
           {!readonlyMode && selectedDataclass ? (
             <DropdownMenu>
@@ -854,7 +844,10 @@ export function EntityList({ tabId }: { tabId: string }) {
                         type="button"
                         variant="outline"
                         size="xs"
-                        className="h-6 gap-1 border-destructive/40 @[28rem]/entity-list:px-2 px-1.5 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        className={cn(
+                          'gap-1 border-destructive/40 @[28rem]/entity-list:px-2 px-1.5 text-destructive hover:bg-destructive/10 hover:text-destructive',
+                          mobile ? 'h-9' : 'h-6'
+                        )}
                         disabled={
                           batchDeleting || (pageCount === 0 && !entitySetId && allCount === 0)
                         }
@@ -926,7 +919,7 @@ export function EntityList({ tabId }: { tabId: string }) {
                 <Button
                   variant="default"
                   size="xs"
-                  className="h-6 gap-1 @[28rem]/entity-list:px-2 px-1.5"
+                  className={cn('gap-1 @[28rem]/entity-list:px-2 px-1.5', mobile ? 'h-9' : 'h-6')}
                   onClick={() => handleCreateEntity()}
                   disabled={readonlyMode}
                 >
@@ -944,11 +937,36 @@ export function EntityList({ tabId }: { tabId: string }) {
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
+
+          {/* Secondary tools share the same compact height as primary actions */}
+          {selectedDataclass && (
+            <FieldManager
+              dataclassName={selectedDataclass}
+              fieldConfig={fieldConfig}
+              initialView={viewMode}
+              onChangeFields={handleFieldsChange}
+              onResetView={handleResetFieldsView}
+              onSaveDefault={handleSaveFieldDefault}
+              isDirtyFromDefault={isFieldConfigDirtyFromDefault}
+            />
+          )}
+
+          <MethodListPopover
+            dataClass={selectedDataclass}
+            scopes={['dataclass', 'entitySelection', 'entity']}
+            entityKey={selectedEntityId}
+            entitySetId={activeTab?.entitySetId}
+            compact
+          />
+
+          {selectedDataclass ? (
+            <AiActionsMenu dataclassName={selectedDataclass} variant="icon" />
+          ) : null}
         </div>
       </div>
 
       <QueryBuilder />
-      {queryExpanded ? (
+      {queryExpanded && !mobile ? (
         <ResizableVerticalHandle
           onResize={handleQueryPanelResize}
           onDoubleClick={handleQueryPanelReset}
@@ -1115,35 +1133,67 @@ export function EntityList({ tabId }: { tabId: string }) {
       )}
 
       {pagination && (
-        <div className="flex h-9 shrink-0 items-center gap-x-2 border-t bg-muted/30 px-2">
-          <p className="min-w-0 shrink truncate text-muted-foreground text-xs">
-            <span className="font-medium text-foreground">{pagination.total.toLocaleString()}</span>{' '}
-            {pagination.total === 1 ? t('entity.result') : t('entity.results')}
-            {dataclassTotalCount !== null && dataclassTotalCount !== pagination.total && (
-              <span className="text-muted-foreground/70">
-                {' '}
-                {t('entity.of')} {dataclassTotalCount.toLocaleString()}
-              </span>
-            )}
-          </p>
-
-          <div className="@[28rem]/entity-list:order-none order-last flex min-w-0 @[28rem]/entity-list:flex-1 items-center justify-center gap-1.5">
-            <p className="shrink-0 text-muted-foreground text-xs">
-              {t('entity.pageOf', {
-                page: pagination.page,
-                total: pagination.totalPages,
-              })}
+        <div
+          className={cn(
+            'flex shrink-0 items-center border-t bg-muted/30',
+            mobile ? 'h-12 justify-between gap-2 px-2' : 'h-9 gap-x-2 px-2'
+          )}
+        >
+          <div className={cn('flex min-w-0 items-center', mobile ? 'gap-2' : 'gap-x-2')}>
+            <p
+              className={cn(
+                'min-w-0 truncate text-muted-foreground',
+                mobile ? 'max-w-[40%] text-xs' : 'text-xs'
+              )}
+            >
+              <span className="font-medium text-foreground">
+                {pagination.total.toLocaleString()}
+              </span>{' '}
+              {pagination.total === 1 ? t('entity.result') : t('entity.results')}
+              {dataclassTotalCount !== null && dataclassTotalCount !== pagination.total && (
+                <span className="text-muted-foreground/70">
+                  {' '}
+                  {t('entity.of')} {dataclassTotalCount.toLocaleString()}
+                </span>
+              )}
             </p>
+            {mobile ? (
+              <QueryTopSelector
+                value={queryTop}
+                onChange={handleTopChange}
+                disabled={entitiesLoading}
+                className="shrink-0"
+              />
+            ) : null}
+          </div>
+
+          <div
+            className={cn(
+              'flex items-center',
+              mobile
+                ? 'shrink-0 gap-0.5'
+                : '@[28rem]/entity-list:order-none order-last min-w-0 @[28rem]/entity-list:flex-1 justify-center gap-1.5'
+            )}
+          >
+            {!mobile ? (
+              <p className="shrink-0 text-muted-foreground text-xs">
+                {t('entity.pageOf', {
+                  page: pagination.page,
+                  total: pagination.totalPages,
+                })}
+              </p>
+            ) : null}
             <TooltipProvider>
-              <div className="flex shrink-0 items-center gap-0.5">
+              <div className="flex shrink-0 items-center gap-0">
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6"
+                      className={cn('h-6 w-6', mobile && 'h-10 w-10')}
                       onClick={() => fetchEntities(1)}
                       disabled={pagination.page === 1 || entitiesLoading}
+                      aria-label={t('command.firstPage')}
                     >
                       <ChevronsLeft className="h-4 w-4" />
                     </Button>
@@ -1162,9 +1212,10 @@ export function EntityList({ tabId }: { tabId: string }) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6"
+                      className={cn('h-6 w-6', mobile && 'h-10 w-10')}
                       onClick={() => fetchEntities(pagination.page - 1)}
                       disabled={!pagination.hasPrev || entitiesLoading}
+                      aria-label={t('command.previousPage')}
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </Button>
@@ -1178,14 +1229,20 @@ export function EntityList({ tabId }: { tabId: string }) {
                     )}
                   </TooltipContent>
                 </Tooltip>
+                {mobile ? (
+                  <span className="min-w-10 px-1 text-center font-medium text-muted-foreground text-xs tabular-nums">
+                    {pagination.page}/{pagination.totalPages}
+                  </span>
+                ) : null}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6"
+                      className={cn('h-6 w-6', mobile && 'h-10 w-10')}
                       onClick={() => fetchEntities(pagination.page + 1)}
                       disabled={!pagination.hasNext || entitiesLoading}
+                      aria-label={t('command.nextPage')}
                     >
                       <ChevronRight className="h-4 w-4" />
                     </Button>
@@ -1204,9 +1261,10 @@ export function EntityList({ tabId }: { tabId: string }) {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-6 w-6"
+                      className={cn('h-6 w-6', mobile && 'h-10 w-10')}
                       onClick={() => fetchEntities(pagination.totalPages)}
                       disabled={pagination.page === pagination.totalPages || entitiesLoading}
+                      aria-label={t('command.lastPage')}
                     >
                       <ChevronsRight className="h-4 w-4" />
                     </Button>
@@ -1224,12 +1282,14 @@ export function EntityList({ tabId }: { tabId: string }) {
             </TooltipProvider>
           </div>
 
-          <QueryTopSelector
-            value={queryTop}
-            onChange={handleTopChange}
-            disabled={entitiesLoading}
-            className="ml-auto shrink-0"
-          />
+          {!mobile ? (
+            <QueryTopSelector
+              value={queryTop}
+              onChange={handleTopChange}
+              disabled={entitiesLoading}
+              className="ml-auto shrink-0"
+            />
+          ) : null}
         </div>
       )}
 
@@ -1367,6 +1427,9 @@ function EntityCard({
 
   // Get timestamp if available
   const timestamp = getEntityTimestamp(entity, locale)
+  // Touch devices have no hover state, so per-card actions must stay visible
+  // and use touch-sized targets instead of the desktop hover-reveal + xs icons.
+  const mobile = isMobileShell()
 
   return (
     <div
@@ -1383,7 +1446,8 @@ function EntityCard({
         }
       }}
       className={cn(
-        'group relative w-full cursor-pointer rounded-lg border bg-card p-3 text-left shadow-sm outline-none transition-all hover:shadow-md',
+        'group relative w-full cursor-pointer rounded-lg border bg-card text-left shadow-sm outline-none transition-all hover:shadow-md',
+        mobile ? 'p-4' : 'p-3',
         isSelected
           ? 'border-primary ring-1 ring-primary/30'
           : 'border-border hover:border-primary/50',
@@ -1401,12 +1465,20 @@ function EntityCard({
         >
           {entity.__KEY}
         </ClickToCopy>
-        <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+        <div
+          className={cn(
+            'flex items-center gap-0.5 transition-opacity',
+            mobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+          )}
+        >
           <ClickToCopy
             value={JSON.stringify(entity, null, 2)}
             tooltipLabel={t('entity.copyJson')}
             tooltipCopiedLabel={t('common.copied')}
-            className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+            className={cn(
+              'rounded-md text-muted-foreground hover:bg-muted hover:text-foreground',
+              mobile ? 'p-2.5' : 'p-1.5'
+            )}
           >
             <Copy className="h-3.5 w-3.5" />
           </ClickToCopy>
@@ -1420,7 +1492,7 @@ function EntityCard({
                   e.stopPropagation()
                   onDuplicate()
                 }}
-                className="h-6! w-6! text-muted-foreground"
+                className={cn('text-muted-foreground', mobile ? 'h-9! w-9!' : 'h-6! w-6!')}
                 title={
                   duplicateShortcut
                     ? `${t('entity.duplicate')} (${duplicateShortcut})`
@@ -1437,7 +1509,7 @@ function EntityCard({
                   e.stopPropagation()
                   onDelete()
                 }}
-                className="h-6! w-6! text-muted-foreground"
+                className={cn('text-muted-foreground', mobile ? 'h-9! w-9!' : 'h-6! w-6!')}
                 title={
                   deleteShortcut ? `${t('entity.delete')} (${deleteShortcut})` : t('entity.delete')
                 }

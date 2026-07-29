@@ -17,7 +17,7 @@ import { SidebarHeader } from './SidebarHeader'
 import { SidebarList } from './SidebarList'
 import type { SidebarProps } from './types'
 
-export function Sidebar({ collapsed = false, onDataclassOpened }: SidebarProps) {
+export function Sidebar({ collapsed = false, onDataclassOpened, onClose }: SidebarProps) {
   const { dataclasses, dataclassesLoading, dataclassesError } = useDataExplorerStore()
   const { tabs, openTab, openAllDataclasses, openHomeTab, openGraphTab } = useTabsStore()
   const activeDataclassName = useActiveDataclassName()
@@ -123,6 +123,7 @@ export function Sidebar({ collapsed = false, onDataclassOpened }: SidebarProps) 
           setSortOption={setSortOption}
           openHomeTab={openHomeTab}
           handleOpenAllDataclasses={handleOpenAllDataclasses}
+          onClose={onClose}
         />
 
         <SidebarList

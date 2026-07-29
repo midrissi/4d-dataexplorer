@@ -26,6 +26,12 @@ import {
 } from 'lucide-react'
 import { useCallback } from 'react'
 import { useTranslation } from '~/i18n'
+import {
+  mobileMenuCollisionProps,
+  mobileMenuContentClass,
+  mobileMenuItemClass,
+} from '~/lib/mobile-menu'
+import { isMobileShell } from '~/lib/platform'
 import { formatCount } from '~/lib/utils'
 import { useDataExplorerStore } from '~/store'
 import {
@@ -49,6 +55,7 @@ type SidebarHeaderProps = {
   setSortOption: (opt: SortOption) => void
   openHomeTab: () => void
   handleOpenAllDataclasses: () => void
+  onClose?: () => void
 }
 
 export function SidebarHeader({
@@ -59,6 +66,7 @@ export function SidebarHeader({
   setSortOption,
   openHomeTab,
   handleOpenAllDataclasses,
+  onClose,
 }: SidebarHeaderProps) {
   const { dataclasses, dataclassesLoading, fetchDataclasses } = useDataExplorerStore()
   const sidebarViewMode = useSidebarViewMode()
@@ -71,6 +79,9 @@ export function SidebarHeader({
   const toggleSidebarShortcut = useShortcut('toggle-sidebar')
   const toggleSidebarCollapsed = useSettingsStore((state) => state.toggleSidebarCollapsed)
   const { t } = useTranslation()
+  const mobile = isMobileShell()
+  const controlSize = mobile ? 'h-11 w-11' : 'h-6 w-6'
+  const iconSize = mobile ? 'h-4 w-4' : 'h-3.5 w-3.5'
 
   const randomizeDataclassIcons = useCallback(() => {
     if (dataclasses.length === 0) return
@@ -88,115 +99,151 @@ export function SidebarHeader({
   }, [dataclasses, dataclassCustomizations, setDataclassCustomizations])
 
   return (
-    <div className="flex h-auto min-h-0 flex-col gap-2 border-border/60 border-b p-2 pb-2">
+    <div
+      className={cn(
+        'flex h-auto min-h-0 flex-col border-border/60 border-b',
+        mobile ? 'gap-2 p-3 pt-2' : 'gap-2 p-2 pb-2'
+      )}
+    >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <h2 className="font-semibold text-xs">{t('sidebar.dataclasses')}</h2>
-          <p className="text-muted-foreground text-xs">
+          <h2 className={cn('font-semibold', mobile ? 'text-base' : 'text-xs')}>
+            {t('sidebar.dataclasses')}
+          </h2>
+          <p className={cn('text-muted-foreground', mobile ? 'text-sm' : 'text-xs')}>
             {formatCount(totalEntities)} {t('sidebar.totalEntities')}
           </p>
         </div>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 shrink-0"
-              onClick={toggleSidebarCollapsed}
-              aria-label={t('layout.collapseSidebar')}
-            >
-              <ChevronsLeft className="h-3.5 w-3.5" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">
-            {t('layout.collapseSidebar')}
-            {toggleSidebarShortcut?.enabled ? (
-              <kbd className="ml-2 rounded bg-muted px-1.5 font-mono text-xs">
-                {formatShortcut(toggleSidebarShortcut)}
-              </kbd>
-            ) : null}
-          </TooltipContent>
-        </Tooltip>
+        {mobile && onClose ? (
+          <Button
+            type="button"
+            variant="ghost"
+            className="h-11 shrink-0 gap-2 px-3"
+            onClick={onClose}
+            aria-label={t('mobile.closeCatalog')}
+          >
+            <X className="h-4 w-4" />
+            {t('mobile.closeCatalog')}
+          </Button>
+        ) : (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 shrink-0"
+                onClick={toggleSidebarCollapsed}
+                aria-label={t('layout.collapseSidebar')}
+              >
+                <ChevronsLeft className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              {t('layout.collapseSidebar')}
+              {toggleSidebarShortcut?.enabled ? (
+                <kbd className="ml-2 rounded bg-muted px-1.5 font-mono text-xs">
+                  {formatShortcut(toggleSidebarShortcut)}
+                </kbd>
+              ) : null}
+            </TooltipContent>
+          </Tooltip>
+        )}
       </div>
 
-      <div className="flex items-center justify-center gap-0.5">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant={isHomeActive ? 'secondary' : 'ghost'}
-              size="icon"
-              className="h-6 w-6"
-              onClick={openHomeTab}
-            >
-              <Home className={cn('h-3.5 w-3.5', isHomeActive && 'text-primary')} />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            {t('sidebar.openHomeTab')}
-            {openHomeShortcut?.enabled && (
-              <kbd className="ml-2 rounded bg-muted px-1.5 font-mono text-xs">
-                {formatShortcut(openHomeShortcut)}
-              </kbd>
-            )}
-          </TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6"
-              onClick={handleOpenAllDataclasses}
-              disabled={dataclassesLoading || dataclasses.length === 0}
-            >
-              <Layers className="h-3.5 w-3.5" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>{t('sidebar.openAllDataclasses')}</TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6"
-              onClick={fetchDataclasses}
-              disabled={dataclassesLoading}
-            >
-              <RefreshCw className={cn('h-3.5 w-3.5', dataclassesLoading && 'animate-spin')} />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>{t('sidebar.refreshDataclasses')}</TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6"
-              onClick={randomizeDataclassIcons}
-              disabled={dataclassesLoading || dataclasses.length === 0}
-              aria-label={t('sidebar.randomizeIcons')}
-            >
-              <Dices className="h-3.5 w-3.5" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>{t('sidebar.randomizeIcons')}</TooltipContent>
-        </Tooltip>
-        <div className="flex h-6 items-center rounded-sm border border-border bg-muted/30 p-px">
+      <div
+        className={cn(
+          'flex items-center',
+          mobile ? 'justify-between gap-1' : 'justify-center gap-0.5'
+        )}
+      >
+        <div className={cn('flex items-center', mobile ? 'gap-1' : 'gap-0.5')}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant={isHomeActive ? 'secondary' : 'ghost'}
+                size="icon"
+                className={controlSize}
+                onClick={openHomeTab}
+              >
+                <Home className={cn(iconSize, isHomeActive && 'text-primary')} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              {t('sidebar.openHomeTab')}
+              {openHomeShortcut?.enabled && !mobile && (
+                <kbd className="ml-2 rounded bg-muted px-1.5 font-mono text-xs">
+                  {formatShortcut(openHomeShortcut)}
+                </kbd>
+              )}
+            </TooltipContent>
+          </Tooltip>
+          {!mobile ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-6 w-6"
+                  onClick={handleOpenAllDataclasses}
+                  disabled={dataclassesLoading || dataclasses.length === 0}
+                >
+                  <Layers className="h-3.5 w-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t('sidebar.openAllDataclasses')}</TooltipContent>
+            </Tooltip>
+          ) : null}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={controlSize}
+                onClick={fetchDataclasses}
+                disabled={dataclassesLoading}
+              >
+                <RefreshCw className={cn(iconSize, dataclassesLoading && 'animate-spin')} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{t('sidebar.refreshDataclasses')}</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={controlSize}
+                onClick={randomizeDataclassIcons}
+                disabled={dataclassesLoading || dataclasses.length === 0}
+                aria-label={t('sidebar.randomizeIcons')}
+              >
+                <Dices className={iconSize} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{t('sidebar.randomizeIcons')}</TooltipContent>
+          </Tooltip>
+        </div>
+        <div
+          className={cn(
+            'flex items-center rounded-md border border-border bg-muted/30',
+            mobile ? 'h-11 p-1' : 'h-6 p-px'
+          )}
+        >
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
                 className={cn(
-                  'h-5 w-5 rounded-r-none rounded-l-sm transition-colors',
+                  'rounded-r-none rounded-l-sm transition-colors',
+                  mobile ? 'h-9 w-9' : 'h-5 w-5',
                   sidebarViewMode === 'cards' && 'bg-background shadow-xs dark:bg-muted'
                 )}
                 onClick={() => setSidebarViewMode('cards')}
                 aria-pressed={sidebarViewMode === 'cards'}
+                aria-label={t('sidebar.cardsView')}
               >
-                <LayoutGrid className="h-3 w-3" />
+                <LayoutGrid className={mobile ? 'h-4 w-4' : 'h-3 w-3'} />
               </Button>
             </TooltipTrigger>
             <TooltipContent>{t('sidebar.cardsView')}</TooltipContent>
@@ -207,13 +254,15 @@ export function SidebarHeader({
                 variant="ghost"
                 size="icon"
                 className={cn(
-                  'h-5 w-5 rounded-none transition-colors',
+                  'rounded-none transition-colors',
+                  mobile ? 'h-9 w-9' : 'h-5 w-5',
                   sidebarViewMode === 'tables' && 'bg-background shadow-xs dark:bg-muted'
                 )}
                 onClick={() => setSidebarViewMode('tables')}
                 aria-pressed={sidebarViewMode === 'tables'}
+                aria-label={t('sidebar.tablesView')}
               >
-                <Table2 className="h-3 w-3" />
+                <Table2 className={mobile ? 'h-4 w-4' : 'h-3 w-3'} />
               </Button>
             </TooltipTrigger>
             <TooltipContent>{t('sidebar.tablesView')}</TooltipContent>
@@ -224,13 +273,15 @@ export function SidebarHeader({
                 variant="ghost"
                 size="icon"
                 className={cn(
-                  'h-5 w-5 rounded-r-sm rounded-l-none transition-colors',
+                  'rounded-r-sm rounded-l-none transition-colors',
+                  mobile ? 'h-9 w-9' : 'h-5 w-5',
                   sidebarViewMode === 'icons' && 'bg-background shadow-xs dark:bg-muted'
                 )}
                 onClick={() => setSidebarViewMode('icons')}
                 aria-pressed={sidebarViewMode === 'icons'}
+                aria-label={t('sidebar.iconsView')}
               >
-                <LayoutTemplate className="h-3 w-3" />
+                <LayoutTemplate className={mobile ? 'h-4 w-4' : 'h-3 w-3'} />
               </Button>
             </TooltipTrigger>
             <TooltipContent>{t('sidebar.iconsView')}</TooltipContent>
@@ -238,13 +289,18 @@ export function SidebarHeader({
         </div>
       </div>
 
-      <div className="flex items-center gap-1">
-        <div className="relative flex-1">
-          <Search className="absolute top-1/2 left-2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+      <div className={cn('flex items-center', mobile ? 'gap-2' : 'gap-1')}>
+        <div className="relative min-w-0 flex-1">
+          <Search
+            className={cn(
+              'absolute top-1/2 left-2.5 -translate-y-1/2 text-muted-foreground',
+              mobile ? 'h-4 w-4' : 'h-3.5 w-3.5'
+            )}
+          />
           <Input
             data-sidebar-search
             placeholder={
-              searchShortcut?.enabled
+              !mobile && searchShortcut?.enabled
                 ? t('sidebar.searchPlaceholderWithShortcut', {
                     shortcut: formatShortcut(searchShortcut),
                   })
@@ -258,7 +314,11 @@ export function SidebarHeader({
                 ;(e.target as HTMLInputElement).blur()
               }
             }}
-            className={cn('h-6 rounded-sm pl-7 text-xs', searchQuery && 'pr-7')}
+            className={cn(
+              'rounded-md pl-8 text-sm',
+              mobile ? 'h-11' : 'h-6 rounded-sm pl-7 text-xs',
+              searchQuery && (mobile ? 'pr-10' : 'pr-7')
+            )}
             aria-label={t('sidebar.searchAria')}
           />
           {searchQuery ? (
@@ -267,10 +327,13 @@ export function SidebarHeader({
               variant="ghost"
               size="icon"
               onClick={() => setSearchQuery('')}
-              className="absolute top-1/2 right-1 h-5 w-5 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              className={cn(
+                'absolute top-1/2 right-1 -translate-y-1/2 text-muted-foreground hover:text-foreground',
+                mobile ? 'h-9 w-9' : 'h-5 w-5'
+              )}
               aria-label={t('sidebar.clearSearch')}
             >
-              <X className="h-3 w-3" />
+              <X className={mobile ? 'h-4 w-4' : 'h-3 w-3'} />
             </Button>
           ) : null}
         </div>
@@ -281,21 +344,26 @@ export function SidebarHeader({
                 <Button
                   variant={sortOption !== 'none' ? 'secondary' : 'ghost'}
                   size="icon"
-                  className="h-6 w-6 shrink-0"
+                  className={cn(controlSize, 'shrink-0')}
                 >
-                  <SortAsc className={cn('h-3.5 w-3.5', sortOption !== 'none' && 'text-primary')} />
+                  <SortAsc className={cn(iconSize, sortOption !== 'none' && 'text-primary')} />
                 </Button>
               </DropdownMenuTrigger>
             </TooltipTrigger>
             <TooltipContent>{t('sidebar.sortDataclasses')}</TooltipContent>
           </Tooltip>
-          <DropdownMenuContent align="end" className="w-44">
+          <DropdownMenuContent
+            align="end"
+            className={mobile ? mobileMenuContentClass() : 'w-44'}
+            {...(mobile ? mobileMenuCollisionProps : { collisionPadding: 12 })}
+          >
             {SORT_OPTIONS.map((option) => (
               <DropdownMenuItem
                 key={option.value}
                 onClick={() => setSortOption(option.value)}
                 className={cn(
                   'flex items-center gap-2',
+                  mobile && mobileMenuItemClass(),
                   sortOption === option.value && 'bg-primary text-primary-foreground'
                 )}
               >
@@ -308,7 +376,10 @@ export function SidebarHeader({
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={() => setSortOption('none')}
-                  className="flex items-center gap-2 text-muted-foreground"
+                  className={cn(
+                    'flex items-center gap-2 text-muted-foreground',
+                    mobile && mobileMenuItemClass()
+                  )}
                 >
                   <X className="h-4 w-4" />
                   <span>{t('sidebar.clearSorting')}</span>

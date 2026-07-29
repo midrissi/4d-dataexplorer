@@ -2,6 +2,7 @@ import { cn } from '@4d/ui'
 import type { LucideIcon } from 'lucide-react'
 import { forwardRef, type ReactNode, useEffect, useImperativeHandle, useRef } from 'react'
 import { AssistantSparklesIcon } from '~/components/AssistantSparklesIcon'
+import { isMobileShell } from '~/lib/platform'
 import './ai-actions.css'
 
 type AiModalShellProps = {
@@ -22,9 +23,15 @@ export function AiModalShell({
   footer,
   className,
 }: AiModalShellProps) {
+  const mobile = isMobileShell()
   return (
-    <div className={cn('ai-action-modal', className)}>
-      <div className="border-border border-b px-4 pt-3 pr-10 pb-2.5">
+    <div className={cn('ai-action-modal', mobile && 'flex h-full flex-col', className)}>
+      <div
+        className={cn(
+          'shrink-0 border-border border-b px-4 pt-3 pr-10 pb-2.5',
+          mobile && 'pt-[max(0.75rem,var(--app-safe-top))]'
+        )}
+      >
         <div className="flex items-start gap-2.5">
           <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-primary/25 bg-primary/10">
             <Icon className="h-4 w-4 text-primary" aria-hidden />
@@ -40,9 +47,16 @@ export function AiModalShell({
         </div>
       </div>
 
-      <div className="space-y-3 px-4 py-3">{children}</div>
+      <div className={cn('space-y-3 px-4 py-3', mobile && 'min-h-0 flex-1 overflow-y-auto')}>
+        {children}
+      </div>
 
-      <div className="flex flex-col-reverse items-stretch gap-1.5 border-border border-t bg-muted/30 px-4 py-2 sm:flex-row sm:items-center sm:justify-end">
+      <div
+        className={cn(
+          'flex flex-col-reverse items-stretch gap-1.5 border-border border-t bg-muted/30 px-4 py-2 sm:flex-row sm:items-center sm:justify-end',
+          mobile && 'shrink-0 pb-[max(0.5rem,var(--app-safe-bottom))]'
+        )}
+      >
         {footer}
       </div>
     </div>
@@ -198,13 +212,15 @@ export function AiPrimaryButton({
   loading?: boolean
   onClick: () => void
 }) {
+  const mobile = isMobileShell()
   return (
     <button
       type="button"
       disabled={disabled || loading}
       onClick={onClick}
       className={cn(
-        'ai-action-cta inline-flex h-6 items-center justify-center gap-1.5 rounded-md px-2.5 font-medium text-xs',
+        'ai-action-cta inline-flex items-center justify-center gap-1.5 rounded-md font-medium text-xs',
+        mobile ? 'h-10 px-4' : 'h-6 px-2.5',
         'bg-primary text-primary-foreground',
         'hover:bg-primary/90',
         'disabled:pointer-events-none disabled:opacity-45'
