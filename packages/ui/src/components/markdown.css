@@ -489,3 +489,100 @@
 .md-preview .hljs-strong {
   font-weight: 700;
 }
+
+/* Compact density — terminal / dense panels (matches app UI text-xs scale). */
+.md-preview.md-preview-compact {
+  font-size: 0.6875rem; /* 11px */
+  line-height: 1.45;
+}
+
+.md-preview.md-preview-compact h1,
+.md-preview.md-preview-compact h2,
+.md-preview.md-preview-compact h3,
+.md-preview.md-preview-compact h4,
+.md-preview.md-preview-compact h5,
+.md-preview.md-preview-compact h6 {
+  margin: 0.85em 0 0.35em;
+  line-height: 1.35;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.md-preview.md-preview-compact h1 {
+  font-size: 0.8125rem; /* 13px */
+  font-weight: 600;
+}
+
+.md-preview.md-preview-compact h2 {
+  font-size: 0.75rem; /* 12px */
+  font-weight: 600;
+}
+
+.md-preview.md-preview-compact h3 {
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.md-preview.md-preview-compact h4,
+.md-preview.md-preview-compact h5,
+.md-preview.md-preview-compact h6 {
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+.md-preview.md-preview-compact p {
+  margin: 0.4em 0;
+}
+
+.md-preview.md-preview-compact ul,
+.md-preview.md-preview-compact ol {
+  margin: 0.4em 0;
+  padding-left: 1.25em;
+}
+
+.md-preview.md-preview-compact li {
+  margin: 0.1em 0;
+}
+
+.md-preview.md-preview-compact table {
+  margin: 0.5em 0;
+  font-size: 0.625rem; /* 10px */
+}
+
+.md-preview.md-preview-compact th,
+.md-preview.md-preview-compact td {
+  padding: 0.25em 0.45em;
+}
+
+.md-preview.md-preview-compact pre {
+  margin: 0.45em 0;
+  padding: 0.45em 0.55em;
+}
+
+.md-preview.md-preview-compact pre code {
+  font-size: 0.625rem;
+  line-height: 1.45;
+}
+
+.md-preview.md-preview-compact code {
+  font-size: 0.9em;
+  padding: 0.05em 0.25em;
+}
+
+.md-preview.md-preview-compact .md-code-block {
+  margin: 0.45em 0;
+}
+
+.md-preview.md-preview-compact .md-code-toolbar {
+  font-size: 0.5625rem;
+  padding: 0.15em 0.35em;
+}
+
+.md-preview.md-preview-compact hr {
+  margin: 0.75em 0;
+}
+
+.md-preview.md-preview-compact blockquote {
+  margin: 0.4em 0;
+  padding-left: 0.65em;
+}

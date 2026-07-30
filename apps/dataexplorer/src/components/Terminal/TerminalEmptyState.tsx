@@ -1,30 +1,34 @@
-import { Braces, ExternalLink, PanelBottom, Sparkles, Terminal as TerminalIcon } from 'lucide-react'
+import {
+  BookOpen,
+  Braces,
+  ExternalLink,
+  FileCode2,
+  PanelBottom,
+  Sparkles,
+  Terminal as TerminalIcon,
+} from 'lucide-react'
 import { EmptyPanel, EmptyPanelAction } from '~/components/EmptyPanel'
 import { useTranslation } from '~/i18n'
-
-const EXAMPLE_IDS = ['all', 'query', 'get', 'snippet'] as const
-
-export type TerminalExampleId = (typeof EXAMPLE_IDS)[number]
+import type { TerminalSnippet } from '~/store/terminal-snippets'
+import { snippetFileName } from './TerminalSnippetsFiles'
 
 type TerminalEmptyStateProps = {
-  onInsertExample: (id: TerminalExampleId) => void
+  snippets: TerminalSnippet[]
+  onOpenSnippet: (snippet: TerminalSnippet) => void
+  onNewSnippet: () => void
+  onShowHelp: () => void
 }
 
 /**
- * First-run state for the ORDA terminal — shared EmptyPanel chrome + example actions.
+ * First-run state for the ORDA terminal — snippet files + help entry points.
  */
-export function TerminalEmptyState({ onInsertExample }: TerminalEmptyStateProps) {
+export function TerminalEmptyState({
+  snippets,
+  onOpenSnippet,
+  onNewSnippet,
+  onShowHelp,
+}: TerminalEmptyStateProps) {
   const { t } = useTranslation()
-  const exampleAll = t('terminal.example.all')
-  const exampleQuery = t('terminal.example.query')
-  const exampleGet = t('terminal.example.get')
-  const exampleSnippet = t('terminal.example.snippet')
-  const exampleLabels: Record<TerminalExampleId, string> = {
-    all: exampleAll,
-    query: exampleQuery,
-    get: exampleGet,
-    snippet: exampleSnippet,
-  }
 
   return (
     <EmptyPanel
@@ -35,18 +39,38 @@ export function TerminalEmptyState({ onInsertExample }: TerminalEmptyStateProps)
       description={t('terminal.empty')}
       ghost="cards"
       size="md"
-      className="h-full min-h-0"
+      align="start"
+      className="h-full min-h-0 pt-3"
       contentClassName="max-w-xl px-2"
       chips={[
         { label: t('terminal.hintDs'), icon: Braces, tone: 'cyan' },
         { label: t('terminal.hintOpen'), icon: ExternalLink, tone: 'primary' },
         { label: t('terminal.hintConsole'), icon: PanelBottom, tone: 'amber' },
       ]}
-      action={EXAMPLE_IDS.map((id) => (
-        <EmptyPanelAction key={id} onClick={() => onInsertExample(id)}>
-          <span className="font-mono">{exampleLabels[id]}</span>
-        </EmptyPanelAction>
-      ))}
+      action={
+        <>
+          {snippets.slice(0, 6).map((snippet) => (
+            <EmptyPanelAction key={snippet.id} onClick={() => onOpenSnippet(snippet)}>
+              <span className="inline-flex items-center gap-1 font-mono">
+                <FileCode2 className="h-3 w-3 opacity-70" aria-hidden />
+                {snippetFileName(snippet.name)}
+              </span>
+            </EmptyPanelAction>
+          ))}
+          <EmptyPanelAction onClick={onNewSnippet}>
+            <span className="inline-flex items-center gap-1 font-mono">
+              <FileCode2 className="h-3 w-3 opacity-70" aria-hidden />
+              {t('terminal.snippets.newFile')}
+            </span>
+          </EmptyPanelAction>
+          <EmptyPanelAction onClick={onShowHelp}>
+            <span className="inline-flex items-center gap-1">
+              <BookOpen className="h-3 w-3" aria-hidden />
+              {t('terminal.helpAction')}
+            </span>
+          </EmptyPanelAction>
+        </>
+      }
     />
   )
 }

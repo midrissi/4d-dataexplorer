@@ -121,9 +121,13 @@ export const tauriDownloadBytes: DownloadBytesFn = async (input) => {
   }
 
   const { writeFile, BaseDirectory } = await import('@tauri-apps/plugin-fs')
+  const safeName = sanitizeFilename(input.filename)
   try {
-    await writeFile(input.filename, input.bytes, { baseDir: BaseDirectory.Document })
+    await writeFile(safeName, input.bytes, { baseDir: BaseDirectory.Document })
   } catch {
-    await writeFile(input.filename, input.bytes, { baseDir: BaseDirectory.Download })
+    // Avoid colliding with an existing Document file (and skip Download —
+    // outside the iOS sandbox it triggers NSURLError -3000 via WKDownload).
+    const unique = `${Date.now()}_${safeName}`
+    await writeFile(unique, input.bytes, { baseDir: BaseDirectory.Document })
   }
 }

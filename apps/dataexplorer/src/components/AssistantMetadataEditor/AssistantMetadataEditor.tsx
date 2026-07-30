@@ -297,7 +297,7 @@ export function AssistantMetadataEditor() {
 
   const handleExport = () => {
     if (!metadata) return
-    downloadMetadataSchema(metadata, catalog?.__NAME ?? metadata.databaseName)
+    void downloadMetadataSchema(metadata, catalog?.__NAME ?? metadata.databaseName)
   }
 
   const handleCancelGeneration = useCallback(() => {

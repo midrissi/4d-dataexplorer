@@ -136,7 +136,9 @@ function getEntitiesQueryKey(params?: {
 }
 
 /** Coerce UI filter params to API values (:1, :2, ...). */
-function coerceFilterParams(filterParams: Array<{ type: string; value: string }>): unknown[] {
+export function coerceFilterParams(
+  filterParams: Array<{ type: string; value: string }>
+): unknown[] {
   return filterParams.map((p) => {
     if (p.type === 'number') {
       const n = Number(p.value)

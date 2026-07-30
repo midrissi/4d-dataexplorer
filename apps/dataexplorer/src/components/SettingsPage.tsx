@@ -54,6 +54,7 @@ import {
 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useEditorLabels, useTranslation } from '~/i18n'
+import { downloadBytes } from '~/lib/download-bytes'
 import { resolveLucideIcon } from '~/lib/lucide-icon'
 import {
   mobileFullscreenDialogClass,
@@ -406,29 +407,25 @@ export function SettingsPage() {
   const [customizeModalOpen, setCustomizeModalOpen] = useState(false)
   const [customizeDataclass, setCustomizeDataclass] = useState<string | null>(null)
 
-  const downloadJson = (json: string, filename: string) => {
-    const blob = new Blob([json], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = filename
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+  const downloadJson = async (json: string, filename: string) => {
+    await downloadBytes({
+      filename,
+      bytes: new TextEncoder().encode(json),
+      mime: 'application/json',
+    })
   }
 
   const handleExportCurrent = () => {
-    downloadJson(exportSettings(), 'dataexplorer-settings.json')
+    void downloadJson(exportSettings(), 'dataexplorer-settings.json')
   }
 
   const handleExportAll = () => {
-    downloadJson(exportProfiles(), 'dataexplorer-profiles.json')
+    void downloadJson(exportProfiles(), 'dataexplorer-profiles.json')
   }
 
   const handleExportSelected = () => {
     if (exportSelectedIds.size === 0) return
-    downloadJson(exportProfiles([...exportSelectedIds]), 'dataexplorer-profiles.json')
+    void downloadJson(exportProfiles([...exportSelectedIds]), 'dataexplorer-profiles.json')
     setExportSelectOpen(false)
     setExportSelectedIds(new Set())
   }

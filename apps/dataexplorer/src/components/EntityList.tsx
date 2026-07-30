@@ -46,7 +46,7 @@ import { EntityListSkeleton } from '~/components/EntityLoadingSkeleton'
 import { PullToRefresh } from '~/components/PullToRefresh'
 import { SwipeNavigate } from '~/components/SwipeNavigate'
 import { getIntlLocale, useTranslation } from '~/i18n'
-import { api, formatThrownError } from '~/lib/api'
+import { api, coerceFilterParams, formatThrownError } from '~/lib/api'
 import { sanitizeForDuplication } from '~/lib/entitySanitizer'
 import { eventBus } from '~/lib/eventBus'
 import {
@@ -55,6 +55,7 @@ import {
   getImageUri,
   isDeferredRelationValue,
 } from '~/lib/fieldPaths'
+import { findEntityPageByKey, resolveKeyAttribute } from '~/lib/find-entity-page'
 import { isMobileShell } from '~/lib/platform'
 import {
   columnPresetTableNames,
@@ -319,6 +320,90 @@ export function EntityList({ tabId }: { tabId: string }) {
   const { focusedEntityIndex, setFocusedEntityIndex } = useKeyboardShortcutsContext()
   const entityRefs = useRef<Map<string, HTMLDivElement | HTMLTableRowElement>>(new Map())
   const listRef = useRef<HTMLDivElement>(null)
+
+  // When an entity is selected (e.g. Terminal "Open entity") but not on the
+  // current page, jump to the page that contains it (key-ordered queries only).
+  // Only auto-page when the selection itself changes — not when the user pages away.
+  const revealAttemptRef = useRef<string | null>(null)
+  const prevSelectedEntityIdRef = useRef<string | null>(null)
+  const activeTabId = useTabsStore((s) => s.activeTabId)
+
+  useEffect(() => {
+    if (activeTabId !== tabId) return
+    if (!selectedDataclass || !activeTab) return
+    if (activeTab.entitySetId) return
+
+    if (!selectedEntityId) {
+      prevSelectedEntityIdRef.current = null
+      revealAttemptRef.current = null
+      return
+    }
+
+    const indexOnPage = entities.findIndex(
+      (entity) =>
+        String(entity.id) === selectedEntityId || String(entity.__KEY) === selectedEntityId
+    )
+    if (indexOnPage >= 0) {
+      revealAttemptRef.current = null
+      prevSelectedEntityIdRef.current = selectedEntityId
+      setFocusedEntityIndex(indexOnPage)
+      const matched = entities[indexOnPage]
+      if (matched && view?.selectedEntityId !== selectedEntityId) {
+        selectEntity(matched)
+      }
+      return
+    }
+
+    if (entitiesLoading) return
+
+    const selectionChanged = prevSelectedEntityIdRef.current !== selectedEntityId
+    prevSelectedEntityIdRef.current = selectedEntityId
+    if (!selectionChanged) return
+    if (revealAttemptRef.current === selectedEntityId) return
+    revealAttemptRef.current = selectedEntityId
+
+    const query = normalizeQueryOptions(activeTab.queryOptions)
+    const targetKey = selectedEntityId
+
+    void (async () => {
+      const keyAttribute = await resolveKeyAttribute(selectedDataclass)
+      if (!keyAttribute) return
+      const page = await findEntityPageByKey({
+        dataclassName: selectedDataclass,
+        entityKey: targetKey,
+        pageSize: query.top,
+        keyAttribute,
+        filter: query.filter || undefined,
+        filterParams: query.filterParams?.length
+          ? coerceFilterParams(query.filterParams)
+          : undefined,
+        sort: query.sort || undefined,
+        order: query.order,
+      })
+      const tab = useTabsStore.getState().tabs.find((t) => t.id === tabId)
+      if (!tab || !isDataclassTab(tab) || tab.selectedEntityId !== targetKey) return
+      if (page == null) {
+        // Allow a later retry (e.g. after catalog/key resolution recovers).
+        if (revealAttemptRef.current === targetKey) revealAttemptRef.current = null
+        return
+      }
+      const currentPage = useDataExplorerStore.getState().tabData[tabId]?.pagination?.page
+      if (currentPage === page) return
+      void fetchEntities(page)
+    })()
+  }, [
+    activeTabId,
+    tabId,
+    selectedEntityId,
+    selectedDataclass,
+    activeTab,
+    entities,
+    entitiesLoading,
+    setFocusedEntityIndex,
+    selectEntity,
+    fetchEntities,
+    view?.selectedEntityId,
+  ])
 
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [duplicateData, setDuplicateData] = useState<Record<string, unknown> | undefined>(undefined)

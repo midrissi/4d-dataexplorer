@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import type { TerminalLogLevel } from '~/lib/terminal/execute-snippet'
 import type { FormattedTerminalResult } from '~/lib/terminal/result-format'
 
-export type TerminalOutputKind = 'input' | 'log' | 'result' | 'error'
+export type TerminalOutputKind = 'input' | 'log' | 'result' | 'error' | 'system'
 
 export type TerminalOutputCell = {
   id: string
@@ -16,6 +16,10 @@ export type TerminalOutputCell = {
   formatted?: FormattedTerminalResult
   /** Raw error message */
   errorMessage?: string
+  /** Plain system message (dot-command replies) */
+  systemMessage?: string
+  /** Markdown body for help / rich system output */
+  markdown?: string
 }
 
 export type TerminalHistoryEntry = {

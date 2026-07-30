@@ -1,5 +1,6 @@
 import { cn } from '@4d/ui'
 import type { TerminalOutputCell } from '~/store/terminal'
+import { TerminalMarkdownCell } from './TerminalMarkdownCell'
 import { TerminalResultCell } from './TerminalResultCell'
 
 function formatTimestamp(timestamp: number): string {
@@ -24,6 +25,16 @@ function Marker({ kind, logLevel }: { kind: TerminalOutputCell['kind']; logLevel
     return (
       <span className={cn(MARKER_BASE, 'bg-destructive/15 text-destructive')} aria-hidden>
         ✕
+      </span>
+    )
+  }
+  if (kind === 'system') {
+    return (
+      <span
+        className={cn(MARKER_BASE, 'bg-violet-500/15 text-violet-700 dark:text-violet-300')}
+        aria-hidden
+      >
+        ·
       </span>
     )
   }
@@ -59,29 +70,31 @@ type TerminalOutputRowProps = {
 export function TerminalOutputRow({ cell, isFirstOfRun = false }: TerminalOutputRowProps) {
   const multiLineInput =
     cell.kind === 'input' && typeof cell.source === 'string' && cell.source.includes('\n')
+  const richSystem = cell.kind === 'system' && Boolean(cell.markdown)
 
   return (
     <li
       className={cn(
         'group flex min-h-6 gap-1.5 px-1.5',
-        multiLineInput ? 'items-start py-0.5' : 'items-center',
+        multiLineInput || richSystem ? 'items-start py-0.5' : 'items-center',
         isFirstOfRun &&
           'mt-1.5 border-border/40 border-t border-dashed first:mt-0 first:border-t-0',
         cell.kind === 'error' && 'bg-destructive/5',
         cell.kind === 'result' && 'hover:bg-muted/25',
-        cell.kind === 'input' && 'bg-muted/15'
+        cell.kind === 'input' && 'bg-muted/15',
+        cell.kind === 'system' && 'bg-violet-500/5'
       )}
     >
       <time
         dateTime={new Date(cell.timestamp).toISOString()}
         className={cn(
           'shrink-0 font-mono text-[10px] text-muted-foreground/55 tabular-nums leading-4 transition-colors group-hover:text-muted-foreground',
-          multiLineInput && 'pt-0.5'
+          (multiLineInput || richSystem) && 'pt-0.5'
         )}
       >
         {formatTimestamp(cell.timestamp)}
       </time>
-      <span className={cn('shrink-0', multiLineInput && 'pt-0.5')}>
+      <span className={cn('shrink-0', (multiLineInput || richSystem) && 'pt-0.5')}>
         <Marker kind={cell.kind} logLevel={cell.logLevel} />
       </span>
       {cell.kind === 'input' ? (
@@ -97,6 +110,12 @@ export function TerminalOutputRow({ cell, isFirstOfRun = false }: TerminalOutput
         >
           {cell.errorMessage}
         </div>
+      ) : cell.kind === 'system' && cell.markdown ? (
+        <TerminalMarkdownCell markdown={cell.markdown} />
+      ) : cell.kind === 'system' && cell.systemMessage != null ? (
+        <pre className="wrap-break-word min-w-0 flex-1 whitespace-pre-wrap font-mono text-[11px] text-foreground/85 leading-4">
+          {cell.systemMessage}
+        </pre>
       ) : cell.formatted ? (
         <div className="flex min-h-4 min-w-0 flex-1 items-center self-center">
           <TerminalResultCell formatted={cell.formatted} />

@@ -8,32 +8,23 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@4d/ui'
-import { Braces, Eraser, Terminal as TerminalIcon } from 'lucide-react'
+import { BookOpen, Braces, Eraser, Terminal as TerminalIcon } from 'lucide-react'
 import type * as MonacoEditor from 'monaco-editor'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from '~/i18n'
 import { api, client } from '~/lib/api'
 import { isMobileShell } from '~/lib/platform'
 import { createDatastore, executeSnippet, formatTerminalResult } from '~/lib/terminal'
+import { executeDotCommand, parseDotCommand } from '~/lib/terminal/dot-commands'
 import { useDataExplorerStore } from '~/store'
 import { useCodeEditorPrefs, useSettingsStore, useUpdateCodeEditorPrefs } from '~/store/settings'
 import { useTerminalStore } from '~/store/terminal'
+import { type TerminalSnippet, useTerminalSnippetsStore } from '~/store/terminal-snippets'
 import { registerOrdaJsProviders } from './orda-js-completion'
 import { TerminalComposer } from './TerminalComposer'
-import { TerminalEmptyState, type TerminalExampleId } from './TerminalEmptyState'
+import { TerminalEmptyState } from './TerminalEmptyState'
 import { TerminalOutputRow } from './TerminalOutputRow'
-
-const EXAMPLE_SNIPPETS: Record<TerminalExampleId, string> = {
-  all: 'ds.Car.all()',
-  query: 'ds.Car.query("ID > 0").select("name")',
-  get: 'await ds.Car.get(12).select("name")',
-  snippet: `const car = await ds.Car.get(12).select("name")
-console.log(car)
-const reservations = await ds.Reservation.query("car.ID=:1", car.getKey())
-console.log(reservations)`,
-}
-
-const CHIP_IDS: TerminalExampleId[] = ['all', 'query', 'get']
+import { snippetFileName, TerminalSnippetsFiles } from './TerminalSnippetsFiles'
 
 export function TerminalPanel({ hideChrome = false }: { hideChrome?: boolean } = {}) {
   const { t } = useTranslation()
@@ -46,6 +37,7 @@ export function TerminalPanel({ hideChrome = false }: { hideChrome?: boolean } =
   const output = useTerminalStore((s) => s.output)
   const draft = useTerminalStore((s) => s.draft)
   const running = useTerminalStore((s) => s.running)
+
   const setDraft = useTerminalStore((s) => s.setDraft)
   const setRunning = useTerminalStore((s) => s.setRunning)
   const appendOutput = useTerminalStore((s) => s.appendOutput)
@@ -55,14 +47,30 @@ export function TerminalPanel({ hideChrome = false }: { hideChrome?: boolean } =
   const historyDown = useTerminalStore((s) => s.historyDown)
   const resetHistoryCursor = useTerminalStore((s) => s.resetHistoryCursor)
 
+  const snippets = useTerminalSnippetsStore((s) => s.snippets)
+  const updateSnippet = useTerminalSnippetsStore((s) => s.updateSnippet)
+  const removeSnippet = useTerminalSnippetsStore((s) => s.removeSnippet)
+
   const [catalog, setCatalog] = useState<CatalogAllResponse | null>(null)
+  const [activeSnippetId, setActiveSnippetId] = useState<string | null>(null)
+  const [snippetDirty, setSnippetDirty] = useState(false)
+  const [startCreateRequest, setStartCreateRequest] = useState(0)
   const outputEndRef = useRef<HTMLDivElement>(null)
   const editorRef = useRef<CodeEditorInstance | null>(null)
   const draftRef = useRef(draft)
   draftRef.current = draft
+  const runningRef = useRef(running)
+  runningRef.current = running
+  const replDraftRef = useRef('')
+  const activeSnippetIdRef = useRef<string | null>(null)
+  activeSnippetIdRef.current = activeSnippetId
+
+  const activeSnippet = useMemo(
+    () => (activeSnippetId ? snippets.find((s) => s.id === activeSnippetId) : undefined),
+    [activeSnippetId, snippets]
+  )
 
   const dataClassNames = useMemo(() => dataclasses.map((d) => d.name), [dataclasses])
-  const firstDc = dataClassNames[0] ?? 'Car'
   const dataClassNamesRef = useRef(dataClassNames)
   dataClassNamesRef.current = dataClassNames
 
@@ -81,6 +89,15 @@ export function TerminalPanel({ hideChrome = false }: { hideChrome?: boolean } =
     }
   }, [])
 
+  // If the open snippet was deleted elsewhere, return to REPL.
+  useEffect(() => {
+    if (activeSnippetId && !snippets.some((s) => s.id === activeSnippetId)) {
+      setActiveSnippetId(null)
+      setSnippetDirty(false)
+      setDraft(replDraftRef.current)
+    }
+  }, [activeSnippetId, snippets, setDraft])
+
   const catalogRef = useRef<CatalogAllResponse | null>(null)
   catalogRef.current = catalog
   const providersRef = useRef<(() => void) | null>(null)
@@ -95,15 +112,112 @@ export function TerminalPanel({ hideChrome = false }: { hideChrome?: boolean } =
     }
   }, [resetHistoryCursor, setDraft])
 
-  const runCode = useCallback(
-    async (code: string) => {
-      const trimmed = code.trim()
-      if (!trimmed || running) return
+  const applyDraft = useCallback(
+    (code: string) => {
+      setDraft(code)
+      resetHistoryCursor()
+      const editor = editorRef.current
+      if (editor) {
+        editor.setValue(code)
+        const line = editor.getModel()?.getLineCount() ?? 1
+        const col = editor.getModel()?.getLineMaxColumn(line) ?? 1
+        editor.setPosition({ lineNumber: line, column: col })
+        editor.focus()
+      }
+    },
+    [resetHistoryCursor, setDraft]
+  )
 
+  const persistActiveSnippet = useCallback(() => {
+    const id = activeSnippetIdRef.current
+    if (!id) return
+    const snippet = useTerminalSnippetsStore.getState().snippets.find((s) => s.id === id)
+    if (!snippet) return
+    const code = draftRef.current
+    if (!code.trim()) return
+    if (code === snippet.code) {
+      setSnippetDirty(false)
+      return
+    }
+    updateSnippet(id, { name: snippet.name, code })
+    setSnippetDirty(false)
+  }, [updateSnippet])
+
+  const openSnippet = useCallback(
+    (snippet: TerminalSnippet) => {
+      if (activeSnippetIdRef.current === snippet.id) {
+        editorRef.current?.focus()
+        return
+      }
+      if (activeSnippetIdRef.current) {
+        persistActiveSnippet()
+      } else {
+        replDraftRef.current = draftRef.current
+      }
+      setActiveSnippetId(snippet.id)
+      setSnippetDirty(false)
+      applyDraft(snippet.code)
+    },
+    [applyDraft, persistActiveSnippet]
+  )
+
+  const closeSnippet = useCallback(() => {
+    persistActiveSnippet()
+    setActiveSnippetId(null)
+    setSnippetDirty(false)
+    applyDraft(replDraftRef.current)
+  }, [applyDraft, persistActiveSnippet])
+
+  const lastSnippetIdRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (activeSnippetId) lastSnippetIdRef.current = activeSnippetId
+  }, [activeSnippetId])
+
+  const handleModeChange = useCallback(
+    (next: 'repl' | 'snippet') => {
+      if (next === 'repl') {
+        if (activeSnippetIdRef.current) closeSnippet()
+        return
+      }
+      if (activeSnippetIdRef.current) {
+        editorRef.current?.focus()
+        return
+      }
+      const list = useTerminalSnippetsStore.getState().snippets
+      if (list.length === 0) {
+        setStartCreateRequest((n) => n + 1)
+        return
+      }
+      const lastId = lastSnippetIdRef.current
+      const preferred =
+        (lastId ? list.find((s) => s.id === lastId) : undefined) ??
+        [...list].sort((a, b) => b.updatedAt - a.updatedAt)[0]
+      if (preferred) openSnippet(preferred)
+    },
+    [closeSnippet, openSnippet]
+  )
+
+  const saveActiveSnippet = useCallback(() => {
+    persistActiveSnippet()
+  }, [persistActiveSnippet])
+
+  const deleteActiveSnippet = useCallback(() => {
+    const id = activeSnippetIdRef.current
+    if (!id) return
+    removeSnippet(id)
+    setActiveSnippetId(null)
+    setSnippetDirty(false)
+    applyDraft(replDraftRef.current)
+  }, [applyDraft, removeSnippet])
+
+  const runJs = useCallback(
+    async (trimmed: string) => {
       appendOutput({ kind: 'input', source: trimmed })
       pushHistory(trimmed)
       resetHistoryCursor()
-      clearInput()
+      if (!activeSnippetIdRef.current) {
+        clearInput()
+      }
       setRunning(true)
 
       try {
@@ -145,28 +259,98 @@ export function TerminalPanel({ hideChrome = false }: { hideChrome?: boolean } =
         editorRef.current?.focus()
       }
     },
-    [appendOutput, clearInput, pushHistory, resetHistoryCursor, running, setRunning]
+    [appendOutput, clearInput, pushHistory, resetHistoryCursor, setRunning]
+  )
+
+  const runCode = useCallback(
+    async (code: string) => {
+      const trimmed = code.trim()
+      if (!trimmed || runningRef.current) return
+
+      // Single-line `.command` works in both REPL and Code (e.g. toolbar .help).
+      const dot = parseDotCommand(trimmed)
+      if (dot) {
+        appendOutput({ kind: 'input', source: trimmed })
+        pushHistory(trimmed)
+        resetHistoryCursor()
+        if (!activeSnippetIdRef.current) {
+          clearInput()
+        }
+
+        const result = executeDotCommand(dot)
+        if (result.kind === 'noop') {
+          editorRef.current?.focus()
+          return
+        }
+        if (result.kind === 'markdown') {
+          appendOutput({ kind: 'system', markdown: result.markdown })
+        } else if (result.kind === 'message') {
+          appendOutput({ kind: 'system', systemMessage: result.text })
+        } else if (result.kind === 'error') {
+          appendOutput({ kind: 'error', errorMessage: result.message })
+        } else if (result.kind === 'load') {
+          appendOutput({
+            kind: 'system',
+            systemMessage: t('terminal.command.loaded', { name: dot.arg }),
+          })
+          const snippet = useTerminalSnippetsStore.getState().getByName(dot.arg)
+          if (snippet) {
+            openSnippet(snippet)
+          } else {
+            applyDraft(result.code)
+          }
+          return
+        } else if (result.kind === 'run') {
+          appendOutput({
+            kind: 'system',
+            systemMessage: t('terminal.command.runningSnippet', { name: dot.arg }),
+          })
+          await runJs(result.code)
+          return
+        }
+        editorRef.current?.focus()
+        return
+      }
+
+      if (activeSnippetIdRef.current) {
+        persistActiveSnippet()
+      }
+      await runJs(trimmed)
+    },
+    [
+      appendOutput,
+      applyDraft,
+      clearInput,
+      openSnippet,
+      persistActiveSnippet,
+      pushHistory,
+      resetHistoryCursor,
+      runJs,
+      t,
+    ]
   )
 
   const handleRun = useCallback(() => {
     void runCode(draftRef.current)
   }, [runCode])
 
-  const insertExample = useCallback(
-    (id: TerminalExampleId) => {
-      const code = EXAMPLE_SNIPPETS[id]
-      const substituted = code
-        .replaceAll(/\bCar\b/g, firstDc)
-        .replaceAll(/\bReservation\b/g, dataClassNames.find((n) => n !== firstDc) ?? firstDc)
-      setDraft(substituted)
+  const showHelp = useCallback(() => {
+    void runCode('.help')
+  }, [runCode])
+
+  const handleDraftChange = useCallback(
+    (value: string) => {
+      setDraft(value)
       resetHistoryCursor()
-      editorRef.current?.focus()
+      const id = activeSnippetIdRef.current
+      if (!id) return
+      const snippet = useTerminalSnippetsStore.getState().snippets.find((s) => s.id === id)
+      setSnippetDirty(!snippet || value !== snippet.code)
     },
-    [dataClassNames, firstDc, resetHistoryCursor, setDraft]
+    [resetHistoryCursor, setDraft]
   )
 
   const lastOutputId = output[output.length - 1]?.id
-  // Keep the scrollback pinned to the latest cell after each run.
   // biome-ignore lint/correctness/useExhaustiveDependencies: re-run when a new output cell appears
   useLayoutEffect(() => {
     outputEndRef.current?.scrollIntoView({ block: 'end' })
@@ -180,32 +364,51 @@ export function TerminalPanel({ hideChrome = false }: { hideChrome?: boolean } =
       providersRef.current = registerOrdaJsProviders(monaco, () => ({
         dataClassNames: useDataExplorerStore.getState().dataclasses.map((d) => d.name),
         catalog: catalogRef.current,
+        snippets: useTerminalSnippetsStore.getState().snippets.map((s) => s.name),
       }))
 
-      editor.addAction({
-        id: 'orda-terminal-run',
-        label: 'Run',
-        keybindings: [monaco.KeyCode.Enter],
-        precondition: '!suggestWidgetVisible',
-        run: (ed) => {
-          void runCode(ed.getValue())
-        },
+      const isSuggestVisible = () =>
+        !!document.querySelector('.editor-widget.suggest-widget.visible')
+
+      editor.addCommand(monaco.KeyCode.Enter, () => {
+        if (isSuggestVisible()) {
+          editor.trigger('keyboard', 'acceptSelectedSuggestion', {})
+          return
+        }
+        // Code mode: Enter inserts a newline. REPL: Enter runs.
+        if (activeSnippetIdRef.current) {
+          editor.trigger('keyboard', 'type', { text: '\n' })
+          return
+        }
+        void runCode(editor.getValue())
       })
 
-      editor.addAction({
-        id: 'orda-terminal-newline',
-        label: 'New line',
-        keybindings: [monaco.KeyMod.Shift | monaco.KeyCode.Enter],
-        run: (ed) => {
-          ed.trigger('keyboard', 'type', { text: '\n' })
-        },
+      editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => {
+        // Code mode: Shift+Enter runs. REPL: Shift+Enter inserts a newline.
+        if (activeSnippetIdRef.current) {
+          void runCode(editor.getValue())
+          return
+        }
+        editor.trigger('keyboard', 'type', { text: '\n' })
       })
 
       editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => {
         void runCode(editor.getValue())
       })
 
+      editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+        if (activeSnippetIdRef.current) {
+          persistActiveSnippet()
+        }
+      })
+
+      // addCommand wins over suggest's own bindings, so when the widget is open
+      // we must forward Up/Down explicitly (precondition on addAction is not enough).
       editor.addCommand(monaco.KeyCode.UpArrow, () => {
+        if (isSuggestVisible()) {
+          editor.trigger('keyboard', 'selectPrevSuggestion', {})
+          return
+        }
         const model = editor.getModel()
         const position = editor.getPosition()
         if (!model || !position) return
@@ -213,6 +416,7 @@ export function TerminalPanel({ hideChrome = false }: { hideChrome?: boolean } =
           editor.trigger('keyboard', 'cursorUp', {})
           return
         }
+        if (activeSnippetIdRef.current) return
         const prev = historyUp(editor.getValue())
         if (prev != null) {
           editor.setValue(prev)
@@ -223,6 +427,10 @@ export function TerminalPanel({ hideChrome = false }: { hideChrome?: boolean } =
       })
 
       editor.addCommand(monaco.KeyCode.DownArrow, () => {
+        if (isSuggestVisible()) {
+          editor.trigger('keyboard', 'selectNextSuggestion', {})
+          return
+        }
         const model = editor.getModel()
         const position = editor.getPosition()
         if (!model || !position) return
@@ -230,6 +438,7 @@ export function TerminalPanel({ hideChrome = false }: { hideChrome?: boolean } =
           editor.trigger('keyboard', 'cursorDown', {})
           return
         }
+        if (activeSnippetIdRef.current) return
         const next = historyDown()
         if (next != null) {
           editor.setValue(next)
@@ -240,8 +449,14 @@ export function TerminalPanel({ hideChrome = false }: { hideChrome?: boolean } =
       })
 
       editor.focus()
+
+      // Composer sits at the bottom of the dock — keep the suggest widget above the caret.
+      const suggest = editor.getContribution('editor.contrib.suggestController') as {
+        forceRenderingAbove?: () => void
+      } | null
+      suggest?.forceRenderingAbove?.()
     },
-    [historyDown, historyUp, runCode]
+    [historyDown, historyUp, persistActiveSnippet, runCode]
   )
 
   useEffect(() => {
@@ -251,17 +466,39 @@ export function TerminalPanel({ hideChrome = false }: { hideChrome?: boolean } =
     }
   }, [])
 
-  const exampleChips = CHIP_IDS.map((id) => (
-    <Button
-      key={id}
-      size="xs"
-      variant="outline"
-      className="h-6 border-border/70 bg-background/60 px-1.5 font-mono text-[10px] text-muted-foreground hover:border-primary/35 hover:bg-primary/5 hover:text-foreground"
-      onClick={() => insertExample(id)}
-    >
-      {t(`terminal.example.${id}`)}
-    </Button>
-  ))
+  const exampleChips = (
+    <>
+      <TerminalSnippetsFiles
+        activeSnippetId={activeSnippetId}
+        startCreateRequest={startCreateRequest}
+        mobile={mobile}
+        onOpenSnippet={openSnippet}
+        onCloseSnippet={closeSnippet}
+        onCreated={(snippet) => {
+          openSnippet(snippet)
+        }}
+        onStatus={(message) => {
+          appendOutput({ kind: 'system', systemMessage: message })
+        }}
+      />
+      <Button
+        size={mobile ? 'sm' : 'xs'}
+        variant="ghost"
+        className={cn(
+          'shrink-0 touch-manipulation gap-1 text-muted-foreground',
+          mobile ? 'h-9 px-2.5 text-xs' : 'h-6 px-1.5 text-[10px]'
+        )}
+        onClick={showHelp}
+      >
+        <BookOpen className={mobile ? 'h-3.5 w-3.5' : 'h-3 w-3'} aria-hidden />
+        {t('terminal.helpAction')}
+      </Button>
+    </>
+  )
+
+  const editorPath = activeSnippet
+    ? `orda-terminal:///snippets/${activeSnippet.id}.js`
+    : 'orda-terminal:///input.js'
 
   return (
     <div className="relative flex h-full min-h-0 flex-col bg-background">
@@ -284,13 +521,17 @@ export function TerminalPanel({ hideChrome = false }: { hideChrome?: boolean } =
             <span className="font-medium text-xs">{t('terminal.title')}</span>
           </>
         ) : (
-          <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <Braces className="h-3 w-3 text-primary/70" aria-hidden />
+          <span className="inline-flex min-w-0 items-center gap-1.5 text-[11px] text-muted-foreground">
+            <Braces className="h-3.5 w-3.5 shrink-0 text-primary/70" aria-hidden />
             <span className="font-medium text-foreground/80">{t('terminal.ordaBadge')}</span>
-            <span className="text-border">·</span>
-            <code className="rounded bg-muted/50 px-1 py-px font-mono text-[10px] text-muted-foreground">
-              {t('terminal.hint')}
-            </code>
+            {!mobile ? (
+              <>
+                <span className="text-border">·</span>
+                <code className="rounded bg-muted/50 px-1 py-px font-mono text-[10px] text-muted-foreground">
+                  {t('terminal.hint')}
+                </code>
+              </>
+            ) : null}
           </span>
         )}
         <div className="ml-auto flex items-center gap-1">
@@ -307,14 +548,14 @@ export function TerminalPanel({ hideChrome = false }: { hideChrome?: boolean } =
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
-                  size="xs"
+                  size={mobile ? 'sm' : 'xs'}
                   variant="ghost"
-                  className="h-6 w-6 p-0"
+                  className={cn('touch-manipulation', mobile ? 'h-9 w-9 p-0' : 'h-6 w-6 p-0')}
                   onClick={clearOutput}
                   aria-label={t('terminal.clear')}
                   disabled={output.length === 0}
                 >
-                  <Eraser className="h-3.5 w-3.5" />
+                  <Eraser className={mobile ? 'h-4 w-4' : 'h-3.5 w-3.5'} />
                 </Button>
               </TooltipTrigger>
               <TooltipContent>{t('terminal.clear')}</TooltipContent>
@@ -324,7 +565,7 @@ export function TerminalPanel({ hideChrome = false }: { hideChrome?: boolean } =
             <Button
               size="sm"
               variant="secondary"
-              className="h-8 px-3"
+              className="h-9 touch-manipulation px-3"
               onClick={() => setConsoleOpen(false)}
             >
               {t('terminal.done')}
@@ -335,7 +576,12 @@ export function TerminalPanel({ hideChrome = false }: { hideChrome?: boolean } =
 
       <div className="relative z-10 min-h-0 flex-1 overflow-auto px-1.5 py-1.5 font-mono text-[11px]">
         {output.length === 0 ? (
-          <TerminalEmptyState onInsertExample={insertExample} />
+          <TerminalEmptyState
+            snippets={snippets}
+            onOpenSnippet={openSnippet}
+            onNewSnippet={() => setStartCreateRequest((n) => n + 1)}
+            onShowHelp={showHelp}
+          />
         ) : (
           <ul className="flex flex-col">
             {output.map((cell, index) => (
@@ -355,11 +601,17 @@ export function TerminalPanel({ hideChrome = false }: { hideChrome?: boolean } =
         running={running}
         editorPrefs={editorPrefs}
         exampleChips={exampleChips}
-        onDraftChange={(value) => {
-          setDraft(value)
-          resetHistoryCursor()
-        }}
+        mode={activeSnippet ? 'snippet' : 'repl'}
+        fileName={activeSnippet ? snippetFileName(activeSnippet.name) : undefined}
+        dirty={snippetDirty}
+        editorPath={editorPath}
+        mobile={mobile}
+        onDraftChange={handleDraftChange}
         onRun={handleRun}
+        onSaveFile={saveActiveSnippet}
+        onDeleteFile={deleteActiveSnippet}
+        onCloseFile={closeSnippet}
+        onModeChange={handleModeChange}
         onEditorPrefsChange={setEditorPrefs}
         onMount={onMount}
       />

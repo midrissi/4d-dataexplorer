@@ -3017,6 +3017,15 @@ export const useSettingsStore = create<SettingsState>()(
             dataclassCustomizations,
             disabledWidgetTypes:
               persisted.disabledWidgetTypes ?? DEFAULT_SETTINGS.disabledWidgetTypes,
+            // Restore dock open state (console vs terminal) after reload.
+            consoleOpen:
+              typeof persisted.consoleOpen === 'boolean'
+                ? persisted.consoleOpen
+                : DEFAULT_SETTINGS.consoleOpen,
+            bottomPanelTab:
+              persisted.bottomPanelTab === 'terminal' || persisted.bottomPanelTab === 'console'
+                ? persisted.bottomPanelTab
+                : DEFAULT_SETTINGS.bottomPanelTab,
           }
         },
       }

@@ -4,6 +4,7 @@ import type * as MonacoEditor from 'monaco-editor'
 import { mapOrdaCompletionKind } from '~/components/QueryBuilder/orda-completion'
 import { isAssistantExposedMethod } from '~/lib/assistant-exposed-method'
 import type { MethodMeta } from '~/lib/terminal'
+import { filterDotCommandSuggestions, isDotCommandContext } from '~/lib/terminal/dot-commands'
 
 /** Monaco snippet placeholder — built without template literals so `${…}` stays literal. */
 function snip(parts: TemplateStringsArray, ...holes: string[]): string {
@@ -141,8 +142,24 @@ function rangeAtWord(
   )
 }
 
+/** Whether a Monaco model URI belongs to the ORDA terminal input editor. */
+export function isTerminalModelUri(uri: {
+  scheme: string
+  path: string
+  toString: () => string
+}): boolean {
+  // monaco-react builds the model via Uri.parse(path). For
+  // `orda-terminal://input.js`, "orda-terminal" is the scheme (path is empty /
+  // `/input.js`) — never match on path alone.
+  return (
+    uri.scheme === 'orda-terminal' ||
+    uri.path.includes('orda-terminal') ||
+    uri.toString().includes('orda-terminal')
+  )
+}
+
 function isTerminalModel(model: MonacoEditor.editor.ITextModel): boolean {
-  return model.uri.path.includes('orda-terminal')
+  return isTerminalModelUri(model.uri)
 }
 
 function scopeFromApplyTo(applyTo?: string): MethodMeta['scope'] {
@@ -215,29 +232,36 @@ function toSuggestions(
 }
 
 /** Match `ds.Car.` (not after all/query/get/entity/sel call). */
-function dataClassMemberContext(before: string): { dataClass: string } | null {
+export function dataClassMemberContext(before: string): { dataClass: string } | null {
   const match = before.match(/(?:^|[\s([{;,=])ds\.([A-Za-z_][\w]*)\s*\.\s*[\w]*$/)
   if (!match) return null
   if (/\.(?:all|query|get|entity|sel)\s*\([^)]*\)\s*\.\s*[\w]*$/.test(before)) return null
   return { dataClass: match[1] ?? '' }
 }
 
-function entityMemberContext(before: string): { dataClass: string } | null {
+export function entityMemberContext(before: string): { dataClass: string } | null {
   const match = before.match(/ds\.([A-Za-z_][\w]*)\s*\.\s*(?:entity|get)\s*\([^)]*\)\s*\.\s*[\w]*$/)
   if (!match) return null
   return { dataClass: match[1] ?? '' }
 }
 
-function selMemberContext(before: string): { dataClass: string } | null {
+export function selMemberContext(before: string): { dataClass: string } | null {
   const match = before.match(/ds\.([A-Za-z_][\w]*)\s*\.\s*sel\s*\([^)]*\)\s*\.\s*[\w]*$/)
   if (!match) return null
   return { dataClass: match[1] ?? '' }
+}
+
+/** True when the caret is right after `ds.` (dataclass / catalog method list). */
+export function isDsMemberContext(before: string): boolean {
+  return /(?:^|[\s([{;,=])ds\.\s*[\w]*$/.test(before)
 }
 
 export type OrdaJsCompletionContext = {
   dataClassNames: string[]
   catalog: CatalogAllResponse | null
   methods?: MethodMeta[]
+  /** Saved snippet names for `.load` / `.run` / `.rm` suggestions. */
+  snippets?: string[]
 }
 
 /**
@@ -300,8 +324,58 @@ export function registerOrdaJsProviders(
           }
         }
 
+        // .load / .run / .rm <snippet>
+        const snippetCmd = before.match(/^\.(load|run|rm|delete|del)\s+([\w-]*)$/i)
+        if (snippetCmd) {
+          const prefix = (snippetCmd[2] ?? '').toLowerCase()
+          const names = (ctx.snippets ?? []).filter((n) =>
+            prefix ? n.toLowerCase().startsWith(prefix) : true
+          )
+          return {
+            suggestions: names.map((name, index) => ({
+              label: name,
+              kind: monaco.languages.CompletionItemKind.File,
+              insertText: name,
+              detail: `${name}.js`,
+              documentation: 'Terminal snippet',
+              range,
+              sortText: String(index).padStart(4, '0'),
+            })),
+          }
+        }
+
+        // `.` / `.he` → terminal dot commands (single-line REPL only)
+        if (isDotCommandContext(before)) {
+          const prefix = before.slice(1)
+          const commands = filterDotCommandSuggestions(prefix)
+          // Replace from just after `.` through the caret (keeps the leading `.`).
+          const startColumn = Math.max(1, before.lastIndexOf('.') + 2)
+          const cmdRange = new monaco.Range(
+            position.lineNumber,
+            Math.min(startColumn, position.column),
+            position.lineNumber,
+            position.column
+          )
+          return {
+            suggestions: commands.map((cmd, index) => ({
+              label: `.${cmd.command}`,
+              kind: monaco.languages.CompletionItemKind.Keyword,
+              insertText: cmd.insertText ?? cmd.command,
+              filterText: `.${cmd.command}`,
+              detail: cmd.detail,
+              documentation:
+                cmd.aliases && cmd.aliases.length > 0
+                  ? `Aliases: ${cmd.aliases.map((a) => `.${a}`).join(', ')}`
+                  : undefined,
+              range: cmdRange,
+              // Keep declared command order (help/clear first), not alphabetical.
+              sortText: `0-${String(index).padStart(3, '0')}`,
+            })),
+          }
+        }
+
         // ds.
-        if (/(?:^|[\s([{;,=])ds\.\s*[\w]*$/.test(before)) {
+        if (isDsMemberContext(before)) {
           const catalogMethods = methods
             .filter((m) => m.scope === 'catalog')
             .map(

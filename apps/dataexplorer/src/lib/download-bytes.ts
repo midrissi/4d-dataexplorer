@@ -20,8 +20,9 @@ let _downloadBytes: DownloadBytesFn | null = null
 
 /**
  * Register a native download implementation (called by the Tauri app).
+ * Pass `null` to clear (e.g. in tests).
  */
-export function registerDownloadBytes(fn: DownloadBytesFn): void {
+export function registerDownloadBytes(fn: DownloadBytesFn | null): void {
   _downloadBytes = fn
 }
 

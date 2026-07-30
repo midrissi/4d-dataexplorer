@@ -22,6 +22,8 @@ export type EmptyPanelProps = {
   ghost?: 'rows' | 'cards' | 'none'
   bordered?: boolean
   size?: 'sm' | 'md' | 'lg'
+  /** Vertical alignment of the content block. @default 'center' */
+  align?: 'center' | 'start'
   className?: string
   /** Applied to the inner content column (title, description, chips, actions). */
   contentClassName?: string
@@ -58,6 +60,7 @@ export function EmptyPanel({
   ghost = 'rows',
   bordered = false,
   size = 'md',
+  align = 'center',
   className,
   contentClassName,
   children,
@@ -68,7 +71,8 @@ export function EmptyPanel({
   return (
     <div
       className={cn(
-        'relative flex flex-col items-center justify-center overflow-hidden text-center',
+        'relative flex flex-col items-center overflow-hidden text-center',
+        align === 'start' ? 'justify-start' : 'justify-center',
         bordered && 'rounded-lg border border-border/80 border-dashed',
         isSm ? 'min-h-24 px-3 py-4' : isLg ? 'min-h-0 flex-1 px-5 py-6' : 'min-h-40 px-4 py-6',
         className

@@ -16,6 +16,11 @@ export type SegmentedControlProps<T extends string> = {
   className?: string
   /** Stretch segments evenly across the available width. */
   fullWidth?: boolean
+  /**
+   * `sm` — compact toolbar (default).
+   * `md` — touch-friendly targets (~32px).
+   */
+  size?: 'sm' | 'md'
   /** Accessible name for the group. */
   'aria-label'?: string
 }
@@ -30,12 +35,15 @@ export function SegmentedControl<T extends string>({
   onValueChange,
   className,
   fullWidth = false,
+  size = 'sm',
   'aria-label': ariaLabel,
 }: SegmentedControlProps<T>) {
+  const md = size === 'md'
   return (
     <fieldset
       className={cn(
-        'm-0 inline-flex min-h-6 w-fit min-w-0 max-w-full flex-wrap items-center gap-0.5 rounded-sm border bg-muted/40 p-px',
+        'm-0 inline-flex w-fit min-w-0 max-w-full flex-wrap items-center gap-0.5 rounded-md border bg-muted/40 p-0.5',
+        md ? 'min-h-9' : 'min-h-6 rounded-sm p-px',
         fullWidth && 'flex w-full flex-nowrap',
         className
       )}
@@ -52,14 +60,20 @@ export function SegmentedControl<T extends string>({
             aria-label={option.ariaLabel}
             onClick={() => onValueChange(option.value)}
             className={cn(
-              'inline-flex h-5 items-center justify-center gap-1 rounded-sm px-1.5 font-medium text-[11px] transition-colors',
+              'inline-flex touch-manipulation items-center justify-center gap-1 rounded-sm font-medium transition-colors',
+              md ? 'h-8 gap-1.5 px-2.5 text-xs' : 'h-5 px-1.5 text-[11px]',
               fullWidth && 'min-w-0 flex-1',
               active
                 ? 'bg-background text-foreground shadow-xs'
                 : 'text-muted-foreground hover:text-foreground'
             )}
           >
-            {Icon ? <Icon className="size-2.5 shrink-0 opacity-70" aria-hidden /> : null}
+            {Icon ? (
+              <Icon
+                className={cn('shrink-0 opacity-70', md ? 'size-3.5' : 'size-2.5')}
+                aria-hidden
+              />
+            ) : null}
             <span className={cn(fullWidth && 'truncate')}>{option.label}</span>
           </button>
         )

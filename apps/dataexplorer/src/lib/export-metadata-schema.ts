@@ -1,21 +1,21 @@
 import type { AssistantMetadataSchema } from './assistant-metadata-schema'
 import { sanitizeMetadataFilename } from './assistant-metadata-schema'
+import { downloadBytes } from './download-bytes'
 
 export function getMetadataExportFilename(databaseName?: string): string {
   const base = sanitizeMetadataFilename(databaseName ?? 'database')
   return `${base}.metadata-schema.json`
 }
 
-export function downloadMetadataSchema(
+export async function downloadMetadataSchema(
   metadata: AssistantMetadataSchema,
   databaseName?: string
-): void {
+): Promise<void> {
   const filename = getMetadataExportFilename(databaseName ?? metadata.databaseName)
-  const blob = new Blob([JSON.stringify(metadata, null, 2)], { type: 'application/json' })
-  const url = URL.createObjectURL(blob)
-  const anchor = document.createElement('a')
-  anchor.href = url
-  anchor.download = filename
-  anchor.click()
-  URL.revokeObjectURL(url)
+  const json = JSON.stringify(metadata, null, 2)
+  await downloadBytes({
+    filename,
+    bytes: new TextEncoder().encode(json),
+    mime: 'application/json',
+  })
 }

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, test } from 'bun:test'
 import { createEmptyMetadata } from './assistant-metadata-schema'
+import { registerDownloadBytes } from './download-bytes'
 import { downloadMetadataSchema, getMetadataExportFilename } from './export-metadata-schema'
 
 describe('getMetadataExportFilename', () => {
@@ -21,14 +22,16 @@ describe('downloadMetadataSchema', () => {
     ;(globalThis as { document?: unknown }).document = originalDocument
     URL.createObjectURL = originalCreate
     URL.revokeObjectURL = originalRevoke
+    registerDownloadBytes(null)
   })
 
-  test('creates an anchor, triggers download, and revokes the url', () => {
+  test('creates an anchor, triggers download, and revokes the url', async () => {
     let clicked = false
     const anchor: Record<string, unknown> = {
       click: () => {
         clicked = true
       },
+      remove: () => {},
     }
     let createdUrl = ''
     let revokedUrl = ''
@@ -41,14 +44,21 @@ describe('downloadMetadataSchema', () => {
     }
     ;(
       globalThis as unknown as {
-        document: { createElement: (...args: unknown[]) => Record<string, unknown> }
+        document: {
+          createElement: (...args: unknown[]) => Record<string, unknown>
+          body: { appendChild: () => void; removeChild: () => void }
+        }
       }
     ).document = {
       createElement: () => anchor,
+      body: {
+        appendChild: () => {},
+        removeChild: () => {},
+      },
     }
 
     const metadata = { ...createEmptyMetadata(), databaseName: 'Sales' }
-    downloadMetadataSchema(metadata)
+    await downloadMetadataSchema(metadata)
 
     expect(anchor.download).toBe('Sales.metadata-schema.json')
     expect(anchor.href).toBe('blob:test')
@@ -56,19 +66,41 @@ describe('downloadMetadataSchema', () => {
     expect(revokedUrl).toBe('blob:test')
   })
 
-  test('explicit database name overrides metadata databaseName', () => {
-    const anchor: Record<string, unknown> = { click: () => {} }
+  test('explicit database name overrides metadata databaseName', async () => {
+    const anchor: Record<string, unknown> = { click: () => {}, remove: () => {} }
     URL.createObjectURL = () => 'blob:x'
     URL.revokeObjectURL = () => {}
     ;(
       globalThis as unknown as {
-        document: { createElement: (...args: unknown[]) => Record<string, unknown> }
+        document: {
+          createElement: (...args: unknown[]) => Record<string, unknown>
+          body: { appendChild: () => void; removeChild: () => void }
+        }
       }
     ).document = {
       createElement: () => anchor,
+      body: {
+        appendChild: () => {},
+        removeChild: () => {},
+      },
     }
 
-    downloadMetadataSchema(createEmptyMetadata(), 'Override')
+    await downloadMetadataSchema(createEmptyMetadata(), 'Override')
     expect(anchor.download).toBe('Override.metadata-schema.json')
+  })
+
+  test('uses registered downloadBytes when available', async () => {
+    let received: { filename: string; mime?: string } | undefined
+    registerDownloadBytes(async (input) => {
+      received = { filename: input.filename, mime: input.mime }
+    })
+
+    const metadata = { ...createEmptyMetadata(), databaseName: 'Sales' }
+    await downloadMetadataSchema(metadata)
+
+    expect(received).toEqual({
+      filename: 'Sales.metadata-schema.json',
+      mime: 'application/json',
+    })
   })
 })

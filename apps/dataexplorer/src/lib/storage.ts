@@ -453,9 +453,17 @@ export function setHttpClientRequestHeight(height: number): void {
 
 /**
  * Get console panel height in pixels.
+ * Clamped so a huge persisted height cannot dominate the viewport (and Monaco).
  */
 export function getConsoleHeight(): number {
-  return getCurrentPrefs().panels.console?.height ?? 220
+  const raw = getCurrentPrefs().panels.console?.height ?? 220
+  const height = Number.isFinite(raw) ? raw : 220
+  const viewport =
+    typeof window !== 'undefined' && Number.isFinite(window.innerHeight) && window.innerHeight > 0
+      ? window.innerHeight
+      : 0
+  const max = viewport > 0 ? Math.max(220, Math.floor(viewport * 0.45)) : 400
+  return Math.min(Math.max(120, height), max)
 }
 
 /**

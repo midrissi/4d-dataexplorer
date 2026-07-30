@@ -137,6 +137,11 @@ export type MarkdownProps = {
   /** Markdown source string */
   children: string
   className?: string
+  /**
+   * `default` — docs-style preview.
+   * `compact` — dense UI (terminal, side panels); 11px body, smaller headings.
+   */
+  density?: 'default' | 'compact'
 }
 
 /**
@@ -145,7 +150,7 @@ export type MarkdownProps = {
  * footnotes, definition lists, abbreviations, custom containers, and
  * syntax-highlighted fenced code.
  */
-export function Markdown({ children, className }: MarkdownProps) {
+export function Markdown({ children, className, density = 'default' }: MarkdownProps) {
   const rootRef = useRef<HTMLDivElement>(null)
   const html = useMemo(() => renderMarkdown(children), [children])
 
@@ -158,7 +163,7 @@ export function Markdown({ children, className }: MarkdownProps) {
   return (
     <div
       ref={rootRef}
-      className={cn('md-preview', className)}
+      className={cn('md-preview', density === 'compact' && 'md-preview-compact', className)}
       // biome-ignore lint/security/noDangerouslySetInnerHtml: HTML is produced by markdown-it and sanitized with DOMPurify
       dangerouslySetInnerHTML={{ __html: html }}
     />

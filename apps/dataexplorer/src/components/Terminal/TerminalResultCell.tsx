@@ -14,8 +14,16 @@ import { ConsoleValue, ObjectTree } from '~/components/Console/ObjectTree'
 import { PrivateBinaryResult } from '~/components/DecodedBinary/PrivateBinaryResult'
 import { DeferredImage } from '~/components/DeferredImage'
 import { useTranslation } from '~/i18n'
+import { isMobileShell } from '~/lib/platform'
 import type { FormattedTerminalResult } from '~/lib/terminal'
+import { useSettingsStore } from '~/store/settings'
 import { isDataclassTab, useTabsStore } from '~/store/tabs'
+
+function revealTargetOnMobile() {
+  if (isMobileShell()) {
+    useSettingsStore.getState().setConsoleOpen(false)
+  }
+}
 
 function EntityCell({ result }: { result: Extract<FormattedTerminalResult, { kind: 'entity' }> }) {
   const { t } = useTranslation()
@@ -41,6 +49,7 @@ function EntityCell({ result }: { result: Extract<FormattedTerminalResult, { kin
               isDataclassTab(tab) && tab.dataclassName === result.dataClass && !tab.entitySetId
           )?.id
     if (tabId) setSelectedEntityId(tabId, result.entityKey)
+    revealTargetOnMobile()
   }
 
   return (
@@ -92,9 +101,11 @@ function SelectionCell({
         customTitle: `${result.dataClass} terminal`,
         forceNew: true,
       })
+      revealTargetOnMobile()
       return
     }
     openTab(result.dataClass)
+    revealTargetOnMobile()
   }
 
   return (
