@@ -8,7 +8,7 @@ import { introMetaRows, metaColumns } from '../.vitepress/data/tables'
 
 # Data Explorer — User Documentation
 
-**Data Explorer** (4D REST Explorer) is a web application for browsing, querying, and managing data in a 4D database through the REST API. It provides a tabbed interface, visual structure graph, query builder, Method Executor, HTTP Client, console panel, AI assistant and dataclass AI actions, and rich customization options.
+**Data Explorer** (4D REST Explorer) is a web, desktop, and mobile application for browsing, querying, and managing data in a 4D database through the REST API. It provides a tabbed interface, visual structure graph, query builder, Method Executor, HTTP Client, console and ORDA terminal, AI assistant and dataclass AI actions, and rich customization options.
 
 <DocTable :columns="metaColumns" :rows="introMetaRows" variant="meta" hide-header />
 
@@ -16,11 +16,11 @@ import { introMetaRows, metaColumns } from '../.vitepress/data/tables'
 
 The sidebar is grouped by topic:
 
-- **Getting started** — install, open from 4D, or [run with Docker](/guide/getting-started#run-with-docker); [macOS desktop first launch](/guide/macos-desktop)
+- **Getting started** — install, open from 4D, or [run with Docker](/guide/getting-started#run-with-docker); [macOS desktop first launch](/guide/macos-desktop); [mobile apps](/guide/mobile)
 - **Basics** — layout, home, sidebar, tabs, modes
 - **Working with data** — browse, query, view, methods, structure graph
 - **AI** — chat assistant, [AI actions & tasks](/guide/ai-actions), metadata
-- **Tools** — command palette, console, HTTP Client, schema builder
+- **Tools** — command palette, [console](/guide/console), [ORDA terminal](/guide/terminal), HTTP Client, schema builder
 - **Configuration** — settings, shortcuts, language, profiles
 - **Development** — contributing and local setup
 

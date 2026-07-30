@@ -15,6 +15,7 @@ import { MethodExecutorPage } from './method-executor.page'
 import { SettingsPage } from './settings.page'
 import { StructureGraphPage } from './structure-graph.page'
 import { TabBarPage } from './tab-bar.page'
+import { TerminalPage } from './terminal.page'
 import { ThemePage } from './theme.page'
 
 type DocThemeMode = 'dark' | 'light'
@@ -38,6 +39,7 @@ export class AppPage extends BasePage {
   readonly headerFooter: HeaderFooterPage
   readonly assistant: AssistantPage
   readonly console: ConsolePage
+  readonly terminal: TerminalPage
   readonly structureGraph: StructureGraphPage
   readonly methodExecutor: MethodExecutorPage
   readonly httpClient: HttpClientPage
@@ -57,6 +59,7 @@ export class AppPage extends BasePage {
     this.headerFooter = new HeaderFooterPage(page)
     this.assistant = new AssistantPage(page)
     this.console = new ConsolePage(page)
+    this.terminal = new TerminalPage(page)
     this.structureGraph = new StructureGraphPage(page)
     this.methodExecutor = new MethodExecutorPage(page)
     this.httpClient = new HttpClientPage(page)
@@ -93,6 +96,7 @@ export class AppPage extends BasePage {
   async prepareForNextFeature(): Promise<void> {
     await this.closeOverlays()
     await this.assistant.closeIfOpen()
+    await this.terminal.closeIfOpen()
     await this.console.closeIfOpen()
     await this.theme.resetToDefault()
     await this.tabs.closeClosableTabs()
@@ -104,6 +108,7 @@ export class AppPage extends BasePage {
   async prepareForScreenshot(): Promise<void> {
     await this.closeOverlays()
     await this.assistant.close()
+    await this.terminal.closeIfOpen()
     await this.console.closeIfOpen()
     await this.theme.resetToDefault()
     await this.pause(300)

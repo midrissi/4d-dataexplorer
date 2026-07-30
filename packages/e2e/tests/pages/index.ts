@@ -19,4 +19,5 @@ export {
 export { SettingsPage } from './settings.page'
 export { StructureGraphPage } from './structure-graph.page'
 export { TabBarPage } from './tab-bar.page'
+export { TerminalPage } from './terminal.page'
 export { ThemePage } from './theme.page'

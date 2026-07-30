@@ -12,6 +12,7 @@ const guideSidebar = [
       { text: 'Introduction', link: '/guide/' },
       { text: 'Getting started', link: '/guide/getting-started' },
       { text: 'macOS desktop first launch', link: '/guide/macos-desktop' },
+      { text: 'Mobile apps', link: '/guide/mobile' },
     ],
   },
   {
@@ -76,7 +77,7 @@ const guideSidebar = [
 const SITE_URL = 'https://midrissi.github.io/4d-dataexplorer'
 const SITE_TITLE = 'Data Explorer'
 const SITE_DESCRIPTION =
-  '4D REST data browser — structure graph, query builder, AI assistant, Method Executor, HTTP Client, themes, Docker & desktop.'
+  '4D REST data browser — structure graph, query builder, AI assistant, Method Executor, ORDA terminal, HTTP Client, themes, Docker, desktop & mobile.'
 
 export default defineConfig({
   title: SITE_TITLE,

@@ -123,7 +123,7 @@ export const metaColumns: DocTableColumn[] = [
 ]
 
 export const introMetaRows: DocTableRow[] = [
-  { label: '**Version**', value: '1.2.x' },
+  { label: '**Version**', value: '1.4.0' },
   {
     label: '**URL**',
     value: '`http://localhost:7080/dataexplorer/` (or your 4D server path)',

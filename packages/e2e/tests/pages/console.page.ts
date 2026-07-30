@@ -56,7 +56,7 @@ export class ConsolePage extends BasePage {
   }
 
   /** Grow the docked panel so network details are visible in screenshots. */
-  async ensureTallPanel(steps = 18): Promise<void> {
+  async ensureTallPanel(steps = 36): Promise<void> {
     const handle = this.page.getByRole('button', { name: /resize panel/i }).last()
     if (!(await this.isVisible(handle, 1000))) {
       return

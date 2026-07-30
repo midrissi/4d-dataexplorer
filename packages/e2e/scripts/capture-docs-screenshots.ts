@@ -20,6 +20,7 @@ import {
   logDocScreenshotStep,
   parseDocScreenshotArgs,
   runDocScreenshotJobPool,
+  TERMINAL_SCREENSHOT_PAGE_NAMES,
 } from './doc-screenshot-capture'
 
 async function assertNotWebAdminLogin(ctx: DocScreenshotContext): Promise<void> {
@@ -355,12 +356,47 @@ function buildDocsCaptureJobs(selection: DocScreenshotSelection): DocScreenshotJ
       async capture(ctx) {
         const { app } = ctx
         await bootstrapAuthenticatedJob(ctx, { resetThemeToDefault: true })
+        await app.tabs.closeClosableTabs()
+        await app.tabs.goHome()
+        await ctx.page.waitForTimeout(400)
         logDocScreenshotStep('📟', 'Console panel')
         await app.console.open()
         await app.console.ensureTallPanel()
         await app.console.waitForNetworkEntries()
         await app.console.expandFirstNetworkEntry()
         await app.screenshot('22-console-panel')
+      },
+    })
+  }
+
+  if (selection.hasAny(TERMINAL_SCREENSHOT_PAGE_NAMES)) {
+    jobs.push({
+      id: 'terminal',
+      label: 'ORDA terminal',
+      async capture(ctx) {
+        const { app } = ctx
+        await bootstrapAuthenticatedJob(ctx, { resetThemeToDefault: true })
+        await app.tabs.closeClosableTabs()
+        await app.tabs.goHome()
+        await ctx.page.waitForTimeout(400)
+        if (selection.isSelected('37-terminal-panel')) {
+          logDocScreenshotStep('⌨️', 'Terminal REPL')
+          await app.terminal.open()
+          await app.terminal.ensureTallPanel()
+          await app.terminal.switchToReplMode()
+          await app.terminal.runExpression('ds.Car.all()')
+          await app.screenshot('37-terminal-panel')
+        }
+        if (selection.isSelected('38-terminal-code')) {
+          logDocScreenshotStep('📄', 'Terminal Code / snippets')
+          if (!(await app.terminal.isOpen())) {
+            await app.terminal.open()
+            await app.terminal.ensureTallPanel()
+          }
+          await app.terminal.switchToCodeMode()
+          await ctx.page.waitForTimeout(600)
+          await app.screenshot('38-terminal-code')
+        }
       },
     })
   }

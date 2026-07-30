@@ -27,6 +27,7 @@ To capture a single new screenshot against the Vite app (proxied to the 4D REST 
 ```bash
 cd packages/e2e
 DATAEXPLORER_URL=http://localhost:3002 bun run capture:screenshots:console
+DATAEXPLORER_URL=http://localhost:3002 bun run capture:screenshots:terminal
 DATAEXPLORER_URL=http://localhost:3002 bun run capture:screenshots:http-client
 DATAEXPLORER_URL=http://localhost:3002 bun run capture:screenshots:ai-actions
 ```

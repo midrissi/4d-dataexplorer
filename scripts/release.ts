@@ -8,6 +8,7 @@
  *   bun run release:patch        1.2.1 -> 1.2.2
  *   bun run release:minor        1.2.1 -> 1.3.0
  *   bun run release:major        1.2.1 -> 2.0.0
+ *   bun run release 1.4.0        set exact version (also accepts v1.4.0)
  *
  * Flags:
  *   --push       also push the branch and the new tag to the remote
@@ -21,6 +22,8 @@ import { $ } from 'bun'
 type Bump = 'patch' | 'minor' | 'major'
 
 const ROOT = join(import.meta.dir, '..')
+const SEMVER_RE = /^(\d+)\.(\d+)\.(\d+)$/
+const BUMPS = new Set<Bump>(['patch', 'minor', 'major'])
 
 /** Files whose `version` field must stay in sync with the root package. */
 const VERSION_FILES = [
@@ -28,6 +31,8 @@ const VERSION_FILES = [
   'apps/dataexplorer/package.json',
   'apps/desktop/package.json',
   'apps/desktop/src-tauri/tauri.conf.json',
+  'apps/mobile/package.json',
+  'apps/mobile/src-tauri/tauri.conf.json',
 ]
 
 function fail(message: string): never {
@@ -35,23 +40,38 @@ function fail(message: string): never {
   process.exit(1)
 }
 
-function parseArgs(): { bump: Bump; push: boolean; dryRun: boolean } {
-  const args = process.argv.slice(2)
-  const bump = args.find((a) => !a.startsWith('-')) as Bump | undefined
+function parseExactVersion(raw: string): string | null {
+  const trimmed = raw.trim().replace(/^v/i, '')
+  return SEMVER_RE.test(trimmed) ? trimmed : null
+}
 
-  if (!bump || !['patch', 'minor', 'major'].includes(bump)) {
-    fail('Expected a bump type: patch | minor | major')
+function parseArgs(): { bump: Bump | null; exact: string | null; push: boolean; dryRun: boolean } {
+  const args = process.argv.slice(2)
+  const target = args.find((a) => !a.startsWith('-'))
+
+  if (!target) {
+    fail('Expected a bump type (patch | minor | major) or an exact version (e.g. 1.4.0)')
+  }
+
+  const bump = BUMPS.has(target as Bump) ? (target as Bump) : null
+  const exact = bump ? null : parseExactVersion(target)
+
+  if (!bump && !exact) {
+    fail(
+      `Invalid target "${target}". Use patch | minor | major, or an exact semver like 1.4.0`
+    )
   }
 
   return {
     bump,
+    exact,
     push: args.includes('--push'),
     dryRun: args.includes('--dry-run'),
   }
 }
 
 function nextVersion(current: string, bump: Bump): string {
-  const match = current.match(/^(\d+)\.(\d+)\.(\d+)$/)
+  const match = current.match(SEMVER_RE)
   if (!match) fail(`Current version "${current}" is not valid semver (x.y.z)`)
   let [major, minor, patch] = match.slice(1).map(Number)
 
@@ -90,18 +110,28 @@ async function assertCleanTree(): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  const { bump, push, dryRun } = parseArgs()
+  const { bump, exact, push, dryRun } = parseArgs()
 
   const rootPkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'))
   const current: string = rootPkg.version
-  const next = nextVersion(current, bump)
+  const next = exact ?? nextVersion(current, bump!)
   const tag = `v${next}`
+  const alreadyAtTarget = current === next
+  const label = exact ? `exact ${next}` : bump!
 
-  console.log(`\x1b[36mReleasing ${current} -> ${next} (${bump})\x1b[0m`)
+  console.log(
+    alreadyAtTarget
+      ? `\x1b[36mReleasing ${next} (already at target; tag only if needed)\x1b[0m`
+      : `\x1b[36mReleasing ${current} -> ${next} (${label})\x1b[0m`
+  )
 
   if (dryRun) {
-    console.log('Dry run — files that would be updated:')
-    for (const file of VERSION_FILES) console.log(`  • ${file}`)
+    if (alreadyAtTarget) {
+      console.log('Dry run — manifests already at target; no file updates.')
+    } else {
+      console.log('Dry run — files that would be updated:')
+      for (const file of VERSION_FILES) console.log(`  • ${file}`)
+    }
     console.log(`Would commit and tag as ${tag}${push ? ' and push' : ''}.`)
     return
   }
@@ -111,15 +141,20 @@ async function main(): Promise<void> {
   const existingTags = (await $`git tag --list ${tag}`.cwd(ROOT).text()).trim()
   if (existingTags) fail(`Tag ${tag} already exists.`)
 
-  for (const file of VERSION_FILES) {
-    updateVersionField(file, current, next)
-    console.log(`  ✓ ${file}`)
+  if (!alreadyAtTarget) {
+    for (const file of VERSION_FILES) {
+      updateVersionField(file, current, next)
+      console.log(`  ✓ ${file}`)
+    }
+
+    await $`git add ${VERSION_FILES}`.cwd(ROOT)
+    await $`git commit -m ${`chore: release ${tag}`}`.cwd(ROOT)
+  } else {
+    console.log('  • Manifests already at target — skipping version commit')
   }
 
-  await $`git add ${VERSION_FILES}`.cwd(ROOT)
-  await $`git commit -m ${`chore: release ${tag}`}`.cwd(ROOT)
   await $`git tag -a ${tag} -m ${`Release ${tag}`}`.cwd(ROOT)
-  console.log(`\x1b[32m✓ Committed and tagged ${tag}\x1b[0m`)
+  console.log(`\x1b[32m✓ ${alreadyAtTarget ? 'Tagged' : 'Committed and tagged'} ${tag}\x1b[0m`)
 
   if (push) {
     const branch = (await $`git rev-parse --abbrev-ref HEAD`.cwd(ROOT).text()).trim()

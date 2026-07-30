@@ -2,6 +2,50 @@
 
 ---
 
+## 1.4.0
+
+### Overview
+
+Version `1.4.0` adds the **ORDA Terminal** (REPL and Code modes with snippet files) in a shared bottom dock with the Console; ships **iOS and Android** mobile apps; improves console network previews and image share/save; and polishes mobile HTTP Client and dock UX.
+
+### Features
+
+#### ORDA Terminal
+
+- **Bottom dock** — Console and Terminal share a resizable dock with a tab strip; open state and active tab persist per profile.
+- **REPL** — Run `ds.*` expressions with Monaco highlighting, catalog-aware autocomplete (including inside `query("…")`), and ↑/↓ history.
+- **Code mode** — Edit named `.js` snippet files inline; Enter for newline, Shift+Enter (or Run) to execute; `⌘/Ctrl+Enter` always runs.
+- **Snippet pack** — Export/import gzip packs (`.orda-snippets.gz`); `.load` / `.run` / `.rm` with name completion.
+- **Result cells** — Entities and selections open in tabs; binaries/images use existing viewers; REST traffic appears in Console → Network.
+- **Dot commands** — `.help`, `.exit`, and related commands; compact help rendering.
+
+#### Mobile
+
+- **iOS & Android apps** — Native shells with connection profiles, CORS-free HTTP, and safe-area layouts.
+- **Touch dock** — Console/Terminal as overlays with larger hit targets; share sheet / Downloads for exports.
+- **Mobile CI** — GitHub Actions builds and uploads mobile release artifacts (including Android signing support).
+
+#### Console & media
+
+- **Network image preview** — Inline preview for image responses in the console network log.
+- **Share / save** — Share or download binary objects and images via platform-native paths (fixes iOS WKWebView download failures).
+
+#### UX
+
+- **About dialog** — App about information from mobile/desktop chrome.
+- **Panel heights** — Entity list and request panes remember height; console height clamps safely when the viewport size is unknown.
+- **HTTP Client (mobile)** — Responsive request/response summary for narrow screens.
+
+### Docs
+
+- Guide pages for [Console](https://midrissi.github.io/4d-dataexplorer/guide/console.html), [ORDA Terminal](https://midrissi.github.io/4d-dataexplorer/guide/terminal.html), and [Mobile apps](https://midrissi.github.io/4d-dataexplorer/guide/mobile.html).
+
+### Fixes
+
+- **iOS downloads** — Snippet and settings exports use the native download/share path instead of `<a download>` (NSURLError -3000).
+- **Dock tab restore** — Reloading with Terminal open no longer forces Console.
+- **Entity reveal** — Opening an entity from the terminal uses primary-key lookup instead of `$filter` on `__KEY`.
+
 ## 1.3.x
 
 ### Overview

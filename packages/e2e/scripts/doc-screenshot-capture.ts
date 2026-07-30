@@ -68,11 +68,14 @@ export const DOC_SCREENSHOT_PAGE_NAMES = [
   '34-http-client-response-image',
   '35-http-client-history',
   '36-http-client-network-error',
+  '37-terminal-panel',
+  '38-terminal-code',
 ] as const
 
 export type DocScreenshotPageName = (typeof DOC_SCREENSHOT_PAGE_NAMES)[number]
 
 export const CONSOLE_SCREENSHOT_PAGE_NAMES = ['22-console-panel'] as const
+export const TERMINAL_SCREENSHOT_PAGE_NAMES = ['37-terminal-panel', '38-terminal-code'] as const
 export const AI_ACTIONS_SCREENSHOT_PAGE_NAMES = [
   '23-ai-actions-menu',
   '24-ai-generate-data',

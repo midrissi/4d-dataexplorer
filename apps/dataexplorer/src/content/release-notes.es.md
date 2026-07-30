@@ -2,6 +2,50 @@
 
 ---
 
+## 1.4.0
+
+### Resumen
+
+La versión `1.4.0` añade el **terminal ORDA** (modos REPL y Código con archivos snippet) en un dock inferior compartido con la Consola; publica las apps **iOS y Android**; mejora las vistas previas de red en la consola y el compartir/guardar imágenes; y pule la UX móvil (Cliente HTTP y dock).
+
+### Funciones
+
+#### Terminal ORDA
+
+- **Dock inferior** — Consola y Terminal comparten un panel redimensionable con pestañas; el estado abierto y la pestaña activa se guardan por perfil.
+- **REPL** — Ejecute expresiones `ds.*` con resaltado Monaco, autocompletado del catálogo (también dentro de `query("…")`) e historial ↑/↓.
+- **Modo Código** — Edite snippets `.js` con nombre; Enter = nueva línea, Mayús+Enter (o Ejecutar) lanza el código; `⌘/Ctrl+Enter` siempre ejecuta.
+- **Paquete de snippets** — Exportar/importar gzip (`.orda-snippets.gz`); `.load` / `.run` / `.rm` con completado de nombres.
+- **Celdas de resultado** — Entidades y selecciones se abren en pestañas; binarios/imágenes con los visores existentes; el tráfico REST aparece en Consola → Red.
+- **Comandos con punto** — `.help`, `.exit`, etc.; ayuda en render compacto.
+
+#### Móvil
+
+- **Apps iOS y Android** — Shells nativos con perfiles de conexión, HTTP sin CORS y layouts safe-area.
+- **Dock táctil** — Consola/Terminal como overlay con objetivos más grandes; hoja de compartir / Descargas para exportaciones.
+- **CI móvil** — GitHub Actions construye y publica artefactos móviles (incluida la firma Android).
+
+#### Consola y medios
+
+- **Vista previa de imagen de red** — Vista previa en línea de respuestas de imagen en el registro de red.
+- **Compartir / guardar** — Comparta o descargue objetos binarios e imágenes por rutas nativas (corrige fallos de descarga WKWebView en iOS).
+
+#### UX
+
+- **Acerca de** — Diálogo de información desde el chrome móvil/escritorio.
+- **Alturas de paneles** — La lista de entidades y paneles de petición recuerdan la altura; la altura de la consola se limita si el viewport es desconocido.
+- **Cliente HTTP (móvil)** — Resumen de petición/respuesta adaptado a pantallas estrechas.
+
+### Documentación
+
+- Páginas de la guía [Consola](https://midrissi.github.io/4d-dataexplorer/guide/console.html), [Terminal ORDA](https://midrissi.github.io/4d-dataexplorer/guide/terminal.html) y [Apps móviles](https://midrissi.github.io/4d-dataexplorer/guide/mobile.html).
+
+### Correcciones
+
+- **Descargas iOS** — Las exportaciones de snippets y ajustes usan la ruta nativa en lugar de `<a download>` (NSURLError -3000).
+- **Restauración de pestaña** — Recargar con el Terminal abierto ya no fuerza la Consola.
+- **Revelar entidad** — Abrir una entidad desde el terminal usa la clave primaria en lugar de `$filter` sobre `__KEY`.
+
 ## 1.3.x
 
 ### Resumen

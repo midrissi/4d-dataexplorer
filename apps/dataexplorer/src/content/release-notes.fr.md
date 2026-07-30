@@ -2,6 +2,50 @@
 
 ---
 
+## 1.4.0
+
+### Aperçu
+
+La version `1.4.0` ajoute le **terminal ORDA** (modes REPL et Code avec fichiers snippets) dans un dock bas partagé avec la Console ; publie les applications **iOS et Android** ; améliore les aperçus réseau de la console et le partage/enregistrement d'images ; et peaufine l'expérience mobile (Client HTTP et dock).
+
+### Fonctionnalités
+
+#### Terminal ORDA
+
+- **Dock bas** — Console et Terminal partagent un panneau redimensionnable avec onglets ; l'état ouvert et l'onglet actif sont mémorisés par profil.
+- **REPL** — Exécutez des expressions `ds.*` avec coloration Monaco, autocomplétion catalogue (y compris dans `query("…")`) et historique ↑/↓.
+- **Mode Code** — Éditez des snippets `.js` nommés ; Entrée = nouvelle ligne, Maj+Entrée (ou Exécuter) lance le code ; `⌘/Ctrl+Entrée` exécute toujours.
+- **Pack de snippets** — Export/import gzip (`.orda-snippets.gz`) ; `.load` / `.run` / `.rm` avec complétion de noms.
+- **Cellules de résultat** — Entités et sélections s'ouvrent en onglets ; binaires/images via les visionneuses existantes ; le trafic REST apparaît dans Console → Réseau.
+- **Commandes point** — `.help`, `.exit`, etc. ; aide en rendu compact.
+
+#### Mobile
+
+- **Apps iOS et Android** — Coques natives avec profils de connexion, HTTP sans CORS et mises en page safe-area.
+- **Dock tactile** — Console/Terminal en overlay avec cibles plus grandes ; feuille de partage / Téléchargements pour les exports.
+- **CI mobile** — GitHub Actions construit et publie les artefacts mobile (signature Android incluse).
+
+#### Console et médias
+
+- **Aperçu d'image réseau** — Prévisualisation inline des réponses image dans le journal réseau.
+- **Partage / enregistrement** — Partage ou téléchargement des objets binaires et images via les chemins natifs (corrige les échecs de téléchargement WKWebView iOS).
+
+#### UX
+
+- **À propos** — Dialogue d'informations depuis le chrome mobile/desktop.
+- **Hauteurs de panneaux** — Liste d'entités et volets de requête mémorisent la hauteur ; hauteur console bornée si le viewport est inconnu.
+- **Client HTTP (mobile)** — Résumé requête/réponse adapté aux écrans étroits.
+
+### Documentation
+
+- Pages guide [Console](https://midrissi.github.io/4d-dataexplorer/guide/console.html), [Terminal ORDA](https://midrissi.github.io/4d-dataexplorer/guide/terminal.html) et [Applications mobiles](https://midrissi.github.io/4d-dataexplorer/guide/mobile.html).
+
+### Corrections
+
+- **Téléchargements iOS** — Les exports de snippets et de réglages utilisent le chemin natif au lieu de `<a download>` (NSURLError -3000).
+- **Restauration de l'onglet** — Recharger avec le Terminal ouvert ne force plus la Console.
+- **Révélation d'entité** — L'ouverture d'une entité depuis le terminal utilise la clé primaire au lieu d'un `$filter` sur `__KEY`.
+
 ## 1.3.x
 
 ### Aperçu

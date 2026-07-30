@@ -34,6 +34,9 @@ async function main(): Promise<void> {
       const { app, theme } = ctx
       logDocScreenshotStep('🎨', `Capturing ${theme} theme`)
       await bootstrapDocCaptureSession(ctx, { resetThemeToDefault: true })
+      await app.tabs.closeClosableTabs()
+      await app.tabs.goHome()
+      await ctx.page.waitForTimeout(400)
       logDocScreenshotStep('📟', 'Console panel')
       await app.console.open()
       await app.console.ensureTallPanel()

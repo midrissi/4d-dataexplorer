@@ -13,6 +13,7 @@
     "test:codegen": "playwright codegen ${DATAEXPLORER_URL:-http://localhost:7080}/dataexplorer/",
     "capture:screenshots": "bun ./scripts/capture-docs-screenshots.ts",
     "capture:screenshots:console": "bun ./scripts/capture-console-screenshot.ts",
+    "capture:screenshots:terminal": "bun ./scripts/capture-terminal-screenshot.ts",
     "capture:screenshots:http-client": "bun ./scripts/capture-http-client-screenshot.ts",
     "capture:screenshots:ai-actions": "bun ./scripts/capture-ai-actions-screenshot.ts"
   },

@@ -52,6 +52,18 @@ const capabilities = [
     desc: 'Compose REST requests, inspect responses, and replay console network entries.',
     link: '/guide/http-client',
   },
+  {
+    num: '09',
+    title: 'Console panel',
+    desc: 'Inspect app logs and every HTTP request in a docked bottom panel.',
+    link: '/guide/console',
+  },
+  {
+    num: '10',
+    title: 'ORDA Terminal',
+    desc: 'Run ds.* expressions and snippet files with actionable result cells.',
+    link: '/guide/terminal',
+  },
 ] as const
 
 const gallery = [
@@ -94,6 +106,22 @@ const gallery = [
     link: '/guide/http-client',
     src: '/screenshots/27-http-client.png',
     alt: 'HTTP Client with a REST request and response panel',
+  },
+  {
+    num: '06',
+    title: 'Console panel',
+    desc: 'Watch application logs and every REST call in the bottom dock — expand rows for headers and bodies, or open a request in the HTTP Client.',
+    link: '/guide/console',
+    src: '/screenshots/22-console-panel.png',
+    alt: 'Console panel with network log and expanded request details',
+  },
+  {
+    num: '07',
+    title: 'ORDA Terminal',
+    desc: 'Run ds.* expressions in a REPL or edit named .js snippets — open entities and selections from result cells, with traffic in Console → Network.',
+    link: '/guide/terminal',
+    src: '/screenshots/37-terminal-panel.png',
+    alt: 'ORDA Terminal with a ds.Car.all() result',
   },
 ] as const
 </script>
@@ -152,8 +180,9 @@ const gallery = [
         <p class="home-landing__gallery-intro">
           Start with the structure graph, lean on the AI assistant when you need guidance, drill into
           precise queries when you know what to fetch, run exposed methods in the Method Executor
-          when you need to call ORDA functions, and use the HTTP Client to compose or replay REST
-          requests while you inspect responses.
+          when you need to call ORDA functions, use the HTTP Client to compose or replay REST
+          requests, and keep the Console and ORDA Terminal docked for logs and live
+          <code>ds.*</code> exploration.
         </p>
       </div>
 

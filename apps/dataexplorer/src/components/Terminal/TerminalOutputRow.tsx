@@ -65,18 +65,13 @@ type TerminalOutputRowProps = {
 
 /**
  * One scrollback line: timestamp gutter, kind marker, and body / smart result cell.
- * Single-line cells stay compact; multi-line input grows to fit.
+ * Gutter stays top-aligned so multi-line bodies don’t vertically center the time/marker.
  */
 export function TerminalOutputRow({ cell, isFirstOfRun = false }: TerminalOutputRowProps) {
-  const multiLineInput =
-    cell.kind === 'input' && typeof cell.source === 'string' && cell.source.includes('\n')
-  const richSystem = cell.kind === 'system' && Boolean(cell.markdown)
-
   return (
     <li
       className={cn(
-        'group flex min-h-6 gap-1.5 px-1.5',
-        multiLineInput || richSystem ? 'items-start py-0.5' : 'items-center',
+        'group flex min-h-6 items-start gap-1.5 px-1.5 py-0.5',
         isFirstOfRun &&
           'mt-1.5 border-border/40 border-t border-dashed first:mt-0 first:border-t-0',
         cell.kind === 'error' && 'bg-destructive/5',
@@ -87,14 +82,11 @@ export function TerminalOutputRow({ cell, isFirstOfRun = false }: TerminalOutput
     >
       <time
         dateTime={new Date(cell.timestamp).toISOString()}
-        className={cn(
-          'shrink-0 font-mono text-[10px] text-muted-foreground/55 tabular-nums leading-4 transition-colors group-hover:text-muted-foreground',
-          (multiLineInput || richSystem) && 'pt-0.5'
-        )}
+        className="shrink-0 pt-0.5 font-mono text-[10px] text-muted-foreground/55 tabular-nums leading-4 transition-colors group-hover:text-muted-foreground"
       >
         {formatTimestamp(cell.timestamp)}
       </time>
-      <span className={cn('shrink-0', (multiLineInput || richSystem) && 'pt-0.5')}>
+      <span className="shrink-0 pt-0.5">
         <Marker kind={cell.kind} logLevel={cell.logLevel} />
       </span>
       {cell.kind === 'input' ? (
@@ -104,10 +96,7 @@ export function TerminalOutputRow({ cell, isFirstOfRun = false }: TerminalOutput
           </pre>
         </div>
       ) : cell.kind === 'error' ? (
-        <div
-          className="min-w-0 flex-1 self-center font-mono text-[11px] text-destructive leading-4"
-          role="alert"
-        >
+        <div className="min-w-0 flex-1 font-mono text-[11px] text-destructive leading-4" role="alert">
           {cell.errorMessage}
         </div>
       ) : cell.kind === 'system' && cell.markdown ? (
@@ -117,7 +106,7 @@ export function TerminalOutputRow({ cell, isFirstOfRun = false }: TerminalOutput
           {cell.systemMessage}
         </pre>
       ) : cell.formatted ? (
-        <div className="flex min-h-4 min-w-0 flex-1 items-center self-center">
+        <div className="flex min-h-4 min-w-0 flex-1 items-start">
           <TerminalResultCell formatted={cell.formatted} />
         </div>
       ) : null}

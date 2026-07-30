@@ -501,7 +501,10 @@ export function TerminalPanel({ hideChrome = false }: { hideChrome?: boolean } =
     : 'orda-terminal:///input.js'
 
   return (
-    <div className="relative flex h-full min-h-0 flex-col bg-background">
+    <section
+      className="relative flex h-full min-h-0 flex-col bg-background"
+      aria-label={t('terminal.title')}
+    >
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-16 bg-linear-to-b from-primary/[0.04] to-transparent"
         aria-hidden
@@ -615,6 +618,6 @@ export function TerminalPanel({ hideChrome = false }: { hideChrome?: boolean } =
         onEditorPrefsChange={setEditorPrefs}
         onMount={onMount}
       />
-    </div>
+    </section>
   )
 }
