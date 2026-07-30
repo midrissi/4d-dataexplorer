@@ -96,7 +96,10 @@ export function TerminalOutputRow({ cell, isFirstOfRun = false }: TerminalOutput
           </pre>
         </div>
       ) : cell.kind === 'error' ? (
-        <div className="min-w-0 flex-1 font-mono text-[11px] text-destructive leading-4" role="alert">
+        <div
+          className="min-w-0 flex-1 font-mono text-[11px] text-destructive leading-4"
+          role="alert"
+        >
           {cell.errorMessage}
         </div>
       ) : cell.kind === 'system' && cell.markdown ? (

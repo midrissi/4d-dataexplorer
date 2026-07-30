@@ -57,9 +57,7 @@ function parseArgs(): { bump: Bump | null; exact: string | null; push: boolean; 
   const exact = bump ? null : parseExactVersion(target)
 
   if (!bump && !exact) {
-    fail(
-      `Invalid target "${target}". Use patch | minor | major, or an exact semver like 1.4.0`
-    )
+    fail(`Invalid target "${target}". Use patch | minor | major, or an exact semver like 1.4.0`)
   }
 
   return {
@@ -114,10 +112,10 @@ async function main(): Promise<void> {
 
   const rootPkg = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'))
   const current: string = rootPkg.version
-  const next = exact ?? nextVersion(current, bump!)
+  const next = exact ?? (bump ? nextVersion(current, bump) : fail('Missing bump or exact version'))
   const tag = `v${next}`
   const alreadyAtTarget = current === next
-  const label = exact ? `exact ${next}` : bump!
+  const label = exact ? `exact ${next}` : (bump ?? fail('Missing bump type'))
 
   console.log(
     alreadyAtTarget
