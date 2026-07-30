@@ -215,13 +215,5 @@ const gallery = [
     </section>
 
     <HomeFaq />
-
-    <footer class="home-landing__footnote">
-      <p>
-        Open from <strong>Records → Data Explorer In Browser</strong> in 4D, run the
-        <a :href="withBase('/guide/getting-started#run-with-docker')">Docker image</a>, or connect
-        with a direct URL and access key.
-      </p>
-    </footer>
   </div>
 </template>

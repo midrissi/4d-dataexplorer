@@ -1,7 +1,7 @@
 [package]
 name = "dataexplorer-mobile"
 version = "1.4.0"
-edition = "2026"
+edition = "2024"
 description = "Data Explorer Mobile Application"
 
 [lib]
