@@ -20,7 +20,8 @@ export const areaRows: DocTableRow[] = [
   },
   {
     area: '**Footer**',
-    purpose: 'Quick access to console, assistant, shortcuts, structure, tools, profiles, theme',
+    purpose:
+      'Quick access to console, terminal, assistant, shortcuts, structure, tools, profiles, theme',
   },
 ]
 
@@ -34,6 +35,10 @@ export const footerRows: DocTableRow[] = [
   {
     control: 'Console',
     action: 'Toggle the [console panel](/guide/console) (network + app logs)',
+  },
+  {
+    control: 'Terminal',
+    action: 'Toggle the [ORDA terminal](/guide/terminal) (`ds.*` expressions)',
   },
   {
     control: 'Chord buffer',
@@ -73,6 +78,7 @@ export const generalShortcuts: DocTableRow[] = [
 export const viewShortcuts: DocTableRow[] = [
   { shortcut: '`⌘ B` or `⌘ K` `B`', action: 'Toggle sidebar' },
   { shortcut: '⌘ ` / Ctrl+`', action: 'Toggle console' },
+  { shortcut: '`⌘ J` / `Ctrl+J`', action: 'Toggle ORDA terminal' },
   { shortcut: '`⇧ ⌘ D` or `⌘ K` `D`', action: 'Toggle light / dark theme' },
   { shortcut: '`⌘ 1`', action: 'Card view (active dataclass tab)' },
   { shortcut: '`⌘ 2`', action: 'Table view (active dataclass tab)' },

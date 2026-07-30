@@ -608,7 +608,12 @@ function ConsoleEmptyState({
   )
 }
 
-export function ConsolePanel() {
+export function ConsolePanel({
+  /** When true, omit title/close chrome (used inside the bottom dock tab strip). */
+  hideChrome = false,
+}: {
+  hideChrome?: boolean
+} = {}) {
   const { t } = useTranslation()
   const mobile = isMobileShell()
   const entries = useConsoleStore((state) => state.entries)
@@ -654,7 +659,7 @@ export function ConsolePanel() {
         )}
       >
         <div className="flex min-w-0 items-center gap-2">
-          {mobile ? (
+          {mobile && !hideChrome ? (
             <Button
               type="button"
               variant="ghost"
@@ -665,9 +670,10 @@ export function ConsolePanel() {
               <X className="h-4 w-4" aria-hidden />
               {t('console.done')}
             </Button>
-          ) : (
+          ) : null}
+          {!hideChrome && !mobile ? (
             <span className="font-medium text-xs">{t('console.title')}</span>
-          )}
+          ) : null}
           <span className="rounded bg-muted px-1.5 py-px text-[10px] text-muted-foreground tabular-nums">
             {entries.length}
           </span>
@@ -749,7 +755,7 @@ export function ConsolePanel() {
             </Tooltip>
           </TooltipProvider>
 
-          {!mobile ? (
+          {!mobile && !hideChrome ? (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>

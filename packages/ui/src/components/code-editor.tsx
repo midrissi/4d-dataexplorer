@@ -459,6 +459,13 @@ export interface CodeEditorProps {
   height?: string | number
   /** @default 13 */
   fontSize?: number
+  /**
+   * Monaco line height. Values &lt; 8 are multipliers of font size; ≥ 8 are pixels.
+   * @default 1.6
+   */
+  lineHeight?: number
+  /** Editor content padding. @default { top: 8, bottom: 8 } */
+  padding?: { top?: number; bottom?: number }
   /** Explicit theme override. Auto-detected from document `dark` class when omitted. */
   theme?: 'light' | 'dark'
   /** @default false */
@@ -644,6 +651,8 @@ export function CodeEditor({
   schema,
   height = '200px',
   fontSize: fontSizeProp = 13,
+  lineHeight: lineHeightProp = 1.6,
+  padding: paddingProp,
   theme: themeProp,
   showLineNumbers = false,
   readOnly = false,
@@ -1044,6 +1053,10 @@ export function CodeEditor({
     () => ({
       fontSize: currentFontSize,
       lineNumbers: showLineNumbers ? 'on' : 'off',
+      lineNumbersMinChars: 2,
+      lineDecorationsWidth: showLineNumbers ? 8 : 0,
+      glyphMargin: false,
+      folding: false,
       wordWrap: isWordWrap ? 'on' : 'off',
       minimap: { enabled: isMinimapOn },
       tabSize: 2,
@@ -1059,8 +1072,11 @@ export function CodeEditor({
         horizontalScrollbarSize: 10,
         useShadows: false,
       },
-      lineHeight: 1.6,
-      padding: { top: 8, bottom: 8 },
+      lineHeight: lineHeightProp,
+      padding: {
+        top: paddingProp?.top ?? 8,
+        bottom: paddingProp?.bottom ?? 8,
+      },
       readOnly,
       quickSuggestions: { other: true, comments: false, strings: true },
       quickSuggestionsDelay: 100,
@@ -1085,6 +1101,9 @@ export function CodeEditor({
       readOnly,
       editorTheme,
       wordBasedSuggestionsProp,
+      lineHeightProp,
+      paddingProp?.top,
+      paddingProp?.bottom,
     ]
   )
 

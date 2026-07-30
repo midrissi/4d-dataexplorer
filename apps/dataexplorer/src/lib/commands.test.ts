@@ -42,6 +42,7 @@ function createMockContext(overrides: Partial<CommandContext> = {}): CommandCont
     toggleReadonlyMode: mock(() => {}),
     toggleAssistantOpen: mock(() => {}),
     toggleConsoleOpen: mock(() => {}),
+    toggleTerminalOpen: mock(() => {}),
     onClose: mock(() => {}),
     onShowHelp: mock(() => {}),
     onEnterSwitchTabsMode: mock(() => {}),
@@ -71,6 +72,7 @@ function createMockContext(overrides: Partial<CommandContext> = {}): CommandCont
     readonlyMode: false,
     assistantOpen: false,
     consoleOpen: false,
+    bottomPanelTab: 'console',
     shortcuts: [
       {
         id: 'command-palette',

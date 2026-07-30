@@ -4,9 +4,9 @@ import { useSettingsStore } from '~/store/settings'
 
 /**
  * Mobile dock overlays that should be mutually exclusive.
- * Opening one dismisses the others (console ↔ dataclasses catalog ↔ AI tasks).
+ * Opening one dismisses the others (console/terminal ↔ dataclasses catalog ↔ AI tasks).
  */
-export type MobileOverlayId = 'console' | 'catalog' | 'aiHistory'
+export type MobileOverlayId = 'console' | 'terminal' | 'catalog' | 'aiHistory'
 
 let closeCatalogFn: (() => void) | null = null
 
@@ -25,7 +25,8 @@ export function registerMobileCatalogCloser(fn: (() => void) | null): void {
 export function prepareMobileOverlay(except: MobileOverlayId): void {
   if (!isMobileShell()) return
 
-  if (except !== 'console') {
+  const keepDock = except === 'console' || except === 'terminal'
+  if (!keepDock) {
     useSettingsStore.setState({ consoleOpen: false })
   }
   if (except !== 'aiHistory') {

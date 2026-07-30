@@ -39,6 +39,7 @@ import {
   Search,
   Send,
   Settings,
+  Terminal,
   UserCircle,
   Wrench,
 } from 'lucide-react'
@@ -78,8 +79,8 @@ import { AiTasksFooterControl } from './AiActions'
 import { AppBrandIcon } from './AppBrandIcon'
 import { AppearanceControls } from './AppearanceControls'
 import { AssistantSparklesIcon } from './AssistantSparklesIcon'
+import { BottomDockPanel } from './BottomDockPanel'
 import { CommandPalette } from './CommandPalette'
-import { ConsolePanel } from './Console/ConsolePanel'
 import { DatabaseIdentityHeaderChip } from './DatabaseIdentityPanel'
 import { DesktopSslWarningFooterControl } from './DesktopSslWarningFooterControl'
 import { DesktopUpdateFooterControl } from './DesktopUpdateFooterControl'
@@ -148,7 +149,9 @@ export function Layout({
   const setAssistantOpen = useSettingsStore((s) => s.setAssistantOpen)
   const toggleAssistantOpen = useSettingsStore((s) => s.toggleAssistantOpen)
   const consoleOpen = useSettingsStore((s) => s.consoleOpen)
+  const bottomPanelTab = useSettingsStore((s) => s.bottomPanelTab)
   const toggleConsoleOpen = useSettingsStore((s) => s.toggleConsoleOpen)
+  const toggleTerminalOpen = useSettingsStore((s) => s.toggleTerminalOpen)
   const consoleErrorCount = useConsoleStore(
     (state) => state.entries.filter((entry) => entry.level === 'error').length
   )
@@ -258,6 +261,7 @@ export function Layout({
       }),
       registerShortcutHandler('toggle-sidebar', toggleSidebarCollapsed),
       registerShortcutHandler('toggle-console', toggleConsoleOpen),
+      registerShortcutHandler('toggle-terminal', toggleTerminalOpen),
       registerShortcutHandler('toggle-theme', toggleTheme),
       registerShortcutHandler('open-settings', openSettingsTab),
       registerShortcutHandler('toggle-readonly', toggleReadonlyMode),
@@ -312,6 +316,7 @@ export function Layout({
     registerShortcutHandler,
     toggleSidebarCollapsed,
     toggleConsoleOpen,
+    toggleTerminalOpen,
     toggleTheme,
     openSettingsTab,
     toggleReadonlyMode,
@@ -575,7 +580,7 @@ export function Layout({
       <div className="relative z-0 flex min-h-0 flex-1 flex-col overflow-hidden">
         {mobile && consoleOpen ? (
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <ConsolePanel />
+            <BottomDockPanel />
           </div>
         ) : (
           <>
@@ -594,7 +599,7 @@ export function Layout({
                   className="shrink-0 overflow-hidden border-t"
                   style={{ height: consoleHeight }}
                 >
-                  <ConsolePanel />
+                  <BottomDockPanel />
                 </div>
               </>
             ) : null}
@@ -613,12 +618,16 @@ export function Layout({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    variant={consoleOpen ? 'secondary' : 'ghost'}
+                    variant={consoleOpen && bottomPanelTab === 'console' ? 'secondary' : 'ghost'}
                     size="sm"
                     className="relative h-6 gap-1.5 px-2 text-[11px]"
                     onClick={toggleConsoleOpen}
-                    aria-label={consoleOpen ? t('console.close') : t('console.open')}
-                    aria-pressed={consoleOpen}
+                    aria-label={
+                      consoleOpen && bottomPanelTab === 'console'
+                        ? t('console.close')
+                        : t('console.open')
+                    }
+                    aria-pressed={consoleOpen && bottomPanelTab === 'console'}
                   >
                     <PanelBottom className="h-3 w-3" />
                     <span>{t('console.title')}</span>
@@ -631,9 +640,46 @@ export function Layout({
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="top">
-                  {consoleOpen ? t('console.close') : t('console.open')}
+                  {consoleOpen && bottomPanelTab === 'console'
+                    ? t('console.close')
+                    : t('console.open')}
                   {(() => {
                     const sc = getShortcut('toggle-console')
+                    return sc?.enabled ? (
+                      <kbd className="ml-2 rounded bg-muted px-1 text-[10px]">
+                        {formatShortcut(sc)}
+                      </kbd>
+                    ) : null
+                  })()}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant={consoleOpen && bottomPanelTab === 'terminal' ? 'secondary' : 'ghost'}
+                    size="sm"
+                    className="relative h-6 gap-1.5 px-2 text-[11px]"
+                    onClick={toggleTerminalOpen}
+                    aria-label={
+                      consoleOpen && bottomPanelTab === 'terminal'
+                        ? t('terminal.close')
+                        : t('terminal.open')
+                    }
+                    aria-pressed={consoleOpen && bottomPanelTab === 'terminal'}
+                  >
+                    <Terminal className="h-3 w-3" />
+                    <span>{t('terminal.title')}</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  {consoleOpen && bottomPanelTab === 'terminal'
+                    ? t('terminal.close')
+                    : t('terminal.open')}
+                  {(() => {
+                    const sc = getShortcut('toggle-terminal')
                     return sc?.enabled ? (
                       <kbd className="ml-2 rounded bg-muted px-1 text-[10px]">
                         {formatShortcut(sc)}

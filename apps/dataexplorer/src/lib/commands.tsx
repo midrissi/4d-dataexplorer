@@ -31,6 +31,7 @@ import {
   Sparkles,
   Sun,
   Table2,
+  Terminal,
   Trash2,
   X,
 } from 'lucide-react'
@@ -136,6 +137,8 @@ export type CommandContext = {
   // Console
   consoleOpen: boolean
   toggleConsoleOpen: () => void
+  bottomPanelTab: 'console' | 'terminal'
+  toggleTerminalOpen: () => void
 
   // Callbacks
   onClose: () => void
@@ -291,7 +294,10 @@ function buildViewCommands(ctx: CommandContext): Command[] {
     },
     {
       id: 'toggle-console',
-      label: ctx.consoleOpen ? ctx.t('command.closeConsole') : ctx.t('command.openConsole'),
+      label:
+        ctx.consoleOpen && ctx.bottomPanelTab === 'console'
+          ? ctx.t('command.closeConsole')
+          : ctx.t('command.openConsole'),
       description: ctx.t('commandDesc.toggleConsole'),
       shortcut: getShortcutDisplay(ctx, 'toggle-console'),
       keywords: ['console', 'logs', 'network', 'requests', 'panel'],
@@ -299,6 +305,22 @@ function buildViewCommands(ctx: CommandContext): Command[] {
       category: 'View',
       action: () => {
         ctx.toggleConsoleOpen()
+        ctx.onClose()
+      },
+    },
+    {
+      id: 'toggle-terminal',
+      label:
+        ctx.consoleOpen && ctx.bottomPanelTab === 'terminal'
+          ? ctx.t('command.closeTerminal')
+          : ctx.t('command.openTerminal'),
+      description: ctx.t('commandDesc.toggleTerminal'),
+      shortcut: getShortcutDisplay(ctx, 'toggle-terminal'),
+      keywords: ['terminal', 'orda', 'ds', 'repl', 'query', 'panel'],
+      icon: <Terminal className="h-4 w-4" />,
+      category: 'View',
+      action: () => {
+        ctx.toggleTerminalOpen()
         ctx.onClose()
       },
     },

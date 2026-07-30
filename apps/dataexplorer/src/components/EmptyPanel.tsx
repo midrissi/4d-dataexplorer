@@ -23,6 +23,8 @@ export type EmptyPanelProps = {
   bordered?: boolean
   size?: 'sm' | 'md' | 'lg'
   className?: string
+  /** Applied to the inner content column (title, description, chips, actions). */
+  contentClassName?: string
   children?: ReactNode
 }
 
@@ -57,6 +59,7 @@ export function EmptyPanel({
   bordered = false,
   size = 'md',
   className,
+  contentClassName,
   children,
 }: EmptyPanelProps) {
   const isSm = size === 'sm'
@@ -85,7 +88,7 @@ export function EmptyPanel({
                 key={i}
                 className={cn(
                   'mx-auto flex w-full items-center gap-2 rounded-lg border border-border/70 border-dashed bg-muted/15 px-2',
-                  isSm ? 'h-6 max-w-40' : 'h-8 max-w-52'
+                  isSm ? 'h-6 max-w-40' : 'h-8 max-w-xl'
                 )}
                 style={{
                   transform: `scale(${1 - i * 0.05}) translateY(${i * 2}px)`,
@@ -103,7 +106,7 @@ export function EmptyPanel({
                 key={i}
                 className={cn(
                   'mx-auto w-full rounded-md border border-border/70 border-dashed bg-muted/20',
-                  isSm ? 'h-6 max-w-44' : 'h-9 max-w-md'
+                  isSm ? 'h-6 max-w-44' : 'h-9 max-w-xl'
                 )}
                 style={{
                   transform: `scale(${1 - i * 0.04}) translateY(${i * 2}px)`,
@@ -115,7 +118,13 @@ export function EmptyPanel({
         </div>
       ) : null}
 
-      <div className={cn('relative flex flex-col items-center', isSm ? 'max-w-56' : 'max-w-sm')}>
+      <div
+        className={cn(
+          'relative flex w-full flex-col items-center',
+          isSm ? 'max-w-56' : 'max-w-sm',
+          contentClassName
+        )}
+      >
         <div className={cn('relative', isSm ? 'mb-2' : 'mb-3')}>
           <div
             className={cn(

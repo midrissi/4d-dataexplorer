@@ -32,6 +32,8 @@ type ObjectTreeProps = {
   depth?: number
   ancestors?: ReadonlySet<object>
   defaultOpen?: boolean
+  /** When false, skip chevron gutter / kind icon on leaf rows (terminal alignment). */
+  gutter?: boolean
 }
 
 type ValueKind =
@@ -216,6 +218,7 @@ function TreeRow({
   label,
   children,
   value,
+  gutter = true,
 }: {
   expandable?: boolean
   open?: boolean
@@ -224,6 +227,8 @@ function TreeRow({
   label?: string
   children: ReactNode
   value: unknown
+  /** When false, skip the chevron column + kind icon (terminal scrollback alignment). */
+  gutter?: boolean
 }) {
   return (
     <div className="group/row inline-flex max-w-full items-center gap-0.5 rounded-sm py-px hover:bg-muted/40">
@@ -240,7 +245,7 @@ function TreeRow({
               open && 'rotate-90'
             )}
           />
-          <KindIcon kind={kind} />
+          {gutter ? <KindIcon kind={kind} /> : null}
           {label !== undefined ? (
             <span className="mr-0.5 shrink-0 font-medium text-sky-700 dark:text-sky-300">
               {label}
@@ -251,8 +256,12 @@ function TreeRow({
         </button>
       ) : (
         <span className="inline-flex min-w-0 max-w-full flex-1 items-center gap-0.5">
-          <span className="inline-block w-3 shrink-0" />
-          <KindIcon kind={kind} />
+          {gutter ? (
+            <>
+              <span className="inline-block w-3 shrink-0" />
+              <KindIcon kind={kind} />
+            </>
+          ) : null}
           {label !== undefined ? (
             <span className="mr-0.5 shrink-0 font-medium text-sky-700 dark:text-sky-300">
               {label}
@@ -267,13 +276,20 @@ function TreeRow({
   )
 }
 
-export function ConsoleValue({ value }: { value: unknown }) {
+export function ConsoleValue({
+  value,
+  gutter = true,
+}: {
+  value: unknown
+  /** Align with plain terminal lines (no chevron gutter / kind icon). @default true */
+  gutter?: boolean
+}) {
   if (value !== null && typeof value === 'object') {
-    return <ObjectTree value={value} />
+    return <ObjectTree value={value} gutter={gutter} />
   }
   const display = primitiveValue(value)
   return (
-    <TreeRow kind={kindOf(value)} value={value}>
+    <TreeRow kind={kindOf(value)} value={value} gutter={gutter}>
       <span className={display.className}>{display.text}</span>
     </TreeRow>
   )
@@ -285,6 +301,7 @@ export function ObjectTree({
   depth = 0,
   ancestors = new Set(),
   defaultOpen = false,
+  gutter = true,
 }: ObjectTreeProps) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(defaultOpen)
@@ -293,7 +310,7 @@ export function ObjectTree({
     const display = primitiveValue(value)
     return (
       <div className={cn(depth > 0 && 'ml-2 border-border/40 border-l pl-1.5')}>
-        <TreeRow kind={kindOf(value)} label={label} value={value}>
+        <TreeRow kind={kindOf(value)} label={label} value={value} gutter={gutter}>
           <span className={display.className}>{display.text}</span>
         </TreeRow>
       </div>
@@ -348,7 +365,7 @@ export function ObjectTree({
   if (ancestors.has(value)) {
     return (
       <div className={cn(depth > 0 && 'ml-2 border-border/40 border-l pl-1.5')}>
-        <TreeRow kind="circular" label={label} value="[Circular]">
+        <TreeRow kind="circular" label={label} value="[Circular]" gutter={gutter}>
           <span className="text-muted-foreground italic">[Circular]</span>
         </TreeRow>
       </div>
@@ -370,6 +387,7 @@ export function ObjectTree({
         kind={kind}
         label={label}
         value={value}
+        gutter={gutter}
       >
         <span className="inline-flex min-w-0 items-center gap-1">
           <span className="font-medium text-muted-foreground">{summary.title}</span>

@@ -51,6 +51,7 @@ const guideSidebar = [
     items: [
       { text: 'Command palette', link: '/guide/command-palette' },
       { text: 'Console panel', link: '/guide/console' },
+      { text: 'ORDA Terminal', link: '/guide/terminal' },
       { text: 'HTTP Client', link: '/guide/http-client' },
       { text: 'JSON Schema Builder', link: '/guide/schema-builder' },
     ],

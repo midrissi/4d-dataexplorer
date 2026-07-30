@@ -60,7 +60,10 @@ export default defineConfig({
   // Patched package — do not serve a stale prebundle that ignores
   // patches/@monaco-editor%2Freact@4.7.0.patch (getModel null race).
   // WASM package uses top-level await + import.meta.url for the .wasm asset.
+  // Pre-bundle monaco-editor so opening Terminal does not trigger a mid-session
+  // optimizeDeps reload (can OOM / Aw-Snap the tab).
   optimizeDeps: {
+    include: ['monaco-editor'],
     exclude: ['@monaco-editor/react', '@4d/base64-decoder'],
   },
   assetsInclude: ['**/*.wasm'],

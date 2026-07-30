@@ -100,6 +100,8 @@ export function createCommandContext(overrides: CommandContextOverrides = {}): C
     toggleAssistantOpen: () => settings.toggleAssistantOpen(),
     consoleOpen: settings.consoleOpen,
     toggleConsoleOpen: () => settings.toggleConsoleOpen(),
+    bottomPanelTab: settings.bottomPanelTab,
+    toggleTerminalOpen: () => settings.toggleTerminalOpen(),
     onClose: overrides.onClose ?? noop,
     onShowHelp: overrides.onShowHelp ?? noop,
     onEnterSwitchTabsMode: overrides.onEnterSwitchTabsMode,

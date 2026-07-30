@@ -7,7 +7,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@4d/ui'
-import { FileText, Info, MoreHorizontal, PanelBottom, Play, Send, Settings } from 'lucide-react'
+import {
+  FileText,
+  Info,
+  MoreHorizontal,
+  PanelBottom,
+  Play,
+  Send,
+  Settings,
+  Terminal,
+} from 'lucide-react'
 import { AiTasksFooterControl } from '~/components/AiActions'
 import { AppearanceControls } from '~/components/AppearanceControls'
 import { MobileDockButton } from '~/components/MobileDockButton'
@@ -29,7 +38,9 @@ export function MobileAppFooter() {
   const { t } = useTranslation()
   const aiConfigured = useAssistantLlmConfigured()
   const consoleOpen = useSettingsStore((s) => s.consoleOpen)
+  const bottomPanelTab = useSettingsStore((s) => s.bottomPanelTab)
   const toggleConsoleOpen = useSettingsStore((s) => s.toggleConsoleOpen)
+  const toggleTerminalOpen = useSettingsStore((s) => s.toggleTerminalOpen)
   const consoleErrorCount = useConsoleStore(
     (state) => state.entries.filter((entry) => entry.level === 'error').length
   )
@@ -53,15 +64,17 @@ export function MobileAppFooter() {
       <nav
         className={cn(
           'mx-auto grid max-w-lg gap-0.5 px-1.5',
-          aiConfigured ? 'grid-cols-4' : 'grid-cols-3'
+          aiConfigured ? 'grid-cols-5' : 'grid-cols-4'
         )}
         aria-label={t('layout.footerNavAria')}
       >
         <MobileDockButton
           label={t('console.title')}
-          pressed={consoleOpen}
+          pressed={consoleOpen && bottomPanelTab === 'console'}
           onClick={toggleConsoleOpen}
-          aria-label={consoleOpen ? t('console.close') : t('console.open')}
+          aria-label={
+            consoleOpen && bottomPanelTab === 'console' ? t('console.close') : t('console.open')
+          }
           className="relative"
         >
           <PanelBottom className="h-5 w-5" />
@@ -71,6 +84,17 @@ export function MobileAppFooter() {
               aria-hidden
             />
           ) : null}
+        </MobileDockButton>
+
+        <MobileDockButton
+          label={t('terminal.title')}
+          pressed={consoleOpen && bottomPanelTab === 'terminal'}
+          onClick={toggleTerminalOpen}
+          aria-label={
+            consoleOpen && bottomPanelTab === 'terminal' ? t('terminal.close') : t('terminal.open')
+          }
+        >
+          <Terminal className="h-5 w-5" />
         </MobileDockButton>
 
         {aiConfigured ? <AiTasksFooterControl dock /> : null}

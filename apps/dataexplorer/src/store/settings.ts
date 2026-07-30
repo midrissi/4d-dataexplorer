@@ -163,6 +163,10 @@ const createSettingsStorage = () =>
             sidebarCollapsed: (es.sidebarCollapsed as boolean) ?? DEFAULT_SETTINGS.sidebarCollapsed,
             assistantOpen: (es.assistantOpen as boolean) ?? DEFAULT_SETTINGS.assistantOpen,
             consoleOpen: (es.consoleOpen as boolean) ?? DEFAULT_SETTINGS.consoleOpen,
+            bottomPanelTab:
+              es.bottomPanelTab === 'terminal' || es.bottomPanelTab === 'console'
+                ? es.bottomPanelTab
+                : DEFAULT_SETTINGS.bottomPanelTab,
             defaultViewMode:
               (es.defaultViewMode as DefaultViewMode) ?? DEFAULT_SETTINGS.defaultViewMode,
             defaultEntityViewMode:
@@ -242,6 +246,10 @@ const createSettingsStorage = () =>
           sidebarCollapsed: state.sidebarCollapsed ?? DEFAULT_SETTINGS.sidebarCollapsed,
           assistantOpen: state.assistantOpen ?? DEFAULT_SETTINGS.assistantOpen,
           consoleOpen: state.consoleOpen ?? DEFAULT_SETTINGS.consoleOpen,
+          bottomPanelTab:
+            state.bottomPanelTab === 'terminal' || state.bottomPanelTab === 'console'
+              ? state.bottomPanelTab
+              : DEFAULT_SETTINGS.bottomPanelTab,
           defaultViewMode: state.defaultViewMode ?? DEFAULT_SETTINGS.defaultViewMode,
           defaultEntityViewMode:
             state.defaultEntityViewMode ?? DEFAULT_SETTINGS.defaultEntityViewMode,
@@ -670,6 +678,8 @@ export type ProfileSettings = {
   sidebarCollapsed: boolean
   assistantOpen: boolean
   consoleOpen: boolean
+  /** Active tab inside the bottom dock when `consoleOpen` is true. */
+  bottomPanelTab: 'console' | 'terminal'
   defaultViewMode: DefaultViewMode
   defaultEntityViewMode: EntityViewMode
   defaultEditMode: EditMode
@@ -718,6 +728,9 @@ export type SettingsState = {
 
   // Bottom console panel open state
   consoleOpen: boolean
+
+  /** Active tab inside the bottom dock (`console` | `terminal`). */
+  bottomPanelTab: 'console' | 'terminal'
 
   // Default view mode for entity lists
   defaultViewMode: DefaultViewMode
@@ -774,6 +787,8 @@ export type SettingsState = {
   toggleAssistantOpen: () => void
   setConsoleOpen: (open: boolean) => void
   toggleConsoleOpen: () => void
+  setBottomPanelTab: (tab: 'console' | 'terminal') => void
+  toggleTerminalOpen: () => void
   setDefaultViewMode: (mode: DefaultViewMode) => void
   setDefaultEntityViewMode: (mode: EntityViewMode) => void
   setDefaultEditMode: (mode: EditMode) => void
@@ -912,6 +927,14 @@ const DEFAULT_SHORTCUTS: KeyboardShortcut[] = [
     id: 'toggle-console',
     label: 'Toggle Console',
     key: '`',
+    modifiers: getPlatformModifier(),
+    enabled: true,
+    category: 'View',
+  },
+  {
+    id: 'toggle-terminal',
+    label: 'Toggle Terminal',
+    key: 'j',
     modifiers: getPlatformModifier(),
     enabled: true,
     category: 'View',
@@ -1219,6 +1242,14 @@ const VSCODE_SHORTCUTS: KeyboardShortcut[] = [
     id: 'toggle-console',
     label: 'Toggle Console',
     key: '`',
+    modifiers: getPlatformModifier(),
+    enabled: true,
+    category: 'View',
+  },
+  {
+    id: 'toggle-terminal',
+    label: 'Toggle Terminal',
+    key: 'j',
     modifiers: getPlatformModifier(),
     enabled: true,
     category: 'View',
@@ -1532,6 +1563,14 @@ const MINIMAL_SHORTCUTS: KeyboardShortcut[] = [
     category: 'View',
   },
   {
+    id: 'toggle-terminal',
+    label: 'Toggle Terminal',
+    key: 'j',
+    modifiers: getPlatformModifier(),
+    enabled: false,
+    category: 'View',
+  },
+  {
     id: 'toggle-theme',
     label: 'Toggle Theme',
     key: 'd',
@@ -1835,6 +1874,14 @@ const VIM_SHORTCUTS: KeyboardShortcut[] = [
     id: 'toggle-console',
     label: 'Toggle Console',
     key: '`',
+    modifiers: getPlatformModifier(),
+    enabled: true,
+    category: 'View',
+  },
+  {
+    id: 'toggle-terminal',
+    label: 'Toggle Terminal',
+    key: 'j',
     modifiers: getPlatformModifier(),
     enabled: true,
     category: 'View',
@@ -2171,6 +2218,7 @@ const DEFAULT_SETTINGS: ProfileSettings = {
   sidebarCollapsed: false,
   assistantOpen: false,
   consoleOpen: false,
+  bottomPanelTab: 'console' as const,
   defaultViewMode: 'cards' as DefaultViewMode,
   defaultEntityViewMode: 'form' as EntityViewMode,
   defaultEditMode: 'form' as EditMode,
@@ -2234,6 +2282,10 @@ function normalizeImportedProfile(
       sidebarCollapsed: (s.sidebarCollapsed as boolean) ?? DEFAULT_SETTINGS.sidebarCollapsed,
       assistantOpen: (s.assistantOpen as boolean) ?? DEFAULT_SETTINGS.assistantOpen,
       consoleOpen: (s.consoleOpen as boolean) ?? DEFAULT_SETTINGS.consoleOpen,
+      bottomPanelTab:
+        s.bottomPanelTab === 'terminal' || s.bottomPanelTab === 'console'
+          ? s.bottomPanelTab
+          : DEFAULT_SETTINGS.bottomPanelTab,
       defaultViewMode: (s.defaultViewMode as DefaultViewMode) ?? DEFAULT_SETTINGS.defaultViewMode,
       defaultEntityViewMode:
         (s.defaultEntityViewMode as EntityViewMode) ?? DEFAULT_SETTINGS.defaultEntityViewMode,
@@ -2296,12 +2348,29 @@ export const useSettingsStore = create<SettingsState>()(
         toggleAssistantOpen: () => set({ assistantOpen: !get().assistantOpen }),
         setConsoleOpen: (open) => {
           if (open) prepareMobileOverlay('console')
-          set({ consoleOpen: open })
+          set({ consoleOpen: open, ...(open ? { bottomPanelTab: 'console' as const } : {}) })
         },
         toggleConsoleOpen: () => {
-          const open = !get().consoleOpen
-          if (open) prepareMobileOverlay('console')
-          set({ consoleOpen: open })
+          const { consoleOpen, bottomPanelTab } = get()
+          if (consoleOpen && bottomPanelTab === 'console') {
+            set({ consoleOpen: false })
+            return
+          }
+          prepareMobileOverlay('console')
+          set({ consoleOpen: true, bottomPanelTab: 'console' })
+        },
+        setBottomPanelTab: (tab) => {
+          prepareMobileOverlay(tab === 'terminal' ? 'terminal' : 'console')
+          set({ bottomPanelTab: tab, consoleOpen: true })
+        },
+        toggleTerminalOpen: () => {
+          const { consoleOpen, bottomPanelTab } = get()
+          if (consoleOpen && bottomPanelTab === 'terminal') {
+            set({ consoleOpen: false })
+            return
+          }
+          prepareMobileOverlay('terminal')
+          set({ consoleOpen: true, bottomPanelTab: 'terminal' })
         },
         setDefaultViewMode: (mode) => {
           set({ defaultViewMode: mode })
@@ -2578,6 +2647,7 @@ export const useSettingsStore = create<SettingsState>()(
             sidebarCollapsed: state.sidebarCollapsed,
             assistantOpen: state.assistantOpen,
             consoleOpen: state.consoleOpen,
+            bottomPanelTab: state.bottomPanelTab,
             defaultViewMode: state.defaultViewMode,
             defaultEntityViewMode: state.defaultEntityViewMode,
             defaultEditMode: state.defaultEditMode,
@@ -2625,6 +2695,7 @@ export const useSettingsStore = create<SettingsState>()(
             sidebarCollapsed,
             assistantOpen,
             consoleOpen,
+            bottomPanelTab,
             defaultViewMode,
             defaultEntityViewMode,
             defaultEditMode,
@@ -2649,6 +2720,7 @@ export const useSettingsStore = create<SettingsState>()(
                 sidebarCollapsed,
                 assistantOpen,
                 consoleOpen,
+                bottomPanelTab,
                 defaultViewMode,
                 defaultEntityViewMode,
                 defaultEditMode,
@@ -2679,6 +2751,10 @@ export const useSettingsStore = create<SettingsState>()(
               sidebarCollapsed: settings.sidebarCollapsed ?? DEFAULT_SETTINGS.sidebarCollapsed,
               assistantOpen: settings.assistantOpen ?? DEFAULT_SETTINGS.assistantOpen,
               consoleOpen: settings.consoleOpen ?? DEFAULT_SETTINGS.consoleOpen,
+              bottomPanelTab:
+                settings.bottomPanelTab === 'terminal' || settings.bottomPanelTab === 'console'
+                  ? settings.bottomPanelTab
+                  : DEFAULT_SETTINGS.bottomPanelTab,
               defaultViewMode: settings.defaultViewMode ?? DEFAULT_SETTINGS.defaultViewMode,
               defaultEntityViewMode:
                 settings.defaultEntityViewMode ?? DEFAULT_SETTINGS.defaultEntityViewMode,
