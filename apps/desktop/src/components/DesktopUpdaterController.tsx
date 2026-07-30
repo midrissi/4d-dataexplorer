@@ -16,7 +16,7 @@ import {
 /** How long to wait after launch before the first background update check (ms). */
 const INITIAL_CHECK_DELAY = 4000
 /** Interval between periodic background update checks (ms). */
-const RECHECK_INTERVAL = 6 * 60 * 60 * 1000
+const RECHECK_INTERVAL = 10 * 60 * 1000
 
 /**
  * Headless desktop updater. Owns the Tauri {@link Update} handle and mirrors

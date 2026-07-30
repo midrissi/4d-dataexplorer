@@ -81,9 +81,11 @@ import { DownloadableImage } from '~/components/DownloadableImage'
 import { EmptyPanel, EmptyPanelAction } from '~/components/EmptyPanel'
 import { EntityDataGrid } from '~/components/EntityDataGrid'
 import { EntityForm, type EntityFormHandle } from '~/components/EntityForm'
+import { EntityDetailSkeleton } from '~/components/EntityLoadingSkeleton'
 import { ErrorList } from '~/components/ErrorList'
 import { MethodListPopover } from '~/components/MethodExecutor/MethodListPopover'
 import { PullToRefresh } from '~/components/PullToRefresh'
+import { SwipeNavigate } from '~/components/SwipeNavigate'
 import { getIntlLocale, useEditorLabels, useTranslation } from '~/i18n'
 import { api, formatThrownError } from '~/lib/api'
 import { durationValueToInputValue, parseDurationInput } from '~/lib/duration'
@@ -2151,11 +2153,17 @@ function FormView({
   }
 
   return mobile && onRefresh ? (
-    <PullToRefresh label={t('entity.pullToRefresh')} onRefresh={onRefresh}>
-      <div className="space-y-3 p-4">{displayableAttributes.map((attr) => renderField(attr))}</div>
+    <PullToRefresh
+      className="h-full min-h-0"
+      label={t('entity.pullToRefresh')}
+      onRefresh={onRefresh}
+    >
+      <div className="space-y-3 p-4 pb-6">
+        {displayableAttributes.map((attr) => renderField(attr))}
+      </div>
     </PullToRefresh>
   ) : (
-    <ScrollArea className="h-full">
+    <ScrollArea className="h-full min-h-0">
       <div className="space-y-3 p-4">{displayableAttributes.map((attr) => renderField(attr))}</div>
     </ScrollArea>
   )
@@ -2208,6 +2216,7 @@ export function EntityViewer(props: EntityViewerProps) {
     : (storeSelectedEntityId ?? activeDataclassTab?.selectedEntityId ?? null)
   const entities = isStandalone ? EMPTY_ENTITIES : (view?.entities ?? EMPTY_ENTITIES)
   const pagination = isStandalone ? null : (view?.pagination ?? null)
+  const entitiesLoading = isStandalone ? false : Boolean(view?.entitiesLoading)
 
   // When a field selection ($attributes/select) is active, the entities loaded
   // in the list are partial (only the selected columns). The details view must
@@ -2787,7 +2796,21 @@ export function EntityViewer(props: EntityViewerProps) {
     handleNavigateLast,
   ])
 
+  // Mobile: swipe sheet → next/prev entity (same as footer chevrons).
+  const swipeEnabled = mobile && !isStandalone && !isEditing && !entitiesLoading
+  const canSwipeNext =
+    entities.length > 0 &&
+    (currentEntityIndex < 0 ||
+      currentEntityIndex < entities.length - 1 ||
+      Boolean(pagination?.hasNext))
+  const canSwipePrev =
+    entities.length > 0 &&
+    (currentEntityIndex < 0 || currentEntityIndex > 0 || Boolean(pagination?.hasPrev))
+
   if (!selectedEntity) {
+    if (entitiesLoading || isLoadingDetails) {
+      return <EntityDetailSkeleton className="h-full" />
+    }
     return (
       <EmptyPanel
         icon={FileJson}
@@ -2813,199 +2836,274 @@ export function EntityViewer(props: EntityViewerProps) {
     ) : null
 
   return (
-    <div className="@container/entity-viewer flex h-full flex-col">
-      {/* Header */}
-      <div className="flex shrink-0 flex-wrap items-start justify-between gap-x-2 gap-y-1.5 border-b bg-background px-2 py-1.5">
-        <div className="min-w-0 flex-1 basis-28">
-          <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-            {selectedEntityId ? (
+    <SwipeNavigate
+      enabled={swipeEnabled}
+      loading={entitiesLoading || isLoadingDetails}
+      loadingLabel={t('entity.loading')}
+      onSwipeLeft={handleNavigateNext}
+      onSwipeRight={handleNavigatePrev}
+      canSwipeLeft={canSwipeNext}
+      canSwipeRight={canSwipePrev}
+      nextLabel={t('command.nextEntity')}
+      previousLabel={t('command.previousEntity')}
+      className="@container/entity-viewer h-full"
+    >
+      <div className="flex h-full min-h-0 flex-col">
+        {/* Header */}
+        <div className="flex shrink-0 flex-wrap items-start justify-between gap-x-2 gap-y-1.5 border-b bg-background px-2 py-1.5">
+          <div className="min-w-0 flex-1 basis-28">
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+              {selectedEntityId ? (
+                <ClickToCopy
+                  as="code"
+                  value={String(selectedEntityId)}
+                  tooltipLabel={t('common.clickToCopy')}
+                  tooltipCopiedLabel={t('common.copied')}
+                  className="truncate rounded-sm bg-muted px-1.5 py-0.5 font-mono text-[11px] leading-none"
+                >
+                  {selectedEntityId}
+                </ClickToCopy>
+              ) : (
+                <code
+                  className="truncate rounded-sm border border-muted-foreground/35 border-dashed bg-transparent px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground italic leading-none"
+                  title={t('entity.noKeyHint')}
+                >
+                  {t('entity.noKey')}
+                </code>
+              )}
               <ClickToCopy
-                as="code"
-                value={String(selectedEntityId)}
-                tooltipLabel={t('common.clickToCopy')}
+                value={JSON.stringify(selectedEntity, null, 2)}
+                tooltipLabel={t('entity.copyJson')}
                 tooltipCopiedLabel={t('common.copied')}
-                className="truncate rounded-sm bg-muted px-1.5 py-0.5 font-mono text-[11px] leading-none"
+                className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-sm hover:bg-accent hover:text-accent-foreground"
               >
-                {selectedEntityId}
+                <Copy className="h-3 w-3" />
               </ClickToCopy>
-            ) : (
-              <code
-                className="truncate rounded-sm border border-muted-foreground/35 border-dashed bg-transparent px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground italic leading-none"
-                title={t('entity.noKeyHint')}
-              >
-                {t('entity.noKey')}
-              </code>
-            )}
-            <ClickToCopy
-              value={JSON.stringify(selectedEntity, null, 2)}
-              tooltipLabel={t('entity.copyJson')}
-              tooltipCopiedLabel={t('common.copied')}
-              className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-sm hover:bg-accent hover:text-accent-foreground"
-            >
-              <Copy className="h-3 w-3" />
-            </ClickToCopy>
-            {selectedDataclass && !mobile && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="xs"
-                      className="h-6 gap-1 @[32rem]/entity-viewer:px-2 px-1.5"
-                      onClick={() => highlightInGraph(selectedDataclass)}
-                      disabled={isLoadingDetails}
-                    >
-                      <Network className="h-3.5 w-3.5" />
-                      <span className="@[32rem]/entity-viewer:inline hidden">
-                        {t('entity.showInStructure')}
-                      </span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {t('entity.highlightDataclassInGraph')}
-                    {openStructureShortcut?.enabled && (
-                      <kbd className="ml-2 rounded bg-muted px-1.5 text-xs">
-                        {formatShortcut(openStructureShortcut)}
-                      </kbd>
-                    )}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
+              {selectedDataclass && !mobile && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="xs"
+                        className="h-6 gap-1 @[32rem]/entity-viewer:px-2 px-1.5"
+                        onClick={() => highlightInGraph(selectedDataclass)}
+                        disabled={isLoadingDetails}
+                      >
+                        <Network className="h-3.5 w-3.5" />
+                        <span className="@[32rem]/entity-viewer:inline hidden">
+                          {t('entity.showInStructure')}
+                        </span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {t('entity.highlightDataclassInGraph')}
+                      {openStructureShortcut?.enabled && (
+                        <kbd className="ml-2 rounded bg-muted px-1.5 text-xs">
+                          {formatShortcut(openStructureShortcut)}
+                        </kbd>
+                      )}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
+            <div className="mt-1">
+              <EntityStats entity={selectedEntity} />
+            </div>
           </div>
-          <div className="mt-1">
-            <EntityStats entity={selectedEntity} />
-          </div>
-        </div>
 
-        {/* Actions */}
-        <div className="flex max-w-full flex-wrap items-center justify-end gap-1">
-          {isLoadingDetails && (
-            <Loader2
-              className="mr-1 h-4 w-4 shrink-0 animate-spin text-muted-foreground"
-              aria-label={t('entity.loading')}
-            />
-          )}
-          {isEditing ? (
-            // On mobile the sticky bottom action bar owns Cancel/Save so the
-            // header stays uncluttered; desktop keeps them inline here.
-            mobile ? null : (
+          {/* Actions */}
+          <div className="flex max-w-full flex-wrap items-center justify-end gap-1">
+            {isLoadingDetails && (
+              <Loader2
+                className="mr-1 h-4 w-4 shrink-0 animate-spin text-muted-foreground"
+                aria-label={t('entity.loading')}
+              />
+            )}
+            {isEditing ? (
+              // On mobile the sticky bottom action bar owns Cancel/Save so the
+              // header stays uncluttered; desktop keeps them inline here.
+              mobile ? null : (
+                <>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="xs"
+                          className="h-6 gap-1 @[32rem]/entity-viewer:px-2 px-1.5"
+                          onClick={() => {
+                            setEditedEntity(JSON.stringify(selectedEntity, null, 2))
+                            setFormData(selectedEntity ?? {})
+                            setIsEditing(false)
+                            setActiveTab(previousTab)
+                            setError(null)
+                          }}
+                          disabled={isSaving}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                          <span className="@[28rem]/entity-viewer:inline hidden">
+                            {t('entity.cancel')}
+                          </span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {t('entity.cancelEdit')}
+                        {cancelEditShortcut?.enabled && (
+                          <kbd className="ml-2 rounded bg-muted px-1.5 text-xs">
+                            {formatShortcut(cancelEditShortcut)}
+                          </kbd>
+                        )}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="default"
+                          size="xs"
+                          className="h-6 gap-1 @[32rem]/entity-viewer:px-2 px-1.5"
+                          onClick={() => {
+                            if (activeTab === 'form') {
+                              formRef.current?.submit()
+                            } else {
+                              void handleSave()
+                            }
+                          }}
+                          disabled={isSaving}
+                        >
+                          {isSaving ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Save className="h-3.5 w-3.5" />
+                          )}
+                          <span className="@[28rem]/entity-viewer:inline hidden">
+                            {t('entity.save')}
+                          </span>
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {t('entity.saveEntity')}
+                        {saveEntityShortcut?.enabled && (
+                          <kbd className="ml-2 rounded bg-muted px-1.5 text-xs">
+                            {formatShortcut(saveEntityShortcut)}
+                          </kbd>
+                        )}
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </>
+              )
+            ) : (
               <>
+                {saveSuccessAt !== null && (
+                  <output
+                    className="flex h-6 items-center gap-1 rounded-sm border border-primary/30 bg-primary/10 px-2 font-medium text-primary text-xs"
+                    aria-live="polite"
+                  >
+                    <Check className="h-4 w-4 shrink-0" />
+                    <span className="@[24rem]/entity-viewer:inline hidden">
+                      {t('entity.saved')}
+                    </span>
+                  </output>
+                )}
+                {entityMethods}
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
                         variant="ghost"
                         size="xs"
-                        className="h-6 gap-1 @[32rem]/entity-viewer:px-2 px-1.5"
-                        onClick={() => {
-                          setEditedEntity(JSON.stringify(selectedEntity, null, 2))
-                          setFormData(selectedEntity ?? {})
-                          setIsEditing(false)
-                          setActiveTab(previousTab)
-                          setError(null)
-                        }}
-                        disabled={isSaving}
-                      >
-                        <X className="h-3.5 w-3.5" />
-                        <span className="@[28rem]/entity-viewer:inline hidden">
-                          {t('entity.cancel')}
-                        </span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      {t('entity.cancelEdit')}
-                      {cancelEditShortcut?.enabled && (
-                        <kbd className="ml-2 rounded bg-muted px-1.5 text-xs">
-                          {formatShortcut(cancelEditShortcut)}
-                        </kbd>
-                      )}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="default"
-                        size="xs"
-                        className="h-6 gap-1 @[32rem]/entity-viewer:px-2 px-1.5"
-                        onClick={() => {
-                          if (activeTab === 'form') {
-                            formRef.current?.submit()
-                          } else {
-                            void handleSave()
-                          }
-                        }}
-                        disabled={isSaving}
-                      >
-                        {isSaving ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Save className="h-3.5 w-3.5" />
+                        className={cn(
+                          'gap-1 @[32rem]/entity-viewer:px-2 px-1.5',
+                          mobile ? 'h-9' : 'h-6'
                         )}
-                        <span className="@[28rem]/entity-viewer:inline hidden">
-                          {t('entity.save')}
+                        onClick={() => void handleReloadEntity()}
+                        disabled={
+                          !selectedDataclass ||
+                          !selectedEntityId ||
+                          isReloadingEntity ||
+                          isLoadingDetails
+                        }
+                      >
+                        <RefreshCw
+                          className={cn('h-3.5 w-3.5', isReloadingEntity && 'animate-spin')}
+                        />
+                        <span className="@[36rem]/entity-viewer:inline hidden">
+                          {t('entity.reloadEntity')}
                         </span>
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>
-                      {t('entity.saveEntity')}
-                      {saveEntityShortcut?.enabled && (
-                        <kbd className="ml-2 rounded bg-muted px-1.5 text-xs">
-                          {formatShortcut(saveEntityShortcut)}
-                        </kbd>
-                      )}
-                    </TooltipContent>
+                    <TooltipContent>{t('entity.reloadEntity')}</TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-              </>
-            )
-          ) : (
-            <>
-              {saveSuccessAt !== null && (
-                <output
-                  className="flex h-6 items-center gap-1 rounded-sm border border-primary/30 bg-primary/10 px-2 font-medium text-primary text-xs"
-                  aria-live="polite"
-                >
-                  <Check className="h-4 w-4 shrink-0" />
-                  <span className="@[24rem]/entity-viewer:inline hidden">{t('entity.saved')}</span>
-                </output>
-              )}
-              {entityMethods}
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="xs"
-                      className={cn(
-                        'gap-1 @[32rem]/entity-viewer:px-2 px-1.5',
-                        mobile ? 'h-9' : 'h-6'
-                      )}
-                      onClick={() => void handleReloadEntity()}
-                      disabled={
-                        !selectedDataclass ||
-                        !selectedEntityId ||
-                        isReloadingEntity ||
-                        isLoadingDetails
-                      }
-                    >
-                      <RefreshCw
-                        className={cn('h-3.5 w-3.5', isReloadingEntity && 'animate-spin')}
-                      />
-                      <span className="@[36rem]/entity-viewer:inline hidden">
-                        {t('entity.reloadEntity')}
-                      </span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>{t('entity.reloadEntity')}</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              {!isStandalone ? (
-                <>
-                  <div className="flex items-center rounded-sm border">
+                {!isStandalone ? (
+                  <>
+                    <div className="flex items-center rounded-sm border">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="xs"
+                              className={cn(
+                                'gap-1 rounded-r-none border-0 @[36rem]/entity-viewer:px-2 px-1.5',
+                                mobile ? 'h-9' : 'h-6'
+                              )}
+                              onClick={() => handleEnterEditMode()}
+                              disabled={readonlyMode || isLoadingDetails}
+                            >
+                              <Edit2 className="h-3.5 w-3.5" />
+                              <span className="@[36rem]/entity-viewer:inline hidden">
+                                {defaultEditMode === 'json' && !mobile
+                                  ? t('entity.editAsJson')
+                                  : t('entity.editAsForm')}
+                              </span>
+                            </Button>
+                          </TooltipTrigger>
+                          {readonlyMode ? (
+                            <TooltipContent>{t('entity.disabledInReadonlyMode')}</TooltipContent>
+                          ) : (
+                            <TooltipContent>
+                              {t('entity.editEntity')}
+                              {editEntityShortcut?.enabled ? (
+                                <kbd className="ml-2 rounded bg-muted px-1.5 text-xs">
+                                  {formatShortcut(editEntityShortcut)}
+                                </kbd>
+                              ) : null}
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="xs"
+                            className={cn(
+                              'rounded-l-none border-0 border-l px-0',
+                              mobile ? 'h-9 w-8' : 'h-6 w-5'
+                            )}
+                            disabled={readonlyMode || isLoadingDetails}
+                          >
+                            <ChevronDown className="h-3.5 w-3.5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEnterEditMode('form')}>
+                            <FileText className="mr-2 h-4 w-4" />
+                            {t('entity.editAsForm')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEnterEditMode('json')}>
+                            <Braces className="mr-2 h-4 w-4" />
+                            {t('entity.editAsJson')}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -3013,442 +3111,393 @@ export function EntityViewer(props: EntityViewerProps) {
                             variant="ghost"
                             size="xs"
                             className={cn(
-                              'gap-1 rounded-r-none border-0 @[36rem]/entity-viewer:px-2 px-1.5',
-                              mobile ? 'h-9' : 'h-6'
+                              'h-6 gap-1 @[32rem]/entity-viewer:px-2 px-1.5',
+                              readonlyMode ? 'cursor-not-allowed opacity-50' : 'text-destructive'
                             )}
-                            onClick={() => handleEnterEditMode()}
+                            onClick={() => !readonlyMode && handleDelete()}
                             disabled={readonlyMode || isLoadingDetails}
                           >
-                            <Edit2 className="h-3.5 w-3.5" />
-                            <span className="@[36rem]/entity-viewer:inline hidden">
-                              {defaultEditMode === 'json' && !mobile
-                                ? t('entity.editAsJson')
-                                : t('entity.editAsForm')}
+                            <Trash2 className="h-3.5 w-3.5" />
+                            <span className="@[32rem]/entity-viewer:inline hidden">
+                              {t('entity.delete')}
                             </span>
                           </Button>
                         </TooltipTrigger>
-                        {readonlyMode ? (
-                          <TooltipContent>{t('entity.disabledInReadonlyMode')}</TooltipContent>
-                        ) : (
-                          <TooltipContent>
-                            {t('entity.editEntity')}
-                            {editEntityShortcut?.enabled ? (
-                              <kbd className="ml-2 rounded bg-muted px-1.5 text-xs">
-                                {formatShortcut(editEntityShortcut)}
-                              </kbd>
-                            ) : null}
-                          </TooltipContent>
-                        )}
+                        <TooltipContent>
+                          {readonlyMode
+                            ? t('entity.disabledInReadonlyMode')
+                            : t('entity.deleteEntityTitle')}
+                          {!readonlyMode && deleteEntityShortcut?.enabled ? (
+                            <kbd className="ml-2 rounded bg-muted px-1.5 text-xs">
+                              {formatShortcut(deleteEntityShortcut)}
+                            </kbd>
+                          ) : null}
+                        </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="xs"
-                          className={cn(
-                            'rounded-l-none border-0 border-l px-0',
-                            mobile ? 'h-9 w-8' : 'h-6 w-5'
-                          )}
-                          disabled={readonlyMode || isLoadingDetails}
-                        >
-                          <ChevronDown className="h-3.5 w-3.5" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEnterEditMode('form')}>
-                          <FileText className="mr-2 h-4 w-4" />
-                          {t('entity.editAsForm')}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleEnterEditMode('json')}>
-                          <Braces className="mr-2 h-4 w-4" />
-                          {t('entity.editAsJson')}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="xs"
-                          className={cn(
-                            'h-6 gap-1 @[32rem]/entity-viewer:px-2 px-1.5',
-                            readonlyMode ? 'cursor-not-allowed opacity-50' : 'text-destructive'
-                          )}
-                          onClick={() => !readonlyMode && handleDelete()}
-                          disabled={readonlyMode || isLoadingDetails}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                          <span className="@[32rem]/entity-viewer:inline hidden">
-                            {t('entity.delete')}
-                          </span>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {readonlyMode
-                          ? t('entity.disabledInReadonlyMode')
-                          : t('entity.deleteEntityTitle')}
-                        {!readonlyMode && deleteEntityShortcut?.enabled ? (
-                          <kbd className="ml-2 rounded bg-muted px-1.5 text-xs">
-                            {formatShortcut(deleteEntityShortcut)}
-                          </kbd>
-                        ) : null}
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </>
-              ) : null}
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Error */}
-      {error && <ErrorList error={error} variant="banner" onDismiss={() => setError(null)} />}
-
-      {/* Content with tabs */}
-      <Tabs
-        value={isEditing && activeTab !== 'form' ? 'json' : activeTab}
-        onValueChange={(v) => {
-          if (isEditing && v !== 'form') {
-            // When editing, only allow switching to form or staying in json
-            if (v === 'tree') return
-          }
-          setActiveTab(v as 'tree' | 'json' | 'form')
-          if (!isEditing) {
-            setPreviousTab(v as 'tree' | 'json' | 'form')
-          }
-        }}
-        className="flex flex-1 flex-col overflow-hidden"
-      >
-        <div
-          className={cn(
-            'flex items-center overflow-x-auto border-b bg-muted/30 px-2',
-            mobile ? 'h-11' : 'h-8'
-          )}
-        >
-          <TabsList className={cn('bg-transparent p-0', mobile ? 'h-9' : 'h-6')}>
-            <TabsTrigger
-              value="form"
-              disabled={(isEditing && activeTab !== 'form') || isLoadingDetails}
-              className={cn(
-                'relative gap-1 @[28rem]/entity-viewer:px-2 px-1.5 text-xs after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-transparent data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:after:bg-primary',
-                mobile ? 'h-9' : 'h-6'
-              )}
-            >
-              <FileText className="h-3.5 w-3.5" />
-              <span className="@[22rem]/entity-viewer:inline hidden">
-                {t('entity.formTab')} {isEditing && activeTab === 'form' && t('entity.formEditing')}
-              </span>
-            </TabsTrigger>
-            {!mobile && (
-              <TabsTrigger
-                value="tree"
-                disabled={isEditing || isLoadingDetails}
-                className="relative h-6 gap-1 @[28rem]/entity-viewer:px-2 px-1.5 text-xs after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-transparent data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:after:bg-primary"
-              >
-                <TreePine className="h-3.5 w-3.5" />
-                <span className="@[22rem]/entity-viewer:inline hidden">{t('entity.treeView')}</span>
-              </TabsTrigger>
-            )}
-            <TabsTrigger
-              value="json"
-              disabled={isLoadingDetails}
-              className={cn(
-                'relative gap-1 @[28rem]/entity-viewer:px-2 px-1.5 text-xs after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-transparent data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:after:bg-primary',
-                mobile ? 'h-9' : 'h-6'
-              )}
-            >
-              <Braces className="h-3.5 w-3.5" />
-              <span className="@[22rem]/entity-viewer:inline hidden">
-                {t('entity.jsonTab')} {isEditing && activeTab === 'json' && t('entity.formEditing')}
-              </span>
-            </TabsTrigger>
-          </TabsList>
-        </div>
-
-        <TabsContent value="tree" className="mt-0 flex-1 overflow-hidden">
-          <div className="flex h-full flex-col">
-            {/* Tree controls */}
-            <div className="flex items-center justify-end gap-1 border-b bg-muted/20 px-3 py-1.5">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 gap-1 px-2 text-xs"
-                      onClick={() => setExpandAll(true)}
-                      disabled={isLoadingDetails}
-                    >
-                      <ChevronsUpDown className="h-3.5 w-3.5" />
-                      {t('entity.expandAll')}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>{t('entity.expandAllNodes')}</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 gap-1 px-2 text-xs"
-                      onClick={() => setExpandAll(false)}
-                      disabled={isLoadingDetails}
-                    >
-                      <ChevronsDownUp className="h-3.5 w-3.5" />
-                      {t('entity.collapseAll')}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>{t('entity.collapseAllNodes')}</TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-            <ScrollArea className="flex-1">
-              <div className="p-4">
-                <MetadataPanel
-                  entries={Object.entries(selectedEntity).filter(([key]) =>
-                    isInternalAttribute(key)
-                  )}
-                  expandAll={expandAll}
-                />
-                {Object.entries(selectedEntity)
-                  .filter(([key]) => !isInternalAttribute(key))
-                  .map(([key, value]) => (
-                    <TreeNode key={key} keyName={key} value={value} expandAll={expandAll} />
-                  ))}
-              </div>
-            </ScrollArea>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="form" className="mt-0 flex-1 overflow-hidden">
-          {isEditing && selectedDataclass ? (
-            <div className="flex h-full min-h-0 flex-col p-4">
-              <EntityForm
-                ref={formRef}
-                dataclassName={selectedDataclass}
-                initialData={formData}
-                mode="edit"
-                entityId={selectedEntityId}
-                onSubmit={handleSaveFromForm}
-                scrollHeight="100%"
-                fieldIdPrefix="entity-viewer-edit"
-                onSubmittingChange={setIsSaving}
-                showError={false}
-                autoFocusFirstField
-              />
-            </div>
-          ) : (
-            <FormView
-              entity={selectedEntity ?? {}}
-              dataclassName={selectedDataclass}
-              isEditing={false}
-              readonlyMode={readonlyMode}
-              onFieldChange={handleFormFieldChange}
-              entityId={selectedEntityId}
-              onRefresh={handleReloadEntity}
-            />
-          )}
-        </TabsContent>
-
-        <TabsContent value="json" className="mt-0 flex-1 overflow-hidden p-3">
-          <CodeEditor
-            value={editedEntity}
-            onChange={setEditedEntity}
-            readOnly={!isEditing}
-            showLineNumbers
-            highlightActiveLine={isEditing}
-            error={!!error}
-            height="100%"
-            toolbar={isEditing}
-            labels={editorLabels}
-            editorPrefs={codeEditorPrefs}
-            onEditorPrefsChange={updateCodeEditorPrefs}
-          />
-        </TabsContent>
-      </Tabs>
-
-      {/* Sticky mobile edit action bar — replaces the header Cancel/Save above */}
-      {mobile && isEditing ? (
-        <div className="flex shrink-0 items-center gap-2 border-t bg-background p-3 pb-[max(0.75rem,var(--app-safe-bottom))]">
-          <Button
-            type="button"
-            variant="outline"
-            className="h-11 flex-1 gap-1.5"
-            onClick={() => {
-              setEditedEntity(JSON.stringify(selectedEntity, null, 2))
-              setFormData(selectedEntity ?? {})
-              setIsEditing(false)
-              setActiveTab(previousTab)
-              setError(null)
-            }}
-            disabled={isSaving}
-          >
-            <X className="h-4 w-4" />
-            {t('entity.cancel')}
-          </Button>
-          <Button
-            type="button"
-            variant="default"
-            className="h-11 flex-1 gap-1.5"
-            onClick={() => {
-              if (activeTab === 'form') {
-                formRef.current?.submit()
-              } else {
-                void handleSave()
-              }
-            }}
-            disabled={isSaving}
-          >
-            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            {t('entity.save')}
-          </Button>
-        </div>
-      ) : null}
-
-      {/* Navigation Bar — hidden while the mobile sticky edit bar is showing */}
-      {!isStandalone && entities.length > 0 && !(mobile && isEditing) ? (
-        <div className="flex h-9 shrink-0 items-center justify-between border-t bg-muted/30 px-2">
-          <div className="min-w-0 truncate text-muted-foreground text-xs">
-            {currentEntityIndex >= 0 && (
-              <>
-                {t('entity.entityOfTotal', {
-                  current: currentEntityIndex + 1,
-                  total: entities.length,
-                })}
-                {pagination && (
-                  <>
-                    {' '}
-                    <span className="mx-1 text-muted-foreground/50">•</span>{' '}
-                    {t('entity.pageOf', {
-                      page: pagination.page,
-                      total: pagination.totalPages,
-                    })}
                   </>
-                )}
+                ) : null}
               </>
             )}
           </div>
-          <div className="flex items-center gap-0.5">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={handleNavigateFirst}
-                    disabled={
-                      (currentEntityIndex <= 0 && (!pagination || pagination.page === 1)) ||
-                      isEditing ||
-                      isLoadingDetails
-                    }
-                  >
-                    <ChevronsLeft className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  First entity
-                  {pageFirstShortcut?.enabled && (
-                    <kbd className="ml-2 rounded bg-muted px-1.5 text-xs">
-                      {formatShortcut(pageFirstShortcut)}
-                    </kbd>
-                  )}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={handleNavigatePrev}
-                    disabled={
-                      (currentEntityIndex <= 0 && !pagination?.hasPrev) ||
-                      isEditing ||
-                      isLoadingDetails
-                    }
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  Previous entity
-                  {navPrevShortcut?.enabled && (
-                    <kbd className="ml-2 rounded bg-muted px-1.5 text-xs">
-                      {formatShortcut(navPrevShortcut)}
-                    </kbd>
-                  )}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={handleNavigateNext}
-                    disabled={
-                      (currentEntityIndex >= entities.length - 1 && !pagination?.hasNext) ||
-                      isEditing ||
-                      isLoadingDetails
-                    }
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  Next entity
-                  {navNextShortcut?.enabled && (
-                    <kbd className="ml-2 rounded bg-muted px-1.5 text-xs">
-                      {formatShortcut(navNextShortcut)}
-                    </kbd>
-                  )}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={handleNavigateLast}
-                    disabled={
-                      (currentEntityIndex >= entities.length - 1 &&
-                        (!pagination || pagination.page === pagination.totalPages)) ||
-                      isEditing ||
-                      isLoadingDetails
-                    }
-                  >
-                    <ChevronsRight className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  Last entity
-                  {pageLastShortcut?.enabled && (
-                    <kbd className="ml-2 rounded bg-muted px-1.5 text-xs">
-                      {formatShortcut(pageLastShortcut)}
-                    </kbd>
-                  )}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
         </div>
-      ) : null}
 
-      {!isStandalone ? <ConfirmDialog /> : null}
-    </div>
+        {/* Error */}
+        {error && <ErrorList error={error} variant="banner" onDismiss={() => setError(null)} />}
+
+        {/* Content with tabs */}
+        <Tabs
+          value={isEditing && activeTab !== 'form' ? 'json' : activeTab}
+          onValueChange={(v) => {
+            if (isEditing && v !== 'form') {
+              // When editing, only allow switching to form or staying in json
+              if (v === 'tree') return
+            }
+            setActiveTab(v as 'tree' | 'json' | 'form')
+            if (!isEditing) {
+              setPreviousTab(v as 'tree' | 'json' | 'form')
+            }
+          }}
+          className="flex min-h-0 flex-1 flex-col overflow-hidden"
+        >
+          <div
+            className={cn(
+              'flex items-center overflow-x-auto border-b bg-muted/30 px-2',
+              mobile ? 'h-11' : 'h-8'
+            )}
+          >
+            <TabsList className={cn('bg-transparent p-0', mobile ? 'h-9' : 'h-6')}>
+              <TabsTrigger
+                value="form"
+                disabled={(isEditing && activeTab !== 'form') || isLoadingDetails}
+                className={cn(
+                  'relative gap-1 @[28rem]/entity-viewer:px-2 px-1.5 text-xs after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-transparent data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:after:bg-primary',
+                  mobile ? 'h-9' : 'h-6'
+                )}
+              >
+                <FileText className="h-3.5 w-3.5" />
+                <span className="@[22rem]/entity-viewer:inline hidden">
+                  {t('entity.formTab')}{' '}
+                  {isEditing && activeTab === 'form' && t('entity.formEditing')}
+                </span>
+              </TabsTrigger>
+              {!mobile && (
+                <TabsTrigger
+                  value="tree"
+                  disabled={isEditing || isLoadingDetails}
+                  className="relative h-6 gap-1 @[28rem]/entity-viewer:px-2 px-1.5 text-xs after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-transparent data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:after:bg-primary"
+                >
+                  <TreePine className="h-3.5 w-3.5" />
+                  <span className="@[22rem]/entity-viewer:inline hidden">
+                    {t('entity.treeView')}
+                  </span>
+                </TabsTrigger>
+              )}
+              <TabsTrigger
+                value="json"
+                disabled={isLoadingDetails}
+                className={cn(
+                  'relative gap-1 @[28rem]/entity-viewer:px-2 px-1.5 text-xs after:absolute after:inset-x-0 after:-bottom-px after:h-0.5 after:bg-transparent data-[state=active]:bg-background data-[state=active]:text-primary data-[state=active]:shadow-sm data-[state=active]:after:bg-primary',
+                  mobile ? 'h-9' : 'h-6'
+                )}
+              >
+                <Braces className="h-3.5 w-3.5" />
+                <span className="@[22rem]/entity-viewer:inline hidden">
+                  {t('entity.jsonTab')}{' '}
+                  {isEditing && activeTab === 'json' && t('entity.formEditing')}
+                </span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="tree" className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className="flex h-full min-h-0 flex-col">
+              {/* Tree controls */}
+              <div className="flex items-center justify-end gap-1 border-b bg-muted/20 px-3 py-1.5">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 gap-1 px-2 text-xs"
+                        onClick={() => setExpandAll(true)}
+                        disabled={isLoadingDetails}
+                      >
+                        <ChevronsUpDown className="h-3.5 w-3.5" />
+                        {t('entity.expandAll')}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{t('entity.expandAllNodes')}</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 gap-1 px-2 text-xs"
+                        onClick={() => setExpandAll(false)}
+                        disabled={isLoadingDetails}
+                      >
+                        <ChevronsDownUp className="h-3.5 w-3.5" />
+                        {t('entity.collapseAll')}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>{t('entity.collapseAllNodes')}</TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <ScrollArea className="flex-1">
+                <div className="p-4">
+                  <MetadataPanel
+                    entries={Object.entries(selectedEntity).filter(([key]) =>
+                      isInternalAttribute(key)
+                    )}
+                    expandAll={expandAll}
+                  />
+                  {Object.entries(selectedEntity)
+                    .filter(([key]) => !isInternalAttribute(key))
+                    .map(([key, value]) => (
+                      <TreeNode key={key} keyName={key} value={value} expandAll={expandAll} />
+                    ))}
+                </div>
+              </ScrollArea>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="form" className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden">
+            {isEditing && selectedDataclass ? (
+              <div className="flex h-full min-h-0 flex-col p-4">
+                <EntityForm
+                  ref={formRef}
+                  dataclassName={selectedDataclass}
+                  initialData={formData}
+                  mode="edit"
+                  entityId={selectedEntityId}
+                  onSubmit={handleSaveFromForm}
+                  scrollHeight="100%"
+                  fieldIdPrefix="entity-viewer-edit"
+                  onSubmittingChange={setIsSaving}
+                  showError={false}
+                  autoFocusFirstField
+                />
+              </div>
+            ) : (
+              <FormView
+                entity={selectedEntity ?? {}}
+                dataclassName={selectedDataclass}
+                isEditing={false}
+                readonlyMode={readonlyMode}
+                onFieldChange={handleFormFieldChange}
+                entityId={selectedEntityId}
+                onRefresh={handleReloadEntity}
+              />
+            )}
+          </TabsContent>
+
+          <TabsContent
+            value="json"
+            className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden p-3"
+          >
+            <CodeEditor
+              value={editedEntity}
+              onChange={setEditedEntity}
+              readOnly={!isEditing}
+              showLineNumbers
+              highlightActiveLine={isEditing}
+              error={!!error}
+              height="100%"
+              toolbar={isEditing}
+              labels={editorLabels}
+              editorPrefs={codeEditorPrefs}
+              onEditorPrefsChange={updateCodeEditorPrefs}
+            />
+          </TabsContent>
+        </Tabs>
+
+        {/* Sticky mobile edit action bar — replaces the header Cancel/Save above */}
+        {mobile && isEditing ? (
+          <div className="flex shrink-0 items-center gap-2 border-t bg-background p-3 pb-[max(0.75rem,var(--app-safe-bottom))]">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-11 flex-1 gap-1.5"
+              onClick={() => {
+                setEditedEntity(JSON.stringify(selectedEntity, null, 2))
+                setFormData(selectedEntity ?? {})
+                setIsEditing(false)
+                setActiveTab(previousTab)
+                setError(null)
+              }}
+              disabled={isSaving}
+            >
+              <X className="h-4 w-4" />
+              {t('entity.cancel')}
+            </Button>
+            <Button
+              type="button"
+              variant="default"
+              className="h-11 flex-1 gap-1.5"
+              onClick={() => {
+                if (activeTab === 'form') {
+                  formRef.current?.submit()
+                } else {
+                  void handleSave()
+                }
+              }}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              {t('entity.save')}
+            </Button>
+          </div>
+        ) : null}
+
+        {/* Navigation Bar — hidden while the mobile sticky edit bar is showing */}
+        {!isStandalone && entities.length > 0 && !(mobile && isEditing) ? (
+          <div className="flex h-9 shrink-0 items-center justify-between border-t bg-muted/30 px-2">
+            <div className="min-w-0 truncate text-muted-foreground text-xs">
+              {currentEntityIndex >= 0 && (
+                <>
+                  {t('entity.entityOfTotal', {
+                    current: currentEntityIndex + 1,
+                    total: entities.length,
+                  })}
+                  {pagination && (
+                    <>
+                      {' '}
+                      <span className="mx-1 text-muted-foreground/50">•</span>{' '}
+                      {t('entity.pageOf', {
+                        page: pagination.page,
+                        total: pagination.totalPages,
+                      })}
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+            <div className="flex items-center gap-0.5">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={handleNavigateFirst}
+                      disabled={
+                        (currentEntityIndex <= 0 && (!pagination || pagination.page === 1)) ||
+                        isEditing ||
+                        isLoadingDetails
+                      }
+                    >
+                      <ChevronsLeft className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    First entity
+                    {pageFirstShortcut?.enabled && (
+                      <kbd className="ml-2 rounded bg-muted px-1.5 text-xs">
+                        {formatShortcut(pageFirstShortcut)}
+                      </kbd>
+                    )}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={handleNavigatePrev}
+                      disabled={
+                        (currentEntityIndex <= 0 && !pagination?.hasPrev) ||
+                        isEditing ||
+                        isLoadingDetails
+                      }
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    Previous entity
+                    {navPrevShortcut?.enabled && (
+                      <kbd className="ml-2 rounded bg-muted px-1.5 text-xs">
+                        {formatShortcut(navPrevShortcut)}
+                      </kbd>
+                    )}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={handleNavigateNext}
+                      disabled={
+                        (currentEntityIndex >= entities.length - 1 && !pagination?.hasNext) ||
+                        isEditing ||
+                        isLoadingDetails
+                      }
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    Next entity
+                    {navNextShortcut?.enabled && (
+                      <kbd className="ml-2 rounded bg-muted px-1.5 text-xs">
+                        {formatShortcut(navNextShortcut)}
+                      </kbd>
+                    )}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={handleNavigateLast}
+                      disabled={
+                        (currentEntityIndex >= entities.length - 1 &&
+                          (!pagination || pagination.page === pagination.totalPages)) ||
+                        isEditing ||
+                        isLoadingDetails
+                      }
+                    >
+                      <ChevronsRight className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    Last entity
+                    {pageLastShortcut?.enabled && (
+                      <kbd className="ml-2 rounded bg-muted px-1.5 text-xs">
+                        {formatShortcut(pageLastShortcut)}
+                      </kbd>
+                    )}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          </div>
+        ) : null}
+
+        {!isStandalone ? <ConfirmDialog /> : null}
+      </div>
+    </SwipeNavigate>
   )
 }

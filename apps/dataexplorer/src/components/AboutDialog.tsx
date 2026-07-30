@@ -1,5 +1,6 @@
 import {
   Button,
+  cn,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -7,12 +8,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@4d/ui'
-import { openUrl } from '@tauri-apps/plugin-opener'
 import { BookOpen, Check, Copy, ExternalLink, FileText, Globe, Info, Package } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AppBrandIcon } from '~/components/AppBrandIcon'
 import { useTranslation } from '~/i18n'
-import { OPEN_ABOUT_DIALOG_EVENT, onOpenAboutDialog } from '~desktop/lib/menu'
+import { OPEN_ABOUT_DIALOG_EVENT, onOpenAboutDialog } from '~/lib/about-dialog'
+import { mobileCenteredDialogClass } from '~/lib/mobile-menu'
+import { isMobileShell, isTauri } from '~/lib/platform'
 
 type AppMeta = {
   appName: string
@@ -53,14 +55,26 @@ const RESOURCES = [
   },
 ] as const
 
-function openExternal(url: string) {
-  void openUrl(url).catch((error) => {
-    console.error('Failed to open URL', url, error)
-  })
+async function openExternal(url: string) {
+  try {
+    if (isTauri()) {
+      const { openUrl } = await import('@tauri-apps/plugin-opener')
+      await openUrl(url)
+      return
+    }
+  } catch (error) {
+    console.error('Failed to open URL via opener', url, error)
+  }
+  window.open(url, '_blank', 'noopener,noreferrer')
 }
 
+/**
+ * About dialog shared by desktop (native menu) and mobile (Tools menu).
+ * Open via {@link emitOpenAboutDialog}.
+ */
 export function AboutDialog() {
   const { t } = useTranslation()
+  const mobile = isMobileShell()
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState(false)
   const [meta, setMeta] = useState<AppMeta>({
@@ -83,10 +97,12 @@ export function AboutDialog() {
       ])
       setMeta({ appName, version, identifier, tauriVersion })
     } catch {
-      setMeta((prev) => ({
-        ...prev,
+      setMeta({
         appName: t('app.title'),
-      }))
+        version: typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : UNKNOWN,
+        identifier: UNKNOWN,
+        tauriVersion: UNKNOWN,
+      })
     }
   }, [t])
 
@@ -128,7 +144,12 @@ export function AboutDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="overflow-hidden border-border p-0 sm:max-w-md">
+      <DialogContent
+        className={cn(
+          'overflow-hidden border-border p-0 sm:max-w-md',
+          mobile && mobileCenteredDialogClass('max-h-[min(90dvh,40rem)] overflow-y-auto p-0')
+        )}
+      >
         <div className="relative bg-primary/10 p-3">
           <div className="absolute -top-8 -right-8 h-20 w-20 rounded-full bg-primary/20 blur-2xl" />
           <DialogHeader>
@@ -170,7 +191,7 @@ export function AboutDialog() {
         <div className="space-y-2 p-3">
           <button
             type="button"
-            onClick={() => openExternal(WEBSITE_URL)}
+            onClick={() => void openExternal(WEBSITE_URL)}
             className="flex w-full items-center gap-2.5 rounded-md border border-border/60 bg-muted/20 px-2.5 py-2 text-left transition-colors hover:bg-muted/40"
           >
             <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-sm border border-primary/20 bg-primary/10 text-primary">
@@ -198,7 +219,7 @@ export function AboutDialog() {
                   <li key={resource.id}>
                     <button
                       type="button"
-                      onClick={() => openExternal(resource.url)}
+                      onClick={() => void openExternal(resource.url)}
                       className="flex h-7 w-full items-center gap-2 rounded-sm px-2 text-left text-xs transition-colors hover:bg-muted/50"
                     >
                       <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
@@ -215,7 +236,12 @@ export function AboutDialog() {
         </div>
 
         <DialogFooter className="border-border border-t px-3 py-2">
-          <Button variant="outline" size="sm" className="h-8 text-xs" onClick={copyDetails}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs"
+            onClick={() => void copyDetails()}
+          >
             {copied ? (
               <Check className="mr-1.5 h-3.5 w-3.5" />
             ) : (

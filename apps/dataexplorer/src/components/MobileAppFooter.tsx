@@ -7,12 +7,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@4d/ui'
-import { FileText, MoreHorizontal, PanelBottom, Play, Send, Settings } from 'lucide-react'
+import { FileText, Info, MoreHorizontal, PanelBottom, Play, Send, Settings } from 'lucide-react'
 import { AiTasksFooterControl } from '~/components/AiActions'
 import { AppearanceControls } from '~/components/AppearanceControls'
 import { MobileDockButton } from '~/components/MobileDockButton'
 import { useAssistantLlmConfigured } from '~/hooks/useAssistantLlmConfigured'
 import { useTranslation } from '~/i18n'
+import { emitOpenAboutDialog } from '~/lib/about-dialog'
 import {
   mobileMenuCollisionProps,
   mobileMenuContentClass,
@@ -114,6 +115,13 @@ export function MobileAppFooter() {
               <span className="shrink-0 font-mono text-muted-foreground text-xs">
                 v{__APP_VERSION__}
               </span>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className={mobileMenuItemClass()}
+              onClick={() => emitOpenAboutDialog()}
+            >
+              <Info className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+              {t('desktopMenu.about', { appName: t('app.title') })}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

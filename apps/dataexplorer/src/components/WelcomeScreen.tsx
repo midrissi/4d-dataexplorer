@@ -19,6 +19,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { EmptyPanel, EmptyPanelAction } from '~/components/EmptyPanel'
+import { PullToRefresh } from '~/components/PullToRefresh'
 import { getIntlLocale, useTranslation } from '~/i18n'
 import { api } from '~/lib/api'
 import { eventBus } from '~/lib/eventBus'
@@ -129,6 +130,7 @@ export function WelcomeScreen() {
   const dataclasses = useDataExplorerStore((s) => s.dataclasses)
   const dataclassesLoading = useDataExplorerStore((s) => s.dataclassesLoading)
   const dataclassesError = useDataExplorerStore((s) => s.dataclassesError)
+  const refreshApp = useDataExplorerStore((s) => s.refreshApp)
   const openTab = useTabsStore((s) => s.openTab)
   const openEntitySetTab = useTabsStore((s) => s.openEntitySetTab)
   const openGraphTab = useTabsStore((s) => s.openGraphTab)
@@ -248,6 +250,14 @@ export function WelcomeScreen() {
     return data
   }, [dataclasses, t])
 
+  const isRefreshingDataclasses = dataclassesLoading && dataclasses.length > 0
+  const mobile = isMobileShell()
+
+  const handlePullRefresh = useCallback(async () => {
+    await refreshApp()
+    fetchServerInfo()
+  }, [refreshApp, fetchServerInfo])
+
   // Initial load only — keep existing stats visible while a refresh is in flight.
   if (dataclassesLoading && dataclasses.length === 0) {
     return (
@@ -260,10 +270,8 @@ export function WelcomeScreen() {
     )
   }
 
-  const isRefreshingDataclasses = dataclassesLoading && dataclasses.length > 0
-
-  return (
-    <div className="relative h-full overflow-auto bg-background">
+  const welcomeBody = (
+    <>
       {/* Decorative background elements */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute top-[10%] left-[10%] h-64 w-64 rounded-full bg-primary/5 blur-3xl" />
@@ -757,8 +765,23 @@ export function WelcomeScreen() {
           </span>
         </div>
       </div>
-    </div>
+    </>
   )
+
+  if (mobile) {
+    return (
+      <PullToRefresh
+        className="relative h-full min-h-0 bg-background"
+        disabled={dataclassesLoading}
+        label={t('layout.pullToRefreshApp')}
+        onRefresh={handlePullRefresh}
+      >
+        <div className="relative">{welcomeBody}</div>
+      </PullToRefresh>
+    )
+  }
+
+  return <div className="relative h-full overflow-auto bg-background">{welcomeBody}</div>
 }
 
 type DataclassRowProps = {

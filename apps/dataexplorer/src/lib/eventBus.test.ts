@@ -7,8 +7,8 @@ describe('lib/eventBus', () => {
     const sub = on('refresh-view', (payload) => {
       received = payload
     })
-    emit('refresh-view', { id: '1' })
-    expect(received).toEqual({ id: '1' })
+    emit('refresh-view', { skipFetch: true })
+    expect(received).toEqual({ skipFetch: true })
     sub.unsubscribe()
   })
 

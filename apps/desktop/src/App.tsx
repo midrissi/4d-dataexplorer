@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 // Dynamically import the main dataexplorer App
 import DataExplorerApp from '~/App'
+import { AboutDialog } from '~/components/AboutDialog'
 import { useTranslation } from '~/i18n'
 import { reconfigureClient } from '~/lib/api'
 import { registerDownloadBytes } from '~/lib/download-bytes'
@@ -13,7 +14,6 @@ import {
 } from '~/lib/platform'
 import { ThemeProvider } from '~/providers/ThemeProvider'
 import { useSettingsStore } from '~/store/settings'
-import { AboutDialog } from '~desktop/components/AboutDialog'
 import { ConnectionScreen } from '~desktop/components/ConnectionScreen'
 import { DesktopUpdaterController } from '~desktop/components/DesktopUpdaterController'
 import {

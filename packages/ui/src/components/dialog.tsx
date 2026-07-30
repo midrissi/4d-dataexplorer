@@ -32,7 +32,8 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] fixed top-[50%] left-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-2.5 border bg-background p-3 shadow-md outline-none duration-fast focus:outline-none focus-visible:outline-none data-[state=closed]:animate-out data-[state=open]:animate-in sm:rounded-md',
+        // Centered overlay: fade + scale only — no slide-from-left/top (reads as a side sheet).
+        'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-lg origin-center translate-x-[-50%] translate-y-[-50%] gap-2.5 border bg-background p-3 shadow-md outline-none duration-fast focus:outline-none focus-visible:outline-none data-[state=closed]:animate-out data-[state=open]:animate-in sm:rounded-md',
         className
       )}
       {...props}

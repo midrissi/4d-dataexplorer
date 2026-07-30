@@ -64,7 +64,7 @@ export function useConfirm() {
 
     return (
       <Dialog open={true} onOpenChange={(open) => !open && handleCancel()}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               {icon}

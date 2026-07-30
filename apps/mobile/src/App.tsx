@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import DataExplorerApp from '~/App'
+import { AboutDialog } from '~/components/AboutDialog'
 import { AppBrandIcon } from '~/components/AppBrandIcon'
 import { useTranslation } from '~/i18n'
 import { reconfigureClient } from '~/lib/api'
@@ -126,6 +127,7 @@ export function MobileApp() {
 
   return (
     <div className="flex h-full min-h-0 w-full flex-col">
+      <AboutDialog />
       {state === 'loading' ? (
         <ThemeProvider>
           <div className="flex h-full w-full flex-col items-center justify-center gap-4 bg-[#12141c]">

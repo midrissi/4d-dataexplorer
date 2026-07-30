@@ -62,6 +62,7 @@ import { getConsoleHeight, setConsoleHeight as saveConsoleHeight } from '~/lib/s
 import { useKeyboardShortcutsContext } from '~/providers/KeyboardShortcutsProvider'
 import { useShortcutController } from '~/providers/ShortcutController'
 import { useTheme } from '~/providers/ThemeProvider'
+import { useDataExplorerStore } from '~/store'
 import { useConsoleStore } from '~/store/console'
 import {
   COLOR_PRESETS,
@@ -496,7 +497,13 @@ export function Layout({
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className={mobile ? mobileMenuItemClass() : undefined}
-                  onClick={() => window.location.reload()}
+                  onClick={() => {
+                    if (mobile) {
+                      void useDataExplorerStore.getState().refreshApp()
+                      return
+                    }
+                    window.location.reload()
+                  }}
                 >
                   <RefreshCw className="mr-2 h-4 w-4" />
                   {t('layout.refreshInterface')}

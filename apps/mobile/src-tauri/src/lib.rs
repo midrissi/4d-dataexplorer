@@ -211,6 +211,8 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
+        // MediaStore / ContentResolver writes (avoids 0-byte content:// fs writes on Android).
+        .plugin(tauri_plugin_save_bytes::init())
         .invoke_handler(tauri::generate_handler![
             list_http_jar_cookies,
             desktop_http_request

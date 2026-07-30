@@ -9,6 +9,7 @@ import {
   applyToolPattern,
   parseToolPattern,
 } from '~/assistant/tool-catalog'
+import { prepareMobileOverlay } from '~/lib/mobile-overlays'
 import type { ProfileEntry, ProfilePrefs } from '~/lib/storage'
 import {
   DEFAULT_PROFILE_PREFS,
@@ -2293,8 +2294,15 @@ export const useSettingsStore = create<SettingsState>()(
         toggleSidebarCollapsed: () => set({ sidebarCollapsed: !get().sidebarCollapsed }),
         setAssistantOpen: (open) => set({ assistantOpen: open }),
         toggleAssistantOpen: () => set({ assistantOpen: !get().assistantOpen }),
-        setConsoleOpen: (open) => set({ consoleOpen: open }),
-        toggleConsoleOpen: () => set({ consoleOpen: !get().consoleOpen }),
+        setConsoleOpen: (open) => {
+          if (open) prepareMobileOverlay('console')
+          set({ consoleOpen: open })
+        },
+        toggleConsoleOpen: () => {
+          const open = !get().consoleOpen
+          if (open) prepareMobileOverlay('console')
+          set({ consoleOpen: open })
+        },
         setDefaultViewMode: (mode) => {
           set({ defaultViewMode: mode })
           // Apply to all existing dataclass tabs

@@ -1,6 +1,7 @@
 import type { ChatActivityStep } from '@4djs/assistant/core'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+import { prepareMobileOverlay } from '~/lib/mobile-overlays'
 
 export type AiTaskKind = 'generate' | 'ask' | 'query'
 export type AiTaskStatus = 'running' | 'done' | 'error' | 'cancelled'
@@ -85,12 +86,17 @@ export const useAiTasksStore = create<AiTasksState>()(
       tasks: [],
       historyOpen: false,
       selectedTaskId: null,
-      setHistoryOpen: (open) =>
+      setHistoryOpen: (open) => {
+        if (open) prepareMobileOverlay('aiHistory')
         set((state) => ({
           historyOpen: open,
           selectedTaskId: open ? state.selectedTaskId : null,
-        })),
-      openTask: (taskId) => set({ historyOpen: true, selectedTaskId: taskId }),
+        }))
+      },
+      openTask: (taskId) => {
+        prepareMobileOverlay('aiHistory')
+        set({ historyOpen: true, selectedTaskId: taskId })
+      },
       clearSelectedTask: () => set({ selectedTaskId: null }),
       addTask: (task) =>
         set((state) => ({

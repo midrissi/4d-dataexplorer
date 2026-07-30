@@ -108,6 +108,11 @@ type DataExplorerState = {
     all?: boolean
   }) => Promise<{ count: number }>
   refreshCurrentView: () => Promise<void>
+  /**
+   * Soft-refresh the connected app: reload catalog + current entities, then
+   * remount the active dataclass tab so relation/detail UI resets.
+   */
+  refreshApp: () => Promise<void>
   /** Sync the top-level mirror with the active tab, restoring its cached slice instantly. */
   syncActiveTab: (activeTabId?: string | null) => void
   /** Drop a tab's cached entity view slice (e.g. when its tab is closed). */
@@ -467,6 +472,11 @@ export const useDataExplorerStore = create<DataExplorerState>()(
           if (selectedDataclass) {
             await get().fetchEntities(pagination?.page || 1)
           }
+        },
+
+        refreshApp: async () => {
+          await get().refreshCurrentView()
+          eventBus.emit('refresh-view', { skipFetch: true })
         },
       }
     },

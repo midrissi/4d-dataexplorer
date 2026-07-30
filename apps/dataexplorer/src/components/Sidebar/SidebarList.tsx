@@ -12,10 +12,12 @@ import {
 } from 'lucide-react'
 import { AiActionsMenu } from '~/components/AiActions'
 import { EmptyPanel, EmptyPanelAction } from '~/components/EmptyPanel'
+import { PullToRefresh } from '~/components/PullToRefresh'
 import { useTranslation } from '~/i18n'
 import { isMobileShell } from '~/lib/platform'
 import { formatCount } from '~/lib/utils'
 import type { Dataclass } from '~/store'
+import { useDataExplorerStore } from '~/store'
 import { DataclassIcon, getDataclassColorClasses } from '../DataclassCustomizeModal'
 
 type SidebarListProps = {
@@ -50,61 +52,79 @@ export function SidebarList({
   handleHighlightInGraph,
 }: SidebarListProps) {
   const { t } = useTranslation()
-  return (
-    <ScrollArea className="min-h-0 min-w-0 flex-1">
-      <div className="min-w-0">
-        {dataclassesLoading && dataclasses.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-2 p-4">
-            <Loader2 className="h-6 w-6 animate-spin text-primary" />
-            <p className="text-muted-foreground text-sm">{t('loading.loadingDataclasses')}</p>
+  const mobile = isMobileShell()
+  const fetchDataclasses = useDataExplorerStore((s) => s.fetchDataclasses)
+
+  const listBody = (
+    <div className="min-w-0">
+      {dataclassesLoading && dataclasses.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-2 p-4">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <p className="text-muted-foreground text-sm">{t('loading.loadingDataclasses')}</p>
+        </div>
+      ) : dataclassesError ? (
+        <div className="p-4">
+          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-destructive text-sm">
+            {dataclassesError}
           </div>
-        ) : dataclassesError ? (
-          <div className="p-4">
-            <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 text-destructive text-sm">
-              {dataclassesError}
-            </div>
-          </div>
-        ) : filteredDataclasses.length === 0 ? (
-          <SidebarEmptyState
-            hasCatalog={dataclasses.length > 0}
-            catalogCount={dataclasses.length}
-            searchQuery={searchQuery}
-            onClearSearch={onClearSearch}
-          />
-        ) : sidebarViewMode === 'icons' ? (
-          <SidebarListIcons
-            filteredDataclasses={filteredDataclasses}
-            activeDataclassName={activeDataclassName}
-            dataclassCustomizations={dataclassCustomizations}
-            isDataclassOpen={isDataclassOpen}
-            handleDataclassClick={handleDataclassClick}
-            handleOpenCustomize={handleOpenCustomize}
-            handleHighlightInGraph={handleHighlightInGraph}
-          />
-        ) : sidebarViewMode === 'tables' ? (
-          <SidebarListTable
-            filteredDataclasses={filteredDataclasses}
-            activeDataclassName={activeDataclassName}
-            dataclassCustomizations={dataclassCustomizations}
-            isDataclassOpen={isDataclassOpen}
-            handleDataclassClick={handleDataclassClick}
-            handleOpenCustomize={handleOpenCustomize}
-            handleHighlightInGraph={handleHighlightInGraph}
-          />
-        ) : (
-          <SidebarListCards
-            filteredDataclasses={filteredDataclasses}
-            activeDataclassName={activeDataclassName}
-            dataclassCustomizations={dataclassCustomizations}
-            isDataclassOpen={isDataclassOpen}
-            handleDataclassClick={handleDataclassClick}
-            handleOpenCustomize={handleOpenCustomize}
-            handleHighlightInGraph={handleHighlightInGraph}
-          />
-        )}
-      </div>
-    </ScrollArea>
+        </div>
+      ) : filteredDataclasses.length === 0 ? (
+        <SidebarEmptyState
+          hasCatalog={dataclasses.length > 0}
+          catalogCount={dataclasses.length}
+          searchQuery={searchQuery}
+          onClearSearch={onClearSearch}
+        />
+      ) : sidebarViewMode === 'icons' ? (
+        <SidebarListIcons
+          filteredDataclasses={filteredDataclasses}
+          activeDataclassName={activeDataclassName}
+          dataclassCustomizations={dataclassCustomizations}
+          isDataclassOpen={isDataclassOpen}
+          handleDataclassClick={handleDataclassClick}
+          handleOpenCustomize={handleOpenCustomize}
+          handleHighlightInGraph={handleHighlightInGraph}
+        />
+      ) : sidebarViewMode === 'tables' ? (
+        <SidebarListTable
+          filteredDataclasses={filteredDataclasses}
+          activeDataclassName={activeDataclassName}
+          dataclassCustomizations={dataclassCustomizations}
+          isDataclassOpen={isDataclassOpen}
+          handleDataclassClick={handleDataclassClick}
+          handleOpenCustomize={handleOpenCustomize}
+          handleHighlightInGraph={handleHighlightInGraph}
+        />
+      ) : (
+        <SidebarListCards
+          filteredDataclasses={filteredDataclasses}
+          activeDataclassName={activeDataclassName}
+          dataclassCustomizations={dataclassCustomizations}
+          isDataclassOpen={isDataclassOpen}
+          handleDataclassClick={handleDataclassClick}
+          handleOpenCustomize={handleOpenCustomize}
+          handleHighlightInGraph={handleHighlightInGraph}
+        />
+      )}
+    </div>
   )
+
+  if (mobile) {
+    return (
+      <PullToRefresh
+        className="min-h-0 min-w-0 flex-1"
+        disabled={dataclassesLoading}
+        label={t('sidebar.pullToRefresh')}
+        onRefresh={async () => {
+          await fetchDataclasses()
+        }}
+      >
+        {listBody}
+      </PullToRefresh>
+    )
+  }
+
+  return <ScrollArea className="min-h-0 min-w-0 flex-1">{listBody}</ScrollArea>
 }
 
 function SidebarEmptyState({

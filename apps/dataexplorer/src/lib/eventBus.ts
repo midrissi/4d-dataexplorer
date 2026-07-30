@@ -47,6 +47,8 @@ type EventPayloadMap = {
   'graph-select-dataclass': string
   'assistant-metadata-changed': { updatedAt: string }
   'catalog-reloaded': undefined
+  /** Remount the active dataclass tab. Set skipFetch when the caller already refreshed data. */
+  'refresh-view': { skipFetch?: boolean } | undefined
 }
 
 type EventPayload<T extends EventType> = T extends keyof EventPayloadMap

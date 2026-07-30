@@ -7,14 +7,22 @@
     "store:default",
     "opener:default",
     "dialog:default",
+    "save-bytes:default",
     "allow-list-http-jar-cookies",
     "allow-desktop-http-request",
     {
       "identifier": "fs:scope",
-      "allow": [{ "path": "$HOME/**" }, { "path": "$DOCUMENT/**" }, { "path": "$DOWNLOAD/**" }]
+      "allow": [
+        { "path": "$HOME/**" },
+        { "path": "$DOCUMENT/**" },
+        { "path": "$DOWNLOAD/**" },
+        { "path": "$APPCACHE/**" }
+      ]
     },
     "fs:allow-write-file",
     "fs:allow-write-text-file",
+    "fs:allow-remove",
+    "fs:allow-appcache-write",
     {
       "identifier": "http:default",
       "allow": [

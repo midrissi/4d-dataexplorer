@@ -87,6 +87,8 @@ export function PullToRefresh({
       const y = e.touches[0]?.clientY ?? 0
       const delta = y - startY.current
       if (delta <= 0) {
+        // Finger moving up = scroll content down — release pull so we don't block it.
+        pulling.current = false
         setDistance(0)
         return
       }

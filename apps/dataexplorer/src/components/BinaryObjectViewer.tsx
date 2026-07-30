@@ -361,8 +361,16 @@ export function BinaryObjectViewer({
   }, [isUrlMode, ensureBytes, base64, name])
 
   const handleDownload = useCallback(async () => {
-    const resolved = await resolveBytes()
-    if (resolved) await saveBytes(resolved.bytes, resolved.format)
+    try {
+      const resolved = await resolveBytes()
+      if (resolved) await saveBytes(resolved.bytes, resolved.format)
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') return
+      if (err instanceof Error && err.name === 'AbortError') return
+      const msg = err instanceof Error ? err.message : String(err ?? '')
+      if (/cancel/i.test(msg)) return
+      alert(err instanceof Error ? err.message : 'Failed to download file')
+    }
   }, [resolveBytes, saveBytes])
 
   const handleShare = useCallback(async () => {

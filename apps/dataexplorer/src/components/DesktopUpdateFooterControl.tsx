@@ -167,7 +167,9 @@ export function DesktopUpdateFooterControl() {
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next)
-    if (!next) {
+    if (next) {
+      checkForUpdates()
+    } else {
       setCatalogOpen(false)
       setQuery('')
     }

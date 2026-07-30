@@ -163,6 +163,7 @@ export const en = {
     switchConnection: 'Switch connection',
     editConnection: 'Edit connection',
     refreshInterface: 'Refresh',
+    pullToRefreshApp: 'Pull to refresh app',
     disconnectConfirmTitle: 'Disconnect from server?',
     disconnectConfirmMessage:
       'You will return to the connection screen. Cookies for this connection are cleared. Your saved connections are kept.',
@@ -438,7 +439,7 @@ export const en = {
   },
   desktopAbout: {
     title: 'About Data Explorer',
-    subtitle: 'A modern desktop client for exploring and managing 4D data.',
+    subtitle: 'A modern client for exploring and managing 4D data.',
     builtWith: 'Built with Tauri',
     nameLabel: 'Application',
     versionLabel: 'Version',
@@ -465,6 +466,7 @@ export const en = {
     openHomeTab: 'Open Home tab',
     openAllDataclasses: 'Open all dataclasses',
     refreshDataclasses: 'Refresh dataclasses',
+    pullToRefresh: 'Pull to refresh catalog',
     randomizeIcons: 'Randomize dataclass icons & colors',
     cardsView: 'Cards view',
     tablesView: 'Tables view',

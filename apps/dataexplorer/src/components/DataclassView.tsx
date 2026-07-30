@@ -207,15 +207,18 @@ export function DataclassView() {
   }, [tabs, clearTabData])
 
   // Explicit refresh: remount the active tab's content (clearing its cached UI
-  // state and loaded relations) and refetch its entities.
+  // state and loaded relations) and refetch its entities unless the caller
+  // already refreshed (refreshApp).
   useEffect(() => {
-    const sub = eventBus.on('refresh-view', () => {
+    const sub = eventBus.on('refresh-view', (payload) => {
       const activeId = useTabsStore.getState().activeTabId
       const activeTab = tabs.find((t) => t.id === activeId)
       if (activeId && activeTab && isDataclassTab(activeTab)) {
         setRemountKeys((prev) => ({ ...prev, [activeId]: (prev[activeId] ?? 0) + 1 }))
       }
-      void refreshCurrentView()
+      if (!payload?.skipFetch) {
+        void refreshCurrentView()
+      }
     })
     return () => sub.unsubscribe()
   }, [tabs, refreshCurrentView])

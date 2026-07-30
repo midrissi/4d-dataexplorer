@@ -1,4 +1,13 @@
-import { createContext, type ReactNode, useCallback, useContext, useMemo, useState } from 'react'
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react'
+import { prepareMobileOverlay, registerMobileCatalogCloser } from '~/lib/mobile-overlays'
 
 type MobileCatalogContextValue = {
   catalogOpen: boolean
@@ -11,9 +20,26 @@ const MobileCatalogContext = createContext<MobileCatalogContextValue | null>(nul
 
 export function MobileCatalogProvider({ children }: { children: ReactNode }) {
   const [catalogOpen, setCatalogOpen] = useState(false)
-  const openCatalog = useCallback(() => setCatalogOpen(true), [])
+
   const closeCatalog = useCallback(() => setCatalogOpen(false), [])
-  const toggleCatalog = useCallback(() => setCatalogOpen((v) => !v), [])
+
+  useEffect(() => {
+    registerMobileCatalogCloser(() => setCatalogOpen(false))
+    return () => registerMobileCatalogCloser(null)
+  }, [])
+
+  const openCatalog = useCallback(() => {
+    prepareMobileOverlay('catalog')
+    setCatalogOpen(true)
+  }, [])
+
+  const toggleCatalog = useCallback(() => {
+    setCatalogOpen((open) => {
+      if (!open) prepareMobileOverlay('catalog')
+      return !open
+    })
+  }, [])
+
   const value = useMemo(
     () => ({ catalogOpen, openCatalog, closeCatalog, toggleCatalog }),
     [catalogOpen, openCatalog, closeCatalog, toggleCatalog]

@@ -1,6 +1,7 @@
+import { emitOpenAboutDialog, onOpenAboutDialog } from '~/lib/about-dialog'
 import { isDesktop } from '~/lib/platform'
 
-export const OPEN_ABOUT_DIALOG_EVENT = 'desktop://open-about-dialog'
+export const OPEN_ABOUT_DIALOG_EVENT = 'app://open-about-dialog'
 
 export type DesktopMenuLabels = {
   appName: string
@@ -38,8 +39,6 @@ const RELOAD_ITEM_ID = 'reload-interface'
 let setupMenuPromise: Promise<void> | null = null
 let lastAppliedSignature: string | null = null
 
-const aboutOpenListeners = new Set<() => void>()
-
 function isMacOS(): boolean {
   return navigator.userAgent.toLowerCase().includes('mac')
 }
@@ -53,25 +52,7 @@ export function reloadDesktopInterface(): void {
   window.location.reload()
 }
 
-/** Notify React (and any other subscribers) that About should open. */
-export function emitOpenAboutDialog(): void {
-  for (const listener of aboutOpenListeners) {
-    try {
-      listener()
-    } catch (err) {
-      console.error('About dialog listener failed:', err)
-    }
-  }
-  window.dispatchEvent(new Event(OPEN_ABOUT_DIALOG_EVENT))
-}
-
-/** Subscribe to About menu / shortcut activations. Returns unsubscribe. */
-export function onOpenAboutDialog(listener: () => void): () => void {
-  aboutOpenListeners.add(listener)
-  return () => {
-    aboutOpenListeners.delete(listener)
-  }
-}
+export { emitOpenAboutDialog, onOpenAboutDialog }
 
 async function findSubmenuByLabels(
   menu: Awaited<ReturnType<typeof import('@tauri-apps/api/menu')['Menu']['default']>>,

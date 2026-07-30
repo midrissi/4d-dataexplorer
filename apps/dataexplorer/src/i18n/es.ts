@@ -168,6 +168,7 @@ export const es = {
     switchConnection: 'Cambiar de conexión',
     editConnection: 'Editar conexión',
     refreshInterface: 'Actualizar',
+    pullToRefreshApp: 'Desliza para actualizar la app',
     disconnectConfirmTitle: '¿Desconectar del servidor?',
     disconnectConfirmMessage:
       'Volverás a la pantalla de conexión. Se borran las cookies de esta conexión. Tus conexiones guardadas se conservan.',
@@ -447,7 +448,7 @@ export const es = {
   },
   desktopAbout: {
     title: 'Acerca de Data Explorer',
-    subtitle: 'Un cliente de escritorio moderno para explorar y gestionar datos 4D.',
+    subtitle: 'Un cliente moderno para explorar y gestionar datos 4D.',
     builtWith: 'Construido con Tauri',
     nameLabel: 'Aplicacion',
     versionLabel: 'Version',
@@ -474,6 +475,7 @@ export const es = {
     openHomeTab: 'Abrir inicio',
     openAllDataclasses: 'Abrir todas las dataclasses',
     refreshDataclasses: 'Actualizar dataclasses',
+    pullToRefresh: 'Desliza para actualizar el catálogo',
     randomizeIcons: 'Iconos y colores aleatorios de dataclasses',
     cardsView: 'Vista tarjetas',
     tablesView: 'Vista tablas',

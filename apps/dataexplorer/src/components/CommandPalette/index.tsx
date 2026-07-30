@@ -667,7 +667,11 @@ export function CommandPalette({
         className={cn(
           'command-palette flex flex-col overflow-hidden p-0',
           mobile
-            ? 'inset-0 top-0 left-0 h-[100dvh] max-h-[100dvh] w-full max-w-full translate-x-0 translate-y-0 rounded-none border-0 pt-[var(--app-safe-top)] pb-[var(--app-safe-bottom)]'
+            ? cn(
+                'inset-0 top-0 left-0 h-dvh max-h-dvh w-full max-w-full origin-center',
+                'translate-x-0 translate-y-0 rounded-none border-0',
+                'pt-[var(--app-safe-top)] pb-[var(--app-safe-bottom)]'
+              )
             : 'h-[70vh] max-h-125 sm:max-w-xl'
         )}
         hideCloseButton
