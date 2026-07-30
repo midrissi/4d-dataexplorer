@@ -24,7 +24,7 @@ import {
 import { desktopFetch } from '~desktop/lib/http'
 import { MobileConnectionScreen } from '~mobile/components/MobileConnectionScreen'
 import { tauriDownloadBytes } from '~mobile/lib/download-bytes'
-import { syncWebviewSafeAreaMode } from '~mobile/lib/webview-safe-area'
+import { syncWebviewLayout } from '~mobile/lib/webview-safe-area'
 
 // Route REST through Tauri HTTP plugin (CORS-free), same as desktop
 registerPlatformFetch(desktopFetch)
@@ -50,12 +50,17 @@ export function MobileApp() {
 
   useEffect(() => {
     const apply = () => {
-      syncWebviewSafeAreaMode()
+      syncWebviewLayout()
     }
     apply()
-    window.visualViewport?.addEventListener('resize', apply)
+    const vv = window.visualViewport
+    vv?.addEventListener('resize', apply)
+    vv?.addEventListener('scroll', apply)
+    window.addEventListener('resize', apply)
     return () => {
-      window.visualViewport?.removeEventListener('resize', apply)
+      vv?.removeEventListener('resize', apply)
+      vv?.removeEventListener('scroll', apply)
+      window.removeEventListener('resize', apply)
     }
   }, [])
 

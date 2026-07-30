@@ -30,8 +30,10 @@ body {
 #root {
   box-sizing: border-box;
   width: 100%;
-  height: 100dvh;
-  max-height: 100dvh;
+  /* Shrink to visualViewport when the soft keyboard is open (see syncWebviewLayout). */
+  height: var(--app-viewport-height, 100dvh);
+  max-height: var(--app-viewport-height, 100dvh);
+  transform: translateY(var(--app-viewport-offset-top, 0px));
   overflow: hidden;
   overscroll-behavior: none;
 }
@@ -39,6 +41,9 @@ body {
 :root {
   --app-safe-top: env(safe-area-inset-top, 0px);
   --app-safe-bottom: env(safe-area-inset-bottom, 0px);
+  --app-keyboard-inset: 0px;
+  --app-viewport-height: 100dvh;
+  --app-viewport-offset-top: 0px;
 }
 
 button:focus-visible,

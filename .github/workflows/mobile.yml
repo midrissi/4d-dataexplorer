@@ -15,8 +15,23 @@ on:
         description: Version stamp used in asset filenames (e.g. 1.3.4-a4b0436)
         type: string
         default: ''
+  # Direct builds while iterating on the mobile branch (no release upload).
+  push:
+    branches: [feat/mobile]
+    paths:
+      - 'apps/mobile/**'
+      - 'apps/dataexplorer/**'
+      - 'apps/desktop/src/**'
+      - 'packages/**'
+      - 'bun.lockb'
+      - '.github/workflows/mobile.yml'
+      - '.github/actions/setup-bun/**'
   # Manual re-run without waiting for full CI (does not upload to a release).
   workflow_dispatch:
+
+concurrency:
+  group: mobile-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
