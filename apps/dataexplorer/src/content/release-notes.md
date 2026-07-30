@@ -2,11 +2,11 @@
 
 ---
 
-## 1.4.0
+## 1.4.x
 
 ### Overview
 
-Version `1.4.0` adds the **ORDA Terminal** (REPL and Code modes with snippet files) in a shared bottom dock with the Console; ships **iOS and Android** mobile apps; improves console network previews and image share/save; and polishes mobile HTTP Client and dock UX.
+Version `1.4.x` adds the **ORDA Terminal** (REPL and Code modes with snippet files) in a shared bottom dock with the Console; ships **iOS and Android** mobile apps; improves console network previews and image share/save; and polishes mobile HTTP Client and dock UX.
 
 ### Features
 

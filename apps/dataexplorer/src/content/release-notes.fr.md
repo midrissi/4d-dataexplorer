@@ -2,11 +2,11 @@
 
 ---
 
-## 1.4.0
+## 1.4.x
 
 ### Aperçu
 
-La version `1.4.0` ajoute le **terminal ORDA** (modes REPL et Code avec fichiers snippets) dans un dock bas partagé avec la Console ; publie les applications **iOS et Android** ; améliore les aperçus réseau de la console et le partage/enregistrement d'images ; et peaufine l'expérience mobile (Client HTTP et dock).
+La version `1.4.x` ajoute le **terminal ORDA** (modes REPL et Code avec fichiers snippets) dans un dock bas partagé avec la Console ; publie les applications **iOS et Android** ; améliore les aperçus réseau de la console et le partage/enregistrement d'images ; et peaufine l'expérience mobile (Client HTTP et dock).
 
 ### Fonctionnalités
 
