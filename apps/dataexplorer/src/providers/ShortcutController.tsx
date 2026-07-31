@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
 } from 'react'
+import { shouldDeferShortcutsForEditableTarget } from '~/lib/shortcut-editable-target'
 import {
   formatKeyCombo,
   type KeyboardShortcut,
@@ -30,31 +31,6 @@ function eventToKeyCombo(e: KeyboardEvent): KeyCombo {
       alt: e.altKey,
     },
   }
-}
-
-function isEditableKeyboardTarget(event: KeyboardEvent): boolean {
-  const candidates: Array<EventTarget | null> = [event.target, document.activeElement]
-  for (const candidate of candidates) {
-    if (!(candidate instanceof Element)) continue
-    if (
-      candidate instanceof HTMLTextAreaElement ||
-      candidate instanceof HTMLInputElement ||
-      candidate instanceof HTMLSelectElement
-    ) {
-      return true
-    }
-    if (candidate instanceof HTMLElement && candidate.isContentEditable) {
-      return true
-    }
-    if (
-      candidate.closest(
-        'textarea, input, select, [contenteditable="true"], [role="textbox"], [data-code-editor], [data-allow-typing], .monaco-editor, .ace_editor, .nokey'
-      )
-    ) {
-      return true
-    }
-  }
-  return false
 }
 
 function keyComboMatches(a: KeyCombo, b: KeyCombo): boolean {
@@ -145,9 +121,9 @@ export function ShortcutController({ children }: { children: ReactNode }) {
       // Ignore modifier-only presses
       if (['Meta', 'Control', 'Shift', 'Alt'].includes(e.key)) return
 
-      // Never steal keys while the user is typing in an editable field
-      // (including portaled dialogs / AI prompt textareas).
-      if (isEditableKeyboardTarget(e)) {
+      // Don't steal plain typing in inputs/editors. Still allow Cmd/Ctrl shortcuts
+      // so panel toggles (terminal, console, palette) work while editing.
+      if (shouldDeferShortcutsForEditableTarget(e)) {
         if (chordBufferRef.current) clearChordBuffer()
         return
       }

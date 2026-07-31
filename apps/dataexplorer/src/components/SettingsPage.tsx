@@ -64,6 +64,7 @@ import {
   mobileMenuItemClass,
 } from '~/lib/mobile-menu'
 import { isDesktop, isMobileShell } from '~/lib/platform'
+import { shortcutMatchesRecordedCombo, shortcutMatchesText } from '~/lib/shortcut-search'
 import { useTheme, useThemeName } from '~/providers/ThemeProvider'
 import { useDataExplorerStore } from '~/store'
 import {
@@ -100,6 +101,7 @@ import { ProfileAppearancePopover } from './ProfileAppearancePopover'
 import { ServerConnectionSettings } from './ServerConnectionSettings'
 import { SettingsField } from './SettingsField'
 import { SettingsSegmentedField } from './SettingsSegmentedField'
+import { ShortcutFinder } from './ShortcutFinder'
 import { ShortcutRecordModal } from './ShortcutRecordModal'
 import { WidgetSettings } from './WidgetSettings'
 
@@ -138,6 +140,7 @@ export function SettingsPage() {
     setCategoryShortcutsEnabled,
     applyShortcutPreset,
     resetShortcuts,
+    syncShortcutsWithDefaults,
     resetAllSettings,
     exportSettings,
     exportProfiles,
@@ -261,16 +264,57 @@ export function SettingsPage() {
   const [recordingShortcutId, setRecordingShortcutId] = useState<string | null>(null)
   const [recordAsChord, setRecordAsChord] = useState(false)
   const [recordingConflict, setRecordingConflict] = useState<string | null>(null)
+  const [shortcutSearchQuery, setShortcutSearchQuery] = useState('')
+  const [shortcutSearchCombo, setShortcutSearchCombo] = useState<KeyCombo | null>(null)
   const shortcutsListRef = useRef<HTMLDivElement>(null)
   const shortcutSectionRefs = useRef<Map<ShortcutCategory, HTMLDivElement>>(new Map())
   const [activeShortcutCategory, setActiveShortcutCategory] = useState<ShortcutCategory | null>(
     null
   )
 
+  const filteredShortcuts = useMemo(() => {
+    if (shortcutSearchCombo) {
+      return shortcuts.filter((shortcut) =>
+        shortcutMatchesRecordedCombo(shortcut, shortcutSearchCombo)
+      )
+    }
+    return shortcuts.filter((shortcut) =>
+      shortcutMatchesText(
+        shortcut,
+        t(`shortcut.${shortcut.id}`) || shortcut.label,
+        formatShortcut(shortcut),
+        shortcutSearchQuery
+      )
+    )
+  }, [shortcutSearchCombo, shortcutSearchQuery, shortcuts, t])
+
   const visibleShortcutCategories = useMemo(
-    () => CATEGORY_ORDER.filter((category) => shortcuts.some((s) => s.category === category)),
-    [shortcuts]
+    () =>
+      CATEGORY_ORDER.filter((category) =>
+        filteredShortcuts.some((shortcut) => shortcut.category === category)
+      ),
+    [filteredShortcuts]
   )
+
+  const handleShortcutSearchTextChange = useCallback((value: string) => {
+    setShortcutSearchQuery(value)
+    setShortcutSearchCombo(null)
+  }, [])
+
+  const handleShortcutSearchRecord = useCallback((combo: KeyCombo, displayValue: string) => {
+    setShortcutSearchCombo(combo)
+    setShortcutSearchQuery(displayValue)
+  }, [])
+
+  const clearShortcutSearch = useCallback(() => {
+    setShortcutSearchQuery('')
+    setShortcutSearchCombo(null)
+  }, [])
+
+  // Pull in newly registered shortcuts (e.g. Toggle Terminal) after app updates.
+  useEffect(() => {
+    syncShortcutsWithDefaults()
+  }, [syncShortcutsWithDefaults])
 
   useEffect(() => {
     if (!shortcutsExpanded || visibleShortcutCategories.length === 0) return
@@ -366,6 +410,7 @@ export function SettingsPage() {
         key: combo.key,
         modifiers: combo.modifiers,
         chord: undefined,
+        enabled: true,
       })
       setRecordingShortcutId(null)
       setRecordingConflict(null)
@@ -390,6 +435,7 @@ export function SettingsPage() {
         chord: [first, second],
         key: first.key,
         modifiers: first.modifiers,
+        enabled: true,
       })
       setRecordingShortcutId(null)
       setRecordingConflict(null)
@@ -1230,6 +1276,16 @@ export function SettingsPage() {
                   </div>
                 </div>
 
+                <ShortcutFinder
+                  query={shortcutSearchQuery}
+                  recordedCombo={shortcutSearchCombo}
+                  resultCount={filteredShortcuts.length}
+                  totalCount={shortcuts.length}
+                  onTextChange={handleShortcutSearchTextChange}
+                  onRecord={handleShortcutSearchRecord}
+                  onClear={clearShortcutSearch}
+                />
+
                 {visibleShortcutCategories.length > 1 ? (
                   <div className="mb-3">
                     <p className="mb-1.5 pl-1 text-muted-foreground text-xs">
@@ -1268,7 +1324,9 @@ export function SettingsPage() {
                   className="max-h-[410px] space-y-3 overflow-y-auto pr-1"
                 >
                   {CATEGORY_ORDER.map((category) => {
-                    const groupShortcuts = shortcuts.filter((s) => s.category === category)
+                    const groupShortcuts = filteredShortcuts.filter(
+                      (shortcut) => shortcut.category === category
+                    )
                     if (groupShortcuts.length === 0) return null
 
                     const config = CATEGORY_CONFIG[category]
@@ -1347,22 +1405,16 @@ export function SettingsPage() {
                                   type="button"
                                   variant="ghost"
                                   size="xs"
-                                  disabled={!shortcut.enabled}
                                   onClick={() => {
-                                    if (!shortcut.enabled) return
                                     setRecordingShortcutId(shortcut.id)
                                     setRecordingConflict(null)
                                   }}
                                   className={cn(
                                     'h-auto min-h-6 shrink-0 px-2 py-1 text-end font-mono text-xs transition-all',
                                     isModalOpen && 'animate-pulse ring-2 ring-primary ring-inset',
-                                    !shortcut.enabled && 'cursor-not-allowed opacity-50'
+                                    !shortcut.enabled && 'opacity-70'
                                   )}
-                                  title={
-                                    !shortcut.enabled
-                                      ? t('settings.enableShortcutToChange')
-                                      : t('settings.clickToChangeShortcut')
-                                  }
+                                  title={t('settings.clickToChangeShortcut')}
                                 >
                                   {shortcut.chord && shortcut.chord.length === 2 ? (
                                     <span className="inline-flex items-center gap-1.5">
@@ -1387,6 +1439,24 @@ export function SettingsPage() {
                       </div>
                     )
                   })}
+                  {filteredShortcuts.length === 0 ? (
+                    <div className="flex min-h-36 flex-col items-center justify-center rounded-lg border border-border border-dashed bg-muted/10 px-6 text-center">
+                      <Keyboard className="mb-2 h-6 w-6 text-muted-foreground/70" aria-hidden />
+                      <p className="font-medium text-sm">{t('settings.shortcutFinderNoResults')}</p>
+                      <p className="mt-1 max-w-sm text-muted-foreground text-xs">
+                        {t('settings.shortcutFinderNoResultsHint')}
+                      </p>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="xs"
+                        className="mt-2"
+                        onClick={clearShortcutSearch}
+                      >
+                        {t('settings.shortcutFinderClear')}
+                      </Button>
+                    </div>
+                  ) : null}
                 </div>
 
                 <div className="mt-2 flex flex-wrap items-center justify-between gap-2 border-t pt-2">

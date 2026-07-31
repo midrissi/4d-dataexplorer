@@ -8,6 +8,7 @@ import {
   formatShortcut,
   getPresetShortcuts,
   getShortcutById,
+  mergeShortcutsWithDefaults,
   SHORTCUT_PRESETS,
   useSettingsStore,
 } from './settings'
@@ -41,6 +42,31 @@ describe('store/settings', () => {
 
     it('SHORTCUT_PRESETS has default, vscode, minimal, vim', () => {
       expect(SHORTCUT_PRESETS.map((p) => p.id)).toEqual(['default', 'vscode', 'minimal', 'vim'])
+    })
+  })
+
+  describe('mergeShortcutsWithDefaults', () => {
+    it('adds newly registered shortcuts missing from persisted lists', () => {
+      const merged = mergeShortcutsWithDefaults([
+        {
+          id: 'toggle-sidebar',
+          label: 'Toggle Sidebar',
+          key: 'b',
+          modifiers: { meta: true },
+          enabled: false,
+          category: 'View',
+        },
+      ])
+      expect(merged.find((s) => s.id === 'toggle-sidebar')).toMatchObject({
+        enabled: false,
+        key: 'b',
+      })
+      expect(merged.find((s) => s.id === 'toggle-terminal')).toMatchObject({
+        id: 'toggle-terminal',
+        enabled: true,
+        key: 'j',
+      })
+      expect(merged.find((s) => s.id === 'toggle-console')).toBeDefined()
     })
   })
 
@@ -670,6 +696,64 @@ describe('store/settings', () => {
       )
       expect(ok).toBe(true)
       expect(useSettingsStore.getState().readonlyMode).toBe(true)
+    })
+
+    it('importSettings fills missing shortcuts like toggle-terminal', () => {
+      const ok = useSettingsStore.getState().importSettings(
+        JSON.stringify({
+          version: 1,
+          settings: {
+            shortcuts: [
+              {
+                id: 'command-palette',
+                label: 'Open Command Palette',
+                key: 'p',
+                modifiers: { meta: true },
+                enabled: true,
+                category: 'General',
+              },
+              {
+                id: 'toggle-sidebar',
+                label: 'Toggle Sidebar',
+                key: 'b',
+                modifiers: { meta: true },
+                enabled: true,
+                category: 'View',
+              },
+            ],
+          },
+        })
+      )
+      expect(ok).toBe(true)
+      const ids = useSettingsStore.getState().shortcuts.map((s) => s.id)
+      expect(ids).toContain('toggle-terminal')
+      expect(ids).toContain('toggle-console')
+      expect(ids).toContain('command-palette')
+      expect(
+        useSettingsStore.getState().shortcuts.find((s) => s.id === 'toggle-terminal')
+      ).toMatchObject({
+        enabled: true,
+        key: 'j',
+      })
+    })
+
+    it('syncShortcutsWithDefaults restores missing shortcut ids', () => {
+      useSettingsStore.setState({
+        shortcuts: [
+          {
+            id: 'command-palette',
+            label: 'Open Command Palette',
+            key: 'p',
+            modifiers: { meta: true },
+            enabled: true,
+            category: 'General',
+          },
+        ],
+      })
+      useSettingsStore.getState().syncShortcutsWithDefaults()
+      const ids = useSettingsStore.getState().shortcuts.map((s) => s.id)
+      expect(ids).toContain('toggle-terminal')
+      expect(ids.length).toBeGreaterThan(1)
     })
 
     it('importSettings returns false for invalid version', () => {

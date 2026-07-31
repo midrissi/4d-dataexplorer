@@ -801,6 +801,8 @@ export type SettingsState = {
   setCategoryShortcutsEnabled: (category: ShortcutCategory, enabled: boolean) => void
   applyShortcutPreset: (presetId: ShortcutPresetId) => void
   resetShortcuts: () => void
+  /** Fill in any DEFAULT_SHORTCUTS ids missing from the current profile. */
+  syncShortcutsWithDefaults: () => void
   resetAllSettings: () => void
   updateCodeEditorPrefs: (partial: Partial<EditorPrefs>) => void
 
@@ -2119,8 +2121,12 @@ const VIM_SHORTCUTS: KeyboardShortcut[] = [
   })),
 ]
 
-/** Merge persisted shortcuts with defaults; treats missing or empty arrays as "use defaults". */
-function mergeShortcutsWithDefaults(shortcuts?: KeyboardShortcut[]): KeyboardShortcut[] {
+/**
+ * Merge persisted shortcuts with defaults; treats missing or empty arrays as "use defaults".
+ * Always returns every DEFAULT_SHORTCUTS id so newly added actions (e.g. toggle-terminal)
+ * remain visible and customizable after import / profile restore.
+ */
+export function mergeShortcutsWithDefaults(shortcuts?: KeyboardShortcut[]): KeyboardShortcut[] {
   const persistedShortcuts = shortcuts ?? []
   return DEFAULT_SHORTCUTS.map((defaultShortcut) => {
     const persistedShortcut = persistedShortcuts.find((s) => s.id === defaultShortcut.id)
@@ -2128,10 +2134,13 @@ function mergeShortcutsWithDefaults(shortcuts?: KeyboardShortcut[]): KeyboardSho
       return {
         ...defaultShortcut,
         ...persistedShortcut,
+        // Keep registry category/label as source of truth; persist only keybinding prefs.
+        id: defaultShortcut.id,
+        label: defaultShortcut.label,
         category: defaultShortcut.category,
       }
     }
-    return defaultShortcut
+    return { ...defaultShortcut }
   })
 }
 
@@ -2390,20 +2399,20 @@ export const useSettingsStore = create<SettingsState>()(
         setDefaultQueryRunMode: (mode) => set({ defaultQueryRunMode: mode }),
 
         updateShortcut: (id, updates) => {
-          const { shortcuts } = get()
+          const shortcuts = mergeShortcutsWithDefaults(get().shortcuts)
           const newShortcuts = shortcuts.map((s) => (s.id === id ? { ...s, ...updates } : s))
           // Mark as custom when shortcuts are manually modified
           set({ shortcuts: newShortcuts, activeShortcutPreset: 'custom' })
         },
 
         setAllShortcutsEnabled: (enabled) => {
-          const { shortcuts } = get()
+          const shortcuts = mergeShortcutsWithDefaults(get().shortcuts)
           const newShortcuts = shortcuts.map((s) => ({ ...s, enabled }))
           set({ shortcuts: newShortcuts, activeShortcutPreset: 'custom' })
         },
 
         setCategoryShortcutsEnabled: (category, enabled) => {
-          const { shortcuts } = get()
+          const shortcuts = mergeShortcutsWithDefaults(get().shortcuts)
           const newShortcuts = shortcuts.map((s) =>
             s.category === category ? { ...s, enabled } : s
           )
@@ -2413,13 +2422,27 @@ export const useSettingsStore = create<SettingsState>()(
         applyShortcutPreset: (presetId) => {
           const presetShortcuts = getPresetShortcuts(presetId)
           set({
-            shortcuts: presetShortcuts.map((s) => ({ ...s })), // Deep copy
+            shortcuts: mergeShortcutsWithDefaults(presetShortcuts.map((s) => ({ ...s }))),
             activeShortcutPreset: presetId,
           })
         },
 
         resetShortcuts: () =>
-          set({ shortcuts: DEFAULT_SHORTCUTS, activeShortcutPreset: 'default' }),
+          set({
+            shortcuts: mergeShortcutsWithDefaults(DEFAULT_SHORTCUTS),
+            activeShortcutPreset: 'default',
+          }),
+
+        /** Ensure newly registered shortcuts appear for customization (e.g. after app update). */
+        syncShortcutsWithDefaults: () => {
+          const current = get().shortcuts
+          const merged = mergeShortcutsWithDefaults(current)
+          const currentIds = current.map((s) => s.id).join('\0')
+          const mergedIds = merged.map((s) => s.id).join('\0')
+          if (currentIds !== mergedIds || current.length !== merged.length) {
+            set({ shortcuts: merged })
+          }
+        },
 
         updateCodeEditorPrefs: (partial) => {
           const { codeEditorPrefs } = get()
@@ -2770,7 +2793,9 @@ export const useSettingsStore = create<SettingsState>()(
                 settings.defaultQueryRunMode === 'runAsSelection'
                   ? settings.defaultQueryRunMode
                   : DEFAULT_SETTINGS.defaultQueryRunMode,
-              shortcuts: settings.shortcuts ?? DEFAULT_SETTINGS.shortcuts,
+              shortcuts: mergeShortcutsWithDefaults(
+                (settings.shortcuts as KeyboardShortcut[] | undefined) ?? DEFAULT_SETTINGS.shortcuts
+              ),
               activeShortcutPreset:
                 settings.activeShortcutPreset ?? DEFAULT_SETTINGS.activeShortcutPreset,
             })
@@ -2992,7 +3017,16 @@ export const useSettingsStore = create<SettingsState>()(
           const persisted = persistedState as Partial<SettingsState>
           const mergedShortcuts = mergeShortcutsWithDefaults(persisted.shortcuts)
 
-          const profiles = persisted.profiles?.length ? persisted.profiles : [buildDefaultProfile()]
+          const rawProfiles = persisted.profiles?.length
+            ? persisted.profiles
+            : [buildDefaultProfile()]
+          const profiles = rawProfiles.map((profile) => ({
+            ...profile,
+            settings: {
+              ...profile.settings,
+              shortcuts: mergeShortcutsWithDefaults(profile.settings?.shortcuts),
+            },
+          }))
           const currentProfileId = persisted.currentProfileId ?? DEFAULT_PROFILE_ID
           const dataclassCustomizations = readDataclassCustomizationsForRehydrate() as Record<
             string,

@@ -52,6 +52,8 @@ type TerminalComposerProps = {
   editorPath?: string
   /** Native mobile shell — larger targets, stacked chrome, no keyboard shortcut chrome. */
   mobile?: boolean
+  /** Mobile-only command history deck shown above the REPL input. */
+  historyNavigator?: ReactNode
   onDraftChange: (value: string) => void
   onRun: () => void
   onSaveFile?: () => void
@@ -77,6 +79,7 @@ export function TerminalComposer({
   dirty = false,
   editorPath = 'orda-terminal:///input.js',
   mobile = false,
+  historyNavigator,
   onDraftChange,
   onRun,
   onSaveFile,
@@ -229,6 +232,8 @@ export function TerminalComposer({
           {runButton}
         </div>
       )}
+
+      {mobile && !isSnippet ? historyNavigator : null}
 
       {isSnippet && fileName ? (
         <div

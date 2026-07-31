@@ -42,6 +42,8 @@ type TerminalState = {
   output: TerminalOutputCell[]
   history: TerminalHistoryEntry[]
   historyIndex: number | null
+  /** Draft captured before entering history navigation, restored after the newest entry. */
+  historyDraft: string
   draft: string
   running: boolean
   appendOutput: (
@@ -62,6 +64,7 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
   output: [],
   history: [],
   historyIndex: null,
+  historyDraft: '',
   draft: '',
   running: false,
 
@@ -93,6 +96,7 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
           -MAX_HISTORY
         ),
         historyIndex: null,
+        historyDraft: '',
       }
     })
   },
@@ -101,9 +105,9 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
     const { history, historyIndex } = get()
     if (history.length === 0) return null
     if (historyIndex === null) {
-      // Stash current draft at end of navigation by storing index at last item
+      // Stash the current unsubmitted draft so Down can restore it.
       const nextIndex = history.length - 1
-      set({ historyIndex: nextIndex, draft: currentDraft })
+      set({ historyIndex: nextIndex, historyDraft: currentDraft })
       return history[nextIndex]?.code ?? null
     }
     if (historyIndex <= 0) {
@@ -115,16 +119,16 @@ export const useTerminalStore = create<TerminalState>((set, get) => ({
   },
 
   historyDown: () => {
-    const { history, historyIndex, draft } = get()
+    const { history, historyIndex, historyDraft } = get()
     if (historyIndex === null) return null
     if (historyIndex >= history.length - 1) {
-      set({ historyIndex: null })
-      return draft
+      set({ historyIndex: null, historyDraft: '' })
+      return historyDraft
     }
     const nextIndex = historyIndex + 1
     set({ historyIndex: nextIndex })
     return history[nextIndex]?.code ?? null
   },
 
-  resetHistoryCursor: () => set({ historyIndex: null }),
+  resetHistoryCursor: () => set({ historyIndex: null, historyDraft: '' }),
 }))

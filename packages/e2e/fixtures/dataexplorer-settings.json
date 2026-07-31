@@ -137,6 +137,26 @@
         "category": "View"
       },
       {
+        "id": "toggle-console",
+        "label": "Toggle Console",
+        "key": "`",
+        "modifiers": {
+          "meta": true
+        },
+        "enabled": true,
+        "category": "View"
+      },
+      {
+        "id": "toggle-terminal",
+        "label": "Toggle Terminal",
+        "key": "j",
+        "modifiers": {
+          "meta": true
+        },
+        "enabled": true,
+        "category": "View"
+      },
+      {
         "id": "toggle-theme",
         "label": "Toggle Theme",
         "key": "d",

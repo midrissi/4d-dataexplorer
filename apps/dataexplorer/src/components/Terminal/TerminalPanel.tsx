@@ -23,6 +23,7 @@ import { type TerminalSnippet, useTerminalSnippetsStore } from '~/store/terminal
 import { registerOrdaJsProviders } from './orda-js-completion'
 import { TerminalComposer } from './TerminalComposer'
 import { TerminalEmptyState } from './TerminalEmptyState'
+import { TerminalHistoryNavigator } from './TerminalHistoryNavigator'
 import { TerminalOutputRow } from './TerminalOutputRow'
 import { snippetFileName, TerminalSnippetsFiles } from './TerminalSnippetsFiles'
 
@@ -37,6 +38,8 @@ export function TerminalPanel({ hideChrome = false }: { hideChrome?: boolean } =
   const output = useTerminalStore((s) => s.output)
   const draft = useTerminalStore((s) => s.draft)
   const running = useTerminalStore((s) => s.running)
+  const historyCount = useTerminalStore((s) => s.history.length)
+  const historyIndex = useTerminalStore((s) => s.historyIndex)
 
   const setDraft = useTerminalStore((s) => s.setDraft)
   const setRunning = useTerminalStore((s) => s.setRunning)
@@ -61,6 +64,7 @@ export function TerminalPanel({ hideChrome = false }: { hideChrome?: boolean } =
   draftRef.current = draft
   const runningRef = useRef(running)
   runningRef.current = running
+  const applyingHistoryRef = useRef(false)
   const replDraftRef = useRef('')
   const activeSnippetIdRef = useRef<string | null>(null)
   activeSnippetIdRef.current = activeSnippetId
@@ -127,6 +131,35 @@ export function TerminalPanel({ hideChrome = false }: { hideChrome?: boolean } =
     },
     [resetHistoryCursor, setDraft]
   )
+
+  const applyHistoryDraft = useCallback(
+    (code: string) => {
+      applyingHistoryRef.current = true
+      setDraft(code)
+      const editor = editorRef.current
+      if (editor) {
+        if (editor.getValue() !== code) editor.setValue(code)
+        const line = editor.getModel()?.getLineCount() ?? 1
+        const col = editor.getModel()?.getLineMaxColumn(line) ?? 1
+        editor.setPosition({ lineNumber: line, column: col })
+        editor.focus()
+      }
+      queueMicrotask(() => {
+        applyingHistoryRef.current = false
+      })
+    },
+    [setDraft]
+  )
+
+  const showPreviousHistory = useCallback(() => {
+    const code = historyUp(editorRef.current?.getValue() ?? draftRef.current)
+    if (code !== null) applyHistoryDraft(code)
+  }, [applyHistoryDraft, historyUp])
+
+  const showNextHistory = useCallback(() => {
+    const code = historyDown()
+    if (code !== null) applyHistoryDraft(code)
+  }, [applyHistoryDraft, historyDown])
 
   const persistActiveSnippet = useCallback(() => {
     const id = activeSnippetIdRef.current
@@ -341,7 +374,7 @@ export function TerminalPanel({ hideChrome = false }: { hideChrome?: boolean } =
   const handleDraftChange = useCallback(
     (value: string) => {
       setDraft(value)
-      resetHistoryCursor()
+      if (!applyingHistoryRef.current) resetHistoryCursor()
       const id = activeSnippetIdRef.current
       if (!id) return
       const snippet = useTerminalSnippetsStore.getState().snippets.find((s) => s.id === id)
@@ -417,13 +450,7 @@ export function TerminalPanel({ hideChrome = false }: { hideChrome?: boolean } =
           return
         }
         if (activeSnippetIdRef.current) return
-        const prev = historyUp(editor.getValue())
-        if (prev != null) {
-          editor.setValue(prev)
-          const line = editor.getModel()?.getLineCount() ?? 1
-          const col = editor.getModel()?.getLineMaxColumn(line) ?? 1
-          editor.setPosition({ lineNumber: line, column: col })
-        }
+        showPreviousHistory()
       })
 
       editor.addCommand(monaco.KeyCode.DownArrow, () => {
@@ -439,13 +466,7 @@ export function TerminalPanel({ hideChrome = false }: { hideChrome?: boolean } =
           return
         }
         if (activeSnippetIdRef.current) return
-        const next = historyDown()
-        if (next != null) {
-          editor.setValue(next)
-          const line = editor.getModel()?.getLineCount() ?? 1
-          const col = editor.getModel()?.getLineMaxColumn(line) ?? 1
-          editor.setPosition({ lineNumber: line, column: col })
-        }
+        showNextHistory()
       })
 
       editor.focus()
@@ -456,7 +477,7 @@ export function TerminalPanel({ hideChrome = false }: { hideChrome?: boolean } =
       } | null
       suggest?.forceRenderingAbove?.()
     },
-    [historyDown, historyUp, persistActiveSnippet, runCode]
+    [persistActiveSnippet, runCode, showNextHistory, showPreviousHistory]
   )
 
   useEffect(() => {
@@ -609,6 +630,16 @@ export function TerminalPanel({ hideChrome = false }: { hideChrome?: boolean } =
         dirty={snippetDirty}
         editorPath={editorPath}
         mobile={mobile}
+        historyNavigator={
+          mobile && historyCount > 0 ? (
+            <TerminalHistoryNavigator
+              count={historyCount}
+              index={historyIndex}
+              onPrevious={showPreviousHistory}
+              onNext={showNextHistory}
+            />
+          ) : null
+        }
         onDraftChange={handleDraftChange}
         onRun={handleRun}
         onSaveFile={saveActiveSnippet}
