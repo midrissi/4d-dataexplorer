@@ -16,12 +16,12 @@ import { isMobileShell } from '~/lib/platform'
 import type { MethodExecutorSeed } from '~/store/method-executor-types'
 import type { MethodFavourite } from '~/store/method-favourites'
 import { useUsedTagsStore } from '~/store/used-tags'
+import { MethodSeedExpression } from './MethodSeedExpression'
 import {
   cnMethodScopeBadge,
   methodArgCountMeta,
   methodScopeShortLabel,
 } from './method-list-display'
-import { MethodSeedExpression } from './MethodSeedExpression'
 
 function FavouriteRow({
   favourite,
@@ -62,12 +62,7 @@ function FavouriteRow({
       meta={
         <>
           {favourite.tags?.length ? (
-            <TagList
-              tags={favourite.tags}
-              max={2}
-              activeTag={activeTag}
-              onTagClick={onTagClick}
-            />
+            <TagList tags={favourite.tags} max={2} activeTag={activeTag} onTagClick={onTagClick} />
           ) : null}
           {argMeta ? (
             <span className="hidden text-[10px] text-muted-foreground sm:inline">{argMeta}</span>

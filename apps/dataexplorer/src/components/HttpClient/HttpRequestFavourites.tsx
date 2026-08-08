@@ -65,12 +65,7 @@ function FavouriteRequestRow({
       meta={
         <>
           {favourite.tags?.length ? (
-            <TagList
-              tags={favourite.tags}
-              max={2}
-              activeTag={activeTag}
-              onTagClick={onTagClick}
-            />
+            <TagList tags={favourite.tags} max={2} activeTag={activeTag} onTagClick={onTagClick} />
           ) : null}
           {!mobile ? (
             <span
