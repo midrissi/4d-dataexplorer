@@ -80,9 +80,25 @@ The login helper is called in `beforeEach` hooks, so each test starts with an au
 
 ## Configuration
 
-The Playwright configuration is in `playwright.config.ts`. 
+The Playwright configuration is in `playwright.config.ts`.
 
-**Note:** The configuration is set to reuse an existing dev server if one is already running on port 3002. If no server is running, you can start it manually with `bun --filter @4d/dataexplorer dev`, or the tests will attempt to start it automatically (though this may not work in all environments).
+E2E runs against the **production build** (`apps/dataexplorer/DataBrowser`), not Vite dev:
+
+1. Stage the build under `.e2e-static/dataexplorer/` (app `base` is `/dataexplorer/`)
+2. Serve it with `bunx http-server`
+3. Proxy `/rest`, `/api`, `/health`, … to rest-server (`REST_PORT`, default `7081`)
+
+Playwright starts this via `scripts/e2e-serve.sh` (also `bun run test:e2e:serve` from the repo root).
+
+```bash
+# optional: build first (e2e-serve builds if DataBrowser is missing)
+bun --filter @4d/dataexplorer build
+
+# run tests (starts http-server + rest-server automatically)
+bun run test:e2e
+```
+
+Defaults: `DATAEXPLORER_URL=http://localhost:4173`, `PORT=4173`, `REST_PORT=7081`. Locally, an already-running server on that URL is reused (`reuseExistingServer`).
 
 Some tests may be skipped if certain conditions aren't met (e.g., no dataclasses available). This is expected behavior.
 
@@ -167,7 +183,7 @@ Optional env vars:
 
 ## CI/CD
 
-Tests are configured to run in CI environments with:
+Tests run against the production build served by `scripts/e2e-serve.sh` (`bunx http-server` + rest-server API proxy), with:
 - Retries on failure
 - HTML and GitHub reporters
 - Trace collection on first retry

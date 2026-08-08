@@ -24,8 +24,9 @@ RUN cd packages/e2e && bunx playwright install --with-deps && cd ../..
 RUN chmod +x /app/scripts/e2e-docker-entrypoint.sh
 
 ENV CI=true
-ENV PORT=7080
-ENV DATAEXPLORER_URL=http://localhost:7080
+ENV PORT=4173
+ENV REST_PORT=7081
+ENV DATAEXPLORER_URL=http://localhost:4173
 
 ENTRYPOINT ["/app/scripts/e2e-docker-entrypoint.sh"]
 CMD []

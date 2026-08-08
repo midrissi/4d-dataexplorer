@@ -118,34 +118,15 @@ jobs:
       - name: Install Playwright browsers
         run: cd packages/e2e && bunx playwright install --with-deps
 
-      - name: Start rest-server
-        run: |
-          cd packages/rest-server
-          bun run dev > rest-server.log 2>&1 &
-          echo $! > rest-server.pid
-          timeout 30 bash -c 'until curl -f http://localhost:7080/health 2>/dev/null; do sleep 1; done' || true
-        env:
-          PORT: 7080
-
-      - name: Verify rest-server is running
-        run: |
-          sleep 2
-          curl -f http://localhost:7080/health || exit 1
-          curl -f http://localhost:7080/dataexplorer/ || exit 1
-
       - name: Run E2E tests
         run: bun run test:e2e
         timeout-minutes: 50
         env:
-          BACKEND_URL: ${{ secrets.BACKEND_URL || 'http://localhost:7080' }}
           CI: true
-
-      - name: Stop rest-server
-        if: always()
-        run: |
-          if [ -f packages/rest-server/rest-server.pid ]; then
-            kill $(cat packages/rest-server/rest-server.pid) || true
-          fi
+          PORT: 4173
+          REST_PORT: 7081
+          DATAEXPLORER_URL: http://localhost:4173
+          BACKEND_URL: ${{ secrets.BACKEND_URL || 'http://localhost:7081' }}
 
       - name: Upload test results
         if: always()
@@ -155,13 +136,14 @@ jobs:
           path: packages/e2e/playwright-report/
           retention-days: 30
 
-      - name: Upload rest-server logs
+      - name: Upload e2e server logs
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: rest-server-logs
-          path: packages/rest-server/rest-server.log
+          name: e2e-server-logs
+          path: .e2e-static/rest-server.log
           retention-days: 7
+          if-no-files-found: ignore
 
   # ── Publish / package only after unit + e2e pass ───────────────────────────
   docker:

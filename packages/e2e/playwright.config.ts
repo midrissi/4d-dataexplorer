@@ -1,10 +1,15 @@
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { defineConfig, devices } from '@playwright/test'
 
 /**
  * Get the DataExplorer URL from environment variable or use default
- * Default: http://localhost:7080
+ * Default: http://localhost:4173 (built app via scripts/e2e-serve.sh / http-server)
  */
-const DATAEXPLORER_URL = process.env.DATAEXPLORER_URL || 'http://localhost:7080'
+const DATAEXPLORER_URL = process.env.DATAEXPLORER_URL || 'http://localhost:4173'
+
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
+const e2eServeScript = path.join(repoRoot, 'scripts/e2e-serve.sh')
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -65,25 +70,13 @@ export default defineConfig({
     // },
   ],
 
-  /* Run your local dev server before starting the tests */
-  webServer: process.env.CI
-    ? {
-        // In CI, rest-server should already be running (started by CI script)
-        // Just verify it's accessible
-        command: `echo "Waiting for rest-server..." && sleep 2 && curl -f ${DATAEXPLORER_URL}/health`,
-        url: `${DATAEXPLORER_URL}/dataexplorer/`,
-        reuseExistingServer: true,
-        timeout: 30 * 1000,
-        stdout: 'pipe',
-        stderr: 'pipe',
-      }
-    : {
-        // In local development, start the dataexplorer dev server
-        command: 'bun --filter @4d/dataexplorer dev',
-        url: `${DATAEXPLORER_URL}/dataexplorer/`,
-        reuseExistingServer: true,
-        timeout: 120 * 1000,
-        stdout: 'pipe',
-        stderr: 'pipe',
-      },
+  /* Serve the production DataExplorer build via bunx http-server (API proxied to rest-server). */
+  webServer: {
+    command: `bash "${e2eServeScript}"`,
+    url: `${DATAEXPLORER_URL}/dataexplorer/`,
+    reuseExistingServer: !process.env.CI,
+    timeout: 180 * 1000,
+    stdout: 'pipe',
+    stderr: 'pipe',
+  },
 })

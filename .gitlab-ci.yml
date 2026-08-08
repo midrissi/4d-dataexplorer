@@ -65,21 +65,18 @@ e2e:
     - bash scripts/e2e-setup.sh
   script:
     - cd packages/e2e && npx playwright test
-  after_script:
-    - |
-      if [ -f packages/rest-server/rest-server.pid ]; then
-        kill $(cat packages/rest-server/rest-server.pid) || true
-      fi
   variables:
-    BACKEND_URL: "${BACKEND_URL:-http://localhost:7080}"
+    BACKEND_URL: "${BACKEND_URL:-http://localhost:7081}"
     CI: "true"
-    PORT: "7080"
+    PORT: "4173"
+    REST_PORT: "7081"
+    DATAEXPLORER_URL: "http://localhost:4173"
   artifacts:
     when: always
     name: playwright-report-${CI_COMMIT_REF_SLUG}
     paths:
       - packages/e2e/playwright-report/
-      - packages/rest-server/rest-server.log
+      - .e2e-static/rest-server.log
     expire_in: 30 days
 
 # Release stage (only on main branch tags)

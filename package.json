@@ -34,6 +34,7 @@
     "test:e2e:debug": "bun --filter @4d/e2e test:debug",
     "test:e2e:report": "bun --filter @4d/e2e test:report",
     "test:e2e:codegen": "bun --filter @4d/e2e test:codegen",
+    "test:e2e:serve": "bash scripts/e2e-serve.sh",
     "test:e2e:docker": "docker build -f Dockerfile.e2e -t dataexplorer-e2e . && docker run --rm dataexplorer-e2e",
     "capture:screenshots": "bun --filter @4d/e2e capture:screenshots && bun run screenshots:compare -- -d",
     "screenshots:compare": "bun scripts/compare-screenshot-changes.ts",
