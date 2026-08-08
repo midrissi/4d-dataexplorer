@@ -1,12 +1,5 @@
-import {
-  CodeEditor,
-  Input,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-  Switch,
-  Textarea,
-} from '@4d/ui'
+import { Input, Popover, PopoverContent, PopoverTrigger, Switch, Textarea } from '@4d/ui'
+import { CodeEditor } from '@4d/ui/code-editor'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import * as React from 'react'
 import type { JSONSchema } from '../types'

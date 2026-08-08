@@ -1,4 +1,5 @@
-import { CodeEditor, ScrollArea } from '@4d/ui'
+import { ScrollArea } from '@4d/ui'
+import { CodeEditor } from '@4d/ui/code-editor'
 import * as React from 'react'
 import { useSchemaBuilderContext, useSchemaBuilderI18n } from '../components/schema-builder'
 import { getEditorLabels } from '../i18n'

@@ -1,11 +1,5 @@
-import {
-  Button,
-  CodeEditor,
-  type CodeEditorInstance,
-  cn,
-  type EditorPrefs,
-  SegmentedControl,
-} from '@4d/ui'
+import { Button, cn, type EditorPrefs, SegmentedControl } from '@4d/ui'
+import { CodeEditor, type CodeEditorInstance } from '@4d/ui/code-editor'
 import {
   CornerDownLeft,
   FileCode2,

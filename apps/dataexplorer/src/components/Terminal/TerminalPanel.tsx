@@ -1,13 +1,6 @@
 import type { CatalogAllResponse } from '@4d/rest'
-import {
-  Button,
-  type CodeEditorInstance,
-  cn,
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@4d/ui'
+import { Button, cn, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@4d/ui'
+import type { CodeEditorInstance } from '@4d/ui/code-editor'
 import { BookOpen, Braces, Eraser, Terminal as TerminalIcon } from 'lucide-react'
 import type * as MonacoEditor from 'monaco-editor'
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'

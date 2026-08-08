@@ -1,4 +1,5 @@
-import { CodeEditor, cn } from '@4d/ui'
+import { cn } from '@4d/ui'
+import { CodeEditor } from '@4d/ui/code-editor'
 import { useState } from 'react'
 import {
   BinaryObjectViewer,

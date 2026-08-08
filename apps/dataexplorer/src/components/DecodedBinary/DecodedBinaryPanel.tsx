@@ -1,11 +1,11 @@
 import type { JsonArray, JsonObject } from '@4d/base64-decoder'
 import { cn } from '@4d/ui'
+import { lazy, Suspense } from 'react'
 import { ObjectTree } from '~/components/Console/ObjectTree'
 import { BlobBinaryView } from './BlobBinaryView'
 import { FormulaBinaryView } from './FormulaBinaryView'
 import { GenericBinaryView } from './GenericBinaryView'
 import { MailAttachmentBinaryView } from './MailAttachmentBinaryView'
-import { MethodBinaryView } from './MethodBinaryView'
 import { OpaqueBinaryView } from './OpaqueBinaryView'
 import { FileBinaryView, FolderBinaryView } from './PathBinaryView'
 import { PointerBinaryView } from './PointerBinaryView'
@@ -22,6 +22,10 @@ import {
   isVectorDecoded,
 } from './types'
 import { VectorBinaryView } from './VectorBinaryView'
+
+const MethodBinaryView = lazy(() =>
+  import('./MethodBinaryView').then((m) => ({ default: m.MethodBinaryView }))
+)
 
 interface DecodedBinaryPanelProps {
   decoded: DecodedBinaryObject
@@ -61,7 +65,11 @@ export function DecodedBinaryPanel({ decoded, className }: DecodedBinaryPanelPro
   }
 
   if (isMethodDecoded(__decoded) && __class === 'VolM') {
-    return <MethodBinaryView data={__decoded} className={className} />
+    return (
+      <Suspense fallback={<div className={cn('min-h-24', className)} />}>
+        <MethodBinaryView data={__decoded} className={className} />
+      </Suspense>
+    )
   }
 
   // FileHandle + opaque runtime classes (pict, rest, soap, …) share metadata + payload shape.

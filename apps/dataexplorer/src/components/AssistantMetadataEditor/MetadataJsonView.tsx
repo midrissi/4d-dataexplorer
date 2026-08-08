@@ -1,4 +1,5 @@
-import { Button, CodeEditor, cn, ScrollArea } from '@4d/ui'
+import { Button, cn, ScrollArea } from '@4d/ui'
+import { CodeEditor } from '@4d/ui/code-editor'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from '~/i18n'
 import type { AssistantMetadataSchema } from '~/lib/assistant-metadata-schema'

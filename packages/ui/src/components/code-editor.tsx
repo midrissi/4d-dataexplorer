@@ -17,7 +17,16 @@ import type * as Monaco from 'monaco-editor'
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { cn } from '../lib/utils'
 import { Button } from './button'
+import {
+  type CodeEditorLabels,
+  DEFAULT_EDITOR_LABELS,
+  DEFAULT_EDITOR_PREFS,
+  type EditorPrefs,
+} from './editor-prefs'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tooltip'
+
+export type { CodeEditorLabels, EditorPrefs } from './editor-prefs'
+export { DEFAULT_EDITOR_LABELS, DEFAULT_EDITOR_PREFS } from './editor-prefs'
 
 /* ------------------------------------------------------------------ */
 /*  Schema completion helpers                                          */
@@ -215,7 +224,8 @@ function configureJsonSchemaRequest(monaco: typeof Monaco) {
 
 /**
  * Ensures Monaco is loaded and JSON schema request is enabled (so $schema URLs are fetched).
- * Call once at app startup so the JSON worker is created with the correct options.
+ * Optional preload on intent (e.g. hover to open an editor). CodeEditor also configures
+ * this in `beforeMount` so startup does not need to pull Monaco into the entry chunk.
  */
 export function ensureMonacoJsonSchemaRequest(): Promise<void> {
   return loader.init().then(configureJsonSchemaRequest)
@@ -319,20 +329,6 @@ function updateMonacoJsonSchemas(monaco: typeof Monaco) {
 
 const PREFS_KEY = 'code-editor-prefs'
 
-export interface EditorPrefs {
-  fontSizeDelta: number
-  wordWrap: boolean
-  minimap: boolean
-  toolbarPosition: 'top' | 'bottom'
-}
-
-export const DEFAULT_EDITOR_PREFS: EditorPrefs = {
-  fontSizeDelta: -2,
-  wordWrap: false,
-  minimap: false,
-  toolbarPosition: 'top',
-}
-
 let prefsCache: EditorPrefs | null = null
 
 function loadPrefs(): EditorPrefs {
@@ -389,40 +385,6 @@ function useEditorPrefs(): [EditorPrefs, (update: Partial<EditorPrefs>) => void]
 /* ------------------------------------------------------------------ */
 
 export type CodeEditorInstance = Monaco.editor.IStandaloneCodeEditor
-
-export interface CodeEditorLabels {
-  formatDocument: string
-  copyCode: string
-  copied: string
-  undo: string
-  redo: string
-  zoomIn: string
-  zoomOut: string
-  resetZoom: string
-  enableWordWrap: string
-  disableWordWrap: string
-  showMinimap: string
-  hideMinimap: string
-  moveToolbarToTop: string
-  moveToolbarToBottom: string
-}
-
-export const DEFAULT_EDITOR_LABELS: CodeEditorLabels = {
-  formatDocument: 'Format document',
-  copyCode: 'Copy code',
-  copied: 'Copied!',
-  undo: 'Undo',
-  redo: 'Redo',
-  zoomIn: 'Zoom in',
-  zoomOut: 'Zoom out',
-  resetZoom: 'Reset zoom',
-  enableWordWrap: 'Enable word wrap',
-  disableWordWrap: 'Disable word wrap',
-  showMinimap: 'Show minimap',
-  hideMinimap: 'Hide minimap',
-  moveToolbarToTop: 'Move toolbar to top',
-  moveToolbarToBottom: 'Move toolbar to bottom',
-}
 
 export type ToolId =
   | 'format'
@@ -1152,6 +1114,9 @@ export function CodeEditor({
           onChange={(v) => onChange?.(v ?? '')}
           beforeMount={(monaco) => {
             defineTransparentThemes(monaco)
+            // Configure JSON $schema requests before the editor/worker start so
+            // apps do not need an eager Monaco init in the entry bundle.
+            configureJsonSchemaRequest(monaco)
           }}
           onMount={(editor, monaco) => {
             // Strict Mode / tab switches can re-invoke onMount after dispose with
@@ -1160,7 +1125,6 @@ export function CodeEditor({
             editorRef.current = editor
             monacoRef.current = monaco
             if (language === 'json') {
-              configureJsonSchemaRequest(monaco)
               const schemaObj = schemaRef.current
               if (schemaObj && typeof schemaObj === 'object') {
                 const model = editor.getModel()

@@ -1,7 +1,6 @@
 import {
   Button,
   ClickToCopy,
-  CodeEditor,
   cn,
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +18,7 @@ import {
   useConfirm,
   useToast,
 } from '@4d/ui'
+import { CodeEditor } from '@4d/ui/code-editor'
 import {
   Braces,
   Check,

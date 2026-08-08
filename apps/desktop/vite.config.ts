@@ -30,6 +30,14 @@ export default defineConfig({
         replacement: path.resolve(__dirname, '../../packages/ui/src/themes'),
       },
       {
+        find: '@4d/ui/editor-prefs',
+        replacement: path.resolve(__dirname, '../../packages/ui/src/components/editor-prefs.ts'),
+      },
+      {
+        find: '@4d/ui/code-editor',
+        replacement: path.resolve(__dirname, '../../packages/ui/src/code-editor.ts'),
+      },
+      {
         find: '@4d/ui',
         replacement: path.resolve(__dirname, '../../packages/ui/src/index.ts'),
       },

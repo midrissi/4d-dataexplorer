@@ -678,6 +678,7 @@ export const fr = {
     wrapperRequiresPost: 'Le wrapper nécessite une requête POST — désactivez Exécuter avec GET.',
     snippets: {
       label: 'Snippets',
+      webFormRef: 'webFormRef par défaut',
       webEvent: 'Événement web',
     },
     add: 'Ajouter',

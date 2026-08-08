@@ -15,18 +15,6 @@ export {
 export { Checkbox } from './components/checkbox'
 export { ClickToCopy, type ClickToCopyAs, type ClickToCopyProps } from './components/click-to-copy'
 export {
-  CodeEditor,
-  type CodeEditorInstance,
-  type CodeEditorLabels,
-  type CodeEditorProps,
-  DEFAULT_EDITOR_LABELS,
-  DEFAULT_EDITOR_PREFS,
-  type EditorPrefs,
-  ensureMonacoJsonSchemaRequest,
-  type ToolbarConfig,
-  type ToolId,
-} from './components/code-editor'
-export {
   Dialog,
   DialogClose,
   DialogContent,
@@ -55,6 +43,12 @@ export {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from './components/dropdown-menu'
+export {
+  type CodeEditorLabels,
+  DEFAULT_EDITOR_LABELS,
+  DEFAULT_EDITOR_PREFS,
+  type EditorPrefs,
+} from './components/editor-prefs'
 export { Input } from './components/input'
 export { Label } from './components/label'
 export {

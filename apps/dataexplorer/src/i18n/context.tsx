@@ -1,4 +1,4 @@
-import type { CodeEditorLabels } from '@4d/ui'
+import type { CodeEditorLabels } from '@4d/ui/editor-prefs'
 import type { ReactNode } from 'react'
 import { createContext, useCallback, useContext, useMemo } from 'react'
 import { useSettingsStore } from '~/store/settings'

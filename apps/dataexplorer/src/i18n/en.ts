@@ -666,6 +666,7 @@ export const en = {
     wrapperRequiresPost: 'Wrapper requires a POST request — turn off Execute with GET.',
     snippets: {
       label: 'Snippets',
+      webFormRef: 'Default webFormRef',
       webEvent: 'Web event',
     },
     add: 'Add',

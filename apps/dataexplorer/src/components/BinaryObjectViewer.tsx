@@ -13,15 +13,13 @@ import {
   ScanSearch,
   Share,
 } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { DecodedBinaryContent } from '~/components/DecodedBinary/DecodedBinaryPanel'
 import {
-  DecodedBinaryContent,
   decodedRootLabel,
   useDecodedBinaryObject,
-} from '~/components/DecodedBinary'
+} from '~/components/DecodedBinary/useDecodedBinaryObject'
 import { HexViewer } from '~/components/HexViewer'
-import { PdfPreviewPanel } from '~/components/HttpClient/PdfPreviewPanel'
-import { TextPreviewPanel } from '~/components/HttpClient/TextPreviewPanel'
 import { useTranslation } from '~/i18n'
 import { api } from '~/lib/api'
 import {
@@ -35,28 +33,22 @@ import { canShareFiles, downloadBytes, shareBytes } from '~/lib/download-bytes'
 import { isMobileShell } from '~/lib/platform'
 import { formatBytes } from '~/lib/utils'
 
-/** The reserved key 4D uses to serialise a binary/blob value inside an object. */
-export const PRIVATE_BINARY_OBJECT_KEY = '__PRIVATE_BINARY_OBJECT'
+const TextPreviewPanel = lazy(() =>
+  import('~/components/HttpClient/TextPreviewPanel').then((m) => ({ default: m.TextPreviewPanel }))
+)
+const PdfPreviewPanel = lazy(() =>
+  import('~/components/HttpClient/PdfPreviewPanel').then((m) => ({ default: m.PdfPreviewPanel }))
+)
+
+import { isPrivateBinaryObject, PRIVATE_BINARY_OBJECT_KEY } from '~/lib/private-binary-object'
+
+export { isPrivateBinaryObject, PRIVATE_BINARY_OBJECT_KEY }
 
 const HEX_PREVIEW_COUNT = 16
 /** Full hex dump is skipped above this size (same ballpark as HTTP Client). */
 const MAX_FULL_HEX_BYTES = 2 * 1024 * 1024
 /** Inline media preview is skipped above this size. */
 const MAX_MEDIA_PREVIEW_BYTES = 12 * 1024 * 1024
-
-/**
- * Detect whether a value is a 4D private binary object, i.e. an object whose
- * single property is {@link PRIVATE_BINARY_OBJECT_KEY} holding a base64 string.
- */
-export function isPrivateBinaryObject(value: unknown): value is Record<string, string> {
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) return false
-  const keys = Object.keys(value)
-  return (
-    keys.length === 1 &&
-    keys[0] === PRIVATE_BINARY_OBJECT_KEY &&
-    typeof (value as Record<string, unknown>)[PRIVATE_BINARY_OBJECT_KEY] === 'string'
-  )
-}
 
 /** Exact byte length of a base64 payload without decoding the whole string. */
 function base64ByteSize(b64: string): number {
@@ -450,28 +442,44 @@ export function BinaryObjectViewer({
         shareLabel={shareAvailable ? t('entity.shareImage') : undefined}
       />
     ) : meta.format?.kind === 'text' && fullBytes ? (
-      <TextPreviewPanel
-        text={bytesToText(fullBytes)}
-        className="h-[min(60vh,32rem)] rounded-md"
-        initialMode={
-          meta.format.extension === 'csv' || meta.format.extension === 'tsv'
-            ? 'csv'
-            : meta.format.extension === 'json'
-              ? 'json'
-              : meta.format.extension === 'html' || meta.format.extension === 'htm'
-                ? 'html'
-                : meta.format.extension === 'md' || meta.format.extension === 'markdown'
-                  ? 'markdown'
-                  : undefined
+      <Suspense
+        fallback={
+          <div className="flex h-[min(60vh,32rem)] items-center justify-center text-muted-foreground text-xs">
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+          </div>
         }
-      />
+      >
+        <TextPreviewPanel
+          text={bytesToText(fullBytes)}
+          className="h-[min(60vh,32rem)] rounded-md"
+          initialMode={
+            meta.format.extension === 'csv' || meta.format.extension === 'tsv'
+              ? 'csv'
+              : meta.format.extension === 'json'
+                ? 'json'
+                : meta.format.extension === 'html' || meta.format.extension === 'htm'
+                  ? 'html'
+                  : meta.format.extension === 'md' || meta.format.extension === 'markdown'
+                    ? 'markdown'
+                    : undefined
+          }
+        />
+      </Suspense>
     ) : meta.format?.kind === 'pdf' && fullBytes ? (
       <div className="overflow-hidden rounded border bg-muted/20">
-        <PdfPreviewPanel
-          bytes={fullBytes}
-          title={name ?? typeLabel}
-          className="h-[min(70vh,40rem)] rounded-none border-0"
-        />
+        <Suspense
+          fallback={
+            <div className="flex h-[min(70vh,40rem)] items-center justify-center text-muted-foreground text-xs">
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+            </div>
+          }
+        >
+          <PdfPreviewPanel
+            bytes={fullBytes}
+            title={name ?? typeLabel}
+            className="h-[min(70vh,40rem)] rounded-none border-0"
+          />
+        </Suspense>
       </div>
     ) : meta.format?.kind === 'image' && previewUrl ? (
       <div className="http-preview-checkerboard flex min-h-40 items-center justify-center overflow-hidden rounded border p-2">

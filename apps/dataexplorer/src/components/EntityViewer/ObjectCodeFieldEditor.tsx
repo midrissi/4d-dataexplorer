@@ -1,4 +1,4 @@
-import { CodeEditor } from '@4d/ui'
+import { CodeEditor } from '@4d/ui/code-editor'
 import { useState } from 'react'
 
 export function ObjectCodeFieldEditor({

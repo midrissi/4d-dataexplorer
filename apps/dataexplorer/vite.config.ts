@@ -43,6 +43,14 @@ export default defineConfig({
         replacement: path.resolve(__dirname, '../../packages/ui/src/themes'),
       },
       {
+        find: '@4d/ui/editor-prefs',
+        replacement: path.resolve(__dirname, '../../packages/ui/src/components/editor-prefs.ts'),
+      },
+      {
+        find: '@4d/ui/code-editor',
+        replacement: path.resolve(__dirname, '../../packages/ui/src/code-editor.ts'),
+      },
+      {
         find: '@4d/ui',
         replacement: path.resolve(__dirname, '../../packages/ui/src/index.ts'),
       },
@@ -74,9 +82,9 @@ export default defineConfig({
   build: {
     outDir: 'DataBrowser',
     emptyOutDir: true,
-    // Main chunk includes Monaco, assistant, AG Grid, etc. (~9MB). Raise until
-    // those are deliberately code-split; avoid noisy false alarms each build.
-    chunkSizeWarningLimit: 10_000,
+    // Entry stays large (assistant, UI shell). Heavy panes (Monaco via editors,
+    // AG Grid, ELK, Method Executor, Http Client) are lazy-loaded from DataclassView.
+    chunkSizeWarningLimit: 5_000,
     rolldownOptions: {
       onwarn(warning, defaultHandler) {
         // @4djs/assistant statically + dynamically imports @4djs/ai-widgets.

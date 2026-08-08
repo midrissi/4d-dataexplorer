@@ -16,15 +16,19 @@ import {
   ToggleLeft,
   TriangleAlert,
 } from 'lucide-react'
-import { type ReactNode, useState } from 'react'
-import {
-  BinaryObjectViewer,
-  isPrivateBinaryObject,
-  PRIVATE_BINARY_OBJECT_KEY,
-} from '~/components/BinaryObjectViewer'
-import { DecodedBinaryPanel } from '~/components/DecodedBinary/DecodedBinaryPanel'
+import { lazy, type ReactNode, Suspense, useState } from 'react'
 import { isDecodedBinaryObject } from '~/components/DecodedBinary/types'
 import { useTranslation } from '~/i18n'
+import { isPrivateBinaryObject, PRIVATE_BINARY_OBJECT_KEY } from '~/lib/private-binary-object'
+
+const BinaryObjectViewer = lazy(() =>
+  import('~/components/BinaryObjectViewer').then((m) => ({ default: m.BinaryObjectViewer }))
+)
+const DecodedBinaryPanel = lazy(() =>
+  import('~/components/DecodedBinary/DecodedBinaryPanel').then((m) => ({
+    default: m.DecodedBinaryPanel,
+  }))
+)
 
 type ObjectTreeProps = {
   value: unknown
@@ -331,11 +335,13 @@ export function ObjectTree({
             <CopyButton value={value} />
           </div>
         ) : null}
-        <BinaryObjectViewer
-          base64={value[PRIVATE_BINARY_OBJECT_KEY]}
-          name={label ?? PRIVATE_BINARY_OBJECT_KEY}
-          defaultExpanded={depth === 0}
-        />
+        <Suspense fallback={<div className="h-8 animate-pulse rounded bg-muted/40" />}>
+          <BinaryObjectViewer
+            base64={value[PRIVATE_BINARY_OBJECT_KEY]}
+            name={label ?? PRIVATE_BINARY_OBJECT_KEY}
+            defaultExpanded={depth === 0}
+          />
+        </Suspense>
       </div>
     )
   }
@@ -357,7 +363,9 @@ export function ObjectTree({
             <CopyButton value={value} />
           </div>
         ) : null}
-        <DecodedBinaryPanel decoded={value} />
+        <Suspense fallback={<div className="h-8 animate-pulse rounded bg-muted/40" />}>
+          <DecodedBinaryPanel decoded={value} />
+        </Suspense>
       </div>
     )
   }

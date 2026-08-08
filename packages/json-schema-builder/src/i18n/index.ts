@@ -1,4 +1,4 @@
-import type { CodeEditorLabels } from '@4d/ui'
+import type { CodeEditorLabels } from '@4d/ui/editor-prefs'
 import { en } from './en'
 import { es } from './es'
 import { fr } from './fr'

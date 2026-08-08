@@ -1,7 +1,6 @@
 import {
   Button,
   Checkbox,
-  CodeEditor,
   cn,
   Dialog,
   DialogContent,
@@ -11,6 +10,7 @@ import {
   DialogTitle,
   Label,
 } from '@4d/ui'
+import { CodeEditor } from '@4d/ui/code-editor'
 import {
   AlertCircle,
   Check,

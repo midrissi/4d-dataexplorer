@@ -75,7 +75,7 @@ import {
   useShortcuts,
 } from '~/store/settings'
 import { RELEASE_NOTES_STATIC_ID, useActiveDataclassTab, useTabsStore } from '~/store/tabs'
-import { AiTasksFooterControl } from './AiActions'
+import { AiTasksFooterControl } from './AiActions/AiTasksFooterControl'
 import { AppBrandIcon } from './AppBrandIcon'
 import { AppearanceControls } from './AppearanceControls'
 import { AssistantSparklesIcon } from './AssistantSparklesIcon'

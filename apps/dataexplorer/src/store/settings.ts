@@ -1,4 +1,4 @@
-import { DEFAULT_EDITOR_PREFS, type EditorPrefs } from '@4d/ui'
+import { DEFAULT_EDITOR_PREFS, type EditorPrefs } from '@4d/ui/editor-prefs'
 import { icons } from 'lucide-react'
 import { create } from 'zustand'
 import { createJSONStorage, devtools, persist } from 'zustand/middleware'

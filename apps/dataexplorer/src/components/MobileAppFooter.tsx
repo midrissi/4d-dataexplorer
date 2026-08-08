@@ -17,7 +17,7 @@ import {
   Settings,
   Terminal,
 } from 'lucide-react'
-import { AiTasksFooterControl } from '~/components/AiActions'
+import { AiTasksFooterControl } from '~/components/AiActions/AiTasksFooterControl'
 import { AppearanceControls } from '~/components/AppearanceControls'
 import { MobileDockButton } from '~/components/MobileDockButton'
 import { useAssistantLlmConfigured } from '~/hooks/useAssistantLlmConfigured'

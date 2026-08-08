@@ -1,4 +1,5 @@
-import { ClickToCopy, CodeEditor, cn } from '@4d/ui'
+import { ClickToCopy, cn } from '@4d/ui'
+import { CodeEditor } from '@4d/ui/code-editor'
 import { Cookie, Copy, FileJson, Inbox, Send, TableProperties } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { isPrivateBinaryObject } from '~/components/BinaryObjectViewer'

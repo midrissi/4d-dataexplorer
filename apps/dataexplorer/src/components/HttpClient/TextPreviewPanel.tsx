@@ -1,4 +1,5 @@
-import { CodeEditor, cn, Markdown } from '@4d/ui'
+import { cn, Markdown } from '@4d/ui'
+import { CodeEditor } from '@4d/ui/code-editor'
 import { Braces, Code2, FileText, Globe, TableProperties } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { JsonTreePreview } from '~/components/Console/ObjectTree'

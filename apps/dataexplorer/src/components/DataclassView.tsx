@@ -1,7 +1,8 @@
 import { Button } from '@4d/ui'
 import { ArrowLeft, Layers, PanelTop } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react'
 import { EmptyPanel } from '~/components/EmptyPanel'
+import { EntityDetailSkeleton, EntityListSkeleton } from '~/components/EntityLoadingSkeleton'
 import { useTranslation } from '~/i18n'
 import { eventBus } from '~/lib/eventBus'
 import { isMobileShell } from '~/lib/platform'
@@ -24,17 +25,43 @@ import {
   useIsStaticTabActive,
   useTabsStore,
 } from '~/store/tabs'
-import { AssistantMetadataTabView } from './AssistantMetadataEditor/AssistantMetadataTabView'
-import { DataclassGraph } from './DataclassGraph'
-import { EntityList } from './EntityList'
-import { EntityViewer } from './EntityViewer'
-import { HttpClientTabView } from './HttpClient/HttpClientTabView'
-import { MethodExecutorTabView } from './MethodExecutor/MethodExecutorTabView'
 import { ResizableHandle, ResizableVerticalHandle } from './ResizablePanel'
-import { SchemaBuilderTabView } from './SchemaBuilderTabView'
-import { SettingsPage } from './SettingsPage'
-import { StaticTabView } from './StaticTabView'
 import { WelcomeScreen } from './WelcomeScreen'
+
+/** Heavy tab panes — keep out of the welcome/first-paint chunk (AG Grid, ELK, Monaco, etc.). */
+const EntityList = lazy(() => import('./EntityList').then((m) => ({ default: m.EntityList })))
+const EntityViewer = lazy(() => import('./EntityViewer').then((m) => ({ default: m.EntityViewer })))
+const DataclassGraph = lazy(() =>
+  import('./DataclassGraph').then((m) => ({ default: m.DataclassGraph }))
+)
+const SettingsPage = lazy(() => import('./SettingsPage').then((m) => ({ default: m.SettingsPage })))
+const StaticTabView = lazy(() =>
+  import('./StaticTabView').then((m) => ({ default: m.StaticTabView }))
+)
+const SchemaBuilderTabView = lazy(() =>
+  import('./SchemaBuilderTabView').then((m) => ({ default: m.SchemaBuilderTabView }))
+)
+const AssistantMetadataTabView = lazy(() =>
+  import('./AssistantMetadataEditor/AssistantMetadataTabView').then((m) => ({
+    default: m.AssistantMetadataTabView,
+  }))
+)
+const MethodExecutorTabView = lazy(() =>
+  import('./MethodExecutor/MethodExecutorTabView').then((m) => ({
+    default: m.MethodExecutorTabView,
+  }))
+)
+const HttpClientTabView = lazy(() =>
+  import('./HttpClient/HttpClientTabView').then((m) => ({ default: m.HttpClientTabView }))
+)
+
+function OverlayFallback({ label }: { label: string }) {
+  return (
+    <div className="flex h-full min-h-0 items-center justify-center text-muted-foreground text-sm">
+      {label}
+    </div>
+  )
+}
 
 const DEFAULT_WIDTH_PERCENT = 40
 const MIN_WIDTH_PERCENT = 25
@@ -98,12 +125,16 @@ function DataclassTabContent({
               </Button>
             </div>
             <div className="min-h-0 flex-1 overflow-hidden">
-              <EntityViewer tabId={tabId} />
+              <Suspense fallback={<EntityDetailSkeleton />}>
+                <EntityViewer tabId={tabId} />
+              </Suspense>
             </div>
           </div>
         ) : (
           <div className="min-h-0 flex-1 overflow-hidden">
-            <EntityList tabId={tabId} />
+            <Suspense fallback={<EntityListSkeleton />}>
+              <EntityList tabId={tabId} />
+            </Suspense>
           </div>
         )}
       </div>
@@ -123,7 +154,9 @@ function DataclassTabContent({
     >
       {/* Entity List — height % when stacked; width % when side-by-side */}
       <div className="min-h-0 min-w-0 overflow-hidden max-[1199px]:h-(--entity-list-height) max-[1199px]:w-full max-[1199px]:shrink-0 min-[1200px]:w-(--entity-list-width) min-[1200px]:shrink-0">
-        <EntityList tabId={tabId} />
+        <Suspense fallback={<EntityListSkeleton />}>
+          <EntityList tabId={tabId} />
+        </Suspense>
       </div>
 
       {/* Vertical resizer — stacked layout only (<1200px) */}
@@ -142,7 +175,9 @@ function DataclassTabContent({
 
       {/* Entity Viewer Panel */}
       <div className="min-h-0 min-w-0 flex-1 overflow-hidden">
-        <EntityViewer tabId={tabId} />
+        <Suspense fallback={<EntityDetailSkeleton />}>
+          <EntityViewer tabId={tabId} />
+        </Suspense>
       </div>
     </div>
   )
@@ -295,19 +330,40 @@ export function DataclassView() {
 
   // Non-dataclass active views are rendered as an overlay over the (hidden)
   // mounted dataclass contents so the latter keep their state while inactive.
+  const loadingLabel = t('common.loading')
   let overlay: React.ReactNode = null
   if (tabs.length === 0 || isHomeTabActive) {
     overlay = <WelcomeScreen />
   } else if (isSettingsTabActive) {
-    overlay = <SettingsPage />
+    overlay = (
+      <Suspense fallback={<OverlayFallback label={loadingLabel} />}>
+        <SettingsPage />
+      </Suspense>
+    )
   } else if (isGraphTabActive) {
-    overlay = <DataclassGraph />
+    overlay = (
+      <Suspense fallback={<OverlayFallback label={loadingLabel} />}>
+        <DataclassGraph />
+      </Suspense>
+    )
   } else if (isStaticTabActive) {
-    overlay = <StaticTabView />
+    overlay = (
+      <Suspense fallback={<OverlayFallback label={loadingLabel} />}>
+        <StaticTabView />
+      </Suspense>
+    )
   } else if (isSchemaBuilderTabActive) {
-    overlay = <SchemaBuilderTabView />
+    overlay = (
+      <Suspense fallback={<OverlayFallback label={loadingLabel} />}>
+        <SchemaBuilderTabView />
+      </Suspense>
+    )
   } else if (isAssistantMetadataTabActive) {
-    overlay = <AssistantMetadataTabView />
+    overlay = (
+      <Suspense fallback={<OverlayFallback label={loadingLabel} />}>
+        <AssistantMetadataTabView />
+      </Suspense>
+    )
   } else if (!activeDataclassTabId && !activeMethodExecutorTabId && !activeHttpClientTabId) {
     overlay = (
       <EmptyPanel
@@ -348,7 +404,9 @@ export function DataclassView() {
         const isActive = tab.id === activeTabId
         return (
           <div key={tab.id} className="h-full" style={{ display: isActive ? 'block' : 'none' }}>
-            <MethodExecutorTabView tab={tab} />
+            <Suspense fallback={<OverlayFallback label={loadingLabel} />}>
+              <MethodExecutorTabView tab={tab} />
+            </Suspense>
           </div>
         )
       })}
@@ -356,7 +414,9 @@ export function DataclassView() {
         const isActive = tab.id === activeTabId
         return (
           <div key={tab.id} className="h-full" style={{ display: isActive ? 'block' : 'none' }}>
-            <HttpClientTabView tab={tab} />
+            <Suspense fallback={<OverlayFallback label={loadingLabel} />}>
+              <HttpClientTabView tab={tab} />
+            </Suspense>
           </div>
         )
       })}

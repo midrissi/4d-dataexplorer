@@ -1,4 +1,5 @@
-import { Button, Checkbox, CodeEditor, cn, Input, Label, ScrollArea } from '@4d/ui'
+import { Button, Checkbox, cn, Input, Label, ScrollArea } from '@4d/ui'
+import { CodeEditor } from '@4d/ui/code-editor'
 import { Loader2, Upload, X } from 'lucide-react'
 import {
   forwardRef,

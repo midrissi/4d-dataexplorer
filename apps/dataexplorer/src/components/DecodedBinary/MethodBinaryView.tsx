@@ -1,4 +1,5 @@
-import { ClickToCopy, CodeEditor } from '@4d/ui'
+import { ClickToCopy } from '@4d/ui'
+import { CodeEditor } from '@4d/ui/code-editor'
 import { Code2 } from 'lucide-react'
 import { useMemo } from 'react'
 import { useTranslation } from '~/i18n'

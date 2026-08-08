@@ -1,4 +1,4 @@
-import type { CodeEditor } from '@4d/ui'
+import type { CodeEditor } from '@4d/ui/code-editor'
 import { JsonTreePreview } from '~/components/Console/ObjectTree'
 import { ObjectCodeFieldEditor } from './ObjectCodeFieldEditor'
 

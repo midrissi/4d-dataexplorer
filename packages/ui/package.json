@@ -7,6 +7,8 @@
   "types": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts",
+    "./code-editor": "./src/code-editor.ts",
+    "./editor-prefs": "./src/components/editor-prefs.ts",
     "./styles": "./src/styles/globals.css",
     "./themes/*": "./src/themes/*"
   },

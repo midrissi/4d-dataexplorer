@@ -1,6 +1,5 @@
 import {
   Button,
-  CodeEditor,
   cn,
   Input,
   Select,
@@ -9,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@4d/ui'
+import { CodeEditor } from '@4d/ui/code-editor'
 import {
   argumentsToParamsSchema,
   methodArgumentsEditorJsonSchema,

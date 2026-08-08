@@ -1,7 +1,6 @@
 import {
   Button,
   ClickToCopy,
-  CodeEditor,
   cn,
   Input,
   Label,
@@ -13,6 +12,7 @@ import {
   SelectValue,
   Switch,
 } from '@4d/ui'
+import { CodeEditor } from '@4d/ui/code-editor'
 import type { LucideIcon } from 'lucide-react'
 import {
   AlertTriangle,

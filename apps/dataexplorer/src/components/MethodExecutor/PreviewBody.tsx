@@ -1,4 +1,4 @@
-import { CodeEditor } from '@4d/ui'
+import { CodeEditor } from '@4d/ui/code-editor'
 import type { ReactNode } from 'react'
 import { isPrivateBinaryObject } from '~/components/BinaryObjectViewer'
 import { PrivateBinaryResult } from '~/components/DecodedBinary/PrivateBinaryResult'

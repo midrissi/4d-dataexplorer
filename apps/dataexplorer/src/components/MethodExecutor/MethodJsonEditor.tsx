@@ -1,4 +1,4 @@
-import { CodeEditor } from '@4d/ui'
+import { CodeEditor } from '@4d/ui/code-editor'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 /**

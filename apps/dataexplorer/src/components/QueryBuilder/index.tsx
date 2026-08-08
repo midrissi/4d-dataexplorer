@@ -6,8 +6,6 @@ import {
 import {
   Button,
   ClickToCopy,
-  CodeEditor,
-  type CodeEditorInstance,
   cn,
   Dialog,
   DialogContent,
@@ -24,6 +22,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@4d/ui'
+import { CodeEditor, type CodeEditorInstance } from '@4d/ui/code-editor'
 import {
   ArrowDownAZ,
   ArrowUpAZ,

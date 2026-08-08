@@ -1,4 +1,4 @@
-import { CodeEditor } from '@4d/ui'
+import { CodeEditor } from '@4d/ui/code-editor'
 import Ajv from 'ajv/dist/2020'
 import { AlertCircle, CheckCircle2, XCircle } from 'lucide-react'
 import type * as Monaco from 'monaco-editor'
