@@ -65,6 +65,7 @@
       "!**/dist",
       "!**/build",
       "!**/DataBrowser",
+      "!**/.e2e-static",
       "!**/playwright-report",
       "!**/test-results",
       "!**/.turbo",
