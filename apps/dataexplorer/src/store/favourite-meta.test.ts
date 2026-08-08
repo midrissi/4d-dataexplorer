@@ -21,9 +21,9 @@ describe('favourite-meta', () => {
   it('parses free-text tag input', () => {
     expect(parseFavouriteTagsInput('api, smoke #prod\nnightly')).toEqual([
       'api',
-      'smoke',
-      'prod',
       'nightly',
+      'prod',
+      'smoke',
     ])
   })
 

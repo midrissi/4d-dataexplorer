@@ -9,6 +9,20 @@ const chipTone = {
     'border-primary/25 bg-primary/10 text-foreground dark:border-primary/30 dark:bg-primary/12',
   active:
     'border-primary/40 bg-primary/15 text-foreground ring-1 ring-primary/20 dark:bg-primary/20',
+  /** Curated starter tags (smoke, rest, …). */
+  preset:
+    'border-sky-500/30 bg-sky-500/10 text-sky-800 dark:border-sky-400/35 dark:bg-sky-500/15 dark:text-sky-200',
+  /** User-created / history tags. */
+  custom:
+    'border-amber-500/30 bg-amber-500/10 text-amber-900 dark:border-amber-400/35 dark:bg-amber-500/15 dark:text-amber-200',
+} as const
+
+const hashTone = {
+  muted: 'text-primary/70',
+  accent: 'text-primary/70',
+  active: 'text-primary/80',
+  preset: 'text-sky-600 dark:text-sky-300',
+  custom: 'text-amber-700 dark:text-amber-300',
 } as const
 
 const chipSize = {
@@ -46,7 +60,7 @@ export function TagChip({
       title={tag}
       {...props}
     >
-      <span aria-hidden className={cn('select-none text-primary/70', compact && 'text-[8px]')}>
+      <span aria-hidden className={cn('select-none', hashTone[tone], compact && 'text-[8px]')}>
         #
       </span>
       <span className="min-w-0 truncate">{tag}</span>
@@ -74,15 +88,18 @@ export function TagChip({
 export function TagChipButton({
   tag,
   active,
+  tone = 'muted',
   size = 'sm',
   className,
   ...props
 }: {
   tag: string
   active?: boolean
+  tone?: Exclude<TagChipTone, 'active'>
   size?: TagChipSize
   className?: string
 } & ButtonHTMLAttributes<HTMLButtonElement>) {
+  const idleTone = tone === 'preset' || tone === 'custom' ? tone : 'muted'
   return (
     <button
       type="button"
@@ -91,14 +108,17 @@ export function TagChipButton({
         chipSize[size],
         'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background',
         size === 'sm' ? 'max-w-24' : 'max-w-28',
-        active ? chipTone.active : chipTone.muted,
+        active ? chipTone.active : chipTone[idleTone],
         className
       )}
       title={tag}
       aria-pressed={active}
       {...props}
     >
-      <span aria-hidden className="select-none text-[8px] text-primary/70">
+      <span
+        aria-hidden
+        className={cn('select-none text-[8px]', active ? hashTone.active : hashTone[idleTone])}
+      >
         #
       </span>
       <span className="min-w-0 truncate">{tag}</span>

@@ -23,10 +23,10 @@ function DataclassToken({ dataClass, slot }: { dataClass?: string; slot?: ReactN
   return (
     <span
       style={colorClasses.style}
-      className={cn('inline-flex items-center gap-1 leading-5', colorClasses.text)}
+      className={cn('inline-flex items-center gap-1 leading-none', colorClasses.text)}
     >
       <DataclassIcon customization={customization} className="size-[1em] shrink-0" />
-      <span className="leading-5">{dataClass}</span>
+      <span className="leading-none">{dataClass}</span>
     </span>
   )
 }
@@ -36,7 +36,7 @@ function SingletonToken({ name, slot }: { name?: string; slot?: ReactNode }) {
   if (!name) return null
 
   return (
-    <span className="text-fuchsia-700 leading-5 dark:text-fuchsia-400" translate="no">
+    <span className="text-fuchsia-700 leading-none dark:text-fuchsia-400" translate="no">
       {name}
     </span>
   )
@@ -79,7 +79,7 @@ export function MethodCallExpression({
   const keyContent = keySlot ?? keyDisplay
 
   return (
-    <code className="inline-flex min-w-max max-w-none flex-nowrap items-center gap-x-0 whitespace-nowrap font-mono text-xs leading-5">
+    <code className="inline-flex min-w-max max-w-none flex-nowrap items-center gap-x-0 whitespace-nowrap font-mono text-xs leading-none">
       <span
         className={
           isSingleton ? 'text-fuchsia-600 dark:text-fuchsia-400' : 'text-sky-600 dark:text-sky-400'

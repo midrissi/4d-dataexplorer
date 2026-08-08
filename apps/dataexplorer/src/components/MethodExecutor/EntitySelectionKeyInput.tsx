@@ -109,7 +109,7 @@ export function EntitySelectionKeyInput({
         title={showLink ? t('methodExecutor.openEntitySelection') : undefined}
         style={{ width: `${widthCh}ch`, fieldSizing: 'content' }}
         className={cn(
-          'm-0 inline-block min-w-[1ch] appearance-none border-0 bg-transparent p-0 align-middle font-mono text-emerald-600 text-xs leading-5 outline-none ring-0 focus:outline-none dark:text-emerald-400',
+          'm-0 inline-block min-w-[1ch] appearance-none border-0 bg-transparent p-0 align-middle font-mono text-emerald-600 text-xs leading-none outline-none ring-0 focus:outline-none dark:text-emerald-400',
           showLink && 'cursor-pointer underline underline-offset-2',
           inputProps.className
         )}

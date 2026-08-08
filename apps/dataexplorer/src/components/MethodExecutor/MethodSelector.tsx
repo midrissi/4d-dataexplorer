@@ -19,6 +19,7 @@ import type { MethodScope } from '~/store/method-executor-types'
 import { useDataclassCustomizations } from '~/store/settings'
 import { EntitySelectionKeyInput } from './EntitySelectionKeyInput'
 import { MethodCallExpression } from './MethodCallExpression'
+import { denseParamsText } from './method-list-display'
 import { SearchableDataclassSelect } from './SearchableDataclassSelect'
 import { SearchableMethodSelect } from './SearchableMethodSelect'
 import type { MethodCatalogItem } from './useMethodCatalog'
@@ -134,7 +135,7 @@ export function MethodSelector({
         aria-label={t('methodExecutor.entityKey')}
         size={selectionKeyWidth}
         style={{ width: `${selectionKeyWidth}ch`, fieldSizing: 'content' }}
-        className="m-0 inline-block min-w-[1ch] appearance-none border-0 bg-transparent p-0 align-middle font-mono text-emerald-600 text-xs leading-5 outline-none dark:text-emerald-400"
+        className="m-0 inline-block min-w-[1ch] appearance-none border-0 bg-transparent p-0 align-middle font-mono text-emerald-600 text-xs leading-none outline-none dark:text-emerald-400"
       />
     ) : scope === 'entitySelection' ? (
       <EntitySelectionKeyInput
@@ -239,7 +240,10 @@ export function MethodSelector({
               </div>
             </div>
             <div
-              className={cn('overflow-y-auto overscroll-contain', mobile ? 'max-h-64' : 'max-h-52')}
+              className={cn(
+                'overflow-hidden overflow-y-auto overscroll-contain rounded-md border bg-background',
+                mobile ? 'max-h-64' : 'max-h-52'
+              )}
             >
               {catalogLoading ? (
                 <p className="px-2 py-4 text-center text-muted-foreground text-xs">
@@ -254,6 +258,7 @@ export function MethodSelector({
                   description={t('methodExecutor.noMethodsDescription')}
                   ghost="none"
                   size="sm"
+                  className="min-h-0 py-4"
                 />
               ) : (
                 filteredMethods.map((method) => {
@@ -261,6 +266,7 @@ export function MethodSelector({
                     ? customizations[method.dataClass]
                     : undefined
                   const colorClasses = getDataclassColorClasses(customization)
+                  const signature = denseParamsText(method.paramsText)
                   return (
                     <button
                       key={method.id}
@@ -271,26 +277,33 @@ export function MethodSelector({
                       }}
                       style={colorClasses.style}
                       className={cn(
-                        'flex w-full min-w-0 items-center gap-2 rounded-md text-left transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                        mobile ? 'min-h-11 px-2 py-2.5' : 'px-2 py-1.5'
+                        'group/row flex w-full min-w-0 items-center gap-1.5 border-border/60 border-b text-left last:border-b-0',
+                        'transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                        mobile ? 'min-h-11 px-2 py-1.5' : 'h-7 px-2'
                       )}
                     >
-                      <MethodCallExpression
-                        scope={method.scope}
-                        dataClass={method.dataClass}
-                        singletonName={method.singletonName}
-                        methodName={method.methodName}
-                      />
-                      {method.paramsText ? (
-                        <span className="ml-auto hidden max-w-[40%] truncate font-mono text-[10px] text-muted-foreground/70 sm:inline">
-                          {method.paramsText}
+                      <span className="min-w-0 flex-1 overflow-x-auto">
+                        <MethodCallExpression
+                          scope={method.scope}
+                          dataClass={method.dataClass}
+                          singletonName={method.singletonName}
+                          methodName={method.methodName}
+                        />
+                      </span>
+                      {signature ? (
+                        <span
+                          className="max-w-[50%] shrink-0 truncate font-mono text-[10px] text-muted-foreground/75"
+                          title={method.paramsText}
+                        >
+                          {signature}
                         </span>
                       ) : (
                         <span
                           className={cn(
-                            'ml-auto h-1.5 w-1.5 shrink-0 rounded-full',
-                            method.scope === 'singleton' ? 'bg-fuchsia-500/70' : colorClasses.bg
+                            'h-1.5 w-1.5 shrink-0 rounded-full opacity-70',
+                            method.scope === 'singleton' ? 'bg-fuchsia-500' : colorClasses.bg
                           )}
+                          aria-hidden
                         />
                       )}
                     </button>
@@ -300,47 +313,51 @@ export function MethodSelector({
             </div>
           </>
         ) : (
-          <div className="group flex items-start gap-1 rounded-md px-1 py-1.5 hover:bg-muted/40">
-            <div className="min-w-0 flex-1 space-y-1 pt-0.5">
-              <div className="flex flex-nowrap items-center gap-2 overflow-x-auto">
-                <MethodCallExpression
-                  scope={scope}
-                  dataClass={dataClass || undefined}
-                  singletonName={singletonName || undefined}
-                  methodName={methodName}
-                  dataClassSlot={
-                    needsTarget ? (
-                      <SearchableDataclassSelect
-                        value={selectedTarget}
-                        dataClasses={targetOptions}
-                        argumentName={methodName}
-                        onChange={needsSingleton ? onSingletonNameChange : onDataClassChange}
-                      />
-                    ) : undefined
-                  }
-                  methodSlot={
-                    <SearchableMethodSelect
-                      value={methodName}
-                      methods={switchableMethods}
-                      loading={catalogLoading}
-                      onChange={onChooseMethod}
+          <div
+            className={cn(
+              'group flex items-center gap-1.5 overflow-hidden rounded-md border bg-background px-2',
+              'hover:bg-muted/40',
+              mobile ? 'min-h-11 py-1' : 'h-7'
+            )}
+          >
+            <div className="flex min-w-0 flex-1 flex-nowrap items-center gap-1.5 overflow-x-auto">
+              <MethodCallExpression
+                scope={scope}
+                dataClass={dataClass || undefined}
+                singletonName={singletonName || undefined}
+                methodName={methodName}
+                dataClassSlot={
+                  needsTarget ? (
+                    <SearchableDataclassSelect
+                      value={selectedTarget}
+                      dataClasses={targetOptions}
+                      argumentName={methodName}
+                      onChange={needsSingleton ? onSingletonNameChange : onDataClassChange}
                     />
-                  }
-                  keySlot={selectedKeySlot}
-                />
-                <span className="rounded-sm px-1.5 py-0.5 text-[10px] text-muted-foreground/80">
-                  {scopeLabel(scope, t)}
-                </span>
-              </div>
+                  ) : undefined
+                }
+                methodSlot={
+                  <SearchableMethodSelect
+                    value={methodName}
+                    methods={switchableMethods}
+                    loading={catalogLoading}
+                    onChange={onChooseMethod}
+                  />
+                }
+                keySlot={selectedKeySlot}
+              />
+              <span className="shrink-0 text-[10px] text-muted-foreground/70">
+                {scopeLabel(scope, t)}
+              </span>
             </div>
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 shrink-0 text-muted-foreground opacity-60 hover:text-foreground group-hover:opacity-100"
+              className="h-5 w-5 shrink-0 text-muted-foreground opacity-60 hover:text-foreground group-hover:opacity-100"
               onClick={onClearMethod}
               aria-label={t('methodExecutor.chooseMethod')}
             >
-              <X className="h-3.5 w-3.5" />
+              <X className="h-3 w-3" />
             </Button>
           </div>
         )}

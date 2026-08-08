@@ -1,6 +1,7 @@
 import { cn, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@4d/ui'
 import { useTranslation } from '~/i18n'
-import { TagChip, TagChipButton } from './TagChip'
+import { favouriteTagChipTone } from '~/store/used-tags'
+import { TagChip, TagChipButton, type TagChipTone } from './TagChip'
 
 /**
  * Single-line tag display for dense list rows.
@@ -11,14 +12,12 @@ export function TagList({
   tags,
   className,
   max = 2,
-  tone = 'muted',
   activeTag,
   onTagClick,
 }: {
   tags: readonly string[]
   className?: string
   max?: number
-  tone?: 'muted' | 'accent'
   activeTag?: string | null
   onTagClick?: (tag: string) => void
 }) {
@@ -29,13 +28,15 @@ export function TagList({
   const isActive = (tag: string) =>
     activeTag != null && activeTag.toLowerCase() === tag.toLowerCase()
 
-  const renderChip = (tag: string, chipTone: 'muted' | 'accent' = tone) => {
+  const renderChip = (tag: string) => {
+    const tone: TagChipTone = favouriteTagChipTone(tag)
     if (onTagClick) {
       return (
         <TagChipButton
           key={tag.toLowerCase()}
           tag={tag}
           size="sm"
+          tone={tone}
           active={isActive(tag)}
           aria-label={t('tags.filterByTag', { tag })}
           onClick={(event) => {
@@ -45,7 +46,7 @@ export function TagList({
         />
       )
     }
-    return <TagChip key={tag.toLowerCase()} tag={tag} tone={chipTone} size="sm" />
+    return <TagChip key={tag.toLowerCase()} tag={tag} tone={tone} size="sm" />
   }
 
   return (
@@ -68,9 +69,7 @@ export function TagList({
               </button>
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-xs">
-              <div className="flex flex-wrap gap-0.5">
-                {tags.map((tag) => renderChip(tag, onTagClick ? tone : 'accent'))}
-              </div>
+              <div className="flex flex-wrap gap-0.5">{tags.map((tag) => renderChip(tag))}</div>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

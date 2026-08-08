@@ -65,3 +65,19 @@ export function cnMethodScopeBadge(scope: MethodScope): string {
   const tone = methodScopeTone(scope)
   return cn(tone.bg, tone.text)
 }
+
+/**
+ * Compact catalog signature for dense list rows
+ * e.g. `( datasetSize : Text )` → `(datasetSize: Text)`.
+ */
+export function denseParamsText(paramsText: string | undefined | null): string | null {
+  if (paramsText == null) return null
+  const trimmed = paramsText.trim()
+  if (!trimmed) return null
+  return trimmed
+    .replace(/\s*:\s*/g, ':')
+    .replace(/\s*;\s*/g, '; ')
+    .replace(/\(\s+/g, '(')
+    .replace(/\s+\)/g, ')')
+    .replace(/\)\s*:/g, '):')
+}

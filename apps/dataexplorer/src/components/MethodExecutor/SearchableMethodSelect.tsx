@@ -13,6 +13,7 @@ import { Check, ChevronDown, CircleAlert, Code2, Search } from 'lucide-react'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { EmptyPanel } from '~/components/EmptyPanel'
 import { useTranslation } from '~/i18n'
+import { denseParamsText } from './method-list-display'
 import type { MethodCatalogItem } from './useMethodCatalog'
 
 type SearchableMethodSelectProps = {
@@ -112,8 +113,8 @@ export function SearchableMethodSelect({
                     : t('methodExecutor.chooseMethod')
                 }
                 className={cn(
-                  'inline-flex max-w-52 items-center gap-1 align-middle',
-                  'font-mono text-[length:inherit] leading-5',
+                  'inline-flex h-5 max-w-52 items-center gap-1 align-middle',
+                  'font-mono text-[length:inherit] leading-none',
                   'rounded-sm transition-colors duration-150',
                   'hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
                   isMissing
@@ -121,7 +122,7 @@ export function SearchableMethodSelect({
                     : 'text-amber-600 dark:text-amber-400'
                 )}
               >
-                <span className="min-w-0 truncate leading-5">{value}</span>
+                <span className="min-w-0 truncate leading-none">{value}</span>
                 <ChevronDown className="size-[0.85em] shrink-0 opacity-40" aria-hidden="true" />
               </button>
             </PopoverTrigger>
@@ -163,7 +164,7 @@ export function SearchableMethodSelect({
               id={listboxId}
               role="listbox"
               aria-label={t('methodExecutor.methods')}
-              className="mt-1.5 max-h-52 overflow-y-auto overscroll-contain"
+              className="mt-1.5 max-h-52 overflow-hidden overflow-y-auto overscroll-contain rounded-md border bg-background"
             >
               {filteredMethods.length === 0 ? (
                 <EmptyPanel
@@ -173,10 +174,12 @@ export function SearchableMethodSelect({
                   title={t('methodExecutor.noMethodsMatch')}
                   ghost="none"
                   size="sm"
+                  className="min-h-0 py-4"
                 />
               ) : (
                 filteredMethods.map((method, index) => {
                   const selected = method.methodName === value
+                  const signature = denseParamsText(method.paramsText)
                   return (
                     <button
                       key={method.id}
@@ -187,24 +190,24 @@ export function SearchableMethodSelect({
                       onMouseEnter={() => setActiveIndex(index)}
                       onClick={() => selectMethod(method)}
                       className={cn(
-                        'flex w-full min-w-0 items-center gap-1.5 rounded-md px-1.5 py-1.5 text-left text-xs',
-                        'hover:bg-muted focus-visible:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                        'flex h-7 w-full min-w-0 items-center gap-1.5 border-border/60 border-b px-1.5 text-left text-xs last:border-b-0',
+                        'hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                         index === activeIndex && 'bg-muted/70'
                       )}
                     >
                       <Check
-                        className={cn(
-                          'h-3.5 w-3.5 shrink-0',
-                          selected ? 'opacity-100' : 'opacity-0'
-                        )}
+                        className={cn('h-3 w-3 shrink-0', selected ? 'opacity-100' : 'opacity-0')}
                         aria-hidden="true"
                       />
                       <span className="min-w-0 flex-1 truncate font-mono text-amber-600 dark:text-amber-400">
                         {method.methodName}
                       </span>
-                      {method.paramsText ? (
-                        <span className="max-w-[45%] truncate font-mono text-[10px] text-muted-foreground/70">
-                          {method.paramsText}
+                      {signature ? (
+                        <span
+                          className="max-w-[50%] shrink-0 truncate font-mono text-[10px] text-muted-foreground/75"
+                          title={method.paramsText}
+                        >
+                          {signature}
                         </span>
                       ) : null}
                     </button>

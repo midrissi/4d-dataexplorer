@@ -45,6 +45,7 @@ yarn-error.log*
 # Cursor
 .cursor/*
 !.cursor/skills
+!.cursor/rules
 
 # WASM glue occasionally regenerated next to committed pkg/
 packages/base64-decoder/pkg/.gitignore

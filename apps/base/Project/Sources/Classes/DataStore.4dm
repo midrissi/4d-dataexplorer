@@ -9,7 +9,7 @@ exposed Function getFirstCar()
 exposed Function sayHello($firstname : Text; $lastname : Text)
 	return "Hello, "+$firstname+" "+$lastname
 	
-exposed Function justATest($isNested : Boolean)
+exposed onHTTPGet Function justATest($isNested : Boolean)
 	var $myCode : Text
 	$myCode:="#DECLARE ($number1:Integer;$number2:Integer):Integer"+Char(13)+"return $number1*$number2"
 	

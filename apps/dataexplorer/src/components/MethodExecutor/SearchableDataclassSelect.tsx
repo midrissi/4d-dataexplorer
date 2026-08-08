@@ -104,8 +104,8 @@ export function SearchableDataclassSelect({
           aria-expanded={open}
           aria-label={t('methodExecutor.chooseArgumentDataclass', { name: argumentName })}
           className={cn(
-            'inline-flex max-w-44 items-center gap-1 align-middle',
-            'font-mono text-[length:inherit] leading-5',
+            'inline-flex h-5 max-w-44 items-center gap-1 align-middle',
+            'font-mono text-[length:inherit] leading-none',
             'rounded-sm transition-colors duration-150',
             'hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40',
             value ? selectedColorClasses.text : 'text-muted-foreground'
@@ -115,7 +115,7 @@ export function SearchableDataclassSelect({
           {value ? (
             <DataclassIcon customization={selectedCustomization} className="size-[1em] shrink-0" />
           ) : null}
-          <span className="min-w-0 truncate leading-5">{displayLabel}</span>
+          <span className="min-w-0 truncate leading-none">{displayLabel}</span>
           <ChevronDown className="size-[0.85em] shrink-0 opacity-40" aria-hidden="true" />
         </button>
       </PopoverTrigger>

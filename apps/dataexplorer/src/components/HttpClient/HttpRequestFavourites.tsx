@@ -1,8 +1,8 @@
-import { cn } from '@4d/ui'
+import { cn, useConfirm } from '@4d/ui'
 import { Star } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import {
-  FavouriteMetaDialog,
+  FavouriteInlineMetaEditor,
   FavouritePrimaryLabel,
   FavouriteTagFilterBar,
   formatRelativeTime,
@@ -20,16 +20,22 @@ import { httpMethodTone, httpRequestLabel } from './http-request-display'
 
 function FavouriteRequestRow({
   favourite,
+  editing,
   onOpen,
   onRemove,
   onEdit,
+  onSaveMeta,
+  onCancelEdit,
   activeTag,
   onTagClick,
 }: {
   favourite: HttpRequestFavourite
+  editing: boolean
   onOpen: () => void
   onRemove: () => void
   onEdit: () => void
+  onSaveMeta: (meta: { name?: string; tags?: string[] }) => void
+  onCancelEdit: () => void
   activeTag: string | null
   onTagClick: (tag: string) => void
 }) {
@@ -40,6 +46,17 @@ function FavouriteRequestRow({
   const absoluteTime = new Date(favourite.createdAt).toLocaleString()
   const detail = isCustomOrigin ? fullUrl : path
 
+  if (editing) {
+    return (
+      <FavouriteInlineMetaEditor
+        initialName={favourite.name}
+        initialTags={favourite.tags}
+        onSave={onSaveMeta}
+        onCancel={onCancelEdit}
+      />
+    )
+  }
+
   return (
     <SavedListRow
       badge={
@@ -48,16 +65,8 @@ function FavouriteRequestRow({
       primary={
         <FavouritePrimaryLabel
           name={favourite.name}
-          detail={
-            <span
-              className={cn(
-                favourite.name && 'truncate',
-                isCustomOrigin && 'text-muted-foreground'
-              )}
-            >
-              {detail}
-            </span>
-          }
+          detail={<span className={cn(isCustomOrigin && 'text-muted-foreground')}>{detail}</span>}
+          signatureLabel={t('favouriteMeta.viewPath')}
         />
       }
       primaryClassName={favourite.name ? 'overflow-hidden' : 'truncate'}
@@ -104,9 +113,10 @@ export function HttpRequestFavourites({
 }) {
   const { t } = useTranslation()
   const mobile = isMobileShell()
+  const { confirm, ConfirmDialog } = useConfirm()
   const registerTags = useUsedTagsStore((state) => state.registerTags)
   const [activeTag, setActiveTag] = useState<string | null>(null)
-  const [editing, setEditing] = useState<HttpRequestFavourite | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
 
   useEffect(() => {
     registerTags(favourites.flatMap((favourite) => favourite.tags ?? []))
@@ -130,6 +140,21 @@ export function HttpRequestFavourites({
       favourite.tags?.some((tag) => tag.toLowerCase() === key)
     )
   }, [favourites, activeTag])
+
+  const confirmRemove = async (favourite: HttpRequestFavourite) => {
+    const { path, fullUrl } = httpRequestLabel(favourite.seed)
+    const label = favourite.name?.trim() || path || fullUrl
+    const ok = await confirm({
+      title: t('favouriteMeta.removeConfirmTitle'),
+      description: t('favouriteMeta.removeConfirmDescription', { name: label }),
+      confirmText: t('httpClient.removeFavourite'),
+      cancelText: t('common.cancel'),
+      variant: 'destructive',
+    })
+    if (!ok) return
+    if (editingId === favourite.id) setEditingId(null)
+    onRemoveFavourite(favourite.id)
+  }
 
   return (
     <>
@@ -160,9 +185,17 @@ export function HttpRequestFavourites({
             <FavouriteRequestRow
               key={favourite.id}
               favourite={favourite}
+              editing={editingId === favourite.id}
               onOpen={() => onOpenFavourite(favourite.seed)}
-              onRemove={() => onRemoveFavourite(favourite.id)}
-              onEdit={() => setEditing(favourite)}
+              onRemove={() => {
+                void confirmRemove(favourite)
+              }}
+              onEdit={() => setEditingId(favourite.id)}
+              onSaveMeta={(meta) => {
+                onUpdateFavouriteMeta(favourite.id, meta)
+                setEditingId(null)
+              }}
+              onCancelEdit={() => setEditingId(null)}
               activeTag={activeTag}
               onTagClick={(tag) =>
                 setActiveTag((current) =>
@@ -173,20 +206,7 @@ export function HttpRequestFavourites({
           ))
         )}
       </SavedListPanel>
-
-      <FavouriteMetaDialog
-        open={editing != null}
-        onOpenChange={(open) => {
-          if (!open) setEditing(null)
-        }}
-        initialName={editing?.name}
-        initialTags={editing?.tags}
-        onSave={(meta) => {
-          if (!editing) return
-          onUpdateFavouriteMeta(editing.id, meta)
-          setEditing(null)
-        }}
-      />
+      <ConfirmDialog />
     </>
   )
 }

@@ -20,6 +20,7 @@ import { MethodFavourites } from './MethodFavourites'
 import { MethodRunHistory } from './MethodRunHistory'
 import { MethodSelector } from './MethodSelector'
 import { flushPendingWrapperText, MethodWrapperEditor } from './MethodWrapperEditor'
+import { DEFAULT_METHOD_WRAPPER_TEXT } from './method-json-snippets'
 import { type MethodResponseMeta, methodResponseMetaFromCall } from './method-response-meta'
 import { parseParamsText } from './parse-params-text'
 import { parseWrapperText } from './parse-wrapper-text'
@@ -74,7 +75,7 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
   const [wrapperEnabled, setWrapperEnabled] = useState(
     seed?.wrapperEnabled ?? Boolean(seed?.wrapperText?.trim())
   )
-  const [wrapperText, setWrapperText] = useState(seed?.wrapperText ?? '')
+  const [wrapperText, setWrapperText] = useState(seed?.wrapperText ?? DEFAULT_METHOD_WRAPPER_TEXT)
   const [argumentsList, setArgumentsListState] = useState<RuntimeArgument[]>(() =>
     initialArguments(seed)
   )
@@ -112,7 +113,7 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
     setAllowedOnHTTPGET(item.allowedOnHTTPGET ?? false)
     setUseGet(false)
     setWrapperEnabled(false)
-    setWrapperText('')
+    setWrapperText(DEFAULT_METHOD_WRAPPER_TEXT)
     setArgumentsList(withPositionalNames(parseParamsText(item.paramsText)))
     if (!sameTarget) {
       setKey('')
@@ -131,7 +132,7 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
     setMethodName('')
     setArgumentsList([])
     setWrapperEnabled(false)
-    setWrapperText('')
+    setWrapperText(DEFAULT_METHOD_WRAPPER_TEXT)
     setKey('')
     setEntitySetId('')
     setFilter('')

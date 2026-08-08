@@ -1,0 +1,26 @@
+---
+description: Hover-reveal row actions must be absolutely positioned — never reserve empty layout space
+globs: apps/**/*.{tsx,jsx},packages/ui/**/*.{tsx,jsx}
+alwaysApply: false
+---
+
+# Absolute hover actions (no reserved gaps)
+
+When a list/table/autocomplete row shows an action only on hover or focus (delete, forget, edit, star, …):
+
+## Do
+
+- Position the control with `absolute` (typically `right-1 top-1/2 -translate-y-1/2` or `inset-y-0 right-0`) inside a `relative` row.
+- Reveal with `opacity-0` → `group-hover:opacity-100` / `focus-within:opacity-100` (and keep keyboard focus visible).
+- Overlay the control on the row when revealed; give it an opaque surface (`bg-popover` / bordered chip) so it stays readable over badges or meta — do **not** shift shared trailing content with padding or spacers.
+- Follow the pattern used by `SavedListRow` desktop actions and tag suggestion “forget” controls.
+
+## Don’t
+
+- Do **not** insert an empty spacer (`<span className="w-5" />`, invisible button, etc.) on rows that lack the action just to keep columns aligned.
+- Do **not** use a flex trailing slot that is sometimes empty and sometimes filled — that shifts badges/meta and wastes horizontal space.
+- Do **not** add row end-padding only on action rows to “make room” — that misaligns badges across the list; cover with the absolute control’s background instead.
+
+## Why
+
+Reserved empty slots misalign shared trailing content (badges, timestamps) across rows and add dead chrome. Absolute overlay keeps layout stable whether the action is present or not.

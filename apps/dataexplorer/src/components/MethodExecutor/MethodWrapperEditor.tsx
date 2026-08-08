@@ -3,7 +3,7 @@ import { useCallback, useRef } from 'react'
 import { useTranslation } from '~/i18n'
 import { MethodJsonEditor } from './MethodJsonEditor'
 import { MethodSnippetsMenu } from './MethodSnippetsMenu'
-import { METHOD_WRAPPER_SNIPPETS } from './method-json-snippets'
+import { DEFAULT_METHOD_WRAPPER_TEXT, METHOD_WRAPPER_SNIPPETS } from './method-json-snippets'
 
 type WrapperFlush = () => string
 const pendingWrapperFlushes = new Set<WrapperFlush>()
@@ -69,7 +69,13 @@ export function MethodWrapperEditor({
           <Label className="flex items-center gap-2 font-medium text-muted-foreground text-xs uppercase tracking-wide">
             <Checkbox
               checked={enabled}
-              onCheckedChange={(checked) => onEnabledChange(checked === true)}
+              onCheckedChange={(checked) => {
+                const next = checked === true
+                if (next && !valueRef.current.trim()) {
+                  onChange(DEFAULT_METHOD_WRAPPER_TEXT)
+                }
+                onEnabledChange(next)
+              }}
             />
             {t('methodExecutor.wrapper')}
           </Label>
@@ -87,9 +93,9 @@ export function MethodWrapperEditor({
 
       {enabled ? (
         <MethodJsonEditor
-          value={value || '{\n  \n}'}
+          value={value.trim() ? value : DEFAULT_METHOD_WRAPPER_TEXT}
           onChange={(next) => onChange(normalizeWrapperText(next))}
-          height={160}
+          height={120}
           path="method-executor:///wrapper.json"
           onRegisterFlush={onRegisterFlush}
         />

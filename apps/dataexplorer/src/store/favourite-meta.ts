@@ -24,9 +24,10 @@ export function normalizeFavouriteTags(tags: readonly string[] | undefined | nul
     if (seen.has(key)) continue
     seen.add(key)
     out.push(tag.slice(0, 32))
-    if (out.length >= MAX_FAVOURITE_TAGS) break
   }
-  return out
+  return [...out]
+    .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+    .slice(0, MAX_FAVOURITE_TAGS)
 }
 
 /** Parse a free-text tags field (comma / hash / newline separated). */

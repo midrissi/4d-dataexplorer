@@ -603,6 +603,9 @@ function EditorToolbar({
 const MIN_FONT = 8
 const MAX_FONT = 32
 const FONT_STEP = 2
+/** Floor for flex (`height="100%"`) editors so the Monaco pane never collapses under the toolbar. */
+const MIN_FLEX_EDITOR_HEIGHT_PX = 160
+const MIN_FLEX_EDITOR_BODY_PX = 120
 
 export function CodeEditor({
   value,
@@ -1079,6 +1082,10 @@ export function CodeEditor({
   )
 
   const needsFlexHeight = height === '100%' || height === 'inherit'
+  const resolvedHeight =
+    typeof height === 'number'
+      ? Math.max(height, showToolbar ? MIN_FLEX_EDITOR_BODY_PX : 80)
+      : height
 
   /* ---- render ---- */
 
@@ -1098,11 +1105,27 @@ export function CodeEditor({
         error && 'border-destructive',
         className
       )}
+      style={
+        needsFlexHeight
+          ? { minHeight: MIN_FLEX_EDITOR_HEIGHT_PX }
+          : typeof resolvedHeight === 'number'
+            ? { minHeight: resolvedHeight + (showToolbar ? 28 : 0) }
+            : undefined
+      }
     >
       {toolbarPosition === 'top' && toolbar}
-      <div className={cn('relative w-full min-w-0', needsFlexHeight && 'min-h-0 flex-1')}>
+      <div
+        className={cn('relative w-full min-w-0', needsFlexHeight && 'flex-1')}
+        style={
+          needsFlexHeight
+            ? { minHeight: MIN_FLEX_EDITOR_BODY_PX }
+            : typeof resolvedHeight === 'number'
+              ? { minHeight: resolvedHeight }
+              : undefined
+        }
+      >
         <Editor
-          height={needsFlexHeight ? '100%' : height}
+          height={needsFlexHeight ? '100%' : resolvedHeight}
           language={language}
           theme={monacoTheme}
           value={displayValue}

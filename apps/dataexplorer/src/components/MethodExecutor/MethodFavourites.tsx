@@ -1,8 +1,8 @@
-import { cn } from '@4d/ui'
+import { cn, useConfirm } from '@4d/ui'
 import { Star } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import {
-  FavouriteMetaDialog,
+  FavouriteInlineMetaEditor,
   FavouritePrimaryLabel,
   FavouriteTagFilterBar,
   formatRelativeTime,
@@ -25,16 +25,22 @@ import {
 
 function FavouriteRow({
   favourite,
+  editing,
   onOpen,
   onRemove,
   onEdit,
+  onSaveMeta,
+  onCancelEdit,
   activeTag,
   onTagClick,
 }: {
   favourite: MethodFavourite
+  editing: boolean
   onOpen: () => void
   onRemove: () => void
   onEdit: () => void
+  onSaveMeta: (meta: { name?: string; tags?: string[] }) => void
+  onCancelEdit: () => void
   activeTag: string | null
   onTagClick: (tag: string) => void
 }) {
@@ -43,6 +49,18 @@ function FavouriteRow({
   const argCount = favourite.config.arguments?.length ?? 0
   const argMeta = methodArgCountMeta(argCount, t)
   const absoluteTime = new Date(favourite.createdAt).toLocaleString()
+  const signature = <MethodSeedExpression config={favourite.config} />
+
+  if (editing) {
+    return (
+      <FavouriteInlineMetaEditor
+        initialName={favourite.name}
+        initialTags={favourite.tags}
+        onSave={onSaveMeta}
+        onCancel={onCancelEdit}
+      />
+    )
+  }
 
   return (
     <SavedListRow
@@ -54,7 +72,8 @@ function FavouriteRow({
       primary={
         <FavouritePrimaryLabel
           name={favourite.name}
-          detail={<MethodSeedExpression config={favourite.config} />}
+          detail={signature}
+          signatureLabel={t('favouriteMeta.viewSignature')}
         />
       }
       primaryClassName={favourite.name ? 'overflow-hidden' : undefined}
@@ -104,9 +123,10 @@ export function MethodFavourites({
 }) {
   const { t } = useTranslation()
   const mobile = isMobileShell()
+  const { confirm, ConfirmDialog } = useConfirm()
   const registerTags = useUsedTagsStore((state) => state.registerTags)
   const [activeTag, setActiveTag] = useState<string | null>(null)
-  const [editing, setEditing] = useState<MethodFavourite | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(null)
 
   useEffect(() => {
     registerTags(favourites.flatMap((favourite) => favourite.tags ?? []))
@@ -130,6 +150,20 @@ export function MethodFavourites({
       favourite.tags?.some((tag) => tag.toLowerCase() === key)
     )
   }, [favourites, activeTag])
+
+  const confirmRemove = async (favourite: MethodFavourite) => {
+    const label = favourite.name?.trim() || favourite.config.methodName
+    const ok = await confirm({
+      title: t('favouriteMeta.removeConfirmTitle'),
+      description: t('favouriteMeta.removeConfirmDescription', { name: label }),
+      confirmText: t('methodExecutor.removeFavourite'),
+      cancelText: t('common.cancel'),
+      variant: 'destructive',
+    })
+    if (!ok) return
+    if (editingId === favourite.id) setEditingId(null)
+    onRemoveFavourite(favourite.id)
+  }
 
   return (
     <>
@@ -160,9 +194,17 @@ export function MethodFavourites({
             <FavouriteRow
               key={favourite.id}
               favourite={favourite}
+              editing={editingId === favourite.id}
               onOpen={() => onOpenFavourite(favourite.config)}
-              onRemove={() => onRemoveFavourite(favourite.id)}
-              onEdit={() => setEditing(favourite)}
+              onRemove={() => {
+                void confirmRemove(favourite)
+              }}
+              onEdit={() => setEditingId(favourite.id)}
+              onSaveMeta={(meta) => {
+                onUpdateFavouriteMeta(favourite.id, meta)
+                setEditingId(null)
+              }}
+              onCancelEdit={() => setEditingId(null)}
               activeTag={activeTag}
               onTagClick={(tag) =>
                 setActiveTag((current) =>
@@ -173,20 +215,7 @@ export function MethodFavourites({
           ))
         )}
       </SavedListPanel>
-
-      <FavouriteMetaDialog
-        open={editing != null}
-        onOpenChange={(open) => {
-          if (!open) setEditing(null)
-        }}
-        initialName={editing?.name}
-        initialTags={editing?.tags}
-        onSave={(meta) => {
-          if (!editing) return
-          onUpdateFavouriteMeta(editing.id, meta)
-          setEditing(null)
-        }}
-      />
+      <ConfirmDialog />
     </>
   )
 }

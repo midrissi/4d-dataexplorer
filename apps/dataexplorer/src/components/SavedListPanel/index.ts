@@ -1,3 +1,4 @@
+export { FavouriteInlineMetaEditor } from './FavouriteInlineMetaEditor'
 export { FavouriteMetaDialog } from './FavouriteMetaDialog'
 export { FavouritePrimaryLabel } from './FavouritePrimaryLabel'
 export { FavouriteTagFilterBar } from './FavouriteTagFilterBar'

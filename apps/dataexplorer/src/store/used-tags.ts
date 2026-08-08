@@ -13,6 +13,8 @@ type UsedTagsState = {
   tags: UsedTag[]
   /** Record tags as used (bumps count / recency). */
   registerTags: (tags: readonly string[]) => void
+  /** Drop a custom tag from autocomplete history (presets are unaffected). */
+  forgetTag: (tag: string) => void
   /** Labels sorted by recency then frequency. */
   allLabels: () => string[]
   /** Autocomplete candidates for a query, excluding already-selected labels. */
@@ -21,6 +23,37 @@ type UsedTagsState = {
 
 const MAX_USED_TAGS = 200
 
+/**
+ * Starter tags for favourites — shown by default when the field is empty.
+ * Oriented around ORDA / REST / webform work without being noisy.
+ */
+export const PREDEFINED_FAVOURITE_TAGS = [
+  'auth',
+  'demo',
+  'hotfix',
+  'local',
+  'nightly',
+  'orda',
+  'prod',
+  'regression',
+  'rest',
+  'seed',
+  'smoke',
+  'staging',
+  'webform',
+  'wip',
+] as const
+
+const PREDEFINED_TAG_KEYS = new Set(PREDEFINED_FAVOURITE_TAGS.map((tag) => tag.toLowerCase()))
+
+export function isPredefinedFavouriteTag(tag: string): boolean {
+  return PREDEFINED_TAG_KEYS.has(tag.trim().toLowerCase())
+}
+
+/** Chip tone for favourites UI — presets vs user history. */
+export function favouriteTagChipTone(tag: string): 'preset' | 'custom' {
+  return isPredefinedFavouriteTag(tag) ? 'preset' : 'custom'
+}
 function sortUsedTags(tags: UsedTag[]): UsedTag[] {
   return [...tags].sort((a, b) => {
     if (b.lastUsedAt !== a.lastUsedAt) return b.lastUsedAt - a.lastUsedAt
@@ -29,21 +62,34 @@ function sortUsedTags(tags: UsedTag[]): UsedTag[] {
   })
 }
 
+function matchesQuery(label: string, query: string): boolean {
+  if (!query) return true
+  return label.toLowerCase().includes(query)
+}
+
 export function filterTagSuggestions(
   catalog: readonly UsedTag[],
   query: string,
-  exclude: readonly string[] = []
+  exclude: readonly string[] = [],
+  predefined: readonly string[] = PREDEFINED_FAVOURITE_TAGS
 ): string[] {
   const excluded = new Set(exclude.map((tag) => tag.toLowerCase()))
   const q = query.trim().toLowerCase()
-  const ranked = sortUsedTags(
-    catalog.filter((item) => {
-      if (excluded.has(item.label.toLowerCase())) return false
-      if (!q) return true
-      return item.label.toLowerCase().includes(q)
-    })
-  )
-  return ranked.map((item) => item.label)
+  const seen = new Set<string>()
+  const out: string[] = []
+
+  const push = (label: string) => {
+    const key = label.toLowerCase()
+    if (excluded.has(key) || seen.has(key)) return
+    if (!matchesQuery(label, q)) return
+    seen.add(key)
+    out.push(label)
+  }
+
+  for (const label of predefined) push(label)
+  for (const item of catalog) push(item.label)
+
+  return [...out].sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
 }
 
 export const useUsedTagsStore = create<UsedTagsState>()(
@@ -74,8 +120,16 @@ export const useUsedTagsStore = create<UsedTagsState>()(
           }
         })
       },
+      forgetTag: (tag) => {
+        const key = tag.trim().toLowerCase()
+        if (!key || isPredefinedFavouriteTag(key)) return
+        set((state) => ({
+          tags: state.tags.filter((item) => item.label.toLowerCase() !== key),
+        }))
+      },
       allLabels: () => sortUsedTags(get().tags).map((tag) => tag.label),
-      suggest: (query, exclude = []) => filterTagSuggestions(get().tags, query, exclude),
+      suggest: (query, exclude = []) =>
+        filterTagSuggestions(get().tags, query, exclude, PREDEFINED_FAVOURITE_TAGS),
     }),
     { name: 'dataexplorer-used-tags-v1' }
   )
