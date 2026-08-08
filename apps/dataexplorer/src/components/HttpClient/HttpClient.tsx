@@ -31,6 +31,7 @@ import {
   Send,
   Shield,
   Square,
+  Star,
   Timer,
 } from 'lucide-react'
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
@@ -73,18 +74,22 @@ import {
   type HttpClientSeed,
   type HttpRawLanguage,
 } from '~/store/http-client-types'
+import { useHttpRequestFavouritesStore } from '~/store/http-request-favourites'
 import { useHttpRequestHistoryStore } from '~/store/http-request-history'
+import { sameHttpSeed } from '~/store/same-http-seed'
 import { useCodeEditorPrefs, useUpdateCodeEditorPrefs } from '~/store/settings'
 import { useTabsStore } from '~/store/tabs'
 import { BuiltInHeadersEditor } from './BuiltInHeadersEditor'
 import { CookieJarEditor } from './CookieJarEditor'
 import { FormDataEditor } from './FormDataEditor'
 import { HttpFilePicker } from './HttpFilePicker'
+import { HttpRequestFavourites } from './HttpRequestFavourites'
 import { HttpRequestHistory } from './HttpRequestHistory'
 import { HttpResponsePanel } from './HttpResponsePanel'
 import { KeyValueEditor } from './KeyValueEditor'
 
 type RequestTab = 'params' | 'headers' | 'body' | 'settings'
+type SidePanel = 'none' | 'history' | 'favourites'
 
 function methodToneClass(method: string): string {
   switch (method.toUpperCase()) {
@@ -222,7 +227,7 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
   const [requestTab, setRequestTab] = useState<RequestTab>('params')
   const [sending, setSending] = useState(false)
   const [response, setResponse] = useState<HttpClientResponse | null>(null)
-  const [showHistory, setShowHistory] = useState(false)
+  const [sidePanel, setSidePanel] = useState<SidePanel>('none')
   const [mobilePane, setMobilePane] = useState<'request' | 'response'>('request')
   const [seedWarnings] = useState(() => seed?.warnings ?? [])
   const abortRef = useRef<AbortController | null>(null)
@@ -243,6 +248,11 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
   const removeHistoryRequest = useHttpRequestHistoryStore((state) => state.removeRequest)
   const clearHistoryRequests = useHttpRequestHistoryStore((state) => state.clearRequests)
   const setHistoryMaxCount = useHttpRequestHistoryStore((state) => state.setMaxCount)
+  const favourites = useHttpRequestFavouritesStore((state) => state.favourites)
+  const toggleFavourite = useHttpRequestFavouritesStore((state) => state.toggleFavourite)
+  const removeFavourite = useHttpRequestFavouritesStore((state) => state.removeFavourite)
+  const clearFavourites = useHttpRequestFavouritesStore((state) => state.clearFavourites)
+  const updateFavouriteMeta = useHttpRequestFavouritesStore((state) => state.updateFavouriteMeta)
   const openHttpClientTab = useTabsStore((state) => state.openHttpClientTab)
 
   const currentOrigin = getBaseUrl().replace(/\/$/, '') || window.location.origin
@@ -405,6 +415,9 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
     return Boolean((draft.path || '/').trim())
   }, [draft])
 
+  const builderSeed = useMemo(() => draftToHttpSeed(draft), [draft])
+  const isCurrentFavourite = favourites.some((item) => sameHttpSeed(item.seed, builderSeed))
+
   const standardMethods = useMemo(() => HTTP_METHODS.filter((method) => method !== 'CUSTOM'), [])
 
   const methodInputValue = draft.method === 'CUSTOM' ? draft.customMethod : draft.method
@@ -533,53 +546,99 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
               <p className="font-semibold text-base">{t('httpClient.title')}</p>
               <p className="text-muted-foreground text-xs">{t('httpClient.subtitle')}</p>
             </div>
-            <Button
-              variant={showHistory ? 'secondary' : 'outline'}
-              size="xs"
-              className="h-6 gap-1 px-2"
-              onClick={() => setShowHistory((visible) => !visible)}
-            >
-              <Clock3 className="h-3.5 w-3.5" />
-              {t('httpClient.history')}
-            </Button>
+            <div className="flex shrink-0 items-center gap-1.5">
+              <Button
+                variant={sidePanel === 'favourites' ? 'secondary' : 'outline'}
+                size="xs"
+                className="h-6 gap-1 px-2"
+                onClick={() =>
+                  setSidePanel((panel) => (panel === 'favourites' ? 'none' : 'favourites'))
+                }
+              >
+                <Star className="h-3.5 w-3.5" />
+                {t('httpClient.favourites')}
+              </Button>
+              <Button
+                variant={sidePanel === 'history' ? 'secondary' : 'outline'}
+                size="xs"
+                className="h-6 gap-1 px-2"
+                onClick={() => setSidePanel((panel) => (panel === 'history' ? 'none' : 'history'))}
+              >
+                <Clock3 className="h-3.5 w-3.5" />
+                {t('httpClient.history')}
+              </Button>
+            </div>
           </div>
 
-          {showHistory && !mobile ? (
+          {sidePanel === 'favourites' && !mobile ? (
+            <HttpRequestFavourites
+              favourites={favourites}
+              onOpenFavourite={(nextSeed) => {
+                openHttpClientTab(nextSeed)
+                setSidePanel('none')
+              }}
+              onRemoveFavourite={removeFavourite}
+              onClearFavourites={clearFavourites}
+              onUpdateFavouriteMeta={updateFavouriteMeta}
+              onClose={() => setSidePanel('none')}
+            />
+          ) : null}
+
+          {sidePanel === 'history' && !mobile ? (
             <HttpRequestHistory
               requests={historyRequests}
               maxCount={historyMaxCount}
               onOpenRequest={(nextSeed) => {
                 openHttpClientTab(nextSeed)
-                setShowHistory(false)
+                setSidePanel('none')
               }}
               onRemoveRequest={removeHistoryRequest}
               onClearRequests={clearHistoryRequests}
               onMaxCountChange={setHistoryMaxCount}
-              onClose={() => setShowHistory(false)}
+              onClose={() => setSidePanel('none')}
             />
           ) : null}
 
-          {showHistory && mobile ? (
+          {sidePanel === 'favourites' && mobile ? (
+            <MobileFullscreenSheet open labelledBy="http-request-favourites-title">
+              <HttpRequestFavourites
+                favourites={favourites}
+                onOpenFavourite={(nextSeed) => {
+                  openHttpClientTab(nextSeed)
+                  setSidePanel('none')
+                }}
+                onRemoveFavourite={removeFavourite}
+                onClearFavourites={clearFavourites}
+                onUpdateFavouriteMeta={updateFavouriteMeta}
+                onClose={() => setSidePanel('none')}
+              />
+            </MobileFullscreenSheet>
+          ) : null}
+
+          {sidePanel === 'history' && mobile ? (
             <MobileFullscreenSheet open labelledBy="http-request-history-title">
               <HttpRequestHistory
                 requests={historyRequests}
                 maxCount={historyMaxCount}
                 onOpenRequest={(nextSeed) => {
                   openHttpClientTab(nextSeed)
-                  setShowHistory(false)
+                  setSidePanel('none')
                 }}
                 onRemoveRequest={removeHistoryRequest}
                 onClearRequests={clearHistoryRequests}
                 onMaxCountChange={setHistoryMaxCount}
-                onClose={() => setShowHistory(false)}
+                onClose={() => setSidePanel('none')}
               />
             </MobileFullscreenSheet>
           ) : null}
 
           <div
-            className={cn('space-y-3', showHistory && !mobile && 'border-border/70 border-t pt-4')}
+            className={cn(
+              'space-y-3',
+              sidePanel !== 'none' && !mobile && 'border-border/70 border-t pt-4'
+            )}
           >
-            {showHistory && !mobile ? (
+            {sidePanel !== 'none' && !mobile ? (
               <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
                 {t('httpClient.requestComposer')}
               </p>
@@ -654,7 +713,32 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
                   minListWidth={240}
                 />
 
-                <div className="flex shrink-0 items-center border-border/80 border-l bg-background/40 p-0.5">
+                <div className="flex shrink-0 items-center gap-0.5 border-border/80 border-l bg-background/40 p-0.5">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      'shrink-0 rounded-sm',
+                      mobile ? 'h-8 w-8' : 'h-5 w-5',
+                      isCurrentFavourite && 'text-amber-500 hover:text-amber-600'
+                    )}
+                    disabled={!canSend}
+                    onClick={() => toggleFavourite(builderSeed)}
+                    aria-label={
+                      isCurrentFavourite
+                        ? t('httpClient.removeFavourite')
+                        : t('httpClient.addFavourite')
+                    }
+                    title={
+                      isCurrentFavourite
+                        ? t('httpClient.removeFavourite')
+                        : t('httpClient.addFavourite')
+                    }
+                    aria-pressed={isCurrentFavourite}
+                  >
+                    <Star className={cn('h-3 w-3', isCurrentFavourite && 'fill-current')} />
+                  </Button>
                   {sending ? (
                     <Button
                       type="button"

@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { HttpClientSeed } from './http-client-types'
+import { sameHttpSeed } from './same-http-seed'
 
 export const HTTP_REQUEST_HISTORY_LIMIT_OPTIONS = [10, 20, 30, 50, 100] as const
 export const DEFAULT_HTTP_REQUEST_HISTORY_LIMIT = 30
@@ -27,10 +28,6 @@ type HttpRequestHistoryState = {
   setMaxCount: (count: number) => void
 }
 
-function sameSeed(left: HttpClientSeed, right: HttpClientSeed): boolean {
-  return JSON.stringify(left) === JSON.stringify(right)
-}
-
 function clampMaxCount(count: number): number {
   const options = HTTP_REQUEST_HISTORY_LIMIT_OPTIONS
   if ((options as readonly number[]).includes(count)) return count
@@ -54,7 +51,7 @@ export const useHttpRequestHistoryStore = create<HttpRequestHistoryState>()(
       maxCount: DEFAULT_HTTP_REQUEST_HISTORY_LIMIT,
       addRequest: (seed, meta) =>
         set((state) => {
-          const withoutDuplicate = state.requests.filter((item) => !sameSeed(item.seed, seed))
+          const withoutDuplicate = state.requests.filter((item) => !sameHttpSeed(item.seed, seed))
           return {
             requests: [
               {

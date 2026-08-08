@@ -1,197 +1,75 @@
-import { Button, cn, useConfirm } from '@4d/ui'
-import { History, Trash2, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { EmptyPanel } from '~/components/EmptyPanel'
+import { cn } from '@4d/ui'
+import { History } from 'lucide-react'
+import {
+  formatRelativeTime,
+  SavedListBadge,
+  SavedListPanel,
+  SavedListRow,
+} from '~/components/SavedListPanel'
 import { useTranslation } from '~/i18n'
 import { isMobileShell } from '~/lib/platform'
-import type { MethodExecutorSeed, MethodScope } from '~/store/method-executor-types'
+import type { MethodExecutorSeed } from '~/store/method-executor-types'
+import { useMethodFavouritesStore } from '~/store/method-favourites'
 import type { MethodRunHistoryItem } from '~/store/method-run-history'
-import { isDataclassTab, useTabsStore } from '~/store/tabs'
-import { MethodCallExpression } from './MethodCallExpression'
-
-function isModClick(event: { metaKey: boolean; ctrlKey: boolean }): boolean {
-  return event.metaKey || event.ctrlKey
-}
-
-function scopeLabel(scope: MethodScope, t: (key: string) => string): string {
-  if (scope === 'catalog') return t('methodExecutor.datastore')
-  if (scope === 'dataclass') return t('methodExecutor.dataclass')
-  if (scope === 'entity') return t('methodExecutor.entity')
-  return t('methodExecutor.entitySelection')
-}
-
-function ModClickableKey({
-  value,
-  title,
-  onOpen,
-}: {
-  value: string
-  title: string
-  onOpen: () => void
-}) {
-  const [hovered, setHovered] = useState(false)
-  const [modHeld, setModHeld] = useState(false)
-  const showLink = hovered && modHeld
-
-  useEffect(() => {
-    if (!hovered) return
-    const syncMod = (event: KeyboardEvent) => setModHeld(event.metaKey || event.ctrlKey)
-    const clearMod = () => setModHeld(false)
-    window.addEventListener('keydown', syncMod)
-    window.addEventListener('keyup', syncMod)
-    window.addEventListener('blur', clearMod)
-    return () => {
-      window.removeEventListener('keydown', syncMod)
-      window.removeEventListener('keyup', syncMod)
-      window.removeEventListener('blur', clearMod)
-    }
-  }, [hovered])
-
-  return (
-    // biome-ignore lint/a11y/useKeyWithClickEvents: ⌘/Ctrl+click only; keyboard users open via the history row
-    // biome-ignore lint/a11y/noStaticElementInteractions: mod-click affordance for opening related data
-    <span
-      title={showLink ? title : undefined}
-      onMouseEnter={(event) => {
-        setHovered(true)
-        setModHeld(isModClick(event))
-      }}
-      onMouseMove={(event) => setModHeld(isModClick(event))}
-      onMouseLeave={() => {
-        setHovered(false)
-        setModHeld(false)
-      }}
-      onClick={(event) => {
-        if (!isModClick(event)) return
-        event.preventDefault()
-        event.stopPropagation()
-        onOpen()
-      }}
-      className={cn(
-        'font-mono text-emerald-600 dark:text-emerald-400',
-        showLink && 'cursor-pointer underline underline-offset-2'
-      )}
-    >
-      {value}
-    </span>
-  )
-}
-
-function HistoryMethodExpression({ config }: { config: MethodExecutorSeed }) {
-  const { t } = useTranslation()
-  const openEntitySetTab = useTabsStore((state) => state.openEntitySetTab)
-  const openTab = useTabsStore((state) => state.openTab)
-  const setSelectedEntityId = useTabsStore((state) => state.setSelectedEntityId)
-
-  const dataClass = config.dataClass?.trim() ?? ''
-  const entityKey = config.key === undefined || config.key === '' ? '' : String(config.key)
-  const selectionKey = config.entitySetId?.trim() ?? ''
-
-  const openEntity = () => {
-    if (!dataClass || !entityKey) return
-    openTab(dataClass)
-    const { tabs, activeTabId } = useTabsStore.getState()
-    const tabId =
-      activeTabId &&
-      tabs.some(
-        (tab) =>
-          tab.id === activeTabId &&
-          isDataclassTab(tab) &&
-          tab.dataclassName === dataClass &&
-          !tab.entitySetId
-      )
-        ? activeTabId
-        : tabs.find(
-            (tab) => isDataclassTab(tab) && tab.dataclassName === dataClass && !tab.entitySetId
-          )?.id
-    if (tabId) setSelectedEntityId(tabId, entityKey)
-  }
-
-  const openSelection = () => {
-    if (!dataClass || !selectionKey) return
-    openEntitySetTab({
-      dataclassName: dataClass,
-      entitySetId: selectionKey,
-    })
-  }
-
-  const keyDisplay =
-    config.scope === 'entity' && entityKey ? (
-      <ModClickableKey
-        value={entityKey}
-        title={t('methodExecutor.openEntity')}
-        onOpen={openEntity}
-      />
-    ) : config.scope === 'entitySelection' && selectionKey ? (
-      <ModClickableKey
-        value={selectionKey}
-        title={t('methodExecutor.openEntitySelection')}
-        onOpen={openSelection}
-      />
-    ) : undefined
-
-  return (
-    <MethodCallExpression
-      scope={config.scope}
-      dataClass={dataClass || undefined}
-      methodName={config.methodName}
-      keyDisplay={keyDisplay}
-    />
-  )
-}
+import { MethodSeedExpression } from './MethodSeedExpression'
+import {
+  cnMethodScopeBadge,
+  methodArgCountMeta,
+  methodResultAccentClass,
+  methodScopeShortLabel,
+} from './method-list-display'
 
 function HistoryRunRow({
   run,
   onOpen,
   onRemove,
-  mobile,
 }: {
   run: MethodRunHistoryItem
   onOpen: () => void
   onRemove: () => void
-  mobile?: boolean
 }) {
   const { t } = useTranslation()
+  const mobile = isMobileShell()
+  const isFavourite = useMethodFavouritesStore((state) => state.isFavourite(run.config))
+  const toggleFavourite = useMethodFavouritesStore((state) => state.toggleFavourite)
   const argCount = run.config.arguments?.length ?? 0
+  const argMeta = methodArgCountMeta(argCount, t)
+  const absoluteTime = new Date(run.timestamp).toLocaleString()
 
   return (
-    <div className="group flex items-center gap-1 rounded-md px-1 py-1.5 transition-colors hover:bg-muted/40">
-      <button
-        type="button"
-        className={cn('min-w-0 flex-1 overflow-x-auto text-left', mobile && 'min-h-11 py-1')}
-        onClick={onOpen}
-      >
-        <div className="flex flex-nowrap items-center gap-2">
-          <HistoryMethodExpression config={run.config} />
-          <span className="shrink-0 text-[10px] text-muted-foreground/80">
-            {scopeLabel(run.config.scope, t)}
-          </span>
-        </div>
-        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11px] text-muted-foreground">
-          <span>{new Date(run.timestamp).toLocaleString()}</span>
-          {argCount > 0 ? (
-            <span>
-              {argCount === 1
-                ? t('methodExecutor.argumentCountOne')
-                : t('methodExecutor.argumentCount', { count: argCount })}
+    <SavedListRow
+      accentClassName={methodResultAccentClass(run.resultKind)}
+      badge={
+        <SavedListBadge className={cn(cnMethodScopeBadge(run.config.scope), 'normal-case')}>
+          {methodScopeShortLabel(run.config.scope)}
+        </SavedListBadge>
+      }
+      primary={<MethodSeedExpression config={run.config} />}
+      meta={
+        <>
+          {argMeta ? (
+            <span className="hidden text-[10px] text-muted-foreground sm:inline">{argMeta}</span>
+          ) : null}
+          {!mobile ? (
+            <span
+              className="w-14 truncate text-right text-[10px] text-muted-foreground/80 tabular-nums"
+              title={absoluteTime}
+            >
+              {formatRelativeTime(run.timestamp)}
             </span>
           ) : null}
-        </div>
-      </button>
-      <Button
-        variant="ghost"
-        size="icon"
-        className={cn(
-          'shrink-0 text-muted-foreground hover:text-destructive group-hover:opacity-100',
-          mobile ? 'h-9 w-9' : 'h-6 w-6 opacity-50'
-        )}
-        onClick={onRemove}
-        aria-label={t('methodExecutor.removeRun')}
-        title={t('methodExecutor.removeRun')}
-      >
-        <Trash2 className="h-3.5 w-3.5" />
-      </Button>
-    </div>
+        </>
+      }
+      favourite={{
+        active: isFavourite,
+        onToggle: () => toggleFavourite(run.config),
+        addLabel: t('methodExecutor.addFavourite'),
+        removeLabel: t('methodExecutor.removeFavourite'),
+      }}
+      onRemove={onRemove}
+      removeLabel={t('methodExecutor.removeRun')}
+      onOpen={onOpen}
+    />
   )
 }
 
@@ -209,90 +87,34 @@ export function MethodRunHistory({
   onClose: () => void
 }) {
   const { t } = useTranslation()
-  const { confirm, ConfirmDialog } = useConfirm()
   const mobile = isMobileShell()
 
-  const handleClearAll = async () => {
-    const ok = await confirm({
-      title: t('methodExecutor.clearHistoryTitle'),
-      description: <span>{t('methodExecutor.clearHistoryDescription')}</span>,
-      confirmText: t('methodExecutor.clearAll'),
-      cancelText: t('methodExecutor.cancel'),
-      variant: 'destructive',
-    })
-    if (!ok) return
-    onClearRuns()
-    onClose()
-  }
-
   return (
-    <div className={cn('space-y-2', mobile ? 'flex h-full min-h-0 flex-col' : 'border-t pt-4')}>
-      <ConfirmDialog />
-      <div
-        className={cn(
-          'flex items-center justify-between gap-2',
-          mobile && 'shrink-0 border-b px-3 py-2'
-        )}
-      >
-        <p
-          id={mobile ? 'method-run-history-title' : undefined}
-          className={cn('min-w-0 flex-1 truncate font-medium text-sm', mobile && 'text-base')}
-        >
-          {t('methodExecutor.lastRuns')}
-        </p>
-        <div className="flex shrink-0 items-center gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn('h-7 text-xs', mobile && 'h-9 text-xs')}
-            onClick={() => void handleClearAll()}
-            disabled={runs.length === 0}
-          >
-            {t('methodExecutor.clearAll')}
-          </Button>
-          {mobile ? (
-            <Button
-              variant="ghost"
-              className="h-9 shrink-0 px-3 text-sm"
-              onClick={onClose}
-              aria-label={t('common.close')}
-            >
-              <X className="mr-1 h-4 w-4" />
-              {t('common.close')}
-            </Button>
-          ) : null}
-        </div>
-      </div>
-      {runs.length === 0 ? (
-        <div className={mobile ? 'p-3' : undefined}>
-          <EmptyPanel
-            icon={History}
-            badgeTone="muted"
-            title={t('methodExecutor.noRunsTitle')}
-            description={t('methodExecutor.noRunsDescription')}
-            ghost="rows"
-            bordered
-            size="sm"
-          />
-        </div>
-      ) : (
-        <div
-          className={cn(
-            'overflow-y-auto overscroll-contain bg-muted/25 p-0.5',
-            mobile ? 'min-h-0 flex-1' : 'max-h-64 rounded-md'
-          )}
-        >
-          {runs.map((run) => (
-            <HistoryRunRow
-              key={run.id}
-              run={run}
-              mobile={mobile}
-              onOpen={() => onOpenRun(run.config)}
-              onRemove={() => onRemoveRun(run.id)}
-            />
-          ))}
-        </div>
-      )}
-    </div>
+    <SavedListPanel
+      icon={History}
+      title={t('methodExecutor.lastRuns')}
+      titleId={mobile ? 'method-run-history-title' : undefined}
+      count={runs.length}
+      clearLabel={t('methodExecutor.clearAll')}
+      onClear={onClearRuns}
+      clearConfirm={{
+        title: t('methodExecutor.clearHistoryTitle'),
+        description: t('methodExecutor.clearHistoryDescription'),
+        confirmText: t('methodExecutor.clearAll'),
+        cancelText: t('methodExecutor.cancel'),
+      }}
+      emptyTitle={t('methodExecutor.noRunsTitle')}
+      emptyDescription={t('methodExecutor.noRunsDescription')}
+      onClose={onClose}
+    >
+      {runs.map((run) => (
+        <HistoryRunRow
+          key={run.id}
+          run={run}
+          onOpen={() => onOpenRun(run.config)}
+          onRemove={() => onRemoveRun(run.id)}
+        />
+      ))}
+    </SavedListPanel>
   )
 }

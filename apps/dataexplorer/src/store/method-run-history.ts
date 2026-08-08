@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { MethodExecutorSeed } from './method-executor-types'
+import { sameMethodConfig } from './same-method-config'
 
 export type MethodResultKind = 'entity' | 'entitysel' | 'other'
 
@@ -20,17 +21,13 @@ type MethodRunHistoryState = {
 
 const MAX_RUNS = 30
 
-function sameConfig(left: MethodExecutorSeed, right: MethodExecutorSeed): boolean {
-  return JSON.stringify(left) === JSON.stringify(right)
-}
-
 export const useMethodRunHistoryStore = create<MethodRunHistoryState>()(
   persist(
     (set) => ({
       runs: [],
       addRun: (config, resultKind) =>
         set((state) => {
-          const withoutDuplicate = state.runs.filter((run) => !sameConfig(run.config, config))
+          const withoutDuplicate = state.runs.filter((run) => !sameMethodConfig(run.config, config))
           return {
             runs: [
               {

@@ -2,6 +2,7 @@ import { Checkbox, Label } from '@4d/ui'
 import { useCallback, useRef } from 'react'
 import { useTranslation } from '~/i18n'
 import { MethodJsonEditor } from './MethodJsonEditor'
+import { MethodSnippetsMenu } from './MethodSnippetsMenu'
 import { METHOD_WRAPPER_SNIPPETS } from './method-json-snippets'
 
 type WrapperFlush = () => string
@@ -63,7 +64,7 @@ export function MethodWrapperEditor({
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <Label className="flex items-center gap-2 font-medium text-sm">
             <Checkbox
@@ -76,6 +77,12 @@ export function MethodWrapperEditor({
             {t('methodExecutor.wrapperHint')}
           </p>
         </div>
+        {enabled ? (
+          <MethodSnippetsMenu
+            snippets={METHOD_WRAPPER_SNIPPETS}
+            onApply={(snippet) => onChange(normalizeWrapperText(snippet.value))}
+          />
+        ) : null}
       </div>
 
       {enabled ? (
@@ -84,7 +91,6 @@ export function MethodWrapperEditor({
           onChange={(next) => onChange(normalizeWrapperText(next))}
           height={160}
           path="method-executor:///wrapper.json"
-          snippets={METHOD_WRAPPER_SNIPPETS}
           onRegisterFlush={onRegisterFlush}
         />
       ) : null}

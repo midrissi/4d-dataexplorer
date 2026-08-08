@@ -1,5 +1,5 @@
 import { Button, Checkbox, cn, Label } from '@4d/ui'
-import { ChevronLeft, Clock3, Loader2, Play } from 'lucide-react'
+import { ChevronLeft, Clock3, Loader2, Play, Star } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { MobileFullscreenSheet } from '~/components/MobileFullscreenSheet'
 import { RequestResponseSplit } from '~/components/RequestResponseSplit'
@@ -11,9 +11,12 @@ import type {
   MethodScope,
   RuntimeArgument,
 } from '~/store/method-executor-types'
+import { useMethodFavouritesStore } from '~/store/method-favourites'
 import { useMethodRunHistoryStore } from '~/store/method-run-history'
+import { sameMethodConfig } from '~/store/same-method-config'
 import { useTabsStore } from '~/store/tabs'
 import { type DetectedMethodResult, detectMethodResult } from './detect-method-result'
+import { MethodFavourites } from './MethodFavourites'
 import { MethodRunHistory } from './MethodRunHistory'
 import { MethodSelector } from './MethodSelector'
 import { flushPendingWrapperText, MethodWrapperEditor } from './MethodWrapperEditor'
@@ -30,6 +33,8 @@ import {
 import { serializeRuntimeParams } from './serialize-params'
 import { type MethodCatalogItem, useMethodCatalog } from './useMethodCatalog'
 
+type SidePanel = 'none' | 'history' | 'favourites'
+
 function initialArguments(seed?: MethodExecutorSeed): RuntimeArgument[] {
   return withPositionalNames(seed?.arguments ?? parseParamsText(seed?.paramsText))
 }
@@ -43,6 +48,11 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
   const addRun = useMethodRunHistoryStore((state) => state.addRun)
   const removeRun = useMethodRunHistoryStore((state) => state.removeRun)
   const clearRuns = useMethodRunHistoryStore((state) => state.clearRuns)
+  const favourites = useMethodFavouritesStore((state) => state.favourites)
+  const toggleFavourite = useMethodFavouritesStore((state) => state.toggleFavourite)
+  const removeFavourite = useMethodFavouritesStore((state) => state.removeFavourite)
+  const clearFavourites = useMethodFavouritesStore((state) => state.clearFavourites)
+  const updateFavouriteMeta = useMethodFavouritesStore((state) => state.updateFavouriteMeta)
 
   const [scope, setScope] = useState<MethodScope>(seed?.scope ?? 'catalog')
   const [methodName, setMethodName] = useState(seed?.methodName ?? '')
@@ -68,7 +78,7 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
   const [result, setResult] = useState<DetectedMethodResult | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [executing, setExecuting] = useState(false)
-  const [showHistory, setShowHistory] = useState(false)
+  const [sidePanel, setSidePanel] = useState<SidePanel>('none')
   // Mobile presents a wizard (pick method -> args -> result) instead of the
   // desktop request/response split; unused on desktop.
   const [mobileStep, setMobileStep] = useState<'method' | 'args' | 'result'>('method')
@@ -145,6 +155,15 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
     wrapperEnabled: wrapperEnabled || undefined,
     wrapperText: wrapperEnabled && wrapperText.trim() ? wrapperText : undefined,
   })
+
+  const builderSeed = currentConfig()
+  const isCurrentFavourite =
+    Boolean(methodName) && favourites.some((item) => sameMethodConfig(item.config, builderSeed))
+
+  const toggleCurrentFavourite = () => {
+    if (!methodName) return
+    toggleFavourite(currentConfig())
+  }
 
   const execute = async () => {
     flushPendingArgumentValues()
@@ -303,7 +322,16 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
             variant="outline"
             size="icon"
             className="h-9 w-9 shrink-0"
-            onClick={() => setShowHistory(true)}
+            onClick={() => setSidePanel('favourites')}
+            aria-label={t('methodExecutor.favourites')}
+          >
+            <Star className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="h-9 w-9 shrink-0"
+            onClick={() => setSidePanel('history')}
             aria-label={t('methodExecutor.history')}
           >
             <Clock3 className="h-4 w-4" />
@@ -417,19 +445,43 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
                   {t('methodExecutor.postRequest')}
                 </span>
               )}
-              <Button
-                size="sm"
-                className="ml-auto h-11 px-4"
-                onClick={() => void execute()}
-                disabled={executing || !canExecute}
-              >
-                {executing ? (
-                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Play className="mr-1.5 h-3.5 w-3.5" />
-                )}
-                {t('methodExecutor.execute')}
-              </Button>
+              <div className="ml-auto flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-11 w-11"
+                  disabled={!canExecute}
+                  onClick={toggleCurrentFavourite}
+                  aria-label={
+                    isCurrentFavourite
+                      ? t('methodExecutor.removeFavourite')
+                      : t('methodExecutor.addFavourite')
+                  }
+                  title={
+                    isCurrentFavourite
+                      ? t('methodExecutor.removeFavourite')
+                      : t('methodExecutor.addFavourite')
+                  }
+                  aria-pressed={isCurrentFavourite}
+                >
+                  <Star
+                    className={cn('h-4 w-4', isCurrentFavourite && 'fill-current text-amber-500')}
+                  />
+                </Button>
+                <Button
+                  size="sm"
+                  className="h-11 px-4"
+                  onClick={() => void execute()}
+                  disabled={executing || !canExecute}
+                >
+                  {executing ? (
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Play className="mr-1.5 h-3.5 w-3.5" />
+                  )}
+                  {t('methodExecutor.execute')}
+                </Button>
+              </div>
             </>
           ) : null}
 
@@ -444,17 +496,32 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
           ) : null}
         </div>
 
-        {showHistory ? (
+        {sidePanel === 'history' ? (
           <MobileFullscreenSheet open labelledBy="method-run-history-title">
             <MethodRunHistory
               runs={runs}
               onOpenRun={(config) => {
                 openMethodExecutorTab(config)
-                setShowHistory(false)
+                setSidePanel('none')
               }}
               onRemoveRun={removeRun}
               onClearRuns={clearRuns}
-              onClose={() => setShowHistory(false)}
+              onClose={() => setSidePanel('none')}
+            />
+          </MobileFullscreenSheet>
+        ) : null}
+        {sidePanel === 'favourites' ? (
+          <MobileFullscreenSheet open labelledBy="method-favourites-title">
+            <MethodFavourites
+              favourites={favourites}
+              onOpenFavourite={(config) => {
+                openMethodExecutorTab(config)
+                setSidePanel('none')
+              }}
+              onRemoveFavourite={removeFavourite}
+              onClearFavourites={clearFavourites}
+              onUpdateFavouriteMeta={updateFavouriteMeta}
+              onClose={() => setSidePanel('none')}
             />
           </MobileFullscreenSheet>
         ) : null}
@@ -474,102 +541,164 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
               <p className="font-semibold text-base">{t('methodExecutor.title')}</p>
               <p className="text-muted-foreground text-xs">{t('methodExecutor.subtitle')}</p>
             </div>
-            <Button
-              variant={showHistory ? 'secondary' : 'outline'}
-              size="sm"
-              onClick={() => setShowHistory((visible) => !visible)}
-            >
-              <Clock3 className="h-3.5 w-3.5" />
-              {t('methodExecutor.history')}
-            </Button>
+            <div className="flex shrink-0 items-center gap-1.5">
+              <Button
+                variant={sidePanel === 'favourites' ? 'secondary' : 'outline'}
+                size="xs"
+                className="h-6 gap-1 px-2"
+                onClick={() =>
+                  setSidePanel((panel) => (panel === 'favourites' ? 'none' : 'favourites'))
+                }
+              >
+                <Star className="h-3.5 w-3.5" />
+                {t('methodExecutor.favourites')}
+              </Button>
+              <Button
+                variant={sidePanel === 'history' ? 'secondary' : 'outline'}
+                size="xs"
+                className="h-6 gap-1 px-2"
+                onClick={() => setSidePanel((panel) => (panel === 'history' ? 'none' : 'history'))}
+              >
+                <Clock3 className="h-3.5 w-3.5" />
+                {t('methodExecutor.history')}
+              </Button>
+            </div>
           </div>
 
-          {showHistory ? (
+          {sidePanel === 'favourites' ? (
+            <MethodFavourites
+              favourites={favourites}
+              onOpenFavourite={openMethodExecutorTab}
+              onRemoveFavourite={removeFavourite}
+              onClearFavourites={clearFavourites}
+              onUpdateFavouriteMeta={updateFavouriteMeta}
+              onClose={() => setSidePanel('none')}
+            />
+          ) : null}
+
+          {sidePanel === 'history' ? (
             <MethodRunHistory
               runs={runs}
               onOpenRun={openMethodExecutorTab}
               onRemoveRun={removeRun}
               onClearRuns={clearRuns}
-              onClose={() => setShowHistory(false)}
+              onClose={() => setSidePanel('none')}
             />
           ) : null}
 
-          <MethodSelector
-            scope={scope}
-            methodName={methodName}
-            dataClass={dataClass}
-            keyValue={key}
-            entitySetId={entitySetId}
-            methods={methods}
-            dataClasses={dataClasses}
-            catalogLoading={catalogLoading}
-            catalogError={catalogError}
-            onScopeChange={(next) => {
-              setScope(next)
-              clearMethod()
-            }}
-            onChooseMethod={chooseMethod}
-            onClearMethod={clearMethod}
-            onDataClassChange={setDataClass}
-            onKeyChange={setKey}
-            onEntitySetIdChange={setEntitySetId}
-          />
+          <div
+            className={cn('space-y-3', sidePanel !== 'none' && 'border-border/70 border-t pt-4')}
+          >
+            {sidePanel !== 'none' ? (
+              <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                {t('methodExecutor.methodComposer')}
+              </p>
+            ) : null}
 
-          <RuntimeArgumentsEditor
-            argumentsList={argumentsList}
-            dataClasses={dataClasses}
-            onChange={setArgumentsList}
-          />
+            <MethodSelector
+              scope={scope}
+              methodName={methodName}
+              dataClass={dataClass}
+              keyValue={key}
+              entitySetId={entitySetId}
+              methods={methods}
+              dataClasses={dataClasses}
+              catalogLoading={catalogLoading}
+              catalogError={catalogError}
+              onScopeChange={(next) => {
+                setScope(next)
+                clearMethod()
+              }}
+              onChooseMethod={chooseMethod}
+              onClearMethod={clearMethod}
+              onDataClassChange={setDataClass}
+              onKeyChange={setKey}
+              onEntitySetIdChange={setEntitySetId}
+            />
 
-          <MethodWrapperEditor
-            enabled={wrapperEnabled}
-            onEnabledChange={(next) => {
-              setWrapperEnabled(next)
-              if (next) setUseGet(false)
-            }}
-            value={wrapperText}
-            onChange={(next) => {
-              setWrapperText(next)
-              if (next.trim()) setUseGet(false)
-            }}
-          />
+            <RuntimeArgumentsEditor
+              argumentsList={argumentsList}
+              dataClasses={dataClasses}
+              onChange={setArgumentsList}
+            />
 
-          {error ? (
-            <p className="rounded-md bg-destructive/10 p-3 text-destructive text-sm">{error}</p>
-          ) : null}
+            <MethodWrapperEditor
+              enabled={wrapperEnabled}
+              onEnabledChange={(next) => {
+                setWrapperEnabled(next)
+                if (next) setUseGet(false)
+              }}
+              value={wrapperText}
+              onChange={(next) => {
+                setWrapperText(next)
+                if (next.trim()) setUseGet(false)
+              }}
+            />
 
-          <div className="sticky bottom-0 flex items-center justify-between gap-3 border-t bg-background/95 py-2 backdrop-blur">
-            {allowedOnHTTPGET ? (
-              <Label
-                className="flex items-center gap-2 text-xs"
-                title={wrapperEnabled ? t('methodExecutor.wrapperRequiresPost') : undefined}
-              >
-                <Checkbox
-                  checked={useGet}
-                  disabled={wrapperEnabled}
-                  onCheckedChange={(checked) => setUseGet(checked === true)}
-                />
-                {t('methodExecutor.executeWithGet')}
-              </Label>
-            ) : (
-              <span className="text-muted-foreground text-xs">
-                {t('methodExecutor.postRequest')}
-              </span>
-            )}
-            <Button
-              size="sm"
-              className={cn(mobile ? 'h-11 px-4' : 'h-8')}
-              onClick={() => void execute()}
-              disabled={executing || !canExecute}
-              title={`${t('methodExecutor.execute')} (⌘/Ctrl+Enter)`}
-            >
-              {executing ? (
-                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+            {error ? (
+              <p className="rounded-md bg-destructive/10 p-3 text-destructive text-sm">{error}</p>
+            ) : null}
+
+            <div className="sticky bottom-0 flex items-center justify-between gap-3 border-t bg-background/95 py-2 backdrop-blur">
+              {allowedOnHTTPGET ? (
+                <Label
+                  className="flex items-center gap-2 text-xs"
+                  title={wrapperEnabled ? t('methodExecutor.wrapperRequiresPost') : undefined}
+                >
+                  <Checkbox
+                    checked={useGet}
+                    disabled={wrapperEnabled}
+                    onCheckedChange={(checked) => setUseGet(checked === true)}
+                  />
+                  {t('methodExecutor.executeWithGet')}
+                </Label>
               ) : (
-                <Play className="mr-1.5 h-3.5 w-3.5" />
+                <span className="text-muted-foreground text-xs">
+                  {t('methodExecutor.postRequest')}
+                </span>
               )}
-              {t('methodExecutor.execute')}
-            </Button>
+              <div className="flex items-center gap-1.5">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className={cn(mobile ? 'h-11 w-11' : 'h-8 w-8')}
+                  disabled={!canExecute}
+                  onClick={toggleCurrentFavourite}
+                  aria-label={
+                    isCurrentFavourite
+                      ? t('methodExecutor.removeFavourite')
+                      : t('methodExecutor.addFavourite')
+                  }
+                  title={
+                    isCurrentFavourite
+                      ? t('methodExecutor.removeFavourite')
+                      : t('methodExecutor.addFavourite')
+                  }
+                  aria-pressed={isCurrentFavourite}
+                >
+                  <Star
+                    className={cn(
+                      'h-3.5 w-3.5',
+                      isCurrentFavourite && 'fill-current text-amber-500'
+                    )}
+                  />
+                </Button>
+                <Button
+                  size="sm"
+                  className={cn(mobile ? 'h-11 px-4' : 'h-8')}
+                  onClick={() => void execute()}
+                  disabled={executing || !canExecute}
+                  title={`${t('methodExecutor.execute')} (⌘/Ctrl+Enter)`}
+                >
+                  {executing ? (
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Play className="mr-1.5 h-3.5 w-3.5" />
+                  )}
+                  {t('methodExecutor.execute')}
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       }
