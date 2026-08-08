@@ -1,6 +1,5 @@
 import {
   Button,
-  CodeEditor,
   cn,
   Input,
   Select,
@@ -35,12 +34,12 @@ import {
   useEffect,
   useId,
   useRef,
-  useState,
 } from 'react'
 import { useTranslation } from '~/i18n'
 import type { RuntimeArgument } from '~/store/method-executor-types'
 import { DateArgumentPicker } from './DateArgumentPicker'
 import { EntitySelectionKeyInput } from './EntitySelectionKeyInput'
+import { MethodJsonEditor } from './MethodJsonEditor'
 import { SearchableDataclassSelect } from './SearchableDataclassSelect'
 
 const ARGUMENT_KINDS = [
@@ -677,43 +676,32 @@ function CustomArgumentEditor({
 }) {
   const argumentRef = useRef(argument)
   argumentRef.current = argument
-  const [draft, setDraft] = useState(argument.value)
-  const draftRef = useRef(argument.value)
-  draftRef.current = draft
+  const onChangeRef = useRef(onChange)
+  onChangeRef.current = onChange
 
-  useEffect(() => {
-    setDraft(argument.value)
-    draftRef.current = argument.value
-  }, [argument.value])
-
-  const flush = useCallback(() => {
-    const next = draftRef.current
-    if (next === argumentRef.current.value) return
-    onChange({ ...argumentRef.current, value: next })
-  }, [onChange])
-
-  useEffect(() => {
-    pendingArgumentFlushes.add(flush)
-    return () => {
-      pendingArgumentFlushes.delete(flush)
-      flush()
+  const onRegisterFlush = useCallback((flush: () => string) => {
+    const wrapped = () => {
+      const next = flush()
+      if (next !== argumentRef.current.value) {
+        onChangeRef.current({ ...argumentRef.current, value: next })
+      }
     }
-  }, [flush])
+    pendingArgumentFlushes.add(wrapped)
+    return () => {
+      pendingArgumentFlushes.delete(wrapped)
+      wrapped()
+    }
+  }, [])
 
   return (
     <div className="pr-1 pb-1 pl-7">
-      <div className="overflow-hidden rounded-md bg-muted/30">
-        <CodeEditor
-          value={draft}
-          onChange={(value) => {
-            draftRef.current = value
-            setDraft(value)
-          }}
-          height={72}
-          showLineNumbers={false}
-          onBlur={flush}
-        />
-      </div>
+      <MethodJsonEditor
+        value={argument.value}
+        onChange={(value) => onChange({ ...argumentRef.current, value })}
+        height={120}
+        path={`method-executor:///arg-${argument.id}.json`}
+        onRegisterFlush={onRegisterFlush}
+      />
     </div>
   )
 }

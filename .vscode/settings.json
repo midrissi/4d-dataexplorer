@@ -28,5 +28,8 @@
   ],
   "tailwindCSS.lint.cssConflict": "warning",
   "tailwindCSS.lint.suggestCanonicalClasses": "warning",
-  "tailwindCSS.classAttributes": ["class", "className", "classList"]
+  "tailwindCSS.classAttributes": ["class", "className", "classList"],
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  }
 }

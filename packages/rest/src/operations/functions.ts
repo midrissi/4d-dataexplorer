@@ -12,6 +12,12 @@ export interface FunctionCallOptions {
    * are cached on the server and include `__ENTITYSET` in the response.
    */
   createEntitySet?: boolean
+  /**
+   * Extra properties merged into the POST body with `params`.
+   * When set, the body is `{ params: [...], ...wrapper }` instead of a bare array.
+   * Ignored for GET (params stay in `?$params=`).
+   */
+  wrapper?: Record<string, unknown>
 }
 
 function buildFunctionQuery(
@@ -26,6 +32,15 @@ function buildFunctionQuery(
     query.$params = JSON.stringify(params)
   }
   return query
+}
+
+/** POST body: bare params array, or `{ params, ...wrapper }` when a wrapper is provided. */
+export function buildFunctionBody(
+  params: unknown[] = [],
+  wrapper?: Record<string, unknown>
+): unknown[] | Record<string, unknown> {
+  if (wrapper === undefined) return params
+  return { params, ...wrapper }
 }
 
 /**
@@ -60,7 +75,11 @@ export async function callDataStoreFunction<T = unknown>(
     return unwrapFunctionResult(response)
   }
 
-  const response = await http.post<FunctionResponse<T>>(path, params, query)
+  const response = await http.post<FunctionResponse<T>>(
+    path,
+    buildFunctionBody(params, options.wrapper),
+    query
+  )
   return unwrapFunctionResult(response)
 }
 
@@ -80,7 +99,11 @@ export async function callDataClassFunction<T = unknown>(
     return unwrapFunctionResult(response)
   }
 
-  const response = await http.post<FunctionResponse<T>>(path, params, query)
+  const response = await http.post<FunctionResponse<T>>(
+    path,
+    buildFunctionBody(params, options.wrapper),
+    query
+  )
   return unwrapFunctionResult(response)
 }
 
@@ -101,7 +124,11 @@ export async function callEntityFunction<T = unknown>(
     return unwrapFunctionResult(response)
   }
 
-  const response = await http.post<FunctionResponse<T>>(path, params, query)
+  const response = await http.post<FunctionResponse<T>>(
+    path,
+    buildFunctionBody(params, options.wrapper),
+    query
+  )
   return unwrapFunctionResult(response)
 }
 
@@ -129,7 +156,11 @@ export async function callEntitySelectionFunction<T = unknown>(
     return unwrapFunctionResult(response)
   }
 
-  const response = await http.post<FunctionResponse<T>>(path, params, query)
+  const response = await http.post<FunctionResponse<T>>(
+    path,
+    buildFunctionBody(params, queryOptions.wrapper),
+    query
+  )
   return unwrapFunctionResult(response)
 }
 
@@ -149,6 +180,10 @@ export async function callSingletonFunction<T = unknown>(
     return unwrapFunctionResult(response)
   }
 
-  const response = await http.post<FunctionResponse<T>>(path, params, query)
+  const response = await http.post<FunctionResponse<T>>(
+    path,
+    buildFunctionBody(params, options.wrapper),
+    query
+  )
   return unwrapFunctionResult(response)
 }

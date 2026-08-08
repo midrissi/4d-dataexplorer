@@ -14,6 +14,7 @@ export {
 export { type FetchFunction, HttpClient, type HttpClientConfig } from './core/http-client'
 // Function call operations
 export {
+  buildFunctionBody,
   callDataClassFunction,
   callDataStoreFunction,
   callEntityFunction,

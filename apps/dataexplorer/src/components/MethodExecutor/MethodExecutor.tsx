@@ -16,7 +16,9 @@ import { useTabsStore } from '~/store/tabs'
 import { type DetectedMethodResult, detectMethodResult } from './detect-method-result'
 import { MethodRunHistory } from './MethodRunHistory'
 import { MethodSelector } from './MethodSelector'
+import { flushPendingWrapperText, MethodWrapperEditor } from './MethodWrapperEditor'
 import { parseParamsText } from './parse-params-text'
+import { parseWrapperText } from './parse-wrapper-text'
 import { ResultPanel } from './ResultPanel'
 import {
   areRuntimeArgumentsReady,
@@ -51,6 +53,10 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
   const [orderby, setOrderby] = useState(seed?.orderby ?? '')
   const [allowedOnHTTPGET, setAllowedOnHTTPGET] = useState(seed?.allowedOnHTTPGET ?? false)
   const [useGet, setUseGet] = useState(seed?.useGet ?? false)
+  const [wrapperEnabled, setWrapperEnabled] = useState(
+    seed?.wrapperEnabled ?? Boolean(seed?.wrapperText?.trim())
+  )
+  const [wrapperText, setWrapperText] = useState(seed?.wrapperText ?? '')
   const [argumentsList, setArgumentsListState] = useState<RuntimeArgument[]>(() =>
     initialArguments(seed)
   )
@@ -80,6 +86,8 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
     setDataClass(item.dataClass ?? '')
     setAllowedOnHTTPGET(item.allowedOnHTTPGET ?? false)
     setUseGet(false)
+    setWrapperEnabled(false)
+    setWrapperText('')
     setArgumentsList(withPositionalNames(parseParamsText(item.paramsText)))
     if (!sameTarget) {
       setKey('')
@@ -95,6 +103,8 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
   const clearMethod = () => {
     setMethodName('')
     setArgumentsList([])
+    setWrapperEnabled(false)
+    setWrapperText('')
     setKey('')
     setEntitySetId('')
     setFilter('')
@@ -132,10 +142,23 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
     allowedOnHTTPGET,
     useGet,
     arguments: argumentsList,
+    wrapperEnabled: wrapperEnabled || undefined,
+    wrapperText: wrapperEnabled && wrapperText.trim() ? wrapperText : undefined,
   })
 
   const execute = async () => {
     flushPendingArgumentValues()
+    const flushedWrapper = wrapperEnabled ? flushPendingWrapperText() : undefined
+    const liveWrapperText =
+      wrapperEnabled && flushedWrapper !== undefined
+        ? flushedWrapper
+        : wrapperEnabled
+          ? wrapperText
+          : ''
+    if (wrapperEnabled && flushedWrapper !== undefined && flushedWrapper !== wrapperText) {
+      setWrapperText(flushedWrapper)
+      if (flushedWrapper.trim()) setUseGet(false)
+    }
     const liveByName = readLiveArgumentInputValues()
     let args = argumentsListRef.current
     if (Object.keys(liveByName).length > 0) {
@@ -174,6 +197,22 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
       return
     }
 
+    let wrapper: Record<string, unknown> | undefined
+    if (wrapperEnabled) {
+      try {
+        wrapper = parseWrapperText(liveWrapperText)
+      } catch {
+        setError(t('methodExecutor.invalidWrapperError'))
+        return
+      }
+      if (wrapper === undefined) {
+        setError(t('methodExecutor.invalidWrapperError'))
+        return
+      }
+    }
+    // Wrapper is POST-only; ignore GET when a wrapper object is present
+    const useGetRequest = useGet && wrapper === undefined
+
     try {
       setExecuting(true)
       const response = await api.callMethod({
@@ -184,12 +223,22 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
         entitySetId: entitySetId || undefined,
         filter: entitySetId.trim() ? undefined : filter || undefined,
         orderby: entitySetId.trim() ? undefined : orderby || undefined,
-        allowedOnHTTPGET: useGet,
+        allowedOnHTTPGET: useGetRequest,
         params: serializeRuntimeParams(args),
+        wrapper,
       })
       const detected = detectMethodResult(response)
       setResult(detected)
-      addRun({ ...currentConfig(), arguments: args }, detected.kind)
+      addRun(
+        {
+          ...currentConfig(),
+          arguments: args,
+          useGet: useGetRequest,
+          wrapperEnabled: wrapperEnabled || undefined,
+          wrapperText: wrapperEnabled && liveWrapperText.trim() ? liveWrapperText : undefined,
+        },
+        detected.kind
+      )
       if (mobile) setMobileStep('result')
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : t('methodExecutor.executionFailed'))
@@ -304,6 +353,18 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
                 dataClasses={dataClasses}
                 onChange={setArgumentsList}
               />
+              <MethodWrapperEditor
+                enabled={wrapperEnabled}
+                onEnabledChange={(next) => {
+                  setWrapperEnabled(next)
+                  if (next) setUseGet(false)
+                }}
+                value={wrapperText}
+                onChange={(next) => {
+                  setWrapperText(next)
+                  if (next.trim()) setUseGet(false)
+                }}
+              />
               {error ? (
                 <p className="rounded-md bg-destructive/10 p-3 text-destructive text-sm">{error}</p>
               ) : null}
@@ -340,9 +401,13 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
           {mobileStep === 'args' ? (
             <>
               {allowedOnHTTPGET ? (
-                <Label className="flex items-center gap-2 text-xs">
+                <Label
+                  className="flex items-center gap-2 text-xs"
+                  title={wrapperEnabled ? t('methodExecutor.wrapperRequiresPost') : undefined}
+                >
                   <Checkbox
                     checked={useGet}
+                    disabled={wrapperEnabled}
                     onCheckedChange={(checked) => setUseGet(checked === true)}
                   />
                   {t('methodExecutor.executeWithGet')}
@@ -456,15 +521,32 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
             onChange={setArgumentsList}
           />
 
+          <MethodWrapperEditor
+            enabled={wrapperEnabled}
+            onEnabledChange={(next) => {
+              setWrapperEnabled(next)
+              if (next) setUseGet(false)
+            }}
+            value={wrapperText}
+            onChange={(next) => {
+              setWrapperText(next)
+              if (next.trim()) setUseGet(false)
+            }}
+          />
+
           {error ? (
             <p className="rounded-md bg-destructive/10 p-3 text-destructive text-sm">{error}</p>
           ) : null}
 
           <div className="sticky bottom-0 flex items-center justify-between gap-3 border-t bg-background/95 py-2 backdrop-blur">
             {allowedOnHTTPGET ? (
-              <Label className="flex items-center gap-2 text-xs">
+              <Label
+                className="flex items-center gap-2 text-xs"
+                title={wrapperEnabled ? t('methodExecutor.wrapperRequiresPost') : undefined}
+              >
                 <Checkbox
                   checked={useGet}
+                  disabled={wrapperEnabled}
                   onCheckedChange={(checked) => setUseGet(checked === true)}
                 />
                 {t('methodExecutor.executeWithGet')}

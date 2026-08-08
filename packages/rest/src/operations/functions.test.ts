@@ -90,6 +90,14 @@ describe('callDataStoreFunction', () => {
     expect(calls[0].params.$method).toBe('entityset')
   })
 
+  test('POSTs { params, ...wrapper } when a wrapper is provided', async () => {
+    const { http, calls } = makeHttp({ result: 'ok' })
+    await callDataStoreFunction(http, 'myMethod', [], {
+      wrapper: { foo: 'test' },
+    })
+    expect(calls[0].body).toEqual({ params: [], foo: 'test' })
+  })
+
   test('GET serializes params and applies filter/orderby', async () => {
     const { http, calls } = makeHttp({ result: 'ok' })
     await callDataStoreFunction(http, 'doThing', [1], {

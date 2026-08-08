@@ -942,8 +942,11 @@ export const api = {
 
   /**
    * Call an exposed 4D class function (dataclass, entity, entity selection, singleton, or catalog).
+   * Optional `wrapper` is merged into the POST body as `{ params: [...], ...wrapper }`.
    */
-  callMethod: async (input: MethodToolInvokeInput): Promise<unknown> => {
+  callMethod: async (
+    input: MethodToolInvokeInput & { wrapper?: Record<string, unknown> }
+  ): Promise<unknown> => {
     const http = client.getHttpClient()
     const params = input.params ?? []
     const fnOptions = {
@@ -951,6 +954,7 @@ export const api = {
       filter: input.filter,
       orderby: input.orderby,
       entitySetId: input.entitySetId,
+      wrapper: input.wrapper,
     }
 
     switch (input.scope) {

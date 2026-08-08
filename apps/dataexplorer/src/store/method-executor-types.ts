@@ -81,4 +81,14 @@ export type MethodExecutorSeed = {
   allowedOnHTTPGET?: boolean
   useGet?: boolean
   arguments?: RuntimeArgument[]
+  /**
+   * When true, POST body is `{ params: [...], ...wrapper }` using `wrapperText`.
+   * Off by default — editor is hidden until enabled.
+   */
+  wrapperEnabled?: boolean
+  /**
+   * Optional JSON object text merged into the POST body with `params`
+   * (e.g. `{ "foo": "test" }` → `{ "params": [...], "foo": "test" }`).
+   */
+  wrapperText?: string
 }
