@@ -431,7 +431,7 @@ function ScalarValueInput({
 
   if (argument.kind === 'boolean') {
     return (
-      <div className="flex min-w-0 items-center gap-2.5">
+      <div className="flex min-w-0 items-center gap-2">
         <span className="shrink-0 font-mono text-muted-foreground text-xs">{typeLabel}</span>
         <Switch
           id={inputId}
@@ -514,7 +514,7 @@ function TextOrNumberValueInput({
         data-param-name={argument.name}
         {...{ [ARG_INPUT_ATTR]: '' }}
         placeholder={argument.kind === 'string' ? t('methodExecutor.stringPlaceholder') : undefined}
-        className="h-7 min-w-0 flex-1 px-2 font-mono text-xs md:text-xs"
+        className="h-6 min-w-0 flex-1 rounded-none border-0 bg-transparent px-2 font-mono text-xs shadow-none focus-visible:ring-0 md:text-xs"
         spellCheck={false}
         autoComplete="off"
       />
@@ -582,14 +582,13 @@ const ArgumentRow = memo(function ArgumentRow({
       ref={sortable.setNodeRef}
       style={style}
       className={cn(
-        'group relative rounded-md',
+        'group relative border-border/60 border-b last:border-b-0',
         'transition-colors duration-150',
-        'hover:bg-muted/40',
         sortable.isDragging && 'z-10 bg-muted/60 shadow-sm'
       )}
     >
-      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-2 gap-y-1 px-1 py-1">
-        <div className="flex items-center">
+      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-stretch gap-x-1">
+        <div className="flex items-center self-center">
           <button
             type="button"
             className="cursor-grab rounded p-0.5 text-muted-foreground/40 hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -604,7 +603,7 @@ const ArgumentRow = memo(function ArgumentRow({
           </span>
         </div>
 
-        <div className="min-w-0 overflow-x-auto">
+        <div className="flex min-w-0 items-center overflow-x-auto px-1">
           {isEntityRef ? (
             <EntityReferenceInput
               argument={{ ...argument, name: positionalName }}
@@ -623,7 +622,7 @@ const ArgumentRow = memo(function ArgumentRow({
           )}
         </div>
 
-        <div className="flex shrink-0 items-center gap-px opacity-70 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+        <div className="flex shrink-0 items-center gap-px self-center opacity-0 transition-opacity focus-within:opacity-100 group-hover:opacity-100">
           <Select
             value={argument.kind}
             onValueChange={(value) => onChangeKind(argument.id, value as RuntimeArgument['kind'])}
@@ -694,7 +693,7 @@ function CustomArgumentEditor({
   }, [])
 
   return (
-    <div className="pr-1 pb-1 pl-7">
+    <div className="border-border/50 border-t px-2 py-1">
       <MethodJsonEditor
         value={argument.value}
         onChange={(value) => onChange({ ...argumentRef.current, value })}
@@ -758,16 +757,18 @@ export function RuntimeArgumentsEditor({
   }
 
   return (
-    <div className={cn('space-y-1.5 border-border/60 border-t pt-3', className)}>
+    <div className={cn('space-y-2 border-border/60 border-t pt-2', className)}>
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-baseline gap-2">
-          <h3 className="font-medium text-sm tracking-tight">{t('methodExecutor.arguments')}</h3>
+          <h3 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
+            {t('methodExecutor.arguments')}
+          </h3>
           {argumentsList.length > 0 ? (
             <span className="rounded-sm bg-muted px-1.5 py-px font-mono text-[10px] text-muted-foreground tabular-nums">
               {argumentsList.length}
             </span>
           ) : null}
-          <p className="truncate text-muted-foreground text-xs">
+          <p className="truncate text-[11px] text-muted-foreground leading-snug">
             {t('methodExecutor.positionalOrder')}
           </p>
         </div>
@@ -785,7 +786,7 @@ export function RuntimeArgumentsEditor({
           onClick={addArgument}
           className={cn(
             'group relative flex w-full items-center gap-2 overflow-hidden rounded-md',
-            'border border-border/70 border-dashed bg-muted/20 px-2 py-1.5 text-left',
+            'border border-border/70 border-dashed bg-muted/20 px-2 py-1 text-left',
             'transition-colors duration-150',
             'hover:border-primary/45 hover:bg-primary/5',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
@@ -832,7 +833,10 @@ export function RuntimeArgumentsEditor({
             items={argumentsList.map((argument) => argument.id)}
             strategy={verticalListSortingStrategy}
           >
-            <div className="rounded-lg bg-muted/25 p-0.5" data-runtime-arguments="">
+            <div
+              className="overflow-hidden rounded-md border bg-background"
+              data-runtime-arguments=""
+            >
               {argumentsList.map((argument, index) => (
                 <ArgumentRow
                   key={argument.id}

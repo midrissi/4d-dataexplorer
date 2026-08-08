@@ -158,7 +158,7 @@ export function DateArgumentPicker({
           autoComplete="off"
           inputMode="numeric"
           className={cn(
-            'h-7 min-w-0 px-2 pr-8 font-mono text-xs md:text-xs',
+            'h-6 min-w-0 px-2 pr-8 font-mono text-xs md:text-xs',
             draftIsInvalid && 'border-destructive/60 focus-visible:ring-destructive',
             inputProps.className
           )}
