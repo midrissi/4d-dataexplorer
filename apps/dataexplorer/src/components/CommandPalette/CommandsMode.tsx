@@ -54,7 +54,7 @@ export function CommandsModeHeader({
         )}
       />
       {!mobile ? (
-        <kbd className="hidden rounded bg-muted px-1 py-0.5 font-mono text-muted-foreground text-xs sm:inline">
+        <kbd className="ml-auto hidden shrink-0 rounded bg-muted px-1 py-0.5 font-mono text-muted-foreground text-xs sm:inline">
           {t('commandPalette.escKey')}
         </kbd>
       ) : null}

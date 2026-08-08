@@ -1395,6 +1395,7 @@ export const es = {
     noCommands: 'No se encontraron comandos',
     noDataclassesFound: 'No se encontraron dataclasses',
     noTabsMatch: 'Ninguna pestaña coincide',
+    noTabsOpen: 'No hay pestañas abiertas',
     typeToSearch: 'Escriba para buscar...',
     goToEntityPlaceholder: 'Índice de entidad…',
     goToPagePlaceholder: 'Número de página…',

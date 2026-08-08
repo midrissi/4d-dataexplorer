@@ -130,38 +130,38 @@ export function CommandPalette({
   }, [])
 
   useEffect(() => {
-    if (open) {
-      setSearch('')
-      setSelectedIndex(0)
-      setGoToValue('')
-      setDataclassSearch('')
-      setDataclassSelectMode(false)
-      setDataclassDataMode(false)
-      setGoToEntityMode(false)
-      setGoToPageMode(false)
-      setSwitchTabsMode(false)
-      setSwitchTabsSelectedIndex(0)
-      setSwitchTabsSearch('')
-      if (startInSwitchTabsMode && tabs.length > 0) {
-        setSwitchTabsMode(true)
-        const currentTabIndex = tabs.findIndex((t) => t.id === activeTabId)
-        setSwitchTabsSelectedIndex(currentTabIndex >= 0 ? currentTabIndex : 0)
-        setTimeout(() => switchTabsInputRef.current?.focus(), 0)
-      } else if (startInDataclassDataMode) {
-        setDataclassDataMode(true)
-        setTimeout(() => dataclassInputRef.current?.focus(), 0)
-      } else if (startInDataclassSelectMode) {
-        setDataclassSelectMode(true)
-        setTimeout(() => dataclassInputRef.current?.focus(), 0)
-      } else if (startInGoToPageMode && selectedDataclass) {
-        setGoToPageMode(true)
-        setTimeout(() => goToInputRef.current?.focus(), 0)
-      } else if (startInGoToMode && selectedDataclass) {
-        setGoToEntityMode(true)
-        setTimeout(() => goToInputRef.current?.focus(), 0)
-      } else {
-        setTimeout(() => inputRef.current?.focus(), 0)
-      }
+    if (!open) return
+    setSearch('')
+    setSelectedIndex(0)
+    setGoToValue('')
+    setDataclassSearch('')
+    setDataclassSelectMode(false)
+    setDataclassDataMode(false)
+    setGoToEntityMode(false)
+    setGoToPageMode(false)
+    setSwitchTabsMode(false)
+    setSwitchTabsSelectedIndex(0)
+    setSwitchTabsSearch('')
+    if (startInSwitchTabsMode) {
+      setSwitchTabsMode(true)
+      const { tabs: currentTabs, activeTabId: currentActive } = useTabsStore.getState()
+      const currentTabIndex = currentTabs.findIndex((t) => t.id === currentActive)
+      setSwitchTabsSelectedIndex(currentTabIndex >= 0 ? currentTabIndex : 0)
+      setTimeout(() => switchTabsInputRef.current?.focus(), 0)
+    } else if (startInDataclassDataMode) {
+      setDataclassDataMode(true)
+      setTimeout(() => dataclassInputRef.current?.focus(), 0)
+    } else if (startInDataclassSelectMode) {
+      setDataclassSelectMode(true)
+      setTimeout(() => dataclassInputRef.current?.focus(), 0)
+    } else if (startInGoToPageMode && selectedDataclass) {
+      setGoToPageMode(true)
+      setTimeout(() => goToInputRef.current?.focus(), 0)
+    } else if (startInGoToMode && selectedDataclass) {
+      setGoToEntityMode(true)
+      setTimeout(() => goToInputRef.current?.focus(), 0)
+    } else {
+      setTimeout(() => inputRef.current?.focus(), 0)
     }
   }, [
     open,
@@ -171,9 +171,6 @@ export function CommandPalette({
     startInDataclassDataMode,
     startInSwitchTabsMode,
     selectedDataclass,
-    tabs.length,
-    activeTabId,
-    tabs.findIndex,
   ])
 
   // Measure anchor element when open and anchorRef is provided (for header search bar)
@@ -222,15 +219,16 @@ export function CommandPalette({
     }
   }, [search])
   useEffect(() => {
-    if (search === '@' && tabs.length > 0) {
+    if (search === '@') {
       setSwitchTabsMode(true)
       setSearch('')
-      const currentTabIndex = tabs.findIndex((t) => t.id === activeTabId)
+      const { tabs: currentTabs, activeTabId: currentActive } = useTabsStore.getState()
+      const currentTabIndex = currentTabs.findIndex((t) => t.id === currentActive)
       setSwitchTabsSelectedIndex(currentTabIndex >= 0 ? currentTabIndex : 0)
       setSwitchTabsSearch('')
       setTimeout(() => switchTabsInputRef.current?.focus(), 0)
     }
-  }, [search, tabs.length, activeTabId, tabs.findIndex])
+  }, [search])
   useEffect(() => {
     if (switchTabsMode) setTimeout(() => switchTabsInputRef.current?.focus(), 0)
   }, [switchTabsMode])
@@ -351,15 +349,10 @@ export function CommandPalette({
   }, [switchTabsMode, handleSwitchTabsKeyDown])
 
   useEffect(() => {
-    if (switchTabsMode) {
-      if (tabs.length === 0) {
-        setSwitchTabsMode(false)
-        setTimeout(() => inputRef.current?.focus(), 0)
-      } else {
-        setSwitchTabsSelectedIndex((i) => Math.min(i, Math.max(0, filteredTabs.length - 1)))
-      }
+    if (switchTabsMode && filteredTabs.length > 0) {
+      setSwitchTabsSelectedIndex((i) => Math.min(i, filteredTabs.length - 1))
     }
-  }, [switchTabsMode, tabs.length, filteredTabs.length])
+  }, [switchTabsMode, filteredTabs.length])
 
   useEffect(() => {
     if (switchTabsMode && switchTabsGridRef.current) {
@@ -516,6 +509,7 @@ export function CommandPalette({
     switchTabsSearch,
     setSwitchTabsSearch,
     switchTabsInputRef,
+    tabs,
     filteredTabs,
     switchTabsSelectedIndex,
     setSwitchTabsSelectedIndex,
@@ -547,7 +541,11 @@ export function CommandPalette({
 
   const renderPaletteHeader = (className?: string) => (
     <div
-      className={cn(mobile && 'flex items-center gap-1 border-border/60 border-b px-2 pt-1 pb-1')}
+      className={cn(
+        mobile
+          ? 'flex items-center gap-1 border-border/60 border-b px-2 pt-1 pb-1'
+          : 'w-full min-w-0'
+      )}
     >
       <div className={cn('min-w-0', mobile ? 'flex-1' : 'w-full')}>
         {goToMode ? (

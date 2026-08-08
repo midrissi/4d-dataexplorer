@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'bun:test'
 import type { KeyboardShortcut } from '~/store/settings'
 import {
+  eventToKeyCombo,
   eventToShortcutSearchCombo,
+  resolveShortcutEventKey,
   shortcutMatchesRecordedCombo,
   shortcutMatchesText,
 } from './shortcut-search'
@@ -13,6 +15,15 @@ const terminalShortcut: KeyboardShortcut = {
   modifiers: { meta: true },
   enabled: true,
   category: 'View',
+}
+
+const tab2Shortcut: KeyboardShortcut = {
+  id: 'tab-2',
+  label: 'Switch to Tab 2',
+  key: '2',
+  modifiers: { ctrl: true, alt: true },
+  enabled: true,
+  category: 'Tabs',
 }
 
 describe('shortcut search', () => {
@@ -50,6 +61,7 @@ describe('shortcut search', () => {
     expect(
       eventToShortcutSearchCombo({
         key: 'j',
+        code: 'KeyJ',
         metaKey: true,
         ctrlKey: false,
         shiftKey: false,
@@ -64,5 +76,46 @@ describe('shortcut search', () => {
         alt: false,
       },
     })
+  })
+
+  it('maps Option+digit physical keys despite layout-transformed event.key', () => {
+    // macOS AZERTY: Ctrl+Option+2 reports key "É" but code "Digit2"
+    expect(
+      resolveShortcutEventKey({
+        key: 'É',
+        code: 'Digit2',
+        altKey: true,
+        ctrlKey: true,
+        metaKey: false,
+      })
+    ).toBe('2')
+
+    expect(
+      eventToKeyCombo({
+        key: 'É',
+        code: 'Digit2',
+        metaKey: false,
+        ctrlKey: true,
+        shiftKey: false,
+        altKey: true,
+      } as KeyboardEvent)
+    ).toEqual({
+      key: '2',
+      modifiers: { meta: false, ctrl: true, shift: false, alt: true },
+    })
+
+    expect(
+      shortcutMatchesRecordedCombo(
+        tab2Shortcut,
+        eventToKeyCombo({
+          key: 'É',
+          code: 'Digit2',
+          metaKey: false,
+          ctrlKey: true,
+          shiftKey: false,
+          altKey: true,
+        } as KeyboardEvent)
+      )
+    ).toBe(true)
   })
 })

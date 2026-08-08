@@ -1400,6 +1400,7 @@ export const fr = {
     noCommands: 'Aucune commande trouvée',
     noDataclassesFound: 'Aucune dataclass trouvée',
     noTabsMatch: 'Aucun onglet ne correspond',
+    noTabsOpen: 'Aucun onglet ouvert',
     typeToSearch: 'Tapez pour rechercher...',
     goToEntityPlaceholder: "Index d'entité…",
     goToPagePlaceholder: 'Numéro de page…',

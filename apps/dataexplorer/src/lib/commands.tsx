@@ -721,13 +721,13 @@ function buildEntityCommands(ctx: CommandContext): Command[] {
 function buildTabCommands(ctx: CommandContext): Command[] {
   const cmds: Command[] = []
 
-  if (ctx.onEnterSwitchTabsMode && ctx.tabs.length > 0) {
+  if (ctx.onEnterSwitchTabsMode) {
     cmds.push({
       id: 'switch-tabs',
       label: ctx.t('command.switchTabs'),
       description: ctx.t('commandDesc.switchTabs'),
       shortcut: getShortcutDisplay(ctx, 'switch-tabs'),
-      keywords: ['tabs', 'switch', 'pick', 'open'],
+      keywords: ['tabs', 'switch', 'pick', 'open', '@'],
       icon: <PanelLeftOpen className="h-4 w-4" />,
       category: 'Tabs',
       action: () => {

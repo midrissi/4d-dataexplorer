@@ -85,4 +85,36 @@ describe('shouldDeferShortcutsForEditableTarget', () => {
       ).toBe(false)
     })
   })
+
+  it('defers Cmd/Ctrl chords inside shortcut-capture surfaces (Shortcut Radar)', () => {
+    withDom((dom) => {
+      const radar = dom.document.createElement('div')
+      radar.setAttribute('data-shortcut-capture', '')
+      const input = dom.document.createElement('input')
+      radar.appendChild(input)
+      dom.document.body.appendChild(radar)
+
+      expect(
+        shouldDeferShortcutsForEditableTarget(fakeEvent({ target: input, ctrlKey: true }))
+      ).toBe(true)
+      expect(
+        shouldDeferShortcutsForEditableTarget(fakeEvent({ target: input, metaKey: true }))
+      ).toBe(true)
+    })
+  })
+
+  it('defers Cmd/Ctrl chords when the capture lock is held (BODY focus)', async () => {
+    const { acquireShortcutCaptureLock } = await import('./shortcut-capture-lock')
+    withDom((dom) => {
+      const release = acquireShortcutCaptureLock()
+      try {
+        const body = dom.document.body
+        expect(
+          shouldDeferShortcutsForEditableTarget(fakeEvent({ target: body, ctrlKey: true }))
+        ).toBe(true)
+      } finally {
+        release()
+      }
+    })
+  })
 })

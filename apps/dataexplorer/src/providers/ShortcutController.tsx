@@ -8,6 +8,7 @@ import {
   useState,
 } from 'react'
 import { shouldDeferShortcutsForEditableTarget } from '~/lib/shortcut-editable-target'
+import { eventToKeyCombo } from '~/lib/shortcut-search'
 import {
   formatKeyCombo,
   type KeyboardShortcut,
@@ -17,21 +18,6 @@ import {
 
 /** Time in ms to wait for second key of a chord before clearing buffer (VSCode-style) */
 const CHORD_TIMEOUT_MS = 5000
-
-function eventToKeyCombo(e: KeyboardEvent): KeyCombo {
-  let key = e.key
-  if (key === ' ') key = 'Space'
-  if (key.length === 1) key = key.toUpperCase()
-  return {
-    key,
-    modifiers: {
-      meta: e.metaKey,
-      ctrl: e.ctrlKey,
-      shift: e.shiftKey,
-      alt: e.altKey,
-    },
-  }
-}
 
 function keyComboMatches(a: KeyCombo, b: KeyCombo): boolean {
   const keyMatch =
@@ -170,9 +156,9 @@ export function ShortcutController({ children }: { children: ReactNode }) {
         if (matchesChordFirst(shortcut, e)) {
           e.preventDefault()
           e.stopPropagation()
-          const combo = eventToKeyCombo(e)
-          chordBufferRef.current = combo
-          setChordBuffer(combo)
+          const nextCombo = eventToKeyCombo(e)
+          chordBufferRef.current = nextCombo
+          setChordBuffer(nextCombo)
           chordTimeoutRef.current = setTimeout(clearChordBuffer, CHORD_TIMEOUT_MS)
           return
         }

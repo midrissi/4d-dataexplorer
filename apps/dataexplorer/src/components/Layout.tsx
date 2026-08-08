@@ -342,12 +342,19 @@ export function Layout({
       {/* Header */}
       <header
         className={cn(
-          'relative z-50 flex items-center justify-between gap-2 border-border/60 border-b bg-background px-3',
-          mobile ? 'min-h-11 gap-2 pt-[max(0.5rem,var(--app-safe-top))] pb-1.5' : 'h-10 gap-3'
+          'relative z-50 border-border/60 border-b bg-background px-3',
+          mobile
+            ? 'flex min-h-11 items-center justify-between gap-2 pt-[max(0.5rem,var(--app-safe-top))] pb-1.5'
+            : 'grid h-10 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3'
         )}
       >
         {/* Left side - Logo (+ expand when sidebar is collapsed on desktop) */}
-        <div className={cn('flex min-w-0 items-center', mobile ? 'gap-1.5' : 'gap-2')}>
+        <div
+          className={cn(
+            'flex min-w-0 items-center',
+            mobile ? 'gap-1.5' : 'gap-2 justify-self-start'
+          )}
+        >
           {mobile ? (
             <Button
               variant={catalogOpen ? 'secondary' : 'ghost'}
@@ -409,30 +416,28 @@ export function Layout({
 
         {/* Center - Global search (desktop field only; mobile lives in the right cluster) */}
         {!mobile ? (
-          <div className="flex min-w-0 flex-1 justify-center px-2">
-            <div
-              ref={headerSearchBarRef}
-              className="flex h-8 w-full min-w-56 max-w-2xl items-center gap-2 rounded-sm border bg-muted/50 px-2.5 transition-colors focus-within:bg-background focus-within:ring-1 focus-within:ring-ring hover:bg-muted/70"
-            >
-              <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-              <input
-                type="text"
-                readOnly
-                placeholder={t('layout.searchPlaceholder')}
-                className="h-full flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground"
-                onClick={() => setCommandPaletteOpen(true)}
-                onFocus={() => setCommandPaletteOpen(true)}
-                aria-label={t('layout.openCommandPaletteAria')}
-              />
-              {(() => {
-                const sc = getShortcut('command-palette')
-                return sc?.enabled ? (
-                  <kbd className="hidden shrink-0 rounded bg-muted px-1 py-0.5 font-mono text-muted-foreground text-xs sm:inline">
-                    {formatShortcut(sc)}
-                  </kbd>
-                ) : null
-              })()}
-            </div>
+          <div
+            ref={headerSearchBarRef}
+            className="flex h-8 w-[min(42rem,calc(100vw-28rem))] min-w-56 items-center gap-2 justify-self-center rounded-sm border bg-muted/50 px-2.5 transition-colors focus-within:bg-background focus-within:ring-1 focus-within:ring-ring hover:bg-muted/70"
+          >
+            <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <input
+              type="text"
+              readOnly
+              placeholder={t('layout.searchPlaceholder')}
+              className="h-full flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground"
+              onClick={() => setCommandPaletteOpen(true)}
+              onFocus={() => setCommandPaletteOpen(true)}
+              aria-label={t('layout.openCommandPaletteAria')}
+            />
+            {(() => {
+              const sc = getShortcut('command-palette')
+              return sc?.enabled ? (
+                <kbd className="hidden shrink-0 rounded bg-muted px-1 py-0.5 font-mono text-muted-foreground text-xs sm:inline">
+                  {formatShortcut(sc)}
+                </kbd>
+              ) : null
+            })()}
           </div>
         ) : null}
 
@@ -440,7 +445,9 @@ export function Layout({
         <div
           className={cn(
             'flex shrink-0 items-center',
-            mobile ? 'gap-0.5 rounded-md border border-border/70 bg-muted/30 p-0.5' : 'gap-1.5'
+            mobile
+              ? 'gap-0.5 rounded-md border border-border/70 bg-muted/30 p-0.5'
+              : 'gap-1.5 justify-self-end'
           )}
         >
           {mobile ? (

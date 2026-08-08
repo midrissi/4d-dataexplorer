@@ -7,7 +7,6 @@ import {
   Lock,
   Pencil,
   ShieldAlert,
-  Sparkles,
   Trash2,
   UserRound,
 } from 'lucide-react'
@@ -78,9 +77,9 @@ export function ConnectionCard({
       {/* biome-ignore lint/a11y/useSemanticElements: card contains nested edit/delete buttons, so it cannot be a native <button> */}
       <div
         className={cn(
-          'group relative flex cursor-pointer items-center gap-2 overflow-hidden rounded-md border border-border bg-card/90 px-2 py-1 shadow-xs transition-colors hover:border-primary/50 hover:bg-accent/50',
-          featured && !warnAccent && 'border-primary/35 bg-primary/5 ring-1 ring-primary/15',
-          warnAccent && 'border-amber-500/40 bg-amber-500/5 hover:border-amber-500/60'
+          'group relative flex cursor-pointer items-center gap-2 overflow-hidden rounded-md border bg-card px-2 py-1 transition-colors hover:bg-accent/60',
+          featured && !warnAccent && 'border-foreground/20 bg-muted/40',
+          warnAccent && 'border-warning/40 bg-warning/5 hover:bg-warning/10'
         )}
         onClick={() => onConnect(connection)}
         onKeyDown={(e) => e.key === 'Enter' && onConnect(connection)}
@@ -90,7 +89,7 @@ export function ConnectionCard({
         <span
           className={cn(
             'absolute inset-y-0 left-0 w-0.5',
-            warnAccent ? 'bg-amber-500/70' : featured ? 'bg-primary' : colorPreset.bg
+            warnAccent ? 'bg-warning' : featured ? 'bg-foreground/50' : colorPreset.bg
           )}
           aria-hidden
         />
@@ -98,24 +97,19 @@ export function ConnectionCard({
         <div className="relative shrink-0">
           <div
             className={cn(
-              'flex h-7 w-7 items-center justify-center rounded-sm shadow-xs',
-              colorPreset.bg,
-              warnAccent && 'opacity-90'
+              'flex h-7 w-7 items-center justify-center rounded-sm border',
+              colorPreset.bgTintStrong
             )}
           >
-            <Icon className="h-3.5 w-3.5 text-white" />
+            <Icon className={cn('h-3.5 w-3.5', colorPreset.class)} />
           </div>
           {readonly ? (
-            <span className="absolute -right-0.5 -bottom-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-500 ring-1 ring-card">
-              <Lock className="h-2 w-2 text-white" />
+            <span className="absolute -right-0.5 -bottom-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full border border-card bg-warning text-warning-foreground">
+              <Lock className="h-2 w-2" />
             </span>
           ) : skipSSL ? (
-            <span className="absolute -right-0.5 -bottom-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-amber-500 ring-1 ring-card">
-              <ShieldAlert className="h-2 w-2 text-white" />
-            </span>
-          ) : featured ? (
-            <span className="absolute -right-0.5 -bottom-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-primary ring-1 ring-card">
-              <Sparkles className="h-2 w-2 text-primary-foreground" />
+            <span className="absolute -right-0.5 -bottom-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full border border-card bg-warning text-warning-foreground">
+              <ShieldAlert className="h-2 w-2" />
             </span>
           ) : null}
         </div>
@@ -124,7 +118,7 @@ export function ConnectionCard({
           <div className="flex items-center gap-1.5 pr-14">
             <p className="truncate font-medium text-xs">{connection.name || connection.baseUrl}</p>
             {featured ? (
-              <span className="shrink-0 rounded-sm bg-primary/15 px-1 py-px font-medium text-[9px] text-primary uppercase tracking-wide">
+              <span className="shrink-0 rounded-sm bg-muted px-1 py-px font-medium text-[9px] text-muted-foreground uppercase tracking-wide">
                 {t('connectionScreen.sidebarLastBadge')}
               </span>
             ) : null}
@@ -161,7 +155,7 @@ export function ConnectionCard({
           </div>
         </div>
 
-        <div className="absolute top-0.5 right-0.5 flex items-center rounded-sm border border-border bg-card/95 opacity-0 shadow-xs backdrop-blur-sm transition-opacity focus-within:opacity-100 group-hover:opacity-100">
+        <div className="absolute top-0.5 right-0.5 flex items-center rounded-sm border bg-card opacity-0 shadow-xs transition-opacity focus-within:opacity-100 group-hover:opacity-100">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button

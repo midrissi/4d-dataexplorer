@@ -36,7 +36,6 @@ import {
   Settings,
   ShieldAlert,
   ShieldCheck,
-  Sparkles,
   Trash2,
   Wifi,
   X,
@@ -609,20 +608,7 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
           className="relative flex shrink-0 flex-col border-r bg-muted/30"
           style={{ width: sidebarWidth }}
         >
-          <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-            <div className="absolute -top-16 left-1/2 h-40 w-56 -translate-x-1/2 rounded-full bg-primary/12 blur-3xl" />
-            <div
-              className="absolute inset-0 opacity-[0.2]"
-              style={{
-                backgroundImage:
-                  'linear-gradient(to right, color-mix(in oklab, var(--border) 70%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in oklab, var(--border) 70%, transparent) 1px, transparent 1px)',
-                backgroundSize: '20px 20px',
-                maskImage: 'linear-gradient(to bottom, black 0%, transparent 70%)',
-              }}
-            />
-          </div>
-
-          <div className="relative z-10 flex items-center justify-between border-border/70 border-b bg-background/50 px-3 py-2 backdrop-blur-sm">
+          <div className="flex items-center justify-between border-b bg-background/80 px-3 py-2">
             <div className="min-w-0">
               <h2 className="font-semibold text-xs tracking-tight">
                 {t('connectionScreen.sidebarTitle')}
@@ -636,9 +622,9 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
               </p>
             </div>
             <Button
-              variant="default"
+              variant="outline"
               size="sm"
-              className="h-6 w-6 shrink-0 p-0 shadow-xs"
+              className="h-6 w-6 shrink-0 p-0"
               onClick={startNewConnection}
               title={t('connectionScreen.newConnection')}
             >
@@ -647,7 +633,7 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
           </div>
 
           {connections.length > 0 ? (
-            <div className="relative z-10 border-border/60 border-b px-3 py-2">
+            <div className="border-b px-3 py-2">
               <div className="relative">
                 <Search
                   className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground"
@@ -658,28 +644,28 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
                   value={connectionQuery}
                   onChange={(e) => setConnectionQuery(e.target.value)}
                   placeholder={t('connectionScreen.sidebarSearch')}
-                  className="h-6 bg-background/70 pl-8 text-xs"
+                  className="h-6 bg-background pl-8 text-xs"
                   aria-label={t('connectionScreen.sidebarSearch')}
                 />
               </div>
               <div className="mt-1.5 flex flex-wrap gap-1">
-                <span className="inline-flex items-center gap-1 rounded-sm border border-border/60 bg-background/50 px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                <span className="inline-flex items-center gap-1 rounded-sm border bg-background px-1.5 py-0.5 text-[10px] text-muted-foreground">
                   <Key className="size-2.5" />
                   {t('connectionScreen.sidebarStatKeys', { count: sidebarStats.withKey })}
                 </span>
                 {sidebarStats.skipSsl > 0 ? (
-                  <span className="inline-flex items-center gap-1 rounded-sm border border-amber-500/30 bg-amber-500/10 px-1.5 py-0.5 text-[10px] text-amber-700 dark:text-amber-300">
+                  <span className="inline-flex items-center gap-1 rounded-sm border border-warning/30 bg-warning/10 px-1.5 py-0.5 text-[10px] text-warning">
                     <ShieldAlert className="size-2.5" />
                     {t('connectionScreen.sidebarStatSkipSsl', { count: sidebarStats.skipSsl })}
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1 rounded-sm border border-success/25 bg-success/10 px-1.5 py-0.5 text-[10px] text-success">
+                  <span className="inline-flex items-center gap-1 rounded-sm border bg-background px-1.5 py-0.5 text-[10px] text-muted-foreground">
                     <ShieldCheck className="size-2.5" />
                     {t('connectionScreen.sidebarStatTrusted')}
                   </span>
                 )}
                 {sidebarStats.readonly > 0 ? (
-                  <span className="inline-flex items-center gap-1 rounded-sm border border-border/60 bg-background/50 px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                  <span className="inline-flex items-center gap-1 rounded-sm border bg-background px-1.5 py-0.5 text-[10px] text-muted-foreground">
                     {t('connectionScreen.sidebarStatReadonly', { count: sidebarStats.readonly })}
                   </span>
                 ) : null}
@@ -687,7 +673,7 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
             </div>
           ) : null}
 
-          <div className="relative z-10 flex min-h-0 flex-1 flex-col">
+          <div className="flex min-h-0 flex-1 flex-col">
             <div className="min-h-0 flex-1 overflow-y-auto p-2">
               <div className="space-y-1.5">
                 {connections.length === 0 && (
@@ -697,7 +683,7 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
                       <div className="absolute inset-0 flex items-center justify-center">
                         <ServerCog className="h-6 w-6 text-muted-foreground/70" />
                       </div>
-                      <span className="absolute -right-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-sm">
+                      <span className="absolute -right-1 -bottom-1 flex h-5 w-5 items-center justify-center rounded-full border bg-muted text-muted-foreground">
                         <Plus className="h-3 w-3" />
                       </span>
                     </div>
@@ -708,7 +694,7 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
                     <button
                       type="button"
                       onClick={startNewConnection}
-                      className="mt-3 flex h-6 w-full items-center justify-center gap-2 rounded-sm border border-dashed px-3 text-muted-foreground text-xs transition-colors hover:border-primary/50 hover:bg-accent hover:text-foreground"
+                      className="mt-3 flex h-6 w-full items-center justify-center gap-2 rounded-sm border border-dashed px-3 text-muted-foreground text-xs transition-colors hover:bg-accent hover:text-foreground"
                     >
                       <Plus className="h-3.5 w-3.5" />
                       {t('connectionScreen.newConnection')}
@@ -743,7 +729,7 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
               </div>
             </div>
 
-            <div className="shrink-0 space-y-2 border-border/70 border-t bg-background/40 p-2.5 backdrop-blur-sm">
+            <div className="shrink-0 space-y-2 border-t bg-background p-2.5">
               <p className="font-medium text-[10px] text-muted-foreground uppercase tracking-wide">
                 {t('connectionScreen.sidebarQuickHeading')}
               </p>
@@ -753,9 +739,9 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
                     key={url}
                     type="button"
                     onClick={() => startNewConnectionWithUrl(url)}
-                    className="group flex h-6 w-full items-center gap-2 rounded-sm border border-border/70 bg-card/60 px-2 text-left transition-colors hover:border-primary/45 hover:bg-accent"
+                    className="group flex h-6 w-full items-center gap-2 rounded-sm border bg-card px-2 text-left transition-colors hover:bg-accent"
                   >
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-sm bg-primary/10 text-primary">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-sm bg-muted text-muted-foreground">
                       <Globe className="h-3 w-3" />
                     </span>
                     <span className="min-w-0 flex-1 truncate font-mono text-[10px] text-muted-foreground group-hover:text-foreground">
@@ -765,8 +751,8 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
                   </button>
                 ))}
               </div>
-              <div className="flex items-start gap-2 rounded-sm border border-border/60 bg-muted/30 px-2 py-1.5">
-                <Clock3 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" aria-hidden />
+              <div className="flex items-start gap-2 rounded-sm border bg-muted/40 px-2 py-1.5">
+                <Clock3 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
                 <p className="text-[10px] text-muted-foreground leading-relaxed">
                   {t('connectionScreen.sidebarTip')}
                 </p>
@@ -784,35 +770,15 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
             setIsResizingSidebar(true)
           }}
           className={cn(
-            'group relative w-1 shrink-0 cursor-col-resize bg-transparent transition-colors hover:bg-primary/40',
-            isResizingSidebar && 'bg-primary/60'
+            'group relative w-1 shrink-0 cursor-col-resize bg-transparent transition-colors hover:bg-border',
+            isResizingSidebar && 'bg-muted-foreground/40'
           )}
         >
           <span className="absolute inset-y-0 left-1/2 w-2 -translate-x-1/2" />
         </button>
 
         {/* Right panel: Connection form / home */}
-        <div className="relative flex min-h-0 flex-1 overflow-hidden">
-          {/* Atmospheric background — grid + brand glow */}
-          <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden>
-            <div className="absolute inset-0 bg-muted/15" />
-            <div
-              className="absolute inset-0 opacity-[0.35] dark:opacity-[0.22]"
-              style={{
-                backgroundImage:
-                  'linear-gradient(to right, color-mix(in oklab, var(--border) 55%, transparent) 1px, transparent 1px), linear-gradient(to bottom, color-mix(in oklab, var(--border) 55%, transparent) 1px, transparent 1px)',
-                backgroundSize: '28px 28px',
-                maskImage:
-                  'radial-gradient(ellipse 75% 65% at 50% 40%, black 20%, transparent 75%)',
-              }}
-            />
-            <div
-              className="absolute -top-24 left-1/2 h-72 w-[36rem] -translate-x-1/2 rounded-full bg-primary/20 blur-3xl"
-              style={{ animation: 'connection-home-glow 8s ease-in-out infinite alternate' }}
-            />
-            <div className="absolute right-[12%] bottom-[18%] h-40 w-40 rounded-full bg-primary/10 blur-3xl" />
-          </div>
-
+        <div className="relative flex min-h-0 flex-1 overflow-hidden bg-background">
           <div className="relative z-10 flex min-h-0 w-full justify-center overflow-y-auto p-3 sm:px-4">
             <div className="my-auto flex w-full max-w-4xl flex-col gap-3">
               <header
@@ -824,16 +790,13 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
                 )}
               >
                 <div className="flex items-center gap-3">
-                  <div className="relative shrink-0">
-                    <div className="h-10 w-10 shadow-primary/25 shadow-sm sm:h-11 sm:w-11">
-                      <AppBrandIcon className="h-full w-full" />
-                    </div>
-                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-background shadow-xs ring-1 ring-border">
-                      <Sparkles className="h-3 w-3 text-primary" />
-                    </span>
+                  <div className="h-10 w-10 shrink-0 sm:h-11 sm:w-11">
+                    <AppBrandIcon className="h-full w-full" />
                   </div>
                   <div>
-                    <h1 className="font-bold text-lg tracking-tight sm:text-xl">Data Explorer</h1>
+                    <h1 className="font-semibold text-lg tracking-tight sm:text-xl">
+                      Data Explorer
+                    </h1>
                     <p className="text-muted-foreground text-xs">
                       {showForm
                         ? editingId
@@ -845,10 +808,10 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
                 </div>
                 {!showForm ? (
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="rounded-sm border border-border/70 bg-background/60 px-2 py-0.5 font-mono text-[11px] text-muted-foreground tabular-nums backdrop-blur-sm">
+                    <span className="rounded-sm border bg-muted/50 px-2 py-0.5 font-mono text-[11px] text-muted-foreground tabular-nums">
                       v{normalizeDesktopVersion(__APP_VERSION__)}
                     </span>
-                    <span className="rounded-sm border border-primary/25 bg-primary/10 px-2 py-0.5 font-medium text-[11px] text-primary">
+                    <span className="rounded-sm border px-2 py-0.5 font-medium text-[11px] text-muted-foreground">
                       {t('connectionScreen.desktopBadge')}
                     </span>
                   </div>
@@ -881,9 +844,9 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
                       handleCancel()
                     }
                   }}
-                  className="overflow-hidden rounded-md border border-border/70 bg-card/80 shadow-sm backdrop-blur-sm"
+                  className="overflow-hidden rounded-md border bg-card shadow-xs"
                 >
-                  <div className="flex items-center justify-between gap-3 border-border/60 border-b bg-primary/5 px-3 py-2">
+                  <div className="flex items-center justify-between gap-3 border-b bg-muted/40 px-3 py-2">
                     <div className="min-w-0">
                       <p className="font-semibold text-xs tracking-tight">
                         {editingId
@@ -894,7 +857,7 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
                         {t('connectionScreen.formLead')}
                       </p>
                     </div>
-                    <span className="hidden rounded-sm border border-border/70 bg-background/70 px-2 py-0.5 font-mono text-[10px] text-muted-foreground sm:inline">
+                    <span className="hidden rounded-sm border bg-background px-2 py-0.5 font-mono text-[10px] text-muted-foreground sm:inline">
                       {baseUrl.trim() || t('connectionScreen.formUrlPending')}
                     </span>
                   </div>
@@ -926,7 +889,7 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
                               className={cn(
                                 'rounded-sm border px-2 py-0.5 font-mono text-[11px] transition-colors hover:bg-accent',
                                 baseUrl === url
-                                  ? 'border-primary bg-primary/10 text-primary'
+                                  ? 'border-foreground/30 bg-muted text-foreground'
                                   : 'border-border text-muted-foreground'
                               )}
                             >
@@ -966,7 +929,7 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between gap-3 rounded-md border border-border/70 bg-background/40 px-2.5 py-2">
+                      <div className="flex items-center justify-between gap-3 rounded-md border bg-muted/30 px-2.5 py-2">
                         <div className="min-w-0 space-y-0.5">
                           <Label htmlFor="readonly" className="cursor-pointer">
                             {t('connectionScreen.formReadonlyLabel')}
@@ -985,9 +948,9 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
                     </div>
 
                     {/* Identity / appearance column */}
-                    <div className="space-y-2.5 bg-muted/15 p-3">
-                      <div className="overflow-hidden rounded-md border border-border/70 bg-background/60">
-                        <div className="border-border/60 border-b px-2.5 py-1.5">
+                    <div className="space-y-2.5 border-l bg-muted/20 p-3">
+                      <div className="overflow-hidden rounded-md border bg-background">
+                        <div className="border-b px-2.5 py-1.5">
                           <p className="font-medium text-[10px] text-muted-foreground uppercase tracking-wide">
                             {t('connectionScreen.formIdentityPreview')}
                           </p>
@@ -995,13 +958,17 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
                         <div className="flex items-center gap-2.5 px-2.5 py-2">
                           <span
                             className={cn(
-                              'flex h-10 w-10 shrink-0 items-center justify-center rounded-md shadow-xs',
-                              COLOR_PRESETS[color].bg
+                              'flex h-10 w-10 shrink-0 items-center justify-center rounded-md border',
+                              COLOR_PRESETS[color].bgTintStrong
                             )}
                           >
                             {(() => {
                               const SelectedIcon = resolveLucideIcon(icon) ?? Database
-                              return <SelectedIcon className="h-5 w-5 text-white" />
+                              return (
+                                <SelectedIcon
+                                  className={cn('h-5 w-5', COLOR_PRESETS[color].class)}
+                                />
+                              )
                             })()}
                           </span>
                           <div className="min-w-0 flex-1">
@@ -1027,12 +994,12 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
                                 </span>
                               ) : null}
                               {readonly ? (
-                                <span className="rounded bg-amber-500/15 px-1.5 py-px text-[9px] text-amber-700 uppercase dark:text-amber-300">
+                                <span className="rounded bg-warning/10 px-1.5 py-px text-[9px] text-warning uppercase">
                                   {t('connectionScreen.formBadgeReadonly')}
                                 </span>
                               ) : null}
                               {skipSSL ? (
-                                <span className="rounded bg-amber-500/15 px-1.5 py-px text-[9px] text-amber-700 uppercase dark:text-amber-300">
+                                <span className="rounded bg-warning/10 px-1.5 py-px text-[9px] text-warning uppercase">
                                   {t('connectionScreen.formBadgeSkipSsl')}
                                 </span>
                               ) : null}
@@ -1067,13 +1034,17 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
                               >
                                 <span
                                   className={cn(
-                                    'flex h-10 w-10 items-center justify-center rounded-sm',
-                                    COLOR_PRESETS[color].bg
+                                    'flex h-10 w-10 items-center justify-center rounded-sm border',
+                                    COLOR_PRESETS[color].bgTintStrong
                                   )}
                                 >
                                   {(() => {
                                     const SelectedIcon = resolveLucideIcon(icon) ?? Database
-                                    return <SelectedIcon className="h-5 w-5 text-white" />
+                                    return (
+                                      <SelectedIcon
+                                        className={cn('h-5 w-5', COLOR_PRESETS[color].class)}
+                                      />
+                                    )
                                   })()}
                                 </span>
                               </Button>
@@ -1114,10 +1085,10 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
                                 aria-label={COLOR_PRESETS[key].name}
                                 title={COLOR_PRESETS[key].name}
                                 className={cn(
-                                  'h-6 w-6 rounded-full border transition-transform hover:scale-110',
+                                  'h-5 w-5 rounded-full border border-border/80 transition-colors hover:border-foreground/40',
                                   COLOR_PRESETS[key].bg,
                                   color === key &&
-                                    'ring-2 ring-ring ring-offset-2 ring-offset-background'
+                                    'ring-2 ring-ring ring-offset-1 ring-offset-background'
                                 )}
                               />
                             ))}
@@ -1127,7 +1098,7 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
 
                       <button
                         type="button"
-                        className="flex h-6 w-full items-center gap-2 rounded-sm border border-border/70 bg-background/50 px-2.5 text-left text-xs transition-colors hover:bg-accent"
+                        className="flex h-6 w-full items-center gap-2 rounded-sm border bg-background px-2.5 text-left text-xs transition-colors hover:bg-accent"
                         onClick={() => setShowAdvanced(!showAdvanced)}
                       >
                         <Settings className="h-3.5 w-3.5 text-muted-foreground" />
@@ -1282,9 +1253,7 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
                       <div
                         className={cn(
                           'rounded-md border px-2.5 py-2 transition-colors',
-                          skipSSL
-                            ? 'border-amber-500/35 bg-amber-500/6'
-                            : 'border-border/80 bg-background/40'
+                          skipSSL ? 'border-warning/40 bg-warning/5' : 'border-border bg-background'
                         )}
                       >
                         <div className="flex items-center justify-between gap-3">
@@ -1304,9 +1273,9 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
                           />
                         </div>
                         {skipSSL ? (
-                          <p className="mt-2 flex items-start gap-2 border-amber-500/20 border-t pt-2 text-amber-800 text-xs leading-relaxed dark:text-amber-200/90">
+                          <p className="mt-2 flex items-start gap-2 border-warning/20 border-t pt-2 text-warning text-xs leading-relaxed">
                             <ShieldAlert
-                              className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600 dark:text-amber-300"
+                              className="mt-0.5 h-3.5 w-3.5 shrink-0"
                               aria-hidden="true"
                             />
                             <span>{t('connectionScreen.formSkipSslWarning')}</span>
@@ -1418,8 +1387,8 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
 
                     return (
                       <>
-                        <section className="overflow-hidden rounded-md border border-border/70 bg-card/80 shadow-sm backdrop-blur-sm">
-                          <div className="border-border/60 border-b bg-primary/5 px-3 py-2">
+                        <section className="overflow-hidden rounded-md border bg-card shadow-xs">
+                          <div className="border-b bg-muted/40 px-3 py-2">
                             <p className="font-semibold text-base tracking-tight">
                               {t('connectionScreen.welcomeTitle')}
                             </p>
@@ -1440,15 +1409,15 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
                               type="button"
                               onClick={() => handleConnect(featured)}
                               disabled={submitting}
-                              className="group relative flex w-full items-center gap-2.5 overflow-hidden rounded-md border border-primary/30 bg-primary/5 px-2.5 py-2 text-left transition-colors hover:border-primary/50 hover:bg-primary/10"
+                              className="group relative flex w-full items-center gap-2.5 overflow-hidden rounded-md border bg-muted/30 px-2.5 py-2 text-left transition-colors hover:bg-accent"
                             >
                               <span
                                 className={cn(
-                                  'flex h-9 w-9 shrink-0 items-center justify-center rounded-md shadow-xs',
-                                  featuredColor.bg
+                                  'flex h-9 w-9 shrink-0 items-center justify-center rounded-md border',
+                                  featuredColor.bgTintStrong
                                 )}
                               >
-                                <FeaturedIcon className="h-5 w-5 text-white" />
+                                <FeaturedIcon className={cn('h-5 w-5', featuredColor.class)} />
                               </span>
                               <span className="min-w-0 flex-1">
                                 <span className="block truncate font-semibold text-xs">
@@ -1457,7 +1426,7 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
                                 <span className="mt-0.5 block truncate font-mono text-[11px] text-muted-foreground">
                                   {featured.baseUrl}
                                 </span>
-                                <span className="mt-1 inline-flex items-center gap-1 text-[10px] text-primary">
+                                <span className="mt-1 inline-flex items-center gap-1 text-[10px] text-muted-foreground">
                                   {t('connectionScreen.openFeatured')}
                                   <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
                                 </span>
@@ -1483,15 +1452,15 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
                                         type="button"
                                         onClick={() => handleConnect(conn)}
                                         disabled={submitting}
-                                        className="group flex items-center gap-2 rounded-md border border-border bg-background/50 px-2.5 py-2 text-left transition-colors hover:border-primary/50 hover:bg-accent"
+                                        className="group flex items-center gap-2 rounded-md border bg-background px-2.5 py-2 text-left transition-colors hover:bg-accent"
                                       >
                                         <span
                                           className={cn(
-                                            'flex h-6 w-6 shrink-0 items-center justify-center rounded-sm',
-                                            colorPreset.bg
+                                            'flex h-6 w-6 shrink-0 items-center justify-center rounded-sm border',
+                                            colorPreset.bgTintStrong
                                           )}
                                         >
-                                          <Icon className="h-3.5 w-3.5 text-white" />
+                                          <Icon className={cn('h-3.5 w-3.5', colorPreset.class)} />
                                         </span>
                                         <span className="min-w-0 flex-1">
                                           <span className="block truncate font-medium text-xs">
@@ -1540,11 +1509,8 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
                               },
                             ] as const
                           ).map((item) => (
-                            <div
-                              key={item.title}
-                              className="rounded-md border border-border/70 bg-card/60 px-3 py-2.5 backdrop-blur-sm"
-                            >
-                              <span className="mb-1 flex h-6 w-6 items-center justify-center rounded-sm border border-primary/20 bg-primary/10 text-primary">
+                            <div key={item.title} className="rounded-md border bg-card px-3 py-2.5">
+                              <span className="mb-1 flex h-6 w-6 items-center justify-center rounded-sm border bg-muted text-muted-foreground">
                                 <item.icon className="h-3.5 w-3.5" />
                               </span>
                               <p className="font-medium text-xs tracking-tight">{item.title}</p>
@@ -1560,18 +1526,18 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <div className="rounded-md border border-border/70 bg-card/80 p-3 shadow-sm backdrop-blur-sm">
+                  <div className="rounded-md border bg-card p-3 shadow-xs">
                     <div className="mb-3 flex items-center justify-center gap-2.5">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-muted">
-                        <Database className="h-4 w-4 text-foreground" />
+                      <div className="flex h-10 w-10 items-center justify-center rounded-md border bg-muted">
+                        <Database className="h-4 w-4 text-muted-foreground" />
                       </div>
                       <div className="flex items-center gap-1" aria-hidden>
                         <span className="h-1.5 w-1.5 rounded-full bg-border" />
                         <span className="h-1.5 w-1.5 rounded-full bg-border" />
-                        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" />
                       </div>
-                      <div className="flex h-10 w-10 items-center justify-center rounded-md border border-primary/40 bg-primary/10">
-                        <ServerCog className="h-4 w-4 text-primary" />
+                      <div className="flex h-10 w-10 items-center justify-center rounded-md border bg-muted">
+                        <ServerCog className="h-4 w-4 text-muted-foreground" />
                       </div>
                     </div>
 
@@ -1603,7 +1569,7 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
                             onClick={() => startNewConnectionWithUrl(url)}
                             className="group flex h-6 w-full items-center gap-2 rounded-sm border border-border bg-background/50 px-2.5 text-left transition-colors hover:border-primary/50 hover:bg-accent"
                           >
-                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-sm bg-muted text-muted-foreground transition-colors group-hover:bg-primary/10 group-hover:text-primary">
+                            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-sm bg-muted text-muted-foreground">
                               <Globe className="h-3.5 w-3.5" />
                             </span>
                             <span className="min-w-0 flex-1 truncate font-mono text-xs">{url}</span>
@@ -1634,11 +1600,8 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
                         },
                       ] as const
                     ).map((item) => (
-                      <div
-                        key={item.title}
-                        className="rounded-md border border-border/70 bg-card/60 px-3 py-2.5 backdrop-blur-sm"
-                      >
-                        <span className="mb-1 flex h-6 w-6 items-center justify-center rounded-sm border border-primary/20 bg-primary/10 text-primary">
+                      <div key={item.title} className="rounded-md border bg-card px-3 py-2.5">
+                        <span className="mb-1 flex h-6 w-6 items-center justify-center rounded-sm border bg-muted text-muted-foreground">
                           <item.icon className="h-3.5 w-3.5" />
                         </span>
                         <p className="font-medium text-xs tracking-tight">{item.title}</p>
@@ -1659,17 +1622,17 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
                   rel="noreferrer"
                   className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground"
                 >
-                  <BookOpen className="h-3.5 w-3.5 text-primary" />
+                  <BookOpen className="h-3.5 w-3.5" />
                   {t('connectionScreen.linkDocs')}
                 </a>
                 <span className="h-3 w-px bg-border" />
                 <span className="inline-flex items-center gap-1.5">
-                  <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+                  <ShieldCheck className="h-3.5 w-3.5" />
                   {t('connectionScreen.featureSecure')}
                 </span>
                 <span className="h-3 w-px bg-border" />
                 <span className="inline-flex items-center gap-1.5">
-                  <Zap className="h-3.5 w-3.5 text-primary" />
+                  <Zap className="h-3.5 w-3.5" />
                   {t('connectionScreen.featureFast')}
                 </span>
                 <span className="h-3 w-px bg-border" />
@@ -1679,7 +1642,7 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
                   rel="noreferrer"
                   className="inline-flex items-center gap-1.5 transition-colors hover:text-foreground"
                 >
-                  <ServerCog className="h-3.5 w-3.5 text-primary" />
+                  <ServerCog className="h-3.5 w-3.5" />
                   {t('connectionScreen.featureRest')}
                 </a>
               </div>

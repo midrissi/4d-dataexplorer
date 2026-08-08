@@ -403,7 +403,7 @@ export function FormView({
       </div>
     </PullToRefresh>
   ) : (
-    <ScrollArea className="h-full min-h-0">
+    <ScrollArea className="h-full min-h-0 flex-1">
       <div className="space-y-3 p-4">{displayableAttributes.map((attr) => renderField(attr))}</div>
     </ScrollArea>
   )

@@ -29,15 +29,37 @@ function comboSearchWords(combo: KeyCombo): string {
   return words.join(' ')
 }
 
-export function eventToShortcutSearchCombo(event: KeyboardEvent): KeyCombo | null {
-  if (['Meta', 'Control', 'Shift', 'Alt'].includes(event.key)) return null
+/**
+ * Resolve the shortcut key from a keyboard event.
+ *
+ * Prefer physical `code` for digits and (when modifiers are held) letters.
+ * Option/Alt on macOS remaps `event.key` to layout characters (e.g. Option+2 → "É"
+ * on AZERTY), which would otherwise break Ctrl+Option+N tab shortcuts.
+ */
+export function resolveShortcutEventKey(
+  event: Pick<KeyboardEvent, 'key' | 'code' | 'altKey' | 'ctrlKey' | 'metaKey'>
+): string {
+  const { key, code } = event
+  if (key === ' ') return 'Space'
 
-  let key = event.key
-  if (key === ' ') key = 'Space'
-  if (key.length === 1) key = key.toUpperCase()
+  const digit = /^Digit([0-9])$/.exec(code)
+  if (digit) return digit[1]
 
+  const numpad = /^Numpad([0-9])$/.exec(code)
+  if (numpad) return numpad[1]
+
+  if (event.altKey || event.ctrlKey || event.metaKey) {
+    const letter = /^Key([A-Z])$/.exec(code)
+    if (letter) return letter[1]
+  }
+
+  if (key.length === 1) return key.toUpperCase()
+  return key
+}
+
+export function eventToKeyCombo(event: KeyboardEvent): KeyCombo {
   return {
-    key,
+    key: resolveShortcutEventKey(event),
     modifiers: {
       meta: event.metaKey,
       ctrl: event.ctrlKey,
@@ -45,6 +67,11 @@ export function eventToShortcutSearchCombo(event: KeyboardEvent): KeyCombo | nul
       alt: event.altKey,
     },
   }
+}
+
+export function eventToShortcutSearchCombo(event: KeyboardEvent): KeyCombo | null {
+  if (['Meta', 'Control', 'Shift', 'Alt'].includes(event.key)) return null
+  return eventToKeyCombo(event)
 }
 
 export function shortcutMatchesRecordedCombo(shortcut: KeyboardShortcut, combo: KeyCombo): boolean {

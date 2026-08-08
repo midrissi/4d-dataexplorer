@@ -1377,6 +1377,7 @@ export const en = {
     noCommands: 'No commands found',
     noDataclassesFound: 'No dataclasses found',
     noTabsMatch: 'No tabs match',
+    noTabsOpen: 'No tabs open',
     typeToSearch: 'Type to search...',
     goToEntityPlaceholder: 'Entity index…',
     goToPagePlaceholder: 'Page number…',

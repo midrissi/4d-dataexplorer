@@ -13,6 +13,7 @@ export type SwitchTabsModeProps = {
   switchTabsSearch: string
   setSwitchTabsSearch: (value: string) => void
   switchTabsInputRef: RefObject<HTMLInputElement | null>
+  tabs: Tab[]
   filteredTabs: Tab[]
   switchTabsSelectedIndex: number
   setSwitchTabsSelectedIndex: (index: number) => void
@@ -49,7 +50,7 @@ export function SwitchTabsModeHeader({
         )}
       />
       {!mobile ? (
-        <kbd className="hidden rounded bg-muted px-1 py-0.5 font-mono text-muted-foreground text-xs sm:inline">
+        <kbd className="ml-auto hidden shrink-0 rounded bg-muted px-1 py-0.5 font-mono text-muted-foreground text-xs sm:inline">
           {t('commandPalette.escKey')}
         </kbd>
       ) : null}
@@ -58,6 +59,7 @@ export function SwitchTabsModeHeader({
 }
 
 export function SwitchTabsModeContent({
+  tabs,
   filteredTabs,
   switchTabsSelectedIndex,
   setSwitchTabsSelectedIndex,
@@ -77,7 +79,9 @@ export function SwitchTabsModeContent({
             icon={PanelLeft}
             badgeIcon={Search}
             badgeTone="amber"
-            title={t('commandPalette.noTabsMatch')}
+            title={
+              tabs.length === 0 ? t('commandPalette.noTabsOpen') : t('commandPalette.noTabsMatch')
+            }
             ghost="none"
             size="sm"
             className="col-span-full"

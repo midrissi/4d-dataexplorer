@@ -21,7 +21,7 @@ export function PreviewBody({
   let body: ReactNode
   if (result.kind === 'entity') {
     body = (
-      <div className="min-h-0 flex-1 overflow-auto">
+      <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
         <EntityViewer entity={result.value} dataclassName={entityDataclassName(result.value)} />
       </div>
     )

@@ -2,6 +2,7 @@ import { Button, cn, Input } from '@4d/ui'
 import { Radar, Search, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from '~/i18n'
+import { acquireShortcutCaptureLock } from '~/lib/shortcut-capture-lock'
 import { eventToShortcutSearchCombo } from '~/lib/shortcut-search'
 import { formatKeyCombo, type KeyCombo } from '~/store/settings'
 
@@ -26,12 +27,21 @@ export function ShortcutFinder({
 }: ShortcutFinderProps) {
   const { t } = useTranslation()
   const [listening, setListening] = useState(false)
+  const [radarFocused, setRadarFocused] = useState(false)
   const listenButtonRef = useRef<HTMLButtonElement>(null)
+  const rootRef = useRef<HTMLElement>(null)
 
   const stopListening = useCallback(() => {
     setListening(false)
     listenButtonRef.current?.focus()
   }, [])
+
+  // Own all chords while listening or while focus is inside Shortcut Radar
+  // (Ctrl+Option digits can report event.target as BODY in some webviews).
+  useEffect(() => {
+    if (!listening && !radarFocused) return
+    return acquireShortcutCaptureLock()
+  }, [listening, radarFocused])
 
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
@@ -63,7 +73,15 @@ export function ShortcutFinder({
 
   return (
     <search
+      ref={rootRef}
       aria-label={t('settings.shortcutFinderLabel')}
+      data-shortcut-capture=""
+      onFocusCapture={() => setRadarFocused(true)}
+      onBlurCapture={(event) => {
+        const next = event.relatedTarget
+        if (next instanceof Node && rootRef.current?.contains(next)) return
+        setRadarFocused(false)
+      }}
       className={cn(
         'mb-3 rounded-lg border p-3 transition-colors',
         listening ? 'border-primary/60 bg-primary/5' : 'border-border bg-muted/20'
@@ -121,9 +139,7 @@ export function ShortcutFinder({
           size="sm"
           className={cn('h-8 shrink-0 gap-1.5 px-3', listening && 'ring-2 ring-primary/30')}
           onClick={() => setListening((current) => !current)}
-          onBlur={() => setListening(false)}
           aria-pressed={listening}
-          data-allow-typing={listening ? '' : undefined}
         >
           <Radar className="h-3.5 w-3.5" aria-hidden />
           {listening ? t('settings.shortcutFinderCancel') : t('settings.shortcutFinderRecord')}

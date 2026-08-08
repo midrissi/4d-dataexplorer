@@ -192,21 +192,13 @@ export function ConnectionHomeUpdateCard({ variant = 'promo' }: { variant?: 'pro
         aria-live="polite"
         className={cn(
           'flex items-center gap-2.5 rounded-md border px-3 py-2',
-          phase === 'error'
-            ? 'border-destructive/30 bg-destructive/5'
-            : phase === 'ready'
-              ? 'border-emerald-500/25 bg-emerald-500/5'
-              : 'border-primary/25 bg-primary/5'
+          phase === 'error' ? 'border-destructive/30 bg-destructive/5' : 'border-border bg-muted/30'
         )}
       >
         <span
           className={cn(
-            'flex h-7 w-7 shrink-0 items-center justify-center rounded-sm border',
-            phase === 'error'
-              ? 'border-destructive/25 bg-destructive/10 text-destructive'
-              : phase === 'ready'
-                ? 'border-emerald-500/25 bg-emerald-500/10 text-emerald-500'
-                : 'border-primary/25 bg-primary/10 text-primary'
+            'flex h-7 w-7 shrink-0 items-center justify-center rounded-sm border bg-muted',
+            phase === 'error' ? 'border-destructive/25 text-destructive' : 'text-muted-foreground'
           )}
         >
           <Icon className={cn('h-3.5 w-3.5', busy && 'animate-spin')} />
@@ -287,42 +279,26 @@ export function ConnectionHomeUpdateCard({ variant = 'promo' }: { variant?: 'pro
     <section
       aria-live="polite"
       className={cn(
-        'relative overflow-hidden rounded-md border shadow-black/5 shadow-xl backdrop-blur-sm',
+        'relative overflow-hidden rounded-md border bg-card shadow-xs',
         phase === 'error'
-          ? 'border-destructive/40 bg-destructive/5'
+          ? 'border-destructive/40'
           : phase === 'ready' || onLatest
-            ? 'border-emerald-500/30 bg-card/80'
+            ? 'border-border'
             : phase === 'available'
-              ? 'border-primary/40 bg-card/80'
-              : 'border-border/70 bg-card/70'
+              ? 'border-border'
+              : 'border-border'
       )}
     >
-      <div
-        className={cn(
-          'pointer-events-none absolute -top-20 -right-12 h-48 w-48 rounded-full blur-3xl',
-          phase === 'error'
-            ? 'bg-destructive/20'
-            : phase === 'available'
-              ? 'bg-primary/25'
-              : 'bg-primary/15'
-        )}
-        aria-hidden
-      />
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-primary/50 to-transparent"
-        aria-hidden
-      />
-
       <div className="relative p-4">
         <div className="flex items-start gap-3.5">
           <div
             className={cn(
-              'flex h-9 w-9 shrink-0 items-center justify-center rounded-md border shadow-sm',
+              'flex h-9 w-9 shrink-0 items-center justify-center rounded-md border bg-muted',
               phase === 'error'
-                ? 'border-destructive/30 bg-destructive/10 text-destructive'
+                ? 'border-destructive/30 text-destructive'
                 : phase === 'ready' || onLatest
-                  ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-500'
-                  : 'border-primary/30 bg-primary/10 text-primary'
+                  ? 'text-muted-foreground'
+                  : 'text-muted-foreground'
             )}
           >
             <Icon className={cn('h-5 w-5', busy && 'animate-spin')} />
@@ -331,13 +307,13 @@ export function ConnectionHomeUpdateCard({ variant = 'promo' }: { variant?: 'pro
             <div className="flex flex-wrap items-center gap-2">
               <p className="font-semibold text-sm tracking-tight">{title}</p>
               {phase === 'available' ? (
-                <span className="inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/10 px-2 py-0.5 font-medium text-[10px] text-primary uppercase tracking-wide">
+                <span className="inline-flex items-center gap-1 rounded-sm border bg-muted px-2 py-0.5 font-medium text-[10px] text-muted-foreground uppercase tracking-wide">
                   <Sparkles className="h-3 w-3" />
                   {t('connectionScreen.updateNewBadge')}
                 </span>
               ) : null}
               {onLatest && phase !== 'available' && phase !== 'downloading' ? (
-                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2 py-0.5 font-medium text-[10px] text-emerald-600 uppercase tracking-wide dark:text-emerald-400">
+                <span className="inline-flex items-center gap-1 rounded-sm border bg-muted px-2 py-0.5 font-medium text-[10px] text-muted-foreground uppercase tracking-wide">
                   {t('desktopUpdater.badgeLatest')}
                 </span>
               ) : null}
@@ -347,7 +323,7 @@ export function ConnectionHomeUpdateCard({ variant = 'promo' }: { variant?: 'pro
         </div>
 
         <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-          <div className="rounded-sm border border-border/60 bg-background/70 px-3 py-2.5">
+          <div className="rounded-sm border bg-muted/30 px-3 py-2.5">
             <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
               {t('desktopUpdater.currentLabel')}
             </p>
@@ -357,23 +333,10 @@ export function ConnectionHomeUpdateCard({ variant = 'promo' }: { variant?: 'pro
           <div
             className={cn(
               'rounded-sm border px-3 py-2.5',
-              phase === 'skipped'
-                ? 'border-border/60 bg-muted/40'
-                : onLatest
-                  ? 'border-emerald-500/25 bg-emerald-500/5'
-                  : 'border-primary/30 bg-primary/10'
+              phase === 'skipped' ? 'border-border bg-muted/40' : 'border-border bg-muted/30'
             )}
           >
-            <p
-              className={cn(
-                'text-[10px] uppercase tracking-wide',
-                phase === 'skipped'
-                  ? 'text-muted-foreground'
-                  : onLatest
-                    ? 'text-emerald-600 dark:text-emerald-400'
-                    : 'text-primary'
-              )}
-            >
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
               {t('desktopUpdater.latestLabel')}
             </p>
             <p
