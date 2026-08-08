@@ -19,6 +19,18 @@ In 4D language, this call is equivalent to:
 $singleton:=cs.VehicleFactory.me.buildVehicle("truck")
 ```
 
+### TypeScript client (`@4d/rest`)
+
+Singleton function calls return a `FunctionCallResult`:
+
+```ts
+const res = await client.singleton('VehicleFactory').call('buildVehicle', 'truck')
+const vehicle = res.unwrap()
+res.time()
+res.status()
+res.notifications()
+```
+
 :::note
 
 Keep in mind that only functions with the [`exposed` keyword](../ORDA/ordaClasses.md#exposed-vs-non-exposed-functions) can be directly called from REST requests.

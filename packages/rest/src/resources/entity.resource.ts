@@ -1,5 +1,7 @@
 import type { HttpClient } from '../core/http-client'
-import type { DeleteResult, Entity, EntityMutationResult, FunctionResponse } from '../types'
+import type { FunctionCallResult } from '../operations/function-call-result'
+import { callEntityFunction } from '../operations/functions'
+import type { DeleteResult, Entity, EntityMutationResult } from '../types'
 
 /**
  * Resource for single entity operations
@@ -68,14 +70,23 @@ export class EntityResource<T extends Entity = Entity> {
   }
 
   /**
-   * Call an entity method
+   * Call an entity method. Returns a {@link FunctionCallResult};
+   * use `.unwrap()` for the business payload.
    */
-  async call<R = unknown>(methodName: string, ...params: unknown[]): Promise<R> {
-    const response = await this.http.post<FunctionResponse<R>>(
-      this.buildPath(`/${methodName}`),
-      params
+  async call<R = unknown>(
+    methodName: string,
+    ...params: unknown[]
+  ): Promise<FunctionCallResult<R>> {
+    return callEntityFunction<R>(
+      this.http,
+      this.dataClassName,
+      this.entityKey,
+      methodName,
+      params,
+      {
+        createEntitySet: false,
+      }
     )
-    return response.result
   }
 
   /**

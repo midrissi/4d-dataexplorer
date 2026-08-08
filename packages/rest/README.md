@@ -147,7 +147,8 @@ await entity.update({ salary: 80000 })
 await entity.delete()
 
 // Call entity method
-const result = await entity.call('calculateBonus', 2024)
+const bonus = await entity.call('calculateBonus', 2024)
+const value = bonus.unwrap()
 
 // Get related entities
 const projects = await entity.getRelatedMany('projects')
@@ -200,29 +201,41 @@ const stats = await dc.compute('salary', '$all')
 
 ### Class Functions
 
+Calls return a `FunctionCallResult` with the HTTP response and helpers:
+
 ```typescript
 // Dataclass function
-const result = await client
+const res = await client
   .dataclass('Employee')
   .call('getTopPerformers', 2024, 10)
+
+const performers = res.unwrap()   // business payload (`result`, or entity-set body)
+res.time()                        // round-trip duration in ms
+res.status()                      // HTTP status
+res.headers()                     // response Headers
+res.notifications()               // `__WEBFORM.__NOTIFICATION` when present
+res.body                          // raw parsed JSON body
 
 // Entity function
 const bonus = await client
   .dataclass('Employee')
   .entity(42)
   .call('calculateBonus', 2024)
+console.log(bonus.unwrap())
 ```
 
 ### Singletons
 
 ```typescript
 // Call singleton function
-const result = await client
+const res = await client
   .singleton('AppConfig')
   .call('getSettings')
+const settings = res.unwrap()
 
 // Or via singletons service
 const value = await client.singletons.call('AppConfig', 'getValue', 'theme')
+console.log(value.unwrap())
 ```
 
 ### Catalog
@@ -380,7 +393,7 @@ try {
 | `create(data)` | Create new entity |
 | `update(key, data)` | Update entity |
 | `delete(key)` | Delete entity |
-| `call(fn, ...params)` | Call class function |
+| `call(fn, ...params)` | Call class function; returns `FunctionCallResult` |
 | `sum/average/min/max(attr)` | Aggregations |
 | `count()` | Count entities |
 

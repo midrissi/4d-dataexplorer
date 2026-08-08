@@ -1,6 +1,7 @@
 import type { HttpClient } from '../core/http-client'
 import { normalizeOrderByExpression } from '../resources/query-builder'
 import type { FunctionResponse } from '../types'
+import { FunctionCallResult } from './function-call-result'
 
 export interface FunctionCallOptions {
   method?: 'GET' | 'POST'
@@ -43,27 +44,23 @@ export function buildFunctionBody(
   return { params, ...wrapper }
 }
 
-/**
- * Class functions normally return `{ result: T }`. When `$method=entityset` is
- * used and the function returns an entity selection, 4D may return the entity
- * set payload directly (with `__ENTITYSET` / `__ENTITIES`) instead.
- *
- * When `__WEBFORM` is present (notifications / privilege stamp), keep the
- * envelope so callers can surface that metadata alongside `result`.
- */
-function unwrapFunctionResult<T>(response: FunctionResponse<T> | T): T {
-  if (
-    response !== null &&
-    typeof response === 'object' &&
-    !Array.isArray(response) &&
-    'result' in response
-  ) {
-    if ('__WEBFORM' in response) {
-      return response as T
-    }
-    return (response as FunctionResponse<T>).result
-  }
-  return response as T
+async function invokeFunction<T>(
+  http: HttpClient,
+  path: string,
+  params: unknown[],
+  options: FunctionCallOptions
+): Promise<FunctionCallResult<T>> {
+  const method = options.method ?? 'POST'
+  const query = buildFunctionQuery(params, options)
+  const meta =
+    method === 'GET'
+      ? await http.getWithMeta<FunctionResponse<T> | T>(path, query)
+      : await http.postWithMeta<FunctionResponse<T> | T>(
+          path,
+          buildFunctionBody(params, options.wrapper),
+          query
+        )
+  return FunctionCallResult.fromHttp<T>(meta)
 }
 
 export async function callDataStoreFunction<T = unknown>(
@@ -71,22 +68,8 @@ export async function callDataStoreFunction<T = unknown>(
   functionName: string,
   params: unknown[] = [],
   options: FunctionCallOptions = {}
-): Promise<T> {
-  const method = options.method ?? 'POST'
-  const path = `/$catalog/${functionName}`
-  const query = buildFunctionQuery(params, options)
-
-  if (method === 'GET') {
-    const response = await http.get<FunctionResponse<T>>(path, query)
-    return unwrapFunctionResult(response)
-  }
-
-  const response = await http.post<FunctionResponse<T>>(
-    path,
-    buildFunctionBody(params, options.wrapper),
-    query
-  )
-  return unwrapFunctionResult(response)
+): Promise<FunctionCallResult<T>> {
+  return invokeFunction<T>(http, `/$catalog/${functionName}`, params, options)
 }
 
 export async function callDataClassFunction<T = unknown>(
@@ -95,22 +78,8 @@ export async function callDataClassFunction<T = unknown>(
   functionName: string,
   params: unknown[] = [],
   options: FunctionCallOptions = {}
-): Promise<T> {
-  const method = options.method ?? 'POST'
-  const path = `/${dataClass}/${functionName}`
-  const query = buildFunctionQuery(params, options)
-
-  if (method === 'GET') {
-    const response = await http.get<FunctionResponse<T>>(path, query)
-    return unwrapFunctionResult(response)
-  }
-
-  const response = await http.post<FunctionResponse<T>>(
-    path,
-    buildFunctionBody(params, options.wrapper),
-    query
-  )
-  return unwrapFunctionResult(response)
+): Promise<FunctionCallResult<T>> {
+  return invokeFunction<T>(http, `/${dataClass}/${functionName}`, params, options)
 }
 
 export async function callEntityFunction<T = unknown>(
@@ -120,22 +89,8 @@ export async function callEntityFunction<T = unknown>(
   functionName: string,
   params: unknown[] = [],
   options: FunctionCallOptions = {}
-): Promise<T> {
-  const method = options.method ?? 'POST'
-  const path = `/${dataClass}(${key})/${functionName}`
-  const query = buildFunctionQuery(params, options)
-
-  if (method === 'GET') {
-    const response = await http.get<FunctionResponse<T>>(path, query)
-    return unwrapFunctionResult(response)
-  }
-
-  const response = await http.post<FunctionResponse<T>>(
-    path,
-    buildFunctionBody(params, options.wrapper),
-    query
-  )
-  return unwrapFunctionResult(response)
+): Promise<FunctionCallResult<T>> {
+  return invokeFunction<T>(http, `/${dataClass}(${key})/${functionName}`, params, options)
 }
 
 export async function callEntitySelectionFunction<T = unknown>(
@@ -144,8 +99,7 @@ export async function callEntitySelectionFunction<T = unknown>(
   functionName: string,
   params: unknown[] = [],
   options: FunctionCallOptions = {}
-): Promise<T> {
-  const method = options.method ?? 'POST'
+): Promise<FunctionCallResult<T>> {
   let path = `/${dataClass}/${functionName}`
   // When targeting an existing entity set, ignore filter/orderby — the set is the selection
   const queryOptions =
@@ -155,19 +109,7 @@ export async function callEntitySelectionFunction<T = unknown>(
   if (queryOptions.entitySetId) {
     path = `/${dataClass}/${functionName}/$entityset/${queryOptions.entitySetId}`
   }
-  const query = buildFunctionQuery(params, queryOptions)
-
-  if (method === 'GET') {
-    const response = await http.get<FunctionResponse<T>>(path, query)
-    return unwrapFunctionResult(response)
-  }
-
-  const response = await http.post<FunctionResponse<T>>(
-    path,
-    buildFunctionBody(params, queryOptions.wrapper),
-    query
-  )
-  return unwrapFunctionResult(response)
+  return invokeFunction<T>(http, path, params, queryOptions)
 }
 
 export async function callSingletonFunction<T = unknown>(
@@ -176,20 +118,6 @@ export async function callSingletonFunction<T = unknown>(
   functionName: string,
   params: unknown[] = [],
   options: FunctionCallOptions = {}
-): Promise<T> {
-  const method = options.method ?? 'POST'
-  const path = `/$singleton/${singleton}/${functionName}`
-  const query = buildFunctionQuery(params, options)
-
-  if (method === 'GET') {
-    const response = await http.get<FunctionResponse<T>>(path, query)
-    return unwrapFunctionResult(response)
-  }
-
-  const response = await http.post<FunctionResponse<T>>(
-    path,
-    buildFunctionBody(params, options.wrapper),
-    query
-  )
-  return unwrapFunctionResult(response)
+): Promise<FunctionCallResult<T>> {
+  return invokeFunction<T>(http, `/$singleton/${singleton}/${functionName}`, params, options)
 }

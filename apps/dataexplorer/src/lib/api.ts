@@ -7,6 +7,7 @@ import {
   callEntitySelectionFunction,
   callSingletonFunction,
   type EntitySetOperator,
+  type FunctionCallResult,
   type InfoResponse,
   normalizeOrderByExpression,
   type QueryOptions,
@@ -946,7 +947,7 @@ export const api = {
    */
   callMethod: async (
     input: MethodToolInvokeInput & { wrapper?: Record<string, unknown> }
-  ): Promise<unknown> => {
+  ): Promise<FunctionCallResult> => {
     const http = client.getHttpClient()
     const params = input.params ?? []
     const fnOptions = {

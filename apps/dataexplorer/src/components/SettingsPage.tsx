@@ -55,6 +55,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useEditorLabels, useTranslation } from '~/i18n'
 import { downloadBytes } from '~/lib/download-bytes'
+import { getShortcutsCheckState } from '~/lib/get-shortcuts-check-state'
 import { resolveLucideIcon } from '~/lib/lucide-icon'
 import {
   mobileFullscreenDialogClass,
@@ -99,6 +100,8 @@ import {
 import { CATEGORY_CONFIG, CATEGORY_ORDER } from './KeyboardShortcutsModal'
 import { ProfileAppearancePopover } from './ProfileAppearancePopover'
 import { ServerConnectionSettings } from './ServerConnectionSettings'
+import { SettingsCard } from './SettingsCard'
+import { SettingsCardHeader } from './SettingsCardHeader'
 import { SettingsField } from './SettingsField'
 import { SettingsSegmentedField } from './SettingsSegmentedField'
 import { ShortcutFinder } from './ShortcutFinder'
@@ -814,7 +817,7 @@ export function SettingsPage() {
 
         {/* Top row: Profiles | Dataclass Appearance */}
         <div className={cn('mb-3 grid items-start gap-3 lg:grid-cols-2', mobile && 'order-3 mb-0')}>
-          <Card className="mb-0">
+          <SettingsCard className="mb-0">
             <Button
               type="button"
               variant="ghost"
@@ -824,7 +827,7 @@ export function SettingsPage() {
                 mobile && 'min-h-11'
               )}
             >
-              <CardHeader
+              <SettingsCardHeader
                 icon={<UserCircle className="h-4 w-4" />}
                 title={t('settings.profiles')}
               />
@@ -1004,10 +1007,10 @@ export function SettingsPage() {
                   : t('settings.profilesCount', { count: profiles.length })}
               </p>
             )}
-          </Card>
+          </SettingsCard>
 
           {/* Dataclass Appearance Card */}
-          <Card className="mb-0">
+          <SettingsCard className="mb-0">
             <Button
               type="button"
               variant="ghost"
@@ -1017,7 +1020,7 @@ export function SettingsPage() {
                 mobile && 'min-h-11'
               )}
             >
-              <CardHeader
+              <SettingsCardHeader
                 icon={<Database className="h-4 w-4" />}
                 title={t('settings.dataclassAppearance')}
               />
@@ -1128,7 +1131,7 @@ export function SettingsPage() {
                 {t('settings.customized', { count: Object.keys(dataclassCustomizations).length })}
               </p>
             )}
-          </Card>
+          </SettingsCard>
         </div>
 
         {/* Export Select Profiles Dialog */}
@@ -1201,14 +1204,14 @@ export function SettingsPage() {
 
         {/* Keyboard shortcuts - full width (desktop only; recording shortcuts needs a physical keyboard) */}
         {!mobile && (
-          <Card className="mb-3">
+          <SettingsCard className="mb-3">
             <Button
               type="button"
               variant="ghost"
               onClick={() => setShortcutsExpanded(!shortcutsExpanded)}
               className="flex h-auto w-full items-center justify-between rounded-none px-0 py-0 hover:bg-transparent"
             >
-              <CardHeader
+              <SettingsCardHeader
                 icon={<Keyboard className="h-4 w-4" />}
                 title={t('settings.keyboardShortcuts')}
               />
@@ -1483,7 +1486,7 @@ export function SettingsPage() {
                 })}
               </p>
             )}
-          </Card>
+          </SettingsCard>
         )}
 
         {mobile ? (
@@ -1504,8 +1507,11 @@ export function SettingsPage() {
           )}
         >
           {/* Appearance Card */}
-          <Card>
-            <CardHeader icon={<Palette className="h-4 w-4" />} title={t('settings.appearance')} />
+          <SettingsCard>
+            <SettingsCardHeader
+              icon={<Palette className="h-4 w-4" />}
+              title={t('settings.appearance')}
+            />
             <div className={cn('space-y-3', mobile && 'mt-3 space-y-4')}>
               <SettingsSegmentedField
                 label={t('settings.mode')}
@@ -1585,11 +1591,11 @@ export function SettingsPage() {
                 </div>
               </div>
             </div>
-          </Card>
+          </SettingsCard>
 
           {/* Default Views Card */}
-          <Card>
-            <CardHeader
+          <SettingsCard>
+            <SettingsCardHeader
               icon={<LayoutGrid className="h-4 w-4" />}
               title={t('settings.defaultViews')}
             />
@@ -1696,7 +1702,7 @@ export function SettingsPage() {
                 </div>
               </SettingsField>
             </div>
-          </Card>
+          </SettingsCard>
         </div>
 
         {/* Database identity + Server Connection */}
@@ -1733,48 +1739,4 @@ export function SettingsPage() {
       )}
     </ScrollArea>
   )
-}
-
-// =============================================================================
-// Helper Components
-// =============================================================================
-
-function Card({ children, className }: { children: React.ReactNode; className?: string }) {
-  const mobile = isMobileShell()
-  return (
-    <div
-      className={cn('rounded-md border border-border bg-card', mobile ? 'p-4' : 'p-3', className)}
-    >
-      {children}
-    </div>
-  )
-}
-
-function CardHeader({ icon, title }: { icon: React.ReactNode; title: string }) {
-  const mobile = isMobileShell()
-  return (
-    <div className="flex items-center gap-2">
-      <div
-        className={cn(
-          'flex items-center justify-center rounded-sm bg-muted text-muted-foreground',
-          mobile ? 'h-8 w-8' : 'h-6 w-6'
-        )}
-        aria-hidden
-      >
-        {icon}
-      </div>
-      <h2 className={cn('font-semibold', mobile ? 'text-base' : 'text-sm')}>{title}</h2>
-    </div>
-  )
-}
-
-/**
- * Calculate checkbox state for a list of shortcuts.
- * Returns true (all enabled), false (none enabled), or 'indeterminate' (some enabled).
- */
-function getShortcutsCheckState(shortcuts: KeyboardShortcut[]): boolean | 'indeterminate' {
-  const enabledCount = shortcuts.filter((s) => s.enabled).length
-  if (enabledCount === 0) return false
-  if (enabledCount === shortcuts.length) return true
-  return 'indeterminate'
 }

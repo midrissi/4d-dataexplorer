@@ -11,8 +11,18 @@ export {
   TimeoutError,
 } from './core/errors'
 // Core
-export { type FetchFunction, HttpClient, type HttpClientConfig } from './core/http-client'
+export {
+  type FetchFunction,
+  HttpClient,
+  type HttpClientConfig,
+  type HttpResponse,
+} from './core/http-client'
 // Function call operations
+export {
+  FunctionCallResult,
+  type FunctionCallResultInit,
+  unwrapFunctionBody,
+} from './operations/function-call-result'
 export {
   buildFunctionBody,
   callDataClassFunction,

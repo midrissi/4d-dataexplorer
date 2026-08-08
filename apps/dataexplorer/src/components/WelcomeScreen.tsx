@@ -25,17 +25,15 @@ import { api } from '~/lib/api'
 import { eventBus } from '~/lib/eventBus'
 import { isMobileShell } from '~/lib/platform'
 import { formatBytes, formatCount } from '~/lib/utils'
-import { type Dataclass, useDataExplorerStore } from '~/store'
-import {
-  type DataclassCustomization,
-  formatShortcut,
-  useDataclassCustomizations,
-  useShortcuts,
-} from '~/store/settings'
+import { useDataExplorerStore } from '~/store'
+import { formatShortcut, useDataclassCustomizations, useShortcuts } from '~/store/settings'
 import { useTabsStore } from '~/store/tabs'
 import { AppBrandIcon } from './AppBrandIcon'
 import { DatabaseIdentityPanel } from './DatabaseIdentityPanel'
-import { DataclassIcon, getDataclassColorClasses } from './DataclassCustomizeModal'
+import { DataclassRow } from './DataclassRow'
+import { WelcomeBarTooltip } from './WelcomeBarTooltip'
+import { WelcomePieTooltip } from './WelcomePieTooltip'
+import { WelcomeStatCard } from './WelcomeStatCard'
 
 // Color palette for charts — driven by theme chart tokens
 const CHART_COLORS = [
@@ -50,79 +48,6 @@ const CHART_COLORS = [
   'var(--chart-3)',
   'var(--chart-4)',
 ]
-
-type StatCardProps = {
-  icon: React.ElementType
-  label: string
-  value: string | number
-  subtext?: string
-  className?: string
-}
-
-function StatCard({ icon: Icon, label, value, subtext, className }: StatCardProps) {
-  return (
-    <div
-      className={cn('rounded-md border bg-card p-3 transition-colors hover:bg-card/90', className)}
-    >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1">
-          <p className="text-muted-foreground text-sm">{label}</p>
-          <p className="mt-1 truncate font-semibold text-2xl text-foreground">{value}</p>
-          {subtext && (
-            <p className="mt-0.5 truncate text-muted-foreground text-xs" title={subtext}>
-              {subtext}
-            </p>
-          )}
-        </div>
-        <div className="shrink-0 rounded-lg bg-primary/10 p-2">
-          <Icon className="h-5 w-5 text-primary" />
-        </div>
-      </div>
-    </div>
-  )
-}
-
-type CustomTooltipProps = {
-  active?: boolean
-  payload?: Array<{ value: number; name: string; payload: { name: string; count: number } }>
-  label?: string
-}
-
-function CustomBarTooltip({
-  active,
-  payload,
-  label,
-  entitiesLabel,
-}: CustomTooltipProps & { entitiesLabel: string }) {
-  if (!active || !payload?.length) return null
-
-  return (
-    <div className="rounded-lg border bg-popover px-3 py-2">
-      <p className="font-medium text-popover-foreground text-sm">{label}</p>
-      <p className="text-muted-foreground text-xs">
-        {formatCount(payload[0].value)} {entitiesLabel}
-      </p>
-    </div>
-  )
-}
-
-function CustomPieTooltip({
-  active,
-  payload,
-  entitiesLabel,
-}: CustomTooltipProps & { entitiesLabel: string }) {
-  if (!active || !payload?.length) return null
-
-  const data = payload[0]
-  return (
-    <div className="rounded-lg border bg-popover px-3 py-2">
-      <p className="font-medium text-popover-foreground text-sm">{data.payload.name}</p>
-      <p className="text-muted-foreground text-xs">
-        {formatCount(data.payload.count)} {entitiesLabel}
-      </p>
-    </div>
-  )
-}
 
 export function WelcomeScreen() {
   const { t, language } = useTranslation()
@@ -446,25 +371,25 @@ export function WelcomeScreen() {
             isRefreshingDataclasses && 'opacity-70'
           )}
         >
-          <StatCard
+          <WelcomeStatCard
             icon={Layers}
             label={t('welcome.dataclasses')}
             value={stats.totalDataclasses}
             subtext={t('welcome.totalTables')}
           />
-          <StatCard
+          <WelcomeStatCard
             icon={FileText}
             label={t('welcome.totalEntities')}
             value={formatCount(stats.totalEntities)}
             subtext={t('welcome.acrossAllDataclasses')}
           />
-          <StatCard
+          <WelcomeStatCard
             icon={HardDrive}
             label={t('welcome.largestDataclass')}
             value={stats.largest ? formatCount(stats.largest.count) : t('welcome.na')}
             subtext={stats.largest?.name}
           />
-          <StatCard
+          <WelcomeStatCard
             icon={TrendingUp}
             label={t('welcome.averageSize')}
             value={formatCount(stats.avgPerDataclass)}
@@ -653,7 +578,7 @@ export function WelcomeScreen() {
               <h3 className="mb-4 font-medium text-foreground">
                 {t('welcome.entitiesByDataclass')}
               </h3>
-              <div className="h-[300px] min-h-[300px]">
+              <div className="h-75 min-h-75">
                 {chartsReady && barChartData.length > 0 && (
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart
@@ -677,7 +602,7 @@ export function WelcomeScreen() {
                         width={140}
                       />
                       <Tooltip
-                        content={<CustomBarTooltip entitiesLabel={t('welcome.entities')} />}
+                        content={<WelcomeBarTooltip entitiesLabel={t('welcome.entities')} />}
                         cursor={{ fill: 'color-mix(in oklch, var(--muted) 50%, transparent)' }}
                       />
                       <Bar dataKey="count" radius={[0, 4, 4, 0]} />
@@ -692,7 +617,7 @@ export function WelcomeScreen() {
               <h3 className="mb-3 font-medium text-foreground text-sm">
                 {t('welcome.distribution')}
               </h3>
-              <div className="h-[300px] min-h-[300px]">
+              <div className="h-75 min-h-75">
                 {chartsReady && pieChartData.length > 0 && (
                   <ResponsiveContainer width="100%" height={300}>
                     <PieChart>
@@ -708,7 +633,7 @@ export function WelcomeScreen() {
                         isAnimationActive={false}
                       />
                       <Tooltip
-                        content={<CustomPieTooltip entitiesLabel={t('welcome.entities')} />}
+                        content={<WelcomePieTooltip entitiesLabel={t('welcome.entities')} />}
                       />
                     </PieChart>
                   </ResponsiveContainer>
@@ -782,60 +707,4 @@ export function WelcomeScreen() {
   }
 
   return <div className="relative h-full overflow-auto bg-background">{welcomeBody}</div>
-}
-
-type DataclassRowProps = {
-  dataclass: Dataclass
-  rank: number
-  maxCount: number
-  customization?: DataclassCustomization
-  onClick: () => void
-}
-
-function DataclassRow({ dataclass, rank, maxCount, customization, onClick }: DataclassRowProps) {
-  const percentage = maxCount > 0 ? (dataclass.count / maxCount) * 100 : 0
-  const colorClasses = getDataclassColorClasses(customization)
-
-  return (
-    <Button
-      type="button"
-      variant="outline"
-      onClick={onClick}
-      style={colorClasses.style}
-      className="group relative h-auto w-full overflow-hidden rounded-md border bg-background/50 px-2 py-1.5 text-left transition-colors"
-    >
-      {/* Progress bar background */}
-      <div
-        className={cn('absolute inset-y-0 left-0 transition-all', colorClasses.bgTint)}
-        style={{ width: `${percentage}%` }}
-      />
-
-      <div className="relative flex w-full items-center gap-1.5">
-        <span
-          className={cn(
-            'flex h-6 w-6 shrink-0 items-center justify-center rounded',
-            colorClasses.bgTint
-          )}
-        >
-          <DataclassIcon
-            customization={customization}
-            className={cn('h-3 w-3', colorClasses.text)}
-          />
-        </span>
-        <div className="flex min-w-0 flex-1 items-center gap-1 overflow-hidden">
-          <span className="shrink-0 text-[10px] text-muted-foreground tabular-nums">#{rank}</span>
-          <span className="truncate font-medium text-foreground text-xs">{dataclass.name}</span>
-        </div>
-        <span
-          className={cn(
-            'shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px] tabular-nums',
-            colorClasses.bgTint,
-            colorClasses.text
-          )}
-        >
-          {formatCount(dataclass.count)}
-        </span>
-      </div>
-    </Button>
-  )
 }

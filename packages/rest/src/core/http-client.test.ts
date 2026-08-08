@@ -82,6 +82,32 @@ describe('HttpClient', () => {
     })
   })
 
+  describe('getWithMeta', () => {
+    it('returns body, status, headers, and duration', async () => {
+      const mockFetch = mock(() =>
+        Promise.resolve(
+          new Response(JSON.stringify({ data: 'test' }), {
+            status: 200,
+            statusText: 'OK',
+            headers: { 'Content-Type': 'application/json', 'X-Trace': '1' },
+          })
+        )
+      )
+      const client = new HttpClient({
+        baseUrl: 'http://localhost:8080',
+        fetch: mockFetch as unknown as FetchFunction,
+      })
+
+      const result = await client.getWithMeta('/test')
+
+      expect(result.data).toEqual({ data: 'test' })
+      expect(result.status).toBe(200)
+      expect(result.statusText).toBe('OK')
+      expect(result.headers.get('X-Trace')).toBe('1')
+      expect(result.durationMs).toBeGreaterThanOrEqual(0)
+    })
+  })
+
   describe('post', () => {
     it('should make POST request with body', async () => {
       const mockFetch = mock(() =>

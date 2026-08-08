@@ -78,16 +78,25 @@ export interface SingletonResponse<T = unknown> {
   result: T
 }
 
+/** `__WEBFORM.__NOTIFICATION` payload from a class function response. */
+export interface FunctionNotification {
+  message?: string
+  type?: string
+}
+
+/** `__WEBFORM` envelope from a class function response. */
+export interface FunctionWebform {
+  __PRIVILEGES?: { stamp?: number }
+  __NOTIFICATION?: FunctionNotification
+}
+
 /**
  * Class function call response
  */
 export interface FunctionResponse<T = unknown> {
   result: T
   /** Present when the server sends web-form notifications / privilege stamps. */
-  __WEBFORM?: {
-    __PRIVILEGES?: { stamp?: number }
-    __NOTIFICATION?: { message?: string; type?: string }
-  }
+  __WEBFORM?: FunctionWebform
 }
 
 /**

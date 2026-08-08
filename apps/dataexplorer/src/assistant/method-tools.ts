@@ -75,7 +75,10 @@ export async function syncMethodTools(registry: AssistantToolRegistry): Promise<
       methods: filterAssistantExposedMethods(catalog.methods),
     },
     metadata: metadata as AssistantMetadataSchema | null,
-    invoke: (input) => api.callMethod(input),
+    invoke: async (input) => {
+      const res = await api.callMethod(input)
+      return res.unwrap()
+    },
     isMethodExposed: (method) => isAssistantExposedMethod(method),
   })
 

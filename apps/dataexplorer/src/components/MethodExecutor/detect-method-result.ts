@@ -1,3 +1,5 @@
+import { extractEntitySetId } from '~/lib/extract-entity-set-id'
+
 export type MethodWebformNotification = {
   message: string
   type?: string
@@ -25,12 +27,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
-export function extractEntitySetId(value: unknown): string | undefined {
-  if (typeof value !== 'string' || !value.trim()) return undefined
-  const marker = '/$entityset/'
-  const markerIndex = value.lastIndexOf(marker)
-  return markerIndex >= 0 ? value.slice(markerIndex + marker.length).split(/[/?#]/)[0] : value
-}
+export { extractEntitySetId }
 
 /** Reads `__WEBFORM.__NOTIFICATION` / `__WEBFORM.__PRIVILEGES.stamp` from a REST body. */
 export function extractWebformMeta(response: unknown): MethodWebformMeta | undefined {
@@ -69,8 +66,17 @@ function withWebform(
   return webform ? { ...detected, webform } : detected
 }
 
-export function detectMethodResult(response: unknown): DetectedMethodResult {
-  const webform = extractWebformMeta(response)
+/** Accepts a full REST body or a raw `__WEBFORM` object. */
+export function webformMetaFromSource(source: unknown): MethodWebformMeta | undefined {
+  if (source == null) return undefined
+  return extractWebformMeta(source) ?? extractWebformMeta({ __WEBFORM: source })
+}
+
+export function detectMethodResult(
+  response: unknown,
+  options?: { webform?: unknown }
+): DetectedMethodResult {
+  const webform = webformMetaFromSource(options?.webform) ?? extractWebformMeta(response)
   const value = unwrapMethodResult(response)
 
   if (isRecord(value) && Array.isArray(value.__ENTITIES)) {

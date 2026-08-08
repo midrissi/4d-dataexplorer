@@ -27,7 +27,9 @@ describe('callEntitySelectionFunction', () => {
       entitySetId: 'BF9F511FA7C94980A0468FF52CDCD68B',
     })
 
-    expect(result).toBe(42)
+    expect(result.unwrap()).toBe(42)
+    expect(result.status()).toBe(200)
+    expect(result.time()).toBeGreaterThanOrEqual(0)
     expect(requests).toEqual([
       {
         path: '/User/getCount/$entityset/BF9F511FA7C94980A0468FF52CDCD68B',
@@ -83,7 +85,7 @@ describe('callDataStoreFunction', () => {
   test('POSTs to the catalog function by default with $method=entityset', async () => {
     const { http, calls } = makeHttp({ result: 'ok' })
     const result = await callDataStoreFunction(http, 'doThing', [1, 2])
-    expect(result).toBe('ok')
+    expect(result.unwrap()).toBe('ok')
     expect(calls[0].method).toBe('POST')
     expect(calls[0].path).toBe('/$catalog/doThing')
     expect(calls[0].body).toEqual([1, 2])
@@ -128,7 +130,8 @@ describe('callDataStoreFunction', () => {
     }
     const { http } = makeHttp(entitySet)
     const result = await callDataStoreFunction(http, 'testFn', [])
-    expect(result).toEqual(entitySet)
+    expect(result.unwrap()).toEqual(entitySet)
+    expect(result.body).toEqual(entitySet)
   })
 })
 
@@ -136,7 +139,7 @@ describe('callDataClassFunction', () => {
   test('POSTs to the dataclass function path', async () => {
     const { http, calls } = makeHttp({ result: 5 })
     const result = await callDataClassFunction(http, 'Employee', 'raise', [10])
-    expect(result).toBe(5)
+    expect(result.unwrap()).toBe(5)
     expect(calls[0].path).toBe('/Employee/raise')
     expect(calls[0].body).toEqual([10])
     expect(calls[0].params.$method).toBe('entityset')
@@ -156,7 +159,7 @@ describe('callEntityFunction', () => {
   test('POSTs to the entity function path', async () => {
     const { http, calls } = makeHttp({ result: true })
     const result = await callEntityFunction(http, 'Employee', 3, 'archive', ['x'])
-    expect(result).toBe(true)
+    expect(result.unwrap()).toBe(true)
     expect(calls[0].path).toBe('/Employee(3)/archive')
     expect(calls[0].body).toEqual(['x'])
     expect(calls[0].params.$method).toBe('entityset')
@@ -192,7 +195,7 @@ describe('callSingletonFunction', () => {
   test('POSTs to the singleton function path', async () => {
     const { http, calls } = makeHttp({ result: 'pong' })
     const result = await callSingletonFunction(http, 'App', 'ping', [1])
-    expect(result).toBe('pong')
+    expect(result.unwrap()).toBe('pong')
     expect(calls[0].path).toBe('/$singleton/App/ping')
     expect(calls[0].body).toEqual([1])
     expect(calls[0].params.$method).toBe('entityset')
@@ -206,7 +209,7 @@ describe('callSingletonFunction', () => {
     expect(calls[0].params.$method).toBe('entityset')
   })
 
-  test('preserves __WEBFORM envelope instead of unwrapping result only', async () => {
+  test('exposes __WEBFORM via notifications() while unwrap() returns result', async () => {
     const envelope = {
       result: null,
       __WEBFORM: {
@@ -219,6 +222,12 @@ describe('callSingletonFunction', () => {
     }
     const { http } = makeHttp(envelope)
     const result = await callSingletonFunction(http, 'dataInitSingleton', 'generate', ['test'])
-    expect(result).toEqual(envelope)
+    expect(result.unwrap()).toBe(null)
+    expect(result.body).toEqual(envelope)
+    expect(result.notifications()).toEqual({
+      message: 'Cannot generate data, data process already running',
+      type: 'warning',
+    })
+    expect(result.webform()?.__PRIVILEGES).toEqual({ stamp: 2 })
   })
 })

@@ -10,6 +10,7 @@ import {
   type RESTClient,
 } from '@4d/rest'
 import { isAssistantExposedMethod } from '~/lib/assistant-exposed-method'
+import { extractEntitySetId } from '~/lib/extract-entity-set-id'
 import { ORDA_DATACLASS, ORDA_KIND } from './symbols'
 
 const ENTITY_SET_TIMEOUT_SEC = 7200
@@ -55,13 +56,6 @@ function isBlockedProxyProp(prop: string): boolean {
     default:
       return false
   }
-}
-
-function extractEntitySetId(uriOrId: unknown): string | undefined {
-  if (typeof uriOrId !== 'string' || !uriOrId.trim()) return undefined
-  const marker = '/$entityset/'
-  const markerIndex = uriOrId.lastIndexOf(marker)
-  return markerIndex >= 0 ? uriOrId.slice(markerIndex + marker.length).split(/[/?#]/)[0] : uriOrId
 }
 
 function splitAttributes(...attributes: string[]): string[] {
@@ -336,7 +330,7 @@ function createEntityHandle(
             prop,
             params,
             callOptions(meta)
-          ).then((result) => normalizeMethodResult(result, dataClass))
+          ).then((result) => normalizeMethodResult(result.unwrap(), dataClass))
         }
       },
     }
@@ -395,7 +389,7 @@ function createSelHandle(
             prop,
             params,
             callOptions(meta, entitySetId)
-          ).then((result) => normalizeMethodResult(result, dataClass))
+          ).then((result) => normalizeMethodResult(result.unwrap(), dataClass))
         }
       },
     }
@@ -444,7 +438,7 @@ function createDataClassHandle(client: RESTClient, name: string, methods: Method
             prop,
             params,
             callOptions(meta)
-          ).then((result) => normalizeMethodResult(result, name))
+          ).then((result) => normalizeMethodResult(result.unwrap(), name))
         }
       },
     }
@@ -535,7 +529,7 @@ export function createDatastore(
     return (...params: unknown[]) => {
       const meta = findMethod(methods, name, 'catalog')
       return callDataStoreFunction(client.getHttpClient(), name, params, callOptions(meta)).then(
-        (result) => normalizeMethodResult(result)
+        (result) => normalizeMethodResult(result.unwrap())
       )
     }
   }

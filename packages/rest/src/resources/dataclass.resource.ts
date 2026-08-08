@@ -1,11 +1,12 @@
 import type { HttpClient } from '../core/http-client'
+import type { FunctionCallResult } from '../operations/function-call-result'
+import { callDataClassFunction } from '../operations/functions'
 import type {
   ComputeOperation,
   ComputeResult,
   Entity,
   EntityCollection,
   EntityMutationResult,
-  FunctionResponse,
   SimpleComputeResult,
 } from '../types'
 import { normalizeEntityMutationResults } from '../utils/entity-mutation'
@@ -145,14 +146,16 @@ export class DataClassResource<T extends Entity = Entity> {
   // ============ Class Functions ============
 
   /**
-   * Call a dataclass function
+   * Call a dataclass function. Returns a {@link FunctionCallResult};
+   * use `.unwrap()` for the business payload.
    */
-  async call<R = unknown>(functionName: string, ...params: unknown[]): Promise<R> {
-    const response = await this.http.post<FunctionResponse<R>>(
-      `/${this.name}/${functionName}`,
-      params
-    )
-    return response.result
+  async call<R = unknown>(
+    functionName: string,
+    ...params: unknown[]
+  ): Promise<FunctionCallResult<R>> {
+    return callDataClassFunction<R>(this.http, this.name, functionName, params, {
+      createEntitySet: false,
+    })
   }
 
   // ============ Aggregations ============

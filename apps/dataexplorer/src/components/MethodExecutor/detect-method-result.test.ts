@@ -77,6 +77,24 @@ describe('detectMethodResult', () => {
     })
   })
 
+  it('accepts webform from FunctionCallResult accessors', () => {
+    expect(
+      detectMethodResult(null, {
+        webform: {
+          __PRIVILEGES: { stamp: 2 },
+          __NOTIFICATION: { message: 'Cannot generate data', type: 'warning' },
+        },
+      })
+    ).toEqual({
+      kind: 'other',
+      value: null,
+      webform: {
+        privilegeStamp: 2,
+        notification: { message: 'Cannot generate data', type: 'warning' },
+      },
+    })
+  })
+
   it('keeps __WEBFORM notification and privilege stamp alongside result', () => {
     expect(
       detectMethodResult({

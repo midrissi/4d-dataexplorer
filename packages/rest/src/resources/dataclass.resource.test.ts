@@ -113,9 +113,10 @@ describe('DataClassResource', () => {
   it('call() posts params and unwraps the result', async () => {
     const { http, calls } = makeHttp({ result: 'done' })
     const result = await new DataClassResource(http, 'Employee').call('doThing', 1, 2)
-    expect(result).toBe('done')
+    expect(result.unwrap()).toBe('done')
     expect(calls[0].path).toBe('/Employee/doThing')
     expect(calls[0].body).toEqual([1, 2])
+    expect(calls[0].params.$method).toBeUndefined()
   })
 
   it('compute() defaults to $all', async () => {

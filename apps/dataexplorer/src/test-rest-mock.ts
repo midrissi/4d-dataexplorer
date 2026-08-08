@@ -1,8 +1,14 @@
 import { mock } from 'bun:test'
+import { FunctionCallResult } from '../../../packages/rest/src/operations/function-call-result'
 import {
   normalizeFilterExpression,
   normalizeOrderByExpression,
 } from '../../../packages/rest/src/resources/query-builder'
+import { EMPTY_VALUE, formatDate } from '../../../packages/rest/src/utils/format'
+
+function emptyFunctionCallResult() {
+  return new FunctionCallResult({ body: undefined })
+}
 
 export const mockCatalogGetDataClasses = mock(() =>
   Promise.resolve({ __UNIQID: 'test-uniq', __BASEID: 'test-base' })
@@ -170,14 +176,17 @@ export class MockRESTClient {
   releaseEntitySet = mockReleaseEntitySet
 }
 
-export const mockCallDataStoreFunction = mock(() => Promise.resolve(undefined))
-export const mockCallDataClassFunction = mock(() => Promise.resolve(undefined))
-export const mockCallEntityFunction = mock(() => Promise.resolve(undefined))
-export const mockCallEntitySelectionFunction = mock(() => Promise.resolve(undefined))
-export const mockCallSingletonFunction = mock(() => Promise.resolve(undefined))
+export const mockCallDataStoreFunction = mock(() => Promise.resolve(emptyFunctionCallResult()))
+export const mockCallDataClassFunction = mock(() => Promise.resolve(emptyFunctionCallResult()))
+export const mockCallEntityFunction = mock(() => Promise.resolve(emptyFunctionCallResult()))
+export const mockCallEntitySelectionFunction = mock(() =>
+  Promise.resolve(emptyFunctionCallResult())
+)
+export const mockCallSingletonFunction = mock(() => Promise.resolve(emptyFunctionCallResult()))
 
 mock.module('@4d/rest', () => ({
   RESTClient: MockRESTClient,
+  FunctionCallResult,
   callDataStoreFunction: mockCallDataStoreFunction,
   callDataClassFunction: mockCallDataClassFunction,
   callEntityFunction: mockCallEntityFunction,
@@ -185,4 +194,6 @@ mock.module('@4d/rest', () => ({
   callSingletonFunction: mockCallSingletonFunction,
   normalizeFilterExpression,
   normalizeOrderByExpression,
+  EMPTY_VALUE,
+  formatDate,
 }))

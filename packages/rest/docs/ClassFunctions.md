@@ -65,7 +65,23 @@ In 4D language, this call is equivalent to:
 $city:=ds.City.getCity("Aguada")
 ```
 
+### TypeScript client (`@4d/rest`)
 
+Class function calls return a `FunctionCallResult` with the HTTP response and helpers:
+
+```ts
+const res = await client.dataclass('City').call('getCity', 'Aguada')
+
+res.unwrap()         // business payload (`result`, or entity-set body)
+res.result()         // same as unwrap()
+res.time()           // round-trip duration in ms
+res.status()         // HTTP status
+res.statusText()     // HTTP status text
+res.headers()        // response Headers
+res.notifications()  // `__WEBFORM.__NOTIFICATION` when present
+res.webform()        // full `__WEBFORM` object
+res.body             // raw parsed JSON body
+```
 
 ## Function configuration
 

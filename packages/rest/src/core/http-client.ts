@@ -56,6 +56,18 @@ export interface RequestOptions {
 }
 
 /**
+ * Parsed HTTP response with timing and header metadata.
+ * `get` / `post` / `put` / `delete` return `data` only; use `*WithMeta` for the full object.
+ */
+export interface HttpResponse<T = unknown> {
+  data: T
+  status: number
+  statusText: string
+  headers: Headers
+  durationMs: number
+}
+
+/**
  * Injectable HTTP client for 4D REST API
  */
 export class HttpClient {
@@ -119,7 +131,10 @@ export class HttpClient {
   /**
    * Execute a request with middleware
    */
-  private async executeRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  private async executeRequest<T>(
+    path: string,
+    options: RequestOptions = {}
+  ): Promise<HttpResponse<T>> {
     const { method = 'GET', headers = {}, body, params, timeout = this.timeout } = options
 
     const url = this.buildUrl(path, params)
@@ -149,6 +164,7 @@ export class HttpClient {
     // Create abort controller for timeout
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), timeout)
+    const startedAt = performance.now()
 
     try {
       let response = await this.fetchFn(request, {
@@ -160,7 +176,14 @@ export class HttpClient {
         response = await middleware(response)
       }
 
-      return await this.handleResponse<T>(response)
+      const data = await this.handleResponse<T>(response)
+      return {
+        data,
+        status: response.status,
+        statusText: response.statusText,
+        headers: new Headers(response.headers),
+        durationMs: performance.now() - startedAt,
+      }
     } catch (error) {
       // Re-throw REST client errors (they should propagate)
       if (
@@ -257,20 +280,41 @@ export class HttpClient {
   }
 
   /**
-   * GET request
+   * GET request (body only)
    */
   async get<T>(path: string, params?: QueryOptions | Record<string, unknown>): Promise<T> {
+    return (await this.getWithMeta<T>(path, params)).data
+  }
+
+  /**
+   * GET request with status, headers, and duration
+   */
+  async getWithMeta<T>(
+    path: string,
+    params?: QueryOptions | Record<string, unknown>
+  ): Promise<HttpResponse<T>> {
     return this.executeRequest<T>(path, { method: 'GET', params })
   }
 
   /**
-   * POST request
+   * POST request (body only)
    */
   async post<T>(
     path: string,
     body?: unknown,
     params?: QueryOptions | Record<string, unknown>
   ): Promise<T> {
+    return (await this.postWithMeta<T>(path, body, params)).data
+  }
+
+  /**
+   * POST request with status, headers, and duration
+   */
+  async postWithMeta<T>(
+    path: string,
+    body?: unknown,
+    params?: QueryOptions | Record<string, unknown>
+  ): Promise<HttpResponse<T>> {
     return this.executeRequest<T>(path, { method: 'POST', body, params })
   }
 
@@ -282,14 +326,14 @@ export class HttpClient {
     body?: unknown,
     params?: QueryOptions | Record<string, unknown>
   ): Promise<T> {
-    return this.executeRequest<T>(path, { method: 'PUT', body, params })
+    return this.executeRequest<T>(path, { method: 'PUT', body, params }).then((res) => res.data)
   }
 
   /**
    * DELETE request
    */
   async delete<T>(path: string, params?: QueryOptions | Record<string, unknown>): Promise<T> {
-    return this.executeRequest<T>(path, { method: 'DELETE', params })
+    return this.executeRequest<T>(path, { method: 'DELETE', params }).then((res) => res.data)
   }
 
   /**

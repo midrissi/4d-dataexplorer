@@ -48,9 +48,10 @@ describe('EntityResource', () => {
   it('call() posts params and unwraps the result', async () => {
     const { http, calls } = makeHttp({ result: 99 })
     const result = await new EntityResource(http, 'Employee', 3).call('raise', 10)
-    expect(result).toBe(99)
+    expect(result.unwrap()).toBe(99)
     expect(calls[0].path).toBe('/Employee(3)/raise')
     expect(calls[0].body).toEqual([10])
+    expect(calls[0].params.$method).toBeUndefined()
   })
 
   it('lock() and unlock() toggle the $lock flag', async () => {

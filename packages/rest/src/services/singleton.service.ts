@@ -1,5 +1,6 @@
 import type { HttpClient } from '../core/http-client'
-import type { SingletonResponse } from '../types'
+import type { FunctionCallResult } from '../operations/function-call-result'
+import { callSingletonFunction } from '../operations/functions'
 
 /**
  * Service for singleton operations
@@ -12,18 +13,17 @@ export class SingletonService {
   }
 
   /**
-   * Call a singleton function
+   * Call a singleton function. Returns a {@link FunctionCallResult};
+   * use `.unwrap()` for the business payload.
    */
   async call<R = unknown>(
     singletonName: string,
     functionName: string,
     ...params: unknown[]
-  ): Promise<R> {
-    const response = await this.http.post<SingletonResponse<R>>(
-      `/$singleton/${singletonName}/${functionName}`,
-      params
-    )
-    return response.result
+  ): Promise<FunctionCallResult<R>> {
+    return callSingletonFunction<R>(this.http, singletonName, functionName, params, {
+      createEntitySet: false,
+    })
   }
 
   /**
@@ -47,13 +47,15 @@ export class SingletonResource {
   }
 
   /**
-   * Call a function on this singleton
+   * Call a function on this singleton. Returns a {@link FunctionCallResult};
+   * use `.unwrap()` for the business payload.
    */
-  async call<R = unknown>(functionName: string, ...params: unknown[]): Promise<R> {
-    const response = await this.http.post<SingletonResponse<R>>(
-      `/$singleton/${this.name}/${functionName}`,
-      params
-    )
-    return response.result
+  async call<R = unknown>(
+    functionName: string,
+    ...params: unknown[]
+  ): Promise<FunctionCallResult<R>> {
+    return callSingletonFunction<R>(this.http, this.name, functionName, params, {
+      createEntitySet: false,
+    })
   }
 }

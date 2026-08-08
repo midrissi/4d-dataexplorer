@@ -20,6 +20,7 @@ import { MethodFavourites } from './MethodFavourites'
 import { MethodRunHistory } from './MethodRunHistory'
 import { MethodSelector } from './MethodSelector'
 import { flushPendingWrapperText, MethodWrapperEditor } from './MethodWrapperEditor'
+import { type MethodResponseMeta, methodResponseMetaFromCall } from './method-response-meta'
 import { parseParamsText } from './parse-params-text'
 import { parseWrapperText } from './parse-wrapper-text'
 import { ResultPanel } from './ResultPanel'
@@ -83,6 +84,8 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
     setArgumentsListState(next)
   }
   const [result, setResult] = useState<DetectedMethodResult | null>(null)
+  const [rawBody, setRawBody] = useState<unknown>(undefined)
+  const [responseMeta, setResponseMeta] = useState<MethodResponseMeta | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [executing, setExecuting] = useState(false)
   const [sidePanel, setSidePanel] = useState<SidePanel>('none')
@@ -118,6 +121,8 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
       setOrderby('')
     }
     setResult(null)
+    setRawBody(undefined)
+    setResponseMeta(null)
     setError(null)
     if (mobile) setMobileStep('args')
   }
@@ -132,6 +137,8 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
     setFilter('')
     setOrderby('')
     setResult(null)
+    setRawBody(undefined)
+    setResponseMeta(null)
     setError(null)
   }
 
@@ -268,8 +275,10 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
         params: serializeRuntimeParams(args),
         wrapper,
       })
-      const detected = detectMethodResult(response)
+      const detected = detectMethodResult(response.unwrap(), { webform: response.webform() })
       setResult(detected)
+      setRawBody(response.body)
+      setResponseMeta(methodResponseMetaFromCall(response))
       addRun(
         {
           ...currentConfig(),
@@ -426,7 +435,7 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
 
           {mobileStep === 'result' ? (
             <div className="flex h-full min-h-0 flex-col">
-              <ResultPanel result={result} />
+              <ResultPanel result={result} rawBody={rawBody} responseMeta={responseMeta} />
             </div>
           ) : null}
         </div>
@@ -737,7 +746,7 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
             <p className="text-muted-foreground text-xs">{t('methodExecutor.resultHint')}</p>
           </div>
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <ResultPanel result={result} />
+            <ResultPanel result={result} rawBody={rawBody} responseMeta={responseMeta} />
           </div>
         </>
       }

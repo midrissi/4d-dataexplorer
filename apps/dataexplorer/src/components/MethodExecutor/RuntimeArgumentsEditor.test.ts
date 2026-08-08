@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import { changeRuntimeArgumentKind } from './RuntimeArgumentsEditor'
+import { changeRuntimeArgumentKind } from './runtime-argument-kind'
 
 describe('changeRuntimeArgumentKind', () => {
   it('converts number to string keeping the digits', () => {
