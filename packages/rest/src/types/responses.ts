@@ -83,6 +83,11 @@ export interface SingletonResponse<T = unknown> {
  */
 export interface FunctionResponse<T = unknown> {
   result: T
+  /** Present when the server sends web-form notifications / privilege stamps. */
+  __WEBFORM?: {
+    __PRIVILEGES?: { stamp?: number }
+    __NOTIFICATION?: { message?: string; type?: string }
+  }
 }
 
 /**

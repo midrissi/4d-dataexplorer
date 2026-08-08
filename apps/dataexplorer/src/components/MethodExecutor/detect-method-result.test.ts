@@ -76,6 +76,49 @@ describe('detectMethodResult', () => {
       value: payload,
     })
   })
+
+  it('keeps __WEBFORM notification and privilege stamp alongside result', () => {
+    expect(
+      detectMethodResult({
+        __WEBFORM: {
+          __PRIVILEGES: { stamp: 2 },
+          __NOTIFICATION: {
+            message: 'Cannot generate data, data process already running',
+            type: 'warning',
+          },
+        },
+        result: null,
+      })
+    ).toEqual({
+      kind: 'other',
+      value: null,
+      webform: {
+        privilegeStamp: 2,
+        notification: {
+          message: 'Cannot generate data, data process already running',
+          type: 'warning',
+        },
+      },
+    })
+  })
+
+  it('attaches __WEBFORM meta to entity results', () => {
+    expect(
+      detectMethodResult({
+        __WEBFORM: {
+          __PRIVILEGES: { stamp: 5 },
+          __NOTIFICATION: { message: 'Saved', type: 'success' },
+        },
+        result: { __KEY: '1', __DATACLASS: 'City' },
+      })
+    ).toMatchObject({
+      kind: 'entity',
+      webform: {
+        privilegeStamp: 5,
+        notification: { message: 'Saved', type: 'success' },
+      },
+    })
+  })
 })
 
 describe('extractEntitySetId', () => {

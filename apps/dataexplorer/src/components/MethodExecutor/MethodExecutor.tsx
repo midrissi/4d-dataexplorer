@@ -42,7 +42,13 @@ function initialArguments(seed?: MethodExecutorSeed): RuntimeArgument[] {
 export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodExecutorSeed }) {
   const { t } = useTranslation()
   const mobile = isMobileShell()
-  const { methods, dataClasses, loading: catalogLoading, error: catalogError } = useMethodCatalog()
+  const {
+    methods,
+    dataClasses,
+    singletons,
+    loading: catalogLoading,
+    error: catalogError,
+  } = useMethodCatalog()
   const openMethodExecutorTab = useTabsStore((state) => state.openMethodExecutorTab)
   const runs = useMethodRunHistoryStore((state) => state.runs)
   const addRun = useMethodRunHistoryStore((state) => state.addRun)
@@ -57,6 +63,7 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
   const [scope, setScope] = useState<MethodScope>(seed?.scope ?? 'catalog')
   const [methodName, setMethodName] = useState(seed?.methodName ?? '')
   const [dataClass, setDataClass] = useState(seed?.dataClass ?? '')
+  const [singletonName, setSingletonName] = useState(seed?.singletonName ?? '')
   const [key, setKey] = useState(seed?.key === undefined ? '' : String(seed.key))
   const [entitySetId, setEntitySetId] = useState(seed?.entitySetId ?? '')
   const [filter, setFilter] = useState(seed?.filter ?? '')
@@ -90,10 +97,15 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
 
   const chooseMethod = (item: MethodCatalogItem) => {
     const sameTarget =
-      item.scope === scope && (item.scope === 'catalog' || item.dataClass === dataClass)
+      item.scope === scope &&
+      (item.scope === 'catalog' ||
+        (item.scope === 'singleton'
+          ? item.singletonName === singletonName
+          : item.dataClass === dataClass))
     setScope(item.scope)
     setMethodName(item.methodName)
     setDataClass(item.dataClass ?? '')
+    setSingletonName(item.singletonName ?? '')
     setAllowedOnHTTPGET(item.allowedOnHTTPGET ?? false)
     setUseGet(false)
     setWrapperEnabled(false)
@@ -129,13 +141,17 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
       (method) =>
         method.methodName === methodName &&
         method.scope === scope &&
-        (scope === 'catalog' || method.dataClass === dataClass)
+        (scope === 'catalog' ||
+          (scope === 'singleton'
+            ? method.singletonName === singletonName
+            : method.dataClass === dataClass))
     )
 
   const canExecute =
     Boolean(methodName) &&
     methodExists &&
-    (scope === 'catalog' || Boolean(dataClass)) &&
+    (scope === 'catalog' ||
+      (scope === 'singleton' ? Boolean(singletonName) : Boolean(dataClass))) &&
     (scope !== 'entity' || Boolean(key.trim())) &&
     (scope !== 'entitySelection' || Boolean(entitySetId.trim())) &&
     areRuntimeArgumentsReady(argumentsList)
@@ -143,7 +159,8 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
   const currentConfig = (): MethodExecutorSeed => ({
     scope,
     methodName,
-    dataClass: dataClass || undefined,
+    dataClass: scope === 'singleton' ? undefined : dataClass || undefined,
+    singletonName: scope === 'singleton' ? singletonName || undefined : undefined,
     key: key || undefined,
     entitySetId: entitySetId || undefined,
     // Entity-set targets already encode the selection — do not carry query filters
@@ -199,7 +216,11 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
       setError(t('methodExecutor.chooseMethodFirst'))
       return
     }
-    if (scope !== 'catalog' && !dataClass) {
+    if (scope === 'singleton' && !singletonName) {
+      setError(t('methodExecutor.chooseSingletonError'))
+      return
+    }
+    if (scope !== 'catalog' && scope !== 'singleton' && !dataClass) {
       setError(t('methodExecutor.chooseDataclassError'))
       return
     }
@@ -237,7 +258,8 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
       const response = await api.callMethod({
         scope,
         methodName,
-        dataClass: dataClass || undefined,
+        dataClass: scope === 'singleton' ? undefined : dataClass || undefined,
+        singletonName: scope === 'singleton' ? singletonName || undefined : undefined,
         key: key || undefined,
         entitySetId: entitySetId || undefined,
         filter: entitySetId.trim() ? undefined : filter || undefined,
@@ -356,10 +378,12 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
               scope={scope}
               methodName={methodName}
               dataClass={dataClass}
+              singletonName={singletonName}
               keyValue={key}
               entitySetId={entitySetId}
               methods={methods}
               dataClasses={dataClasses}
+              singletons={singletons}
               catalogLoading={catalogLoading}
               catalogError={catalogError}
               onScopeChange={(next) => {
@@ -369,6 +393,7 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
               onChooseMethod={chooseMethod}
               onClearMethod={clearMethod}
               onDataClassChange={setDataClass}
+              onSingletonNameChange={setSingletonName}
               onKeyChange={setKey}
               onEntitySetIdChange={setEntitySetId}
             />
@@ -416,7 +441,7 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
               disabled={
                 !methodName ||
                 !methodExists ||
-                (scope !== 'catalog' && !dataClass) ||
+                (scope === 'singleton' ? !singletonName : scope !== 'catalog' && !dataClass) ||
                 (scope === 'entity' && !key.trim()) ||
                 (scope === 'entitySelection' && !entitySetId.trim())
               }
@@ -599,10 +624,12 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
               scope={scope}
               methodName={methodName}
               dataClass={dataClass}
+              singletonName={singletonName}
               keyValue={key}
               entitySetId={entitySetId}
               methods={methods}
               dataClasses={dataClasses}
+              singletons={singletons}
               catalogLoading={catalogLoading}
               catalogError={catalogError}
               onScopeChange={(next) => {
@@ -612,6 +639,7 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
               onChooseMethod={chooseMethod}
               onClearMethod={clearMethod}
               onDataClassChange={setDataClass}
+              onSingletonNameChange={setSingletonName}
               onKeyChange={setKey}
               onEntitySetIdChange={setEntitySetId}
             />

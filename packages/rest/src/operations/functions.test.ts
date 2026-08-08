@@ -205,4 +205,20 @@ describe('callSingletonFunction', () => {
     expect(calls[0].path).toBe('/$singleton/App/ping')
     expect(calls[0].params.$method).toBe('entityset')
   })
+
+  test('preserves __WEBFORM envelope instead of unwrapping result only', async () => {
+    const envelope = {
+      result: null,
+      __WEBFORM: {
+        __PRIVILEGES: { stamp: 2 },
+        __NOTIFICATION: {
+          message: 'Cannot generate data, data process already running',
+          type: 'warning',
+        },
+      },
+    }
+    const { http } = makeHttp(envelope)
+    const result = await callSingletonFunction(http, 'dataInitSingleton', 'generate', ['test'])
+    expect(result).toEqual(envelope)
+  })
 })

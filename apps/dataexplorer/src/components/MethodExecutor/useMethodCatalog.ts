@@ -1,4 +1,4 @@
-import type { DataClassMethod, DatastoreMethod } from '@4d/rest'
+import type { DataClassMethod, DatastoreMethod, SingletonMethod } from '@4d/rest'
 import { useEffect, useState } from 'react'
 import { api } from '~/lib/api'
 import { isAssistantExposedMethod } from '~/lib/assistant-exposed-method'
@@ -9,6 +9,7 @@ export type MethodCatalogItem = {
   id: string
   methodName: string
   dataClass?: string
+  singletonName?: string
   scope: MethodScope
   applyTo?: string
   paramsText?: string
@@ -51,9 +52,24 @@ export function catalogMethodItem(method: DatastoreMethod): MethodCatalogItem {
   }
 }
 
+export function singletonMethodItem(
+  method: SingletonMethod & { paramsText?: string },
+  singletonName: string
+): MethodCatalogItem {
+  return {
+    id: `singleton:${singletonName}:${method.name}`,
+    methodName: method.name,
+    singletonName,
+    scope: 'singleton',
+    paramsText: method.paramsText,
+    allowedOnHTTPGET: method.allowedOnHTTPGET,
+  }
+}
+
 export function useMethodCatalog() {
   const [methods, setMethods] = useState<MethodCatalogItem[]>([])
   const [dataClasses, setDataClasses] = useState<string[]>([])
+  const [singletons, setSingletons] = useState<string[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -73,11 +89,19 @@ export function useMethodCatalog() {
             if (isAssistantExposedMethod(method)) next.push(methodItem(method, dataClass.name))
           }
         }
+        for (const singleton of catalog.singletons ?? []) {
+          for (const method of singleton.methods ?? []) {
+            if (isAssistantExposedMethod(method)) {
+              next.push(singletonMethodItem(method, singleton.name))
+            }
+          }
+        }
         for (const method of fullCatalog.methods ?? []) {
           if (isAssistantExposedMethod(method)) next.push(catalogMethodItem(method))
         }
         setMethods(next)
         setDataClasses(catalog.dataClasses.map((dataClass) => dataClass.name))
+        setSingletons((catalog.singletons ?? []).map((singleton) => singleton.name))
         setLoading(false)
       } catch (reason: unknown) {
         if (cancelled) return
@@ -96,5 +120,5 @@ export function useMethodCatalog() {
     }
   }, [])
 
-  return { methods, dataClasses, loading, error }
+  return { methods, dataClasses, singletons, loading, error }
 }

@@ -31,9 +31,21 @@ function DataclassToken({ dataClass, slot }: { dataClass?: string; slot?: ReactN
   )
 }
 
+function SingletonToken({ name, slot }: { name?: string; slot?: ReactNode }) {
+  if (slot) return <>{slot}</>
+  if (!name) return null
+
+  return (
+    <span className="text-fuchsia-700 leading-5 dark:text-fuchsia-400" translate="no">
+      {name}
+    </span>
+  )
+}
+
 /**
  * Renders a method call in scope-specific syntax:
  * - catalog: ds.method
+ * - singleton: cs.Singleton.method
  * - dataclass: ds.Table.method
  * - entity: ds.Table.entity(key).method
  * - entitySelection: ds.Table.sel(key).method
@@ -42,6 +54,7 @@ export function MethodCallExpression({
   scope,
   methodName,
   dataClass,
+  singletonName,
   dataClassSlot,
   methodSlot,
   keySlot,
@@ -50,6 +63,7 @@ export function MethodCallExpression({
   scope: MethodScope
   methodName: string
   dataClass?: string
+  singletonName?: string
   dataClassSlot?: ReactNode
   /** Editable method picker (same pattern as dataclass select). */
   methodSlot?: ReactNode
@@ -58,15 +72,28 @@ export function MethodCallExpression({
   /** Read-only key content (e.g. history with mod-click). */
   keyDisplay?: ReactNode
 }) {
-  const showDataClass = scope !== 'catalog'
+  const isSingleton = scope === 'singleton'
+  const showDataClass = scope !== 'catalog' && !isSingleton
+  const showSingleton = isSingleton
   const targetKind = scope === 'entity' ? 'entity' : scope === 'entitySelection' ? 'sel' : null
   const keyContent = keySlot ?? keyDisplay
 
   return (
     <code className="inline-flex min-w-max max-w-none flex-nowrap items-center gap-x-0 whitespace-nowrap font-mono text-xs leading-5">
-      <span className="text-sky-600 dark:text-sky-400" translate="no">
-        ds
+      <span
+        className={
+          isSingleton ? 'text-fuchsia-600 dark:text-fuchsia-400' : 'text-sky-600 dark:text-sky-400'
+        }
+        translate="no"
+      >
+        {isSingleton ? 'cs' : 'ds'}
       </span>
+      {showSingleton ? (
+        <>
+          <Dot />
+          <SingletonToken name={singletonName} slot={dataClassSlot} />
+        </>
+      ) : null}
       {showDataClass ? (
         <>
           <Dot />

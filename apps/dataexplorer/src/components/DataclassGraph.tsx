@@ -2313,6 +2313,26 @@ export function DataclassGraph() {
                                               aria-label="Not allowed on HTTP GET"
                                             />
                                           )}
+                                          {exposed ? (
+                                            <Button
+                                              variant="ghost"
+                                              size="icon"
+                                              className="h-5 w-5 shrink-0"
+                                              title="Execute method"
+                                              onClick={(event) => {
+                                                event.stopPropagation()
+                                                openMethodExecutorTab({
+                                                  scope: 'singleton',
+                                                  methodName: method.name,
+                                                  singletonName: singleton.name,
+                                                  paramsText: paramsText ?? undefined,
+                                                  allowedOnHTTPGET: allowedGet,
+                                                })
+                                              }}
+                                            >
+                                              <Play className="h-3 w-3" />
+                                            </Button>
+                                          ) : null}
                                         </div>
                                       </TooltipTrigger>
                                       <TooltipContent

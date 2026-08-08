@@ -1,4 +1,4 @@
-export type MethodScope = 'catalog' | 'dataclass' | 'entity' | 'entitySelection'
+export type MethodScope = 'catalog' | 'singleton' | 'dataclass' | 'entity' | 'entitySelection'
 
 export type CustomRuntimeArgument = {
   id: string
@@ -73,6 +73,8 @@ export type MethodExecutorSeed = {
   scope: MethodScope
   methodName: string
   dataClass?: string
+  /** Shared singleton class name (`/$singleton/{name}/{function}`). */
+  singletonName?: string
   key?: string | number
   entitySetId?: string
   filter?: string

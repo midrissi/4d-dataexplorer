@@ -1,5 +1,15 @@
 import { Button, cn, Input } from '@4d/ui'
-import { Boxes, Code2, Database, FileText, type LucideIcon, Rows3, Search, X } from 'lucide-react'
+import {
+  Boxes,
+  Code2,
+  Database,
+  FileText,
+  Hexagon,
+  type LucideIcon,
+  Rows3,
+  Search,
+  X,
+} from 'lucide-react'
 import { useEffect, useId, useMemo, useState } from 'react'
 import { getDataclassColorClasses } from '~/components/DataclassCustomizeModal'
 import { EmptyPanel } from '~/components/EmptyPanel'
@@ -13,10 +23,11 @@ import { SearchableDataclassSelect } from './SearchableDataclassSelect'
 import { SearchableMethodSelect } from './SearchableMethodSelect'
 import type { MethodCatalogItem } from './useMethodCatalog'
 
-const SCOPES: MethodScope[] = ['catalog', 'dataclass', 'entity', 'entitySelection']
+const SCOPES: MethodScope[] = ['catalog', 'singleton', 'dataclass', 'entity', 'entitySelection']
 
 const SCOPE_ICONS: Record<MethodScope, LucideIcon> = {
   catalog: Database,
+  singleton: Hexagon,
   dataclass: Boxes,
   entity: FileText,
   entitySelection: Rows3,
@@ -24,41 +35,52 @@ const SCOPE_ICONS: Record<MethodScope, LucideIcon> = {
 
 function scopeLabel(scope: MethodScope, t: (key: string) => string): string {
   if (scope === 'catalog') return t('methodExecutor.datastore')
+  if (scope === 'singleton') return t('methodExecutor.singleton')
   if (scope === 'dataclass') return t('methodExecutor.dataclass')
   if (scope === 'entity') return t('methodExecutor.entity')
   return t('methodExecutor.entitySelection')
+}
+
+function catalogTargetName(method: MethodCatalogItem): string {
+  return method.singletonName ?? method.dataClass ?? 'datastore'
 }
 
 export function MethodSelector({
   scope,
   methodName,
   dataClass,
+  singletonName,
   keyValue,
   entitySetId,
   methods,
   dataClasses,
+  singletons,
   catalogLoading,
   catalogError,
   onScopeChange,
   onChooseMethod,
   onClearMethod,
   onDataClassChange,
+  onSingletonNameChange,
   onKeyChange,
   onEntitySetIdChange,
 }: {
   scope: MethodScope
   methodName: string
   dataClass: string
+  singletonName: string
   keyValue: string
   entitySetId: string
   methods: MethodCatalogItem[]
   dataClasses: string[]
+  singletons: string[]
   catalogLoading: boolean
   catalogError: string | null
   onScopeChange: (scope: MethodScope) => void
   onChooseMethod: (item: MethodCatalogItem) => void
   onClearMethod: () => void
   onDataClassChange: (value: string) => void
+  onSingletonNameChange: (value: string) => void
   onKeyChange: (value: string) => void
   onEntitySetIdChange: (value: string) => void
 }) {
@@ -66,37 +88,43 @@ export function MethodSelector({
   const mobile = isMobileShell()
   const customizations = useDataclassCustomizations()
   const [search, setSearch] = useState('')
-  const [catalogDataClass, setCatalogDataClass] = useState('')
+  const [catalogFilter, setCatalogFilter] = useState('')
   const searchId = useId()
   const deferredQuery = search.trim().toLowerCase()
   const showPicker = !methodName
-  const needsTarget = scope !== 'catalog'
+  const needsDataclass = scope === 'dataclass' || scope === 'entity' || scope === 'entitySelection'
+  const needsSingleton = scope === 'singleton'
+  const needsTarget = needsDataclass || needsSingleton
+  const selectedTarget = needsSingleton ? singletonName : dataClass
+  const targetOptions = needsSingleton ? singletons : dataClasses
   const selectionKey = scope === 'entity' ? keyValue : entitySetId
   const selectionKeyWidth = Math.max(selectionKey.length, 1)
 
   useEffect(() => {
-    setCatalogDataClass('')
+    setCatalogFilter('')
     setSearch('')
   }, [])
 
   const filteredMethods = useMemo(() => {
     return methods.filter((method) => {
       if (method.scope !== scope) return false
-      if (needsTarget && catalogDataClass && method.dataClass !== catalogDataClass) return false
+      if (needsSingleton && catalogFilter && method.singletonName !== catalogFilter) return false
+      if (needsDataclass && catalogFilter && method.dataClass !== catalogFilter) return false
       if (!deferredQuery) return true
-      return `${method.dataClass ?? 'datastore'} ${method.methodName} ${method.paramsText ?? ''}`
+      return `${catalogTargetName(method)} ${method.methodName} ${method.paramsText ?? ''}`
         .toLowerCase()
         .includes(deferredQuery)
     })
-  }, [catalogDataClass, deferredQuery, methods, needsTarget, scope])
+  }, [catalogFilter, deferredQuery, methods, needsDataclass, needsSingleton, scope])
 
   const switchableMethods = useMemo(() => {
     return methods.filter((method) => {
       if (method.scope !== scope) return false
-      if (needsTarget && dataClass && method.dataClass !== dataClass) return false
+      if (needsSingleton && singletonName && method.singletonName !== singletonName) return false
+      if (needsDataclass && dataClass && method.dataClass !== dataClass) return false
       return true
     })
-  }, [dataClass, methods, needsTarget, scope])
+  }, [dataClass, methods, needsDataclass, needsSingleton, scope, singletonName])
 
   const selectedKeySlot =
     scope === 'entity' ? (
@@ -116,6 +144,13 @@ export function MethodSelector({
         onChange={onEntitySetIdChange}
       />
     ) : undefined
+
+  const targetFilterLabel = needsSingleton
+    ? t('methodExecutor.singleton')
+    : t('methodExecutor.dataclass')
+  const allTargetsLabel = needsSingleton
+    ? t('methodExecutor.allSingletons')
+    : t('methodExecutor.allDataclasses')
 
   return (
     <div className="space-y-2 border-t pt-4">
@@ -175,11 +210,11 @@ export function MethodSelector({
                     {t('methodExecutor.fromDataclass')}
                   </span>
                   <SearchableDataclassSelect
-                    value={catalogDataClass}
-                    dataClasses={dataClasses}
-                    argumentName={t('methodExecutor.dataclass')}
-                    emptyOptionLabel={t('methodExecutor.allDataclasses')}
-                    onChange={setCatalogDataClass}
+                    value={catalogFilter}
+                    dataClasses={targetOptions}
+                    argumentName={targetFilterLabel}
+                    emptyOptionLabel={allTargetsLabel}
+                    onChange={setCatalogFilter}
                   />
                 </div>
               ) : null}
@@ -243,6 +278,7 @@ export function MethodSelector({
                       <MethodCallExpression
                         scope={method.scope}
                         dataClass={method.dataClass}
+                        singletonName={method.singletonName}
                         methodName={method.methodName}
                       />
                       {method.paramsText ? (
@@ -253,7 +289,7 @@ export function MethodSelector({
                         <span
                           className={cn(
                             'ml-auto h-1.5 w-1.5 shrink-0 rounded-full',
-                            colorClasses.bg
+                            method.scope === 'singleton' ? 'bg-fuchsia-500/70' : colorClasses.bg
                           )}
                         />
                       )}
@@ -270,14 +306,15 @@ export function MethodSelector({
                 <MethodCallExpression
                   scope={scope}
                   dataClass={dataClass || undefined}
+                  singletonName={singletonName || undefined}
                   methodName={methodName}
                   dataClassSlot={
                     needsTarget ? (
                       <SearchableDataclassSelect
-                        value={dataClass}
-                        dataClasses={dataClasses}
+                        value={selectedTarget}
+                        dataClasses={targetOptions}
                         argumentName={methodName}
-                        onChange={onDataClassChange}
+                        onChange={needsSingleton ? onSingletonNameChange : onDataClassChange}
                       />
                     ) : undefined
                   }

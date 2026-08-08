@@ -11,6 +11,7 @@ function isModClick(event: { metaKey: boolean; ctrlKey: boolean }): boolean {
 
 export function methodScopeLabel(scope: MethodScope, t: (key: string) => string): string {
   if (scope === 'catalog') return t('methodExecutor.datastore')
+  if (scope === 'singleton') return t('methodExecutor.singleton')
   if (scope === 'dataclass') return t('methodExecutor.dataclass')
   if (scope === 'entity') return t('methodExecutor.entity')
   return t('methodExecutor.entitySelection')
@@ -131,6 +132,7 @@ export function MethodSeedExpression({ config }: { config: MethodExecutorSeed })
     <MethodCallExpression
       scope={config.scope}
       dataClass={dataClass || undefined}
+      singletonName={config.singletonName || undefined}
       methodName={config.methodName}
       keyDisplay={keyDisplay}
     />

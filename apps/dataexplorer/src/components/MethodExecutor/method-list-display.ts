@@ -9,6 +9,11 @@ export function methodScopeTone(scope: MethodScope): { text: string; bg: string 
         text: 'text-violet-700 dark:text-violet-400',
         bg: 'bg-violet-500/10 border-violet-500/25',
       }
+    case 'singleton':
+      return {
+        text: 'text-fuchsia-700 dark:text-fuchsia-400',
+        bg: 'bg-fuchsia-500/10 border-fuchsia-500/25',
+      }
     case 'dataclass':
       return {
         text: 'text-sky-700 dark:text-sky-400',
@@ -41,6 +46,7 @@ export function methodResultAccentClass(resultKind?: MethodResultKind): string {
 /** Short badge text for list rows (fits like HTTP method pills). */
 export function methodScopeShortLabel(scope: MethodScope): string {
   if (scope === 'catalog') return 'ds'
+  if (scope === 'singleton') return 'cs'
   if (scope === 'dataclass') return 'class'
   if (scope === 'entity') return 'entity'
   return 'sel'

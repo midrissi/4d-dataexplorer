@@ -47,6 +47,9 @@ export function buildFunctionBody(
  * Class functions normally return `{ result: T }`. When `$method=entityset` is
  * used and the function returns an entity selection, 4D may return the entity
  * set payload directly (with `__ENTITYSET` / `__ENTITIES`) instead.
+ *
+ * When `__WEBFORM` is present (notifications / privilege stamp), keep the
+ * envelope so callers can surface that metadata alongside `result`.
  */
 function unwrapFunctionResult<T>(response: FunctionResponse<T> | T): T {
   if (
@@ -55,6 +58,9 @@ function unwrapFunctionResult<T>(response: FunctionResponse<T> | T): T {
     !Array.isArray(response) &&
     'result' in response
   ) {
+    if ('__WEBFORM' in response) {
+      return response as T
+    }
     return (response as FunctionResponse<T>).result
   }
   return response as T
