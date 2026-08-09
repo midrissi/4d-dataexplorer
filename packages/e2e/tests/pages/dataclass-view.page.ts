@@ -1,11 +1,15 @@
 import { BasePage } from './base.page'
 
 export class DataclassViewPage extends BasePage {
-  readonly querySection = this.page.getByRole('search')
+  readonly querySection = this.page.locator('[data-query-builder-panel]')
 
-  readonly queryToggleButton = this.querySection.getByRole('button', { name: /^query$/i })
+  readonly queryToggleButton = this.querySection.getByRole('button', {
+    name: /^(Expand|Collapse) panel$/i,
+  })
 
-  readonly filterExpressionInput = this.querySection.getByPlaceholder(/salary > 50000/i)
+  readonly filterExpressionLabel = this.querySection.getByText('Filter Expression', {
+    exact: true,
+  })
 
   readonly entityCard = this.page
     .locator('main')
@@ -27,12 +31,16 @@ export class DataclassViewPage extends BasePage {
       return
     }
 
-    if (await this.isVisible(this.filterExpressionInput, 500)) {
+    if (await this.isVisible(this.filterExpressionLabel, 500)) {
+      return
+    }
+
+    if (!(await this.isVisible(this.queryToggleButton, 2000))) {
       return
     }
 
     await this.queryToggleButton.click()
-    await this.filterExpressionInput.waitFor({ state: 'visible', timeout: 3000 }).catch(() => {})
+    await this.filterExpressionLabel.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {})
     await this.pause(500)
   }
 

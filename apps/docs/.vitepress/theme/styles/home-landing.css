@@ -243,12 +243,6 @@
   box-shadow: 0 10px 32px oklch(0.15 0.03 260 / 12%);
 }
 
-@media (min-width: 960px) {
-  .home-landing__figure--wide {
-    grid-column: 1 / -1;
-  }
-}
-
 .home-landing__figure-header {
   display: flex;
   flex-wrap: wrap;
@@ -319,12 +313,6 @@
   width: 100%;
   object-fit: contain;
   object-position: top center;
-}
-
-@media (min-width: 960px) {
-  .home-landing__figure--wide .home-landing__figure-shot .screenshot-frame__body img {
-    max-height: 560px;
-  }
 }
 
 /* —— FAQ (editorial accordion, matches capabilities rhythm) —— */

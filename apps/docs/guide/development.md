@@ -30,6 +30,7 @@ DATAEXPLORER_URL=http://localhost:3002 bun run capture:screenshots:console
 DATAEXPLORER_URL=http://localhost:3002 bun run capture:screenshots:terminal
 DATAEXPLORER_URL=http://localhost:3002 bun run capture:screenshots:http-client
 DATAEXPLORER_URL=http://localhost:3002 bun run capture:screenshots:ai-actions
+DATAEXPLORER_URL=http://localhost:3002 bun run capture:screenshots -- 39
 ```
 
 HTTP Client response-format screenshots expect sample files on the 4D WebFolder at `http://localhost/` (for example `/text.txt`, `/markdown.md`, `/PDF.pdf` from `apps/base/WebFolder`).

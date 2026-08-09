@@ -257,6 +257,24 @@ function buildDocsCaptureJobs(selection: DocScreenshotSelection): DocScreenshotJ
     })
   }
 
+  if (selection.isSelected('39-rest-export')) {
+    jobs.push({
+      id: '39-rest-export',
+      label: 'REST Export',
+      async capture(ctx) {
+        const { app } = ctx
+        await bootstrapAuthenticatedJob(ctx, { openFirstDataclass: false })
+        logDocScreenshotStep('📦', 'REST Export preview')
+        await app.restExport.openFromToolsMenu()
+        await app.restExport.waitForCatalog()
+        await app.restExport.goToPreview()
+        await app.restExport.expandAllFolders()
+        await app.prepareForScreenshot()
+        await app.screenshot('39-rest-export')
+      },
+    })
+  }
+
   if (selection.isSelected('17-schema-builder')) {
     jobs.push({
       id: '17-schema-builder',

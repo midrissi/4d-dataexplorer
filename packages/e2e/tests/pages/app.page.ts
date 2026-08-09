@@ -12,6 +12,7 @@ import { HomePage } from './home.page'
 import { HttpClientPage } from './http-client.page'
 import { LoginPage } from './login.page'
 import { MethodExecutorPage } from './method-executor.page'
+import { RestExportPage } from './rest-export.page'
 import { SettingsPage } from './settings.page'
 import { StructureGraphPage } from './structure-graph.page'
 import { TabBarPage } from './tab-bar.page'
@@ -42,6 +43,7 @@ export class AppPage extends BasePage {
   readonly terminal: TerminalPage
   readonly structureGraph: StructureGraphPage
   readonly methodExecutor: MethodExecutorPage
+  readonly restExport: RestExportPage
   readonly httpClient: HttpClientPage
   readonly theme: ThemePage
 
@@ -62,6 +64,7 @@ export class AppPage extends BasePage {
     this.terminal = new TerminalPage(page)
     this.structureGraph = new StructureGraphPage(page)
     this.methodExecutor = new MethodExecutorPage(page)
+    this.restExport = new RestExportPage(page)
     this.httpClient = new HttpClientPage(page)
     this.theme = new ThemePage(page, options.screenshotTheme)
   }

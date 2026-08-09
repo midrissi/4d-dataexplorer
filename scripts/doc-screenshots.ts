@@ -58,6 +58,7 @@ export const CAPTURED_SCREENSHOTS = [
   '36-http-client-network-error',
   '37-terminal-panel',
   '38-terminal-code',
+  '39-rest-export',
 ] as const
 
 /** Manually added assets (same image in dark/ and light/). */

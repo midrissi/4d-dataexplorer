@@ -54,6 +54,7 @@ const guideSidebar = [
       { text: 'Console panel', link: '/guide/console' },
       { text: 'ORDA Terminal', link: '/guide/terminal' },
       { text: 'HTTP Client', link: '/guide/http-client' },
+      { text: 'REST Export', link: '/guide/rest-export' },
       { text: 'JSON Schema Builder', link: '/guide/schema-builder' },
     ],
   },
@@ -77,7 +78,7 @@ const guideSidebar = [
 const SITE_URL = 'https://midrissi.github.io/4d-dataexplorer'
 const SITE_TITLE = 'Data Explorer'
 const SITE_DESCRIPTION =
-  '4D REST data browser — structure graph, query builder, AI assistant, Method Executor, ORDA terminal, HTTP Client, themes, Docker, desktop & mobile.'
+  '4D REST data browser — structure graph, query builder, AI assistant, Method Executor, ORDA terminal, HTTP Client, REST Export, themes, Docker, desktop & mobile.'
 
 export default defineConfig({
   title: SITE_TITLE,

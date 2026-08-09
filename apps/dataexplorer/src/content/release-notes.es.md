@@ -6,7 +6,7 @@
 
 ### Resumen
 
-La versión `1.4.x` añade el **terminal ORDA** (modos REPL y Código con archivos snippet) en un dock inferior compartido con la Consola; publica las apps **iOS y Android**; mejora las vistas previas de red en la consola y el compartir/guardar imágenes; y pule la UX móvil (Cliente HTTP y dock).
+La versión `1.4.x` añade el **terminal ORDA** (modos REPL y Código con archivos snippet) en un dock inferior compartido con la Consola; añade **exportación REST** (colección Postman v2.1 y OpenAPI 3.1 desde el catálogo, el Cliente HTTP y el Ejecutor de métodos); publica las apps **iOS y Android**; mejora las vistas previas de red en la consola y el compartir/guardar imágenes; y pule la UX móvil (Cliente HTTP y dock).
 
 ### Funciones
 
@@ -18,6 +18,13 @@ La versión `1.4.x` añade el **terminal ORDA** (modos REPL y Código con archiv
 - **Paquete de snippets** — Exportar/importar gzip (`.orda-snippets.gz`); `.load` / `.run` / `.rm` con completado de nombres.
 - **Celdas de resultado** — Entidades y selecciones se abren en pestañas; binarios/imágenes con los visores existentes; el tráfico REST aparece en Consola → Red.
 - **Comandos con punto** — `.help`, `.exit`, etc.; ayuda en render compacto.
+
+#### Exportación REST
+
+- **Pestaña Exportación REST** — Ábrala desde Herramientas o la paleta de comandos; un asistente en cuatro pasos (selección → categorías → variables → vista previa) genera una colección Postman v2.1 o una spec OpenAPI 3.1 a partir del catálogo.
+- **Catálogo de peticiones** — Auth, catalog, info, CRUD, entity sets, funciones dataclass / entity / entitySelection y singletons. Los métodos no expuestos y el login de directorio están desactivados por defecto.
+- **Vista previa** — Expanda o contraiga carpetas (incluido expandir / contraer todo), active o no los emojis, Mayús+clic para aplicar o quitar un emoji por categoría, y opcionalmente adjunte la documentación oficial REST 4D a cada petición.
+- **Cliente HTTP y Ejecutor de métodos** — Exporte también la petición actual o los favoritos en Postman u OpenAPI.
 
 #### Móvil
 
@@ -38,13 +45,16 @@ La versión `1.4.x` añade el **terminal ORDA** (modos REPL y Código con archiv
 
 ### Documentación
 
-- Páginas de la guía [Consola](https://midrissi.github.io/4d-dataexplorer/guide/console.html), [Terminal ORDA](https://midrissi.github.io/4d-dataexplorer/guide/terminal.html) y [Apps móviles](https://midrissi.github.io/4d-dataexplorer/guide/mobile.html).
+- Páginas de la guía [Consola](https://midrissi.github.io/4d-dataexplorer/guide/console.html), [Terminal ORDA](https://midrissi.github.io/4d-dataexplorer/guide/terminal.html), [Exportación REST](https://midrissi.github.io/4d-dataexplorer/guide/rest-export.html) y [Apps móviles](https://midrissi.github.io/4d-dataexplorer/guide/mobile.html).
 
 ### Correcciones
 
 - **Descargas iOS** — Las exportaciones de snippets y ajustes usan la ruta nativa en lugar de `<a download>` (NSURLError -3000).
 - **Restauración de pestaña** — Recargar con el Terminal abierto ya no fuerza la Consola.
 - **Revelar entidad** — Abrir una entidad desde el terminal usa la clave primaria en lugar de `$filter` sobre `__KEY`.
+- **Parámetros de consulta vacíos** — La exportación Postman desactiva por defecto `$filter` / `$orderby` / `$attributes` vacíos para que no se envíen hasta rellenarlos.
+- **Respuestas OpenAPI** — Las specs exportadas listan los estados REST 4D conocidos (200, 401, 402, 404, 500).
+- **Pestaña Docs de Postman** — La documentación de cada petición incluye el markdown oficial de 4D REST, no solo un resumen.
 
 ## 1.3.x
 

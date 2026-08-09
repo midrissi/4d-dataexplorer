@@ -52,7 +52,7 @@ export const footerRows: DocTableRow[] = [
   { control: 'Network', action: 'Open [structure graph](/guide/structure-graph)' },
   {
     control: 'Wrench',
-    action: '**Tools** menu (HTTP Client, Schema Builder, Assistant Metadata)',
+    action: '**Tools** menu (HTTP Client, REST Export, Schema Builder, Assistant Metadata)',
   },
   { control: 'Profile badge', action: 'Switch profile (when multiple profiles exist)' },
   { control: 'Gear', action: 'Open **Settings**' },

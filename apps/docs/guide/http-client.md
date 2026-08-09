@@ -83,6 +83,10 @@ Failed fetches (CORS, mixed content, cancelled, or offline targets) show a struc
 
 ![HTTP Client network error](/screenshots/36-http-client-network-error.png)
 
+### Export
+
+Use **Export** to download the current request (or favourites) as a **Postman Collection v2.1** or **OpenAPI 3.1** document. For a full catalog toolkit, use [REST Export](/guide/rest-export).
+
 ### History
 
 Use **History** to reopen recent requests (method, URL, and seed). Adjust how many entries to keep, remove individual rows, or clear the list.

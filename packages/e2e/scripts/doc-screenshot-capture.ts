@@ -70,6 +70,7 @@ export const DOC_SCREENSHOT_PAGE_NAMES = [
   '36-http-client-network-error',
   '37-terminal-panel',
   '38-terminal-code',
+  '39-rest-export',
 ] as const
 
 export type DocScreenshotPageName = (typeof DOC_SCREENSHOT_PAGE_NAMES)[number]
@@ -537,7 +538,8 @@ export async function restoreSessionAfterAiSeed(
   await app.waitForReady()
   await page.waitForTimeout(1000)
   await app.theme.setTheme(theme)
-  if ((await page.getByRole('button', { name: /AI actions for /i }).count()) === 0) {
+  const mainAiTrigger = page.locator('main').getByRole('button', { name: /AI actions for /i })
+  if ((await mainAiTrigger.count()) === 0) {
     await app.tabs.goHome()
     await page.waitForTimeout(400)
     await app.home.openFirstDataclass()
@@ -546,13 +548,10 @@ export async function restoreSessionAfterAiSeed(
   await app.assistant.closeIfOpen()
   await app.theme.resetToDefault()
 
-  const aiMenuButton = page.getByRole('button', {
+  const named = page.locator('main').getByRole('button', {
     name: new RegExp(`AI actions for ${dataclassName}`, 'i'),
   })
-  const aiTrigger =
-    (await aiMenuButton.count()) > 0
-      ? aiMenuButton.first()
-      : page.getByRole('button', { name: /AI actions for /i }).first()
+  const aiTrigger = (await named.count()) > 0 ? named.first() : mainAiTrigger.first()
   await aiTrigger.waitFor({ state: 'visible', timeout: 15_000 })
   return aiTrigger
 }
@@ -696,7 +695,8 @@ export async function captureAiActionsScreenshots(
   const aiTrigger = await restoreSessionAfterAiSeed(ctx, dataclassName)
 
   if (isSelected('23-ai-actions-menu') || isSelected('24-ai-generate-data')) {
-    await aiTrigger.click()
+    // Sidebar hover triggers intercept pointer events; use the main toolbar button.
+    await aiTrigger.click({ force: true })
     await page.getByRole('menuitem', { name: /Generate data/i }).waitFor({ state: 'visible' })
     if (isSelected('23-ai-actions-menu')) {
       logDocScreenshotStep('✨', 'AI actions menu')
@@ -716,7 +716,7 @@ export async function captureAiActionsScreenshots(
 
   if (isSelected('25-ai-ask-dataclass')) {
     logDocScreenshotStep('💬', 'AI ask dataclass')
-    await aiTrigger.click()
+    await aiTrigger.click({ force: true })
     await page.getByRole('menuitem', { name: /Ask dataclass/i }).click()
     await page.getByRole('dialog').waitFor({ state: 'visible' })
     await page.waitForTimeout(300)

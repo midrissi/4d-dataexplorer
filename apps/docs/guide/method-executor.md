@@ -37,6 +37,10 @@ After **Execute**, the right panel adapts to the response: an **entity selection
 - Click **Execute** when the target and arguments are complete.
 - **History** lists recent successful runs so you can reopen the same configuration. ⌘/Ctrl+click keys in history to open the related entity or selection.
 
+### Export
+
+Use **Export** to download the current method call (or favourites) as a **Postman Collection v2.1** or **OpenAPI 3.1** document. For a full catalog toolkit, use [REST Export](/guide/rest-export).
+
 ### Tips
 
 - Clear the current method with the **×** control to return to the catalog picker.

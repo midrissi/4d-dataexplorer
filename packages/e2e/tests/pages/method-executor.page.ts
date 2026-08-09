@@ -5,7 +5,7 @@ export type MethodExecutorScopeLabel = 'Datastore' | 'Dataclass' | 'Entity' | 'E
 export class MethodExecutorPage extends BasePage {
   readonly title = this.page.getByText('Method Executor', { exact: true }).first()
 
-  readonly searchInput = this.page.getByPlaceholder(/search name, dataclass, or signature/i)
+  readonly searchInput = this.page.getByPlaceholder(/search name,.+signature/i)
 
   readonly executeButton = this.page.getByRole('button', { name: /^Execute$/i })
 
@@ -23,6 +23,15 @@ export class MethodExecutorPage extends BasePage {
   }
 
   async chooseMethod(methodName: string): Promise<void> {
+    await this.page
+      .getByText('Loading methods…')
+      .waitFor({ state: 'hidden', timeout: 15_000 })
+      .catch(() => {})
+
+    if (!(await this.isVisible(this.searchInput, 1500))) {
+      await this.clearMethod()
+    }
+
     await this.searchInput.waitFor({ state: 'visible', timeout: 8000 })
     await this.searchInput.fill(methodName)
     await this.pause(400)

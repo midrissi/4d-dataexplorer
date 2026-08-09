@@ -4,7 +4,7 @@ title: Mobile apps
 
 # Mobile apps
 
-Data Explorer is also available as native **iOS** and **Android** apps (Tauri). You connect to a 4D REST server from a connection screen; browsing, query, console, terminal, and HTTP Client use the same core UI as the web app, adapted for touch.
+Data Explorer is also available as native **iOS** and **Android** apps (Tauri). You connect to a 4D REST server from a connection screen; browsing, query, console, terminal, HTTP Client, and REST Export use the same core UI as the web app, adapted for touch.
 
 ### Highlights
 

@@ -64,9 +64,24 @@ const capabilities = [
     desc: 'Run ds.* expressions and snippet files with actionable result cells.',
     link: '/guide/terminal',
   },
+  {
+    num: '11',
+    title: 'REST Export',
+    desc: 'Build a Postman Collection or OpenAPI spec from the catalog, HTTP Client, or Method Executor.',
+    link: '/guide/rest-export',
+  },
 ] as const
 
-const gallery = [
+type GalleryItem = {
+  num: string
+  title: string
+  desc: string
+  link: string
+  src?: string
+  alt?: string
+}
+
+const gallery: GalleryItem[] = [
   {
     num: '01',
     title: 'Structure graph',
@@ -123,7 +138,15 @@ const gallery = [
     src: '/screenshots/37-terminal-panel.png',
     alt: 'ORDA Terminal with a ds.Car.all() result',
   },
-] as const
+  {
+    num: '08',
+    title: 'REST Export',
+    desc: 'Pick dataclasses, categories, and variables, then export a Postman Collection v2.1 or OpenAPI 3.1 toolkit — with optional emojis and official 4D REST docs.',
+    link: '/guide/rest-export',
+    src: '/screenshots/39-rest-export.png',
+    alt: 'REST Export preview with Postman/OpenAPI toolkit folders',
+  },
+]
 </script>
 
 <template>
@@ -181,18 +204,14 @@ const gallery = [
           Start with the structure graph, lean on the AI assistant when you need guidance, drill into
           precise queries when you know what to fetch, run exposed methods in the Method Executor
           when you need to call ORDA functions, use the HTTP Client to compose or replay REST
-          requests, and keep the Console and ORDA Terminal docked for logs and live
+          requests, export a Postman or OpenAPI toolkit from REST Export, and keep the Console and
+          ORDA Terminal docked for logs and live
           <code>ds.*</code> exploration.
         </p>
       </div>
 
       <div class="home-landing__gallery-grid">
-        <article
-          v-for="item in gallery"
-          :key="item.num"
-          class="home-landing__figure"
-          :class="{ 'home-landing__figure--wide': item.num === '01' }"
-        >
+        <article v-for="item in gallery" :key="item.num" class="home-landing__figure">
           <header class="home-landing__figure-header">
             <div class="home-landing__figure-meta">
               <span class="home-landing__figure-num" aria-hidden="true">{{ item.num }}</span>
@@ -205,6 +224,7 @@ const gallery = [
           </header>
           <p class="home-landing__figure-desc">{{ item.desc }}</p>
           <ScreenshotFrame
+            v-if="item.src"
             class="home-landing__figure-shot"
             :src="item.src"
             :alt="item.alt"

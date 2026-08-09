@@ -16,6 +16,7 @@ export {
   MethodExecutorPage,
   type MethodExecutorScopeLabel,
 } from './method-executor.page'
+export { RestExportPage } from './rest-export.page'
 export { SettingsPage } from './settings.page'
 export { StructureGraphPage } from './structure-graph.page'
 export { TabBarPage } from './tab-bar.page'

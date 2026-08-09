@@ -17,7 +17,7 @@ Tabs behave like a modern browser:
 - **Close** — single tab (`Ctrl+Alt+W`), others, to the right, or all (pinned tabs are protected)
 - **Show in structure** — dataclass tab context menu
 
-Static tabs include **Home**, **Structure**, **Settings**, **Release notes**, **JSON Schema Builder**, and **Assistant Metadata**.
+Static tabs include **Home**, **Structure**, **Settings**, **Release notes**, **JSON Schema Builder**, **REST Export**, and **Assistant Metadata**.
 
 ### Tab shortcuts
 
