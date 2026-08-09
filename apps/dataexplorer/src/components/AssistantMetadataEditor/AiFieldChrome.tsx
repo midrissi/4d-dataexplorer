@@ -9,6 +9,7 @@ import {
 } from '@4d/ui'
 import { Loader2, Sparkles } from 'lucide-react'
 import type { ComponentProps, ReactNode } from 'react'
+import { useCloudLlmOffline } from '~/hooks/useCloudLlmOffline'
 import { useTranslation } from '~/i18n'
 import './assistant-metadata-editor.css'
 
@@ -35,12 +36,17 @@ function AiGenerateAction({
   showLabel = false,
 }: AiActionProps) {
   const { t } = useTranslation()
+  const cloudLlmOffline = useCloudLlmOffline()
 
   if (!onGenerate) return null
 
   const resolvedTooltip =
     tooltip ??
-    (aiEnabled ? t('assistantMetadata.generateWithAiHint') : t('assistantMetadata.aiNotConfigured'))
+    (aiEnabled
+      ? t('assistantMetadata.generateWithAiHint')
+      : cloudLlmOffline
+        ? t('assistant.requiresInternet')
+        : t('assistantMetadata.aiNotConfigured'))
 
   return (
     <TooltipProvider delayDuration={250}>

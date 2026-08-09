@@ -72,6 +72,7 @@ function createMockContext(overrides: Partial<CommandContext> = {}): CommandCont
     activeDataclassTab: { dataclassName: 'Employee' },
     readonlyMode: false,
     assistantOpen: false,
+    cloudLlmOffline: false,
     consoleOpen: false,
     bottomPanelTab: 'console',
     shortcuts: [
@@ -165,6 +166,15 @@ describe('lib/commands', () => {
     getCommandById(commands, 'switch-tabs')?.action()
     expect(ctx.closeTab).toHaveBeenCalled()
     expect(ctx.onEnterSwitchTabsMode).toHaveBeenCalled()
+  })
+
+  it('disables open-assistant when cloud LLM is offline', () => {
+    const commands = buildCommands(
+      createMockContext({ cloudLlmOffline: true, assistantOpen: false })
+    )
+    const assistant = getCommandById(commands, 'show-assistant')
+    expect(assistant?.disabled).toBe(true)
+    expect(assistant?.description).toBe('assistant.requiresInternet')
   })
 
   it('getCommandById, getCommandsByCategory, getEnabledCommands', () => {

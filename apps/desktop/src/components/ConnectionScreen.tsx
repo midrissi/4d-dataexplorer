@@ -45,6 +45,7 @@ import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } f
 import { AppBrandIcon } from '~/components/AppBrandIcon'
 import { AppearanceControls } from '~/components/AppearanceControls'
 import { DesktopUpdateFooterControl } from '~/components/DesktopUpdateFooterControl'
+import { OnlineStatusFooterControl } from '~/components/OnlineStatusFooterControl'
 import { VirtualIconGrid } from '~/components/VirtualIconGrid'
 import { useTranslation } from '~/i18n'
 import { formatThrownError } from '~/lib/api'
@@ -1653,7 +1654,10 @@ export function ConnectionScreen({ onConnect, initialEdit }: ConnectionScreenPro
 
       {/* Footer: app updates + appearance controls */}
       <footer className="flex h-8 w-full shrink-0 items-center justify-between gap-2 border-t bg-muted/30 px-2">
-        <DesktopUpdateFooterControl />
+        <div className="flex min-w-0 items-center gap-1">
+          <OnlineStatusFooterControl />
+          <DesktopUpdateFooterControl />
+        </div>
         <AppearanceControls side="top" align="end" />
       </footer>
 

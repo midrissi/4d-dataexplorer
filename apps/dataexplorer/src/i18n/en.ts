@@ -362,6 +362,7 @@ export const en = {
     checking: 'Checking…',
     checkForUpdates: 'Check for updates',
     checkAgain: 'Check again',
+    requiresInternet: 'Connect to the internet to check for updates',
     restartNow: 'Restart to apply',
     retry: 'Retry',
     neverChecked: 'Not yet',
@@ -400,6 +401,24 @@ export const en = {
       'A forged or self-signed cert will look the same as the real one. Prefer known lab servers and leave this off for production.',
     guidance:
       'Turn Skip SSL off in the connection settings when you move beyond localhost or trusted self-signed lab hosts.',
+  },
+  onlineStatus: {
+    offlineLabel: 'Offline',
+    offlineAria: 'No internet connection',
+    offlineTooltip: 'Internet is unavailable',
+    offlineTitle: 'You’re offline',
+    offlineDescription:
+      'Cloud AI and app updates need the internet. Local 4D REST, HTTP Client, and a local LLM still work.',
+    lanTitle: 'Local tools stay up',
+    lanBody: '4D on the LAN, HTTP Client, and localhost LLM endpoints do not need public internet.',
+    cloudTitle: 'Cloud features paused',
+    cloudBody: 'Remote LLM chat and GitHub update checks wait until you’re back online.',
+    onlineLabel: 'Online',
+    onlineAria: 'Internet connection restored',
+    onlineTooltip: 'Connection restored',
+    onlineTitle: 'Back online',
+    onlineDescription: 'Cloud AI and updates are available again.',
+    onlineGuidance: 'This notice dismisses itself in a few seconds.',
   },
   viewportWarning: {
     toolbarLabel: 'Tight fit',
@@ -1781,6 +1800,7 @@ export const en = {
     copied: 'Copied!',
     openInNewTab: 'Open in new tab',
     couldntSave: "Couldn't save",
+    requiresInternet: 'Requires an internet connection',
   },
   favouriteMeta: {
     editTitle: 'Edit favourite',
@@ -2126,6 +2146,7 @@ export const en = {
       'Welcome to **Data Explorer**. I am powered by **{model}** and can query your dataclasses through REST. Ask naturally — e.g. "show the catalog" or "query Employee where name begins with A".',
     welcomeDisconnected:
       'Welcome to **Data Explorer**. Chat requires an LLM — open **LLM settings** to connect a cloud provider or a local server such as Ollama or LM Studio.',
+    requiresInternet: 'Connect to the internet to use cloud AI',
     emptyStateTitle: 'Data Explorer',
     emptyStateDescription:
       'Ask about your catalog, query entities, or explore records through REST.',

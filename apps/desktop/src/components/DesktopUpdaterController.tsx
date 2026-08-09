@@ -1,5 +1,6 @@
 import type { Update } from '@tauri-apps/plugin-updater'
 import { useEffect, useEffectEvent, useRef } from 'react'
+import { getOnlineStatus, subscribeOnlineStatus } from '~/lib/online-status'
 import { useDesktopUpdaterStore } from '~/store/desktop-updater'
 import {
   checkForUpdate,
@@ -54,6 +55,8 @@ export function DesktopUpdaterController() {
   })
 
   const runCheck = useEffectEvent(async () => {
+    if (!getOnlineStatus()) return
+
     const currentPhase = phaseRef.current
     if (checkingRef.current || currentPhase === 'downloading' || currentPhase === 'ready') {
       return
@@ -261,11 +264,37 @@ export function DesktopUpdaterController() {
   }, [])
 
   useEffect(() => {
-    const initial = setTimeout(() => void runCheck(), INITIAL_CHECK_DELAY)
-    const interval = setInterval(() => void runCheck(), RECHECK_INTERVAL)
+    let initial: ReturnType<typeof setTimeout> | undefined
+    let interval: ReturnType<typeof setInterval> | undefined
+
+    const startTimers = () => {
+      if (initial) clearTimeout(initial)
+      if (interval) clearInterval(interval)
+      initial = setTimeout(() => void runCheck(), INITIAL_CHECK_DELAY)
+      interval = setInterval(() => void runCheck(), RECHECK_INTERVAL)
+    }
+
+    const stopTimers = () => {
+      if (initial) clearTimeout(initial)
+      if (interval) clearInterval(interval)
+      initial = undefined
+      interval = undefined
+    }
+
+    if (getOnlineStatus()) startTimers()
+
+    const unsub = subscribeOnlineStatus(() => {
+      if (getOnlineStatus()) {
+        void runCheck()
+        startTimers()
+        return
+      }
+      stopTimers()
+    })
+
     return () => {
-      clearTimeout(initial)
-      clearInterval(interval)
+      stopTimers()
+      unsub()
     }
   }, [])
 

@@ -135,6 +135,7 @@ export type CommandContext = {
   // Assistant
   assistantOpen: boolean
   toggleAssistantOpen: () => void
+  cloudLlmOffline?: boolean
 
   // Console
   consoleOpen: boolean
@@ -168,12 +169,17 @@ function buildHelpCommands(ctx: CommandContext): Command[] {
     commands.push({
       id: 'show-assistant',
       label: ctx.assistantOpen ? ctx.t('command.closeAssistant') : ctx.t('command.openAssistant'),
-      description: ctx.t('commandDesc.toggleAssistant'),
+      description:
+        ctx.cloudLlmOffline && !ctx.assistantOpen
+          ? ctx.t('assistant.requiresInternet')
+          : ctx.t('commandDesc.toggleAssistant'),
       shortcut: getShortcutDisplay(ctx, 'toggle-assistant'),
       keywords: ['assistant', 'ai', 'chat', 'sparkles', 'help'],
       icon: <Sparkles className="h-4 w-4" />,
       category: 'Help',
+      disabled: Boolean(ctx.cloudLlmOffline && !ctx.assistantOpen),
       action: () => {
+        if (ctx.cloudLlmOffline && !ctx.assistantOpen) return
         ctx.toggleAssistantOpen()
         ctx.onClose()
       },

@@ -1,6 +1,7 @@
 import { cn } from '@4d/ui'
 import { Filter, type LucideIcon, RefreshCw, Sparkles } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { useCloudLlmOffline } from '~/hooks/useCloudLlmOffline'
 import { useTranslation } from '~/i18n'
 import {
   type AiModalExampleKind,
@@ -44,7 +45,8 @@ export function AiPromptExamples({
   const [generated, setGenerated] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
 
-  const canGenerate = isAssistantLlmConfigured()
+  const cloudLlmOffline = useCloudLlmOffline()
+  const canGenerate = isAssistantLlmConfigured() && !cloudLlmOffline
 
   useEffect(() => {
     if (!open) return

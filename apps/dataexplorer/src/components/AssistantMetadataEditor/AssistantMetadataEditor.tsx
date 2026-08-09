@@ -29,13 +29,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { refreshAssistantMethodTools } from '~/assistant/method-tools'
 import { dataExplorerToolRegistry } from '~/assistant/tool-registry'
 import { EmptyPanel } from '~/components/EmptyPanel'
+import { useAssistantLlmConfigured } from '~/hooks/useAssistantLlmConfigured'
+import { useCloudLlmOffline } from '~/hooks/useCloudLlmOffline'
 import { useTranslation } from '~/i18n'
 import { client } from '~/lib/api'
 import {
   filterAssistantExposedMethods,
   isAssistantExposedMethod,
 } from '~/lib/assistant-exposed-method'
-import { isAssistantLlmConfigured } from '~/lib/assistant-llm-configured'
 import type { AssistantMetadataSchema } from '~/lib/assistant-metadata-schema'
 import { mergeCatalogIntoMetadata, touchMetadata } from '~/lib/assistant-metadata-schema'
 import { isOptionalAttributeDescription } from '~/lib/description-task-filter'
@@ -156,7 +157,9 @@ export function AssistantMetadataEditor() {
   const activeGenerationRef = useRef<ActiveGeneration | null>(null)
   const detailsPanelRef = useRef<HTMLDivElement>(null)
   const editorSavedUpdatedAtRef = useRef<string | null>(null)
-  const aiEnabled = isAssistantLlmConfigured()
+  const llmConfigured = useAssistantLlmConfigured()
+  const cloudLlmOffline = useCloudLlmOffline()
+  const aiEnabled = llmConfigured && !cloudLlmOffline
 
   const setGeneration = useCallback((next: ActiveGeneration | null) => {
     activeGenerationRef.current = next
@@ -1020,7 +1023,9 @@ export function AssistantMetadataEditor() {
                 </TooltipTrigger>
                 <TooltipContent side="bottom" className="max-w-[16rem] text-xs">
                   {!aiEnabled
-                    ? t('assistantMetadata.aiNotConfigured')
+                    ? cloudLlmOffline
+                      ? t('assistant.requiresInternet')
+                      : t('assistantMetadata.aiNotConfigured')
                     : missingDescriptionCount === 0
                       ? t('assistantMetadata.generateAllNothing')
                       : t('assistantMetadata.generateAllDescriptionsHint', {

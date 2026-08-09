@@ -15,6 +15,7 @@ import { Database, Filter, type LucideIcon, MessageCircle } from 'lucide-react'
 import { useState } from 'react'
 import { AssistantSparklesIcon } from '~/components/AssistantSparklesIcon'
 import { useAssistantLlmConfigured } from '~/hooks/useAssistantLlmConfigured'
+import { useCloudLlmOffline } from '~/hooks/useCloudLlmOffline'
 import { useTranslation } from '~/i18n'
 import { AI_ACTIONS, type AiActionId } from '~/lib/ai-actions'
 import { isMobileShell } from '~/lib/platform'
@@ -50,6 +51,7 @@ export function AiActionsMenu({
   const { t } = useTranslation()
   const mobile = isMobileShell()
   const configured = useAssistantLlmConfigured()
+  const cloudLlmOffline = useCloudLlmOffline()
   const readonlyMode = useReadonlyMode()
   const hasRunning = useHasRunningAiTaskForDataclass(dataclassName)
   const runningQueryTaskId = useRunningAiQueryTaskIdForDataclass(dataclassName)
@@ -64,6 +66,41 @@ export function AiActionsMenu({
   if (!configured || !dataclassName) return null
 
   const isIcon = variant === 'icon'
+
+  if (cloudLlmOffline) {
+    return (
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span className={cn('inline-flex', className)}>
+              <Button
+                type="button"
+                variant={isIcon ? 'ghost' : 'outline'}
+                size={isIcon ? 'iconXs' : 'xs'}
+                className={cn(
+                  isIcon
+                    ? mobile
+                      ? 'h-9! w-9!'
+                      : 'h-6! w-6!'
+                    : 'h-6 gap-1 border-primary/20 px-2',
+                  !isIcon && mobile && 'h-9',
+                  'opacity-60'
+                )}
+                disabled
+                aria-label={t('aiActions.menuAria', { dataclass: dataclassName })}
+              >
+                <AssistantSparklesIcon
+                  className={cn(isIcon ? 'h-3.5 w-3.5' : 'h-3.5 w-3.5 text-primary')}
+                />
+                {isIcon ? null : <span>{t('aiActions.menu')}</span>}
+              </Button>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>{t('assistant.requiresInternet')}</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    )
+  }
 
   const openAction = (actionId: AiActionId) => {
     setMenuOpen(false)

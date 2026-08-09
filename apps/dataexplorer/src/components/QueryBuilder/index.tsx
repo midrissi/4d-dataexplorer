@@ -47,6 +47,7 @@ import {
   readLiveArgumentInputValues,
 } from '~/components/MethodExecutor/RuntimeArgumentsEditor'
 import { useAssistantLlmConfigured } from '~/hooks/useAssistantLlmConfigured'
+import { useCloudLlmOffline } from '~/hooks/useCloudLlmOffline'
 import { getIntlLocale, useTranslation } from '~/i18n'
 import { api } from '~/lib/api'
 import {
@@ -102,6 +103,7 @@ export function QueryBuilder() {
   const pageSize = usePageSize()
   const defaultCreateEntitySet = defaultQueryRunMode === 'runAsSelection'
   const llmConfigured = useAssistantLlmConfigured()
+  const cloudLlmOffline = useCloudLlmOffline()
   const [generateQueryOpen, setGenerateQueryOpen] = useState(false)
   const queryGenerating = useHasRunningAiQueryTaskForDataclass(selectedDataclass ?? undefined)
   const runningQueryTaskId = useRunningAiQueryTaskIdForDataclass(selectedDataclass ?? undefined)
@@ -1055,33 +1057,48 @@ export function QueryBuilder() {
             <div className="flex items-center justify-between gap-2">
               <Label className="text-xs">{t('query.filterExpression')}</Label>
               {llmConfigured && selectedDataclass ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-7 gap-1 border-primary/20 bg-primary/5 text-primary text-xs hover:border-primary/35 hover:bg-primary/10 hover:text-primary"
-                  onClick={handleOpenGenerateQuery}
-                  aria-label={
-                    queryGenerating ? t('query.viewGeneratingTask') : t('query.generateWithAi')
-                  }
-                  title={
-                    queryGenerating
-                      ? t('query.viewGeneratingTaskHint')
-                      : t('query.generateWithAiHint')
-                  }
-                >
-                  <span className="inline-flex size-3.5 shrink-0 items-center justify-center">
-                    {queryGenerating ? (
-                      <span
-                        aria-hidden
-                        className="size-3.5 animate-spin rounded-full border-2 border-primary/30 border-t-primary"
-                      />
-                    ) : (
-                      <AssistantSparklesIcon className="size-3.5" twinkle />
-                    )}
-                  </span>
-                  {queryGenerating ? t('query.generating') : t('query.generateWithAi')}
-                </Button>
+                <TooltipProvider delayDuration={250}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="inline-flex">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-7 gap-1 border-primary/20 bg-primary/5 text-primary text-xs hover:border-primary/35 hover:bg-primary/10 hover:text-primary"
+                          disabled={cloudLlmOffline && !queryGenerating}
+                          onClick={handleOpenGenerateQuery}
+                          aria-label={
+                            cloudLlmOffline
+                              ? t('assistant.requiresInternet')
+                              : queryGenerating
+                                ? t('query.viewGeneratingTask')
+                                : t('query.generateWithAi')
+                          }
+                        >
+                          <span className="inline-flex size-3.5 shrink-0 items-center justify-center">
+                            {queryGenerating ? (
+                              <span
+                                aria-hidden
+                                className="size-3.5 animate-spin rounded-full border-2 border-primary/30 border-t-primary"
+                              />
+                            ) : (
+                              <AssistantSparklesIcon className="size-3.5" twinkle />
+                            )}
+                          </span>
+                          {queryGenerating ? t('query.generating') : t('query.generateWithAi')}
+                        </Button>
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-56 text-xs">
+                      {cloudLlmOffline
+                        ? t('assistant.requiresInternet')
+                        : queryGenerating
+                          ? t('query.viewGeneratingTaskHint')
+                          : t('query.generateWithAiHint')}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               ) : null}
             </div>
             <CodeEditor

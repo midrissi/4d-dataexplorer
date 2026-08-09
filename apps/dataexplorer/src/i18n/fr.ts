@@ -371,6 +371,7 @@ export const fr = {
     checking: 'Verification…',
     checkForUpdates: 'Rechercher des mises a jour',
     checkAgain: 'Verifier a nouveau',
+    requiresInternet: 'Connectez-vous à Internet pour rechercher des mises à jour',
     restartNow: 'Redemarrer pour appliquer',
     retry: 'Reessayer',
     neverChecked: 'Pas encore',
@@ -409,6 +410,25 @@ export const fr = {
       'Un certificat usurpe ou auto-signe paraitra aussi legitime. Reservez cela aux serveurs de labo connus.',
     guidance:
       'Desactivez Skip SSL dans les parametres de connexion des que vous quittez localhost ou un hote de labo de confiance.',
+  },
+  onlineStatus: {
+    offlineLabel: 'Hors ligne',
+    offlineAria: 'Pas de connexion Internet',
+    offlineTooltip: 'Internet indisponible',
+    offlineTitle: 'Vous êtes hors ligne',
+    offlineDescription:
+      'L’IA cloud et les mises à jour nécessitent Internet. Le REST 4D local, le client HTTP et un LLM local restent utilisables.',
+    lanTitle: 'Les outils locaux restent actifs',
+    lanBody:
+      'Le 4D sur le LAN, le client HTTP et les LLM en localhost n’ont pas besoin d’Internet public.',
+    cloudTitle: 'Fonctions cloud en pause',
+    cloudBody: 'Le chat LLM distant et les vérifications GitHub attendent le retour en ligne.',
+    onlineLabel: 'En ligne',
+    onlineAria: 'Connexion Internet rétablie',
+    onlineTooltip: 'Connexion rétablie',
+    onlineTitle: 'De retour en ligne',
+    onlineDescription: 'L’IA cloud et les mises à jour sont de nouveau disponibles.',
+    onlineGuidance: 'Cet avis disparaît tout seul dans quelques secondes.',
   },
   viewportWarning: {
     toolbarLabel: 'Espace serre',
@@ -1816,6 +1836,7 @@ export const fr = {
     copied: 'Copié !',
     openInNewTab: 'Ouvrir dans un nouvel onglet',
     couldntSave: 'Enregistrement impossible',
+    requiresInternet: 'Nécessite une connexion Internet',
   },
   favouriteMeta: {
     editTitle: 'Modifier le favori',
@@ -2168,6 +2189,7 @@ export const fr = {
       'Bienvenue dans **Data Explorer**. Je suis alimenté par **{model}** et peux interroger vos dataclasses via REST. Posez vos questions naturellement — par ex. « affiche le catalogue » ou « interroge Employee dont le nom commence par A ».',
     welcomeDisconnected:
       'Bienvenue dans **Data Explorer**. Le chat nécessite un LLM — ouvrez les **Paramètres LLM** pour connecter un fournisseur cloud ou un serveur local comme Ollama ou LM Studio.',
+    requiresInternet: 'Connectez-vous à Internet pour utiliser l’IA cloud',
     emptyStateTitle: 'Data Explorer',
     emptyStateDescription:
       'Interrogez le catalogue, les entités ou explorez les enregistrements via REST.',

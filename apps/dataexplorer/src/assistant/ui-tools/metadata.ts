@@ -2,7 +2,11 @@ import { toolResultErr, toolResultOk } from '@4djs/assistant/core'
 import type { AssistantToolHandler, AssistantToolRegistry } from '@4djs/assistant/tools'
 import { refreshAssistantMethodTools } from '~/assistant/method-tools'
 import { client } from '~/lib/api'
-import { isAssistantLlmConfigured } from '~/lib/assistant-llm-configured'
+import {
+  CLOUD_LLM_OFFLINE_ERROR,
+  isAssistantLlmConfigured,
+  isCloudLlmOffline,
+} from '~/lib/assistant-llm-configured'
 import { mergeCatalogIntoMetadata, touchMetadata } from '~/lib/assistant-metadata-schema'
 import type { AttributeExclusionFilter, DescriptionTaskFilter } from '~/lib/description-task-filter'
 import {
@@ -270,6 +274,9 @@ export function buildMetadataTools(registry: AssistantToolRegistry): AssistantTo
           return toolResultErr(
             'LLM is not configured. Configure the assistant model in Settings before generating metadata descriptions.'
           )
+        }
+        if (isCloudLlmOffline()) {
+          return toolResultErr(CLOUD_LLM_OFFLINE_ERROR)
         }
 
         const { catalog, metadata } = await loadMetadataContext()

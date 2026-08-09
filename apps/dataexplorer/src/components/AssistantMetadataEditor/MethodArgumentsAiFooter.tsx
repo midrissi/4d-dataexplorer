@@ -1,5 +1,6 @@
 import { cn } from '@4d/ui'
 import { Loader2, Sparkles } from 'lucide-react'
+import { useCloudLlmOffline } from '~/hooks/useCloudLlmOffline'
 import { useTranslation } from '~/i18n'
 
 type AiGenerateFooterProps = {
@@ -18,6 +19,7 @@ export function AiGenerateFooter({
   ariaLabel,
 }: AiGenerateFooterProps) {
   const { t } = useTranslation()
+  const cloudLlmOffline = useCloudLlmOffline()
 
   if (!onGenerate) return null
 
@@ -32,7 +34,9 @@ export function AiGenerateFooter({
         tooltip ??
         (aiEnabled
           ? t('assistantMetadata.generateArgumentsHint')
-          : t('assistantMetadata.aiNotConfigured'))
+          : cloudLlmOffline
+            ? t('assistant.requiresInternet')
+            : t('assistantMetadata.aiNotConfigured'))
       }
     >
       {generating ? (

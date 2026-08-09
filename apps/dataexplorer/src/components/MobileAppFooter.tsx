@@ -21,6 +21,7 @@ import {
 import { AiTasksFooterControl } from '~/components/AiActions/AiTasksFooterControl'
 import { AppearanceControls } from '~/components/AppearanceControls'
 import { MobileDockButton } from '~/components/MobileDockButton'
+import { OnlineStatusFooterControl } from '~/components/OnlineStatusFooterControl'
 import { useAssistantLlmConfigured } from '~/hooks/useAssistantLlmConfigured'
 import { useTranslation } from '~/i18n'
 import { emitOpenAboutDialog } from '~/lib/about-dialog'
@@ -63,6 +64,9 @@ export function MobileAppFooter() {
         'pt-1 pb-[max(0.375rem,var(--app-safe-bottom))]'
       )}
     >
+      <div className="flex justify-center px-1.5 pb-1 empty:hidden">
+        <OnlineStatusFooterControl />
+      </div>
       <nav
         className={cn(
           'mx-auto grid max-w-lg gap-0.5 px-1.5',

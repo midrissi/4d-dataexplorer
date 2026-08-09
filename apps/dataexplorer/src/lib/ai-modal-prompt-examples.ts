@@ -1,7 +1,7 @@
 import type { CatalogAllResponse, DataClassAttribute } from '@4d/rest'
 import { parseSuggestedPromptsResponse, requestLlmCompletion } from '@4djs/assistant/core'
 import { client } from '~/lib/api'
-import { isAssistantLlmConfigured } from '~/lib/assistant-llm-configured'
+import { isAssistantLlmConfigured, isCloudLlmOffline } from '~/lib/assistant-llm-configured'
 
 export type AiModalExampleKind = 'query' | 'ask' | 'generate'
 
@@ -205,7 +205,7 @@ export async function fetchAiModalPromptExamples(input: {
   const catalog = await client.catalog.getAllWithMetadataCached()
   const fallback = buildStaticAiModalPromptExamples(input.kind, input.dataclassName, catalog)
 
-  if (!isAssistantLlmConfigured()) {
+  if (!isAssistantLlmConfigured() || isCloudLlmOffline()) {
     return fallback
   }
 

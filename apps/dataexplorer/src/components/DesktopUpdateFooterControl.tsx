@@ -15,6 +15,7 @@ import {
   Star,
 } from 'lucide-react'
 import { useEffect, useEffectEvent, useState } from 'react'
+import { useOnlineStatus } from '~/hooks/useOnlineStatus'
 import { useTranslation } from '~/i18n'
 import {
   DESKTOP_RELEASES_INDEX_URL,
@@ -122,6 +123,7 @@ function triggerChrome(phase: DesktopUpdaterPhase): {
 /** Always-visible desktop status-bar control for checking and applying updates. */
 export function DesktopUpdateFooterControl() {
   const { t } = useTranslation()
+  const online = useOnlineStatus()
   const [open, setOpen] = useState(false)
   const [catalogOpen, setCatalogOpen] = useState(false)
   const [query, setQuery] = useState('')
@@ -160,15 +162,14 @@ export function DesktopUpdateFooterControl() {
   })
 
   useEffect(() => {
-    if (!catalogOpen) return
-    if (releases) return
+    if (!online || !catalogOpen || releases) return
     void loadReleases()
-  }, [catalogOpen, releases])
+  }, [catalogOpen, online, releases])
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next)
     if (next) {
-      checkForUpdates()
+      if (online) checkForUpdates()
     } else {
       setCatalogOpen(false)
       setQuery('')
@@ -179,6 +180,8 @@ export function DesktopUpdateFooterControl() {
 
   const chrome = triggerChrome(phase)
   const busy = phase === 'checking' || phase === 'downloading'
+  const offline = !online
+  const offlineHint = offline ? t('desktopUpdater.requiresInternet') : undefined
   const displayCurrent = normalizeDesktopVersion(currentVersion || __APP_VERSION__)
   const channelLatest = channelLatestVersion ?? latestVersion ?? null
   const onLatest =
@@ -436,6 +439,7 @@ export function DesktopUpdateFooterControl() {
             <Button
               size="sm"
               className="h-8 w-full justify-between text-[11px]"
+              title={offlineHint}
               onClick={() => {
                 if (phase === 'skipped' && skippedVersion === channelLatest) {
                   installUpdate()
@@ -445,7 +449,7 @@ export function DesktopUpdateFooterControl() {
                   installVersion(channelLatest)
                 }
               }}
-              disabled={busy}
+              disabled={busy || !online}
             >
               <span className="inline-flex items-center gap-1.5">
                 <Star className="size-3.5 fill-current" />
@@ -467,8 +471,9 @@ export function DesktopUpdateFooterControl() {
             variant="outline"
             size="sm"
             className="h-8 w-full justify-between text-[11px]"
+            title={offlineHint}
             onClick={() => setCatalogOpen((v) => !v)}
-            disabled={busy && phase === 'downloading'}
+            disabled={(busy && phase === 'downloading') || !online}
             aria-expanded={catalogOpen}
           >
             <span className="inline-flex items-center gap-1.5">
@@ -494,7 +499,8 @@ export function DesktopUpdateFooterControl() {
                   type="button"
                   className="text-[10px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
                   onClick={() => void loadReleases()}
-                  disabled={releasesLoading || busy}
+                  disabled={releasesLoading || busy || !online}
+                  title={offlineHint}
                 >
                   {t('desktopUpdater.refreshCatalog')}
                 </button>
@@ -529,6 +535,8 @@ export function DesktopUpdateFooterControl() {
                       variant="outline"
                       className="h-7 text-[11px]"
                       onClick={() => void loadReleases()}
+                      disabled={offline}
+                      title={offlineHint}
                     >
                       <RotateCcw className="size-3" />
                       {t('desktopUpdater.retry')}
@@ -591,7 +599,8 @@ export function DesktopUpdateFooterControl() {
                                 size="sm"
                                 variant={isChannelLatest && !isCurrent ? 'default' : 'outline'}
                                 className="h-6 shrink-0 px-2 text-[10px]"
-                                disabled={busy}
+                                disabled={busy || offline}
+                                title={offlineHint}
                                 onClick={() => {
                                   if (isChannelLatest && latestVersion === release.version) {
                                     installUpdate()
@@ -655,7 +664,8 @@ export function DesktopUpdateFooterControl() {
               size="sm"
               className="ml-auto h-7 text-[11px]"
               onClick={checkForUpdates}
-              disabled={busy}
+              disabled={busy || offline}
+              title={offlineHint}
             >
               <RotateCcw className="size-3" />
               {phase === 'error' ? t('desktopUpdater.retry') : t('desktopUpdater.checkAgain')}

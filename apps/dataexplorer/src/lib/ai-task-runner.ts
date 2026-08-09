@@ -17,7 +17,11 @@ import {
   GENERATE_QUERY_SET_OPTIONS_FOLLOW_UP,
 } from '~/lib/ai-actions'
 import { client } from '~/lib/api'
-import { isAssistantLlmConfigured } from '~/lib/assistant-llm-configured'
+import {
+  CLOUD_LLM_OFFLINE_ERROR,
+  isAssistantLlmConfigured,
+  isCloudLlmOffline,
+} from '~/lib/assistant-llm-configured'
 import { eventBus } from '~/lib/eventBus'
 import {
   type AiAskInput,
@@ -368,6 +372,9 @@ async function runTask(params: {
 }): Promise<string> {
   if (!isAssistantLlmConfigured()) {
     throw new LlmNotConfiguredError('LLM is not configured')
+  }
+  if (isCloudLlmOffline()) {
+    throw new Error(CLOUD_LLM_OFFLINE_ERROR)
   }
 
   const store = useAiTasksStore.getState()

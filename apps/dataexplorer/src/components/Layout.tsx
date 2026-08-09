@@ -49,7 +49,9 @@ import { AssistantChatbot } from '~/assistant/AssistantChatbot'
 import { syncAssistantToolPrefs } from '~/assistant/sync-tool-prefs'
 import { dataExplorerToolRegistry } from '~/assistant/tool-registry'
 import { refreshWidgetTools } from '~/assistant/ui-tools/widgets'
+import { useCloudLlmOffline } from '~/hooks/useCloudLlmOffline'
 import { useTranslation } from '~/i18n'
+import { isCloudLlmOffline } from '~/lib/assistant-llm-configured'
 import type { CommandPaletteMode } from '~/lib/eventBus'
 import { eventBus } from '~/lib/eventBus'
 import { resolveLucideIcon } from '~/lib/lucide-icon'
@@ -88,6 +90,7 @@ import { DesktopUpdateFooterControl } from './DesktopUpdateFooterControl'
 import { KeyboardShortcutsModal } from './KeyboardShortcutsModal'
 import { MobileAppFooter } from './MobileAppFooter'
 import { useMobileCatalog } from './MobileCatalogContext'
+import { OnlineStatusFooterControl } from './OnlineStatusFooterControl'
 import { ResizableVerticalHandle } from './ResizablePanel'
 import { ViewportWarningFooterControl } from './ViewportWarningFooterControl'
 
@@ -150,6 +153,8 @@ export function Layout({
   const [assistantLoading, setAssistantLoading] = useState(false)
   const setAssistantOpen = useSettingsStore((s) => s.setAssistantOpen)
   const toggleAssistantOpen = useSettingsStore((s) => s.toggleAssistantOpen)
+  const cloudLlmOffline = useCloudLlmOffline()
+  const assistantToggleDisabled = cloudLlmOffline && !assistantOpen
   const consoleOpen = useSettingsStore((s) => s.consoleOpen)
   const bottomPanelTab = useSettingsStore((s) => s.bottomPanelTab)
   const toggleConsoleOpen = useSettingsStore((s) => s.toggleConsoleOpen)
@@ -271,7 +276,14 @@ export function Layout({
       ...(isMobileShell()
         ? []
         : [
-            registerShortcutHandler('toggle-assistant', toggleAssistantOpen),
+            registerShortcutHandler('toggle-assistant', () => {
+              if (useSettingsStore.getState().assistantOpen) {
+                setAssistantOpen(false)
+                return
+              }
+              if (isCloudLlmOffline()) return
+              toggleAssistantOpen()
+            }),
             registerShortcutHandler('open-structure', () => {
               const dataclassToHighlight = activeDataclassTab?.dataclassName
               openGraphTab().then(() => {
@@ -323,6 +335,7 @@ export function Layout({
     openSettingsTab,
     toggleReadonlyMode,
     toggleAssistantOpen,
+    setAssistantOpen,
     openHomeTab,
     openGraphTab,
     openAssistantMetadataTab,
@@ -700,6 +713,7 @@ export function Layout({
             </TooltipProvider>
 
             <AiTasksFooterControl />
+            <OnlineStatusFooterControl />
             <ViewportWarningFooterControl />
             <DesktopSslWarningFooterControl />
             <DesktopUpdateFooterControl />
@@ -750,30 +764,48 @@ export function Layout({
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button
-                    variant={assistantOpen ? 'default' : 'ghost'}
-                    size="icon"
-                    className={cn(
-                      'h-6 w-6',
-                      assistantOpen &&
-                        'bg-primary text-primary-foreground shadow-md shadow-primary/25'
-                    )}
-                    onClick={() => setAssistantOpen(!assistantOpen)}
-                    aria-label={
-                      assistantOpen ? t('layout.closeAssistant') : t('layout.openAssistant')
-                    }
-                    aria-pressed={assistantOpen}
-                    aria-busy={assistantLoading}
-                  >
-                    {assistantLoading ? (
-                      <Loader2 className="h-3 w-3 animate-spin" />
-                    ) : (
-                      <AssistantSparklesIcon className="h-3 w-3" />
-                    )}
-                  </Button>
+                  <span className="inline-flex">
+                    <Button
+                      variant={assistantOpen ? 'default' : 'ghost'}
+                      size="icon"
+                      className={cn(
+                        'h-6 w-6',
+                        assistantOpen &&
+                          'bg-primary text-primary-foreground shadow-md shadow-primary/25'
+                      )}
+                      disabled={assistantToggleDisabled}
+                      onClick={() => {
+                        if (assistantOpen) {
+                          setAssistantOpen(false)
+                          return
+                        }
+                        if (cloudLlmOffline) return
+                        setAssistantOpen(true)
+                      }}
+                      aria-label={
+                        assistantToggleDisabled
+                          ? t('assistant.requiresInternet')
+                          : assistantOpen
+                            ? t('layout.closeAssistant')
+                            : t('layout.openAssistant')
+                      }
+                      aria-pressed={assistantOpen}
+                      aria-busy={assistantLoading}
+                    >
+                      {assistantLoading ? (
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      ) : (
+                        <AssistantSparklesIcon className="h-3 w-3" />
+                      )}
+                    </Button>
+                  </span>
                 </TooltipTrigger>
                 <TooltipContent side="top">
-                  {assistantOpen ? t('layout.closeAssistant') : t('layout.openAssistant')}
+                  {assistantToggleDisabled
+                    ? t('assistant.requiresInternet')
+                    : assistantOpen
+                      ? t('layout.closeAssistant')
+                      : t('layout.openAssistant')}
                   {(() => {
                     const sc = getShortcut('toggle-assistant')
                     return sc?.enabled ? (

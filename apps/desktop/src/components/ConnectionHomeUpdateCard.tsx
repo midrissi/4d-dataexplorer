@@ -12,6 +12,7 @@ import {
   Star,
 } from 'lucide-react'
 import { useEffect, useEffectEvent, useState } from 'react'
+import { useOnlineStatus } from '~/hooks/useOnlineStatus'
 import { useTranslation } from '~/i18n'
 import {
   type DesktopReleaseRef,
@@ -51,6 +52,7 @@ function formatPublishedAt(iso: string | null): string | null {
  */
 export function ConnectionHomeUpdateCard({ variant = 'promo' }: { variant?: 'promo' | 'inline' }) {
   const { t } = useTranslation()
+  const online = useOnlineStatus()
   const [catalogOpen, setCatalogOpen] = useState(false)
   const [releases, setReleases] = useState<DesktopReleaseRef[] | null>(null)
   const [releasesError, setReleasesError] = useState<string | null>(null)
@@ -85,9 +87,9 @@ export function ConnectionHomeUpdateCard({ variant = 'promo' }: { variant?: 'pro
   })
 
   useEffect(() => {
-    if (!catalogOpen || releases) return
+    if (!online || !catalogOpen || releases) return
     void loadReleases()
-  }, [catalogOpen, releases])
+  }, [catalogOpen, online, releases])
 
   const actionable =
     phase === 'available' ||
@@ -111,6 +113,8 @@ export function ConnectionHomeUpdateCard({ variant = 'promo' }: { variant?: 'pro
     phase === 'skipped' ||
     (Boolean(channelLatest) && !onLatest && phase !== 'ready' && phase !== 'checking')
   const busy = phase === 'downloading' || phase === 'checking'
+  const offline = !online
+  const offlineTitle = offline ? t('desktopUpdater.requiresInternet') : undefined
   const percent =
     progress?.contentLength != null && progress.contentLength > 0
       ? Math.min(100, Math.round((progress.downloaded / progress.contentLength) * 100))
@@ -403,6 +407,7 @@ export function ConnectionHomeUpdateCard({ variant = 'promo' }: { variant?: 'pro
             <Button
               size="sm"
               className="h-6 gap-1 px-2"
+              title={offlineTitle}
               onClick={() => {
                 if (
                   latestVersion === channelLatest ||
@@ -414,7 +419,7 @@ export function ConnectionHomeUpdateCard({ variant = 'promo' }: { variant?: 'pro
                   installVersion(channelLatest)
                 }
               }}
-              disabled={busy}
+              disabled={busy || offline}
             >
               <Star className="h-3.5 w-3.5 fill-current" />
               {t('desktopUpdater.installLatest')}
@@ -452,7 +457,9 @@ export function ConnectionHomeUpdateCard({ variant = 'promo' }: { variant?: 'pro
               size="sm"
               variant="secondary"
               className="h-6 gap-1 px-2"
+              title={offlineTitle}
               onClick={() => checkForUpdates()}
+              disabled={offline}
             >
               <RefreshCw className="h-3.5 w-3.5" />
               {t('desktopUpdater.retry')}
@@ -462,8 +469,9 @@ export function ConnectionHomeUpdateCard({ variant = 'promo' }: { variant?: 'pro
             variant="outline"
             size="sm"
             className="ml-auto h-6 gap-1 px-2 text-[11px]"
+            title={offlineTitle}
             onClick={() => setCatalogOpen((o) => !o)}
-            disabled={busy && phase === 'downloading'}
+            disabled={(busy && phase === 'downloading') || offline}
             aria-expanded={catalogOpen}
           >
             {catalogOpen ? (
@@ -485,7 +493,8 @@ export function ConnectionHomeUpdateCard({ variant = 'promo' }: { variant?: 'pro
                 type="button"
                 className="text-[10px] text-muted-foreground underline-offset-2 hover:text-foreground hover:underline"
                 onClick={() => void loadReleases()}
-                disabled={releasesLoading || busy}
+                disabled={releasesLoading || busy || offline}
+                title={offlineTitle}
               >
                 {t('desktopUpdater.refreshCatalog')}
               </button>
@@ -545,7 +554,8 @@ export function ConnectionHomeUpdateCard({ variant = 'promo' }: { variant?: 'pro
                             size="sm"
                             variant={isChannelLatest && !isCurrent ? 'default' : 'outline'}
                             className="h-6 shrink-0 px-2 text-[10px]"
-                            disabled={busy}
+                            disabled={busy || offline}
+                            title={offlineTitle}
                             onClick={() => {
                               if (isChannelLatest && latestVersion === release.version) {
                                 installUpdate()

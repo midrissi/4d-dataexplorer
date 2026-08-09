@@ -1,5 +1,6 @@
 import { type ThemeName, themes } from '@4d/ui'
 import { getLabel, type Locale } from '~/i18n/labels'
+import { isCloudLlmOffline } from '~/lib/assistant-llm-configured'
 import type { CommandContext } from '~/lib/commands'
 import {
   DEFAULT_PROFILE_PREFS,
@@ -99,6 +100,7 @@ export function createCommandContext(overrides: CommandContextOverrides = {}): C
     shortcuts: settings.shortcuts,
     assistantOpen: settings.assistantOpen,
     toggleAssistantOpen: () => settings.toggleAssistantOpen(),
+    cloudLlmOffline: isCloudLlmOffline(),
     consoleOpen: settings.consoleOpen,
     toggleConsoleOpen: () => settings.toggleConsoleOpen(),
     bottomPanelTab: settings.bottomPanelTab,

@@ -11,7 +11,7 @@ function emitChange() {
   for (const listener of listeners) listener()
 }
 
-function subscribe(listener: () => void): () => void {
+export function subscribeAssistantLlmConfigured(listener: () => void): () => void {
   listeners.add(listener)
   return () => {
     listeners.delete(listener)
@@ -36,7 +36,7 @@ if (typeof window !== 'undefined') {
 }
 
 export function useAssistantLlmConfigured(): boolean {
-  const configured = useSyncExternalStore(subscribe, getSnapshot, () => false)
+  const configured = useSyncExternalStore(subscribeAssistantLlmConfigured, getSnapshot, () => false)
 
   // Re-check when the tab becomes visible (settings may have changed in-panel)
   const recheck = useCallback(() => {

@@ -1,6 +1,6 @@
 import { requestLlmCompletion } from '@4djs/assistant/core'
 import { client } from '~/lib/api'
-import { isAssistantLlmConfigured } from '~/lib/assistant-llm-configured'
+import { assertCloudLlmAvailable } from '~/lib/assistant-llm-configured'
 import {
   type FilterParam,
   type FilterParamType,
@@ -167,7 +167,7 @@ export async function generateQueryFromPrompt(input: {
   prompt: string
   signal?: AbortSignal
 }): Promise<QueryOptions> {
-  if (!isAssistantLlmConfigured()) throw new Error('LLM not configured')
+  assertCloudLlmAvailable()
 
   const trimmed = input.prompt.trim()
   if (!trimmed) throw new Error('Prompt is required')

@@ -1,4 +1,13 @@
-import { Button, cn, Input, Label } from '@4d/ui'
+import {
+  Button,
+  cn,
+  Input,
+  Label,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@4d/ui'
 import {
   createLlmSettingsFormState,
   createLlmSettingsFormStateFromStored,
@@ -12,7 +21,9 @@ import { Eye, EyeOff, Loader2, Sparkles } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { createDataExplorerLlmSettings } from '~/assistant/llm-config'
 import { notifyAssistantLlmConfiguredChanged } from '~/hooks/useAssistantLlmConfigured'
+import { useOnlineStatus } from '~/hooks/useOnlineStatus'
 import { useTranslation } from '~/i18n'
+import { isLocalLlmBaseUrl } from '~/lib/assistant-llm-configured'
 import { isMobileShell } from '~/lib/platform'
 
 const LLM_SETTINGS_STORAGE_KEY = 'dataexplorer-llm-settings'
@@ -35,6 +46,7 @@ function loadFormState(): LlmSettingsFormState {
 export function AssistantLlmSettingsPanel() {
   const { t } = useTranslation()
   const mobile = isMobileShell()
+  const online = useOnlineStatus()
   const [form, setForm] = useState<LlmSettingsFormState | null>(null)
   const [showKey, setShowKey] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -124,6 +136,8 @@ export function AssistantLlmSettingsPanel() {
           : form.hasStoredApiKey && !form.apiKey && form.resolvedApiKey
             ? maskApiKey(form.resolvedApiKey)
             : form.apiKey
+
+  const testOffline = Boolean(form && !online && !isLocalLlmBaseUrl(form.baseUrl))
 
   return (
     <div className={cn('rounded-md border border-border bg-card', mobile ? 'p-4' : 'mb-3 p-3')}>
@@ -243,16 +257,27 @@ export function AssistantLlmSettingsPanel() {
           ) : null}
 
           <div className={cn('flex gap-2', mobile && 'flex-col')}>
-            <Button
-              type="button"
-              variant="outline"
-              className={cn(mobile ? 'h-11 w-full' : 'h-8')}
-              disabled={testing || saving}
-              onClick={() => void handleTest()}
-            >
-              {testing ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : null}
-              {t('settings.aiTestConnection')}
-            </Button>
+            <TooltipProvider delayDuration={250}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className={cn('inline-flex', mobile && 'w-full')}>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className={cn(mobile ? 'h-11 w-full' : 'h-8')}
+                      disabled={testing || saving || testOffline}
+                      onClick={() => void handleTest()}
+                    >
+                      {testing ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : null}
+                      {t('settings.aiTestConnection')}
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                {testOffline ? (
+                  <TooltipContent>{t('assistant.requiresInternet')}</TooltipContent>
+                ) : null}
+              </Tooltip>
+            </TooltipProvider>
             <Button
               type="submit"
               className={cn(mobile ? 'h-11 w-full' : 'h-8')}

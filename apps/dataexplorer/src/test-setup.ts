@@ -26,6 +26,16 @@ if (typeof globalThis.localStorage === 'undefined') {
   ;(globalThis as { localStorage: Storage }).localStorage = testStorage
 }
 
+Object.defineProperty(globalThis, 'navigator', {
+  configurable: true,
+  value: {
+    ...(typeof globalThis.navigator === 'object' && globalThis.navigator
+      ? globalThis.navigator
+      : {}),
+    onLine: true,
+  },
+})
+
 if (typeof globalThis.window === 'undefined') {
   const listeners = new Map<string, Set<(e: Event) => void>>()
   ;(

@@ -2,7 +2,7 @@ import type { CatalogWithMetadataExpanded } from '@4d/rest'
 import { requestLlmCompletion } from '@4djs/assistant/core'
 import type { MethodArgumentSchema } from '@4djs/assistant/tools'
 import { filterAssistantExposedMethods } from './assistant-exposed-method'
-import { isAssistantLlmConfigured } from './assistant-llm-configured'
+import { assertCloudLlmAvailable } from './assistant-llm-configured'
 
 const DESCRIPTION_SYSTEM_PROMPT = `You write concise, helpful documentation for a 4D database REST API assistant.
 Return ONLY the description text — no quotes, markdown, or JSON wrapper.
@@ -53,7 +53,7 @@ export async function generateDataclassDescription(input: {
   dataclassName: string
   signal?: AbortSignal
 }): Promise<string> {
-  if (!isAssistantLlmConfigured()) throw new Error('LLM not configured')
+  assertCloudLlmAvailable()
 
   const dc = input.catalog.dataClasses.find((d) => d.name === input.dataclassName)
   if (!dc) throw new Error(`Dataclass not found: ${input.dataclassName}`)
@@ -96,7 +96,7 @@ export async function generateAttributeDescription(input: {
   attributeName: string
   signal?: AbortSignal
 }): Promise<string> {
-  if (!isAssistantLlmConfigured()) throw new Error('LLM not configured')
+  assertCloudLlmAvailable()
 
   const dc = input.catalog.dataClasses.find((d) => d.name === input.dataclassName)
   const attr = dc?.attributes?.find((a) => a.name === input.attributeName)
@@ -118,7 +118,7 @@ export async function generateSingletonDescription(input: {
   singletonName: string
   signal?: AbortSignal
 }): Promise<string> {
-  if (!isAssistantLlmConfigured()) throw new Error('LLM not configured')
+  assertCloudLlmAvailable()
 
   const singleton = input.catalog.singletons?.find((s) => s.name === input.singletonName)
   if (!singleton) throw new Error(`Singleton not found: ${input.singletonName}`)
@@ -149,7 +149,7 @@ export async function generateMethodDescription(input: {
   methodName: string
   signal?: AbortSignal
 }): Promise<string> {
-  if (!isAssistantLlmConfigured()) throw new Error('LLM not configured')
+  assertCloudLlmAvailable()
 
   let methodInfo: Record<string, unknown> | null = null
 
@@ -187,7 +187,7 @@ export async function generateMethodArguments(input: {
   methodName: string
   signal?: AbortSignal
 }): Promise<MethodArgumentSchema[]> {
-  if (!isAssistantLlmConfigured()) throw new Error('LLM not configured')
+  assertCloudLlmAvailable()
 
   let methodInfo: Record<string, unknown> | null = null
 
