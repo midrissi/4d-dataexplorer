@@ -21,6 +21,7 @@ export {
   formatPostmanRequestDocs,
   REST_DOCS_BASE,
   REST_QUERY_DOCS,
+  REST_REQUEST_RESPONSES,
   TOOLKIT_DOCS_BY_EMOJI_KEY,
 } from './toolkit-docs'
 export type { ToolkitEmojiConfig, ToolkitEmojiKey } from './toolkit-emoji'

@@ -7,6 +7,7 @@ import {
   restExportOpenApiFilename,
   serializeOpenApiDocument,
 } from '~/lib/rest-export/emit-openapi'
+import { REST_REQUEST_RESPONSES } from '~/lib/rest-export/toolkit-docs'
 import { buildAccessKeyLoginItem } from './build-collection'
 import type {
   PostmanBody,
@@ -241,7 +242,7 @@ function toOperation(
     tags: [tag],
     ...(params.length > 0 ? { parameters: params } : {}),
     ...(body ? { requestBody: body } : {}),
-    responses: { '200': { description: 'Success' } },
+    responses: REST_REQUEST_RESPONSES,
   }
 }
 

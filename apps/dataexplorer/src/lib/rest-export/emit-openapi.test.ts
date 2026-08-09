@@ -45,6 +45,13 @@ describe('emitOpenApiDocument', () => {
     expect(listPath?.get?.summary).toContain(toolkitLabels.list)
     expect(listPath?.get?.parameters?.some((p) => p.name === '$filter')).toBe(true)
     expect(listPath?.get?.parameters?.some((p) => p.name === '$method')).toBe(true)
+    expect(listPath?.get?.responses).toEqual({
+      '200': { description: expect.stringContaining('without error') },
+      '401': { description: expect.stringContaining('Permissions') },
+      '402': { description: expect.stringContaining('sessions') },
+      '404': { description: expect.stringContaining('Not Found') },
+      '500': { description: expect.stringContaining('Internal Server Error') },
+    })
     expect(listPath?.post?.requestBody).toBeTruthy()
 
     const entityFn = doc.paths['/rest/Company({key})/fullName']?.post

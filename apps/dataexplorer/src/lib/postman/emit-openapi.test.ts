@@ -71,6 +71,13 @@ describe('emitOpenApiFromPostmanItems', () => {
     expect(doc.paths['/api/login']?.post).toBeTruthy()
     expect(doc.paths['/rest/Company']?.get?.summary).toBe('List companies')
     expect(doc.paths['/rest/Company']?.get?.tags).toEqual(['crm'])
+    expect(doc.paths['/rest/Company']?.get?.responses).toEqual({
+      '200': { description: expect.stringContaining('without error') },
+      '401': { description: expect.stringContaining('Permissions') },
+      '402': { description: expect.stringContaining('sessions') },
+      '404': { description: expect.stringContaining('Not Found') },
+      '500': { description: expect.stringContaining('Internal Server Error') },
+    })
     expect(
       doc.paths['/rest/Company']?.get?.parameters?.some((param) => param.name === '$top')
     ).toBe(true)

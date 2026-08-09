@@ -5,6 +5,19 @@ import type { ToolkitNode, ToolkitQueryParam } from './toolkit-types'
 /** Unversioned 4D REST docs (tracks latest). @see https://developer.4d.com/docs/category/rest-api */
 export const REST_DOCS_BASE = 'https://developer.4d.com/docs/REST'
 
+/** HTTP statuses returned by 4D REST. Status 0 (request not processed) is not a valid OpenAPI code.
+ * @see https://developer.4d.com/docs/REST/REST_requests#request-status */
+export const REST_REQUEST_RESPONSES: Record<string, { description: string }> = {
+  '200': { description: 'OK — Request processed without error.' },
+  '401': { description: "Unauthorized — Permissions error (check user's permissions)." },
+  '402': { description: 'No session — Maximum number of sessions has been reached.' },
+  '404': {
+    description:
+      'Not Found — The data class is not accessible via REST or the entity set does not exist.',
+  },
+  '500': { description: 'Internal Server Error — Error processing the REST request.' },
+}
+
 export type ToolkitDocRef = {
   url: string
   description: string

@@ -5,10 +5,17 @@ import {
   formatDocsDescription,
   formatPostmanRequestDocs,
   REST_DOCS_BASE,
+  REST_REQUEST_RESPONSES,
 } from './toolkit-docs'
 import type { ToolkitNode } from './toolkit-types'
 
 describe('toolkit docs', () => {
+  it('lists official 4D REST request statuses for OpenAPI', () => {
+    expect(Object.keys(REST_REQUEST_RESPONSES)).toEqual(['200', '401', '402', '404', '500'])
+    expect(REST_REQUEST_RESPONSES['401']?.description).toContain('Permissions')
+    expect(REST_REQUEST_RESPONSES['402']?.description).toContain('sessions')
+  })
+
   it('maps emoji keys to official 4D REST pages', () => {
     expect(docsForEmojiKey('request.catalog')?.url).toBe(`${REST_DOCS_BASE}/catalog`)
     expect(docsForEmojiKey('request.serverInfo')?.url).toBe(`${REST_DOCS_BASE}/info`)

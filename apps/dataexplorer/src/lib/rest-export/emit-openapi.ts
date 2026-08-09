@@ -1,5 +1,5 @@
 import { pathParamNames } from './path-placeholders'
-import { formatDocsDescription } from './toolkit-docs'
+import { formatDocsDescription, REST_REQUEST_RESPONSES } from './toolkit-docs'
 import type {
   ToolkitBody,
   ToolkitInventory,
@@ -166,9 +166,7 @@ function toOpenApiOperation(entry: TaggedOperation): OpenApiOperation {
     tags: [tagName(tags)],
     ...(params.length > 0 ? { parameters: params } : {}),
     ...(body ? { requestBody: body } : {}),
-    responses: {
-      '200': { description: 'Success' },
-    },
+    responses: REST_REQUEST_RESPONSES,
   }
 }
 
