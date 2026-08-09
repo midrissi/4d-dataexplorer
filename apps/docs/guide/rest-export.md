@@ -16,10 +16,15 @@ The tab is a four-step wizard. Use **Next** / **Back** (or the step indicator) t
 
 | Step | Purpose |
 |------|---------|
-| **Selection** | Choose dataclasses and singletons to include. Refresh the catalog if the structure changed. |
+| **Selection** | Choose **Expanded** or **Collection variable** dataclass mode, then dataclasses and singletons. Refresh the catalog if the structure changed. |
 | **Categories** | Toggle request groups (auth, catalog, CRUD, entity sets, functions, …). Core and advanced groups each have select / unselect all. |
 | **Variables** | Collection name, description, base URL, and login variables (access key, username / password). Optionally include an access-key login request. |
 | **Preview** | Review the folder tree, then export as Postman or OpenAPI. |
+
+**Dataclass mode** (Selection step, first choice):
+
+- **Expanded** (default) — one folder per selected dataclass with concrete paths (`/rest/Agency`) and `Functions/{dataclass|entity|entitySelection}`.
+- **Collection variable** — one shared `DataClass` CRUD/catalog template using `{{Dataclass}}` (`/rest/$catalog/{{Dataclass}}`, `/rest/{{Dataclass}}`, …). The dataclass list only includes classes with member functions; those export as direct `dataclass` / `entity` / `entitySelection` subfolders (no `Functions` wrapper). The Postman collection includes a `Dataclass` variable (defaults to the first selected dataclass). Use this for large catalogs so the export stays small.
 
 **Directory login** and **include non-exposed methods** are off by default. Turn them on under **Advanced** on the Categories step if you need them.
 
@@ -45,5 +50,6 @@ Choose **Postman** or **OpenAPI** in the preview toolbar, then **Export**. Empty
 ### Tips
 
 - Select only the dataclasses you need — the tree and file size stay smaller.
+- Use **Collection variable** dataclass mode for large 4D bases so CRUD is not duplicated per dataclass.
 - Uncheck categories you do not use (for example delete-all or compute / upload) before preview.
 - Collection name and variables are reused the next time you open REST Export.

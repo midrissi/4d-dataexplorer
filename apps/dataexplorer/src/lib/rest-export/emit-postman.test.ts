@@ -126,4 +126,42 @@ describe('emitPostmanCollection', () => {
   it('builds a slug filename', () => {
     expect(restExportPostmanFilename('4D REST API')).toBe('4d-rest-api.postman_collection.json')
   })
+
+  it('emits {{Dataclass}} CRUD paths and Dataclass variable in collectionVar mode', () => {
+    const config = createDefaultToolkitConfig({
+      name: 'Demo API',
+      selectedDataClasses: ['Company'],
+      dataclassMode: 'collectionVar',
+      variables: {
+        baseUrl: 'https://example.com/',
+        dataclass: 'Company',
+      },
+    })
+    const inventory = buildToolkitInventory(catalog, config)
+    const collection = emitPostmanCollection({
+      inventory,
+      name: config.name,
+      variables: config.variables,
+    })
+
+    expect(collection.variable?.find((v) => v.key === 'Dataclass')?.value).toBe('Company')
+
+    const list = findItem(collection.item, toolkitLabels.list)
+    expect(list && 'request' in list ? list.request.url.raw : undefined).toContain(
+      '/rest/{{Dataclass}}'
+    )
+    expect(list && 'request' in list ? list.request.url.raw : undefined).not.toContain(
+      '/rest/Company'
+    )
+
+    const catalogDc = findItem(collection.item, toolkitLabels.catalogDataClass('{{Dataclass}}'))
+    expect(catalogDc && 'request' in catalogDc ? catalogDc.request.url.raw : undefined).toContain(
+      '/rest/$catalog/{{Dataclass}}'
+    )
+
+    const entityFn = findItem(collection.item, toolkitLabels.classFn('fullName'))
+    expect(entityFn && 'request' in entityFn ? entityFn.request.url.raw : undefined).toContain(
+      '/rest/Company({{key}})/fullName'
+    )
+  })
 })

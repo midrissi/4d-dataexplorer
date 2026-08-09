@@ -8,6 +8,7 @@ import {
   type ToolkitEmojiKey,
 } from './toolkit-emoji'
 import type {
+  DataclassExportMode,
   ToolkitBody,
   ToolkitCatalogDataClass,
   ToolkitCatalogInput,
@@ -24,6 +25,8 @@ import type {
 } from './toolkit-types'
 
 const AUTHENTIFY = 'authentify'
+const DATACLASS_VAR = 'Dataclass'
+const DATACLASS_PLACEHOLDER = `{${DATACLASS_VAR}}`
 
 type FunctionScope = 'dataclass' | 'entity' | 'entitySelection'
 
@@ -140,7 +143,19 @@ function entitySetParam(): ToolkitPathParam {
   return { name: 'entitySetId', example: '', description: 'Server entity set ID' }
 }
 
-function firstStorageAttribute(dataClass: ToolkitCatalogDataClass): string {
+function dataclassParam(): ToolkitPathParam {
+  return { name: DATACLASS_VAR, example: '', description: 'Dataclass name' }
+}
+
+function mergePathParams(
+  extra: ToolkitPathParam[] | undefined,
+  params?: ToolkitPathParam[]
+): ToolkitPathParam[] | undefined {
+  if (!extra?.length && !params?.length) return undefined
+  return [...(extra ?? []), ...(params ?? [])]
+}
+
+function firstStorageAttribute(dataClass: Pick<ToolkitCatalogDataClass, 'attributes'>): string {
   const storage = dataClass.attributes?.find((attr) => !attr.kind || attr.kind === 'storage')
   return storage?.name || dataClass.attributes?.[0]?.name || '{attribute}'
 }
@@ -427,11 +442,19 @@ function buildSingletonsFolder(
 }
 
 function buildDataClassCrud(
-  dataClass: ToolkitCatalogDataClass,
-  flags: ToolkitCategoryFlags
+  dataClass: Pick<ToolkitCatalogDataClass, 'name' | 'attributes'>,
+  flags: ToolkitCategoryFlags,
+  options?: {
+    extraPathParams?: ToolkitPathParam[]
+    forceAttributePlaceholder?: boolean
+    catalogLabelName?: string
+  }
 ): ToolkitNode[] {
   const name = dataClass.name
   const children: ToolkitNode[] = []
+  const extraParams = options?.extraPathParams
+  const catalogLabelName = options?.catalogLabelName ?? name
+  const withParams = (params?: ToolkitPathParam[]) => mergePathParams(extraParams, params)
   const dcPath = `/rest/${name}`
   const entityPath = `/rest/${name}({key})`
   const entitySetPath = `/rest/${name}/$entityset/{entitySetId}`
@@ -441,11 +464,12 @@ function buildDataClassCrud(
       operationNode(
         op({
           id: `dc:${name}:catalog`,
-          label: PLAIN_LABELS.catalogDataClass(name),
+          label: PLAIN_LABELS.catalogDataClass(catalogLabelName),
           operationId: operationId(name, 'catalog'),
           emojiKey: 'request.catalogDataClass',
           method: 'GET',
           path: `/rest/$catalog/${name}`,
+          pathParams: withParams(),
         })
       )
     )
@@ -468,6 +492,7 @@ function buildDataClassCrud(
             { key: '$orderby', value: '' },
             { key: '$attributes', value: '' },
           ],
+          pathParams: withParams(),
         })
       )
     )
@@ -485,6 +510,7 @@ function buildDataClassCrud(
           path: dcPath,
           query: [{ key: '$method', value: 'update' }],
           body: jsonBody({}),
+          pathParams: withParams(),
         })
       )
     )
@@ -500,7 +526,7 @@ function buildDataClassCrud(
           emojiKey: 'request.getByKey',
           method: 'GET',
           path: entityPath,
-          pathParams: [keyParam()],
+          pathParams: withParams([keyParam()]),
         })
       )
     )
@@ -518,6 +544,7 @@ function buildDataClassCrud(
           path: dcPath,
           query: [{ key: '$method', value: 'update' }],
           body: jsonBody({ __KEY: '{{key}}', __STAMP: '{{stamp}}' }),
+          pathParams: withParams(),
         })
       )
     )
@@ -534,7 +561,7 @@ function buildDataClassCrud(
           method: 'POST',
           path: entityPath,
           query: [{ key: '$method', value: 'delete' }],
-          pathParams: [keyParam()],
+          pathParams: withParams([keyParam()]),
         })
       )
     )
@@ -554,6 +581,7 @@ function buildDataClassCrud(
             { key: '$filter', value: '' },
             { key: '$method', value: 'delete' },
           ],
+          pathParams: withParams(),
         })
       )
     )
@@ -571,6 +599,7 @@ function buildDataClassCrud(
           path: dcPath,
           query: [{ key: '$method', value: 'delete' }],
           description: 'Deletes every entity in the dataclass. Destructive.',
+          pathParams: withParams(),
         })
       )
     )
@@ -591,6 +620,7 @@ function buildDataClassCrud(
             { key: '$method', value: 'entityset' },
             { key: '$timeout', value: '60' },
           ],
+          pathParams: withParams(),
         })
       )
     )
@@ -610,7 +640,7 @@ function buildDataClassCrud(
             { key: '$top', value: '20' },
             { key: '$skip', value: '0' },
           ],
-          pathParams: [entitySetParam()],
+          pathParams: withParams([entitySetParam()]),
         })
       )
     )
@@ -627,7 +657,7 @@ function buildDataClassCrud(
           method: 'GET',
           path: entitySetPath,
           query: [{ key: '$clean', value: 'true' }],
-          pathParams: [entitySetParam()],
+          pathParams: withParams([entitySetParam()]),
         })
       )
     )
@@ -644,7 +674,7 @@ function buildDataClassCrud(
           method: 'GET',
           path: entitySetPath,
           query: [{ key: '$method', value: 'release' }],
-          pathParams: [entitySetParam()],
+          pathParams: withParams([entitySetParam()]),
         })
       )
     )
@@ -661,14 +691,16 @@ function buildDataClassCrud(
           method: 'POST',
           path: entitySetPath,
           query: [{ key: '$method', value: 'delete' }],
-          pathParams: [entitySetParam()],
+          pathParams: withParams([entitySetParam()]),
         })
       )
     )
   }
 
   if (flags.compute) {
-    const attribute = firstStorageAttribute(dataClass)
+    const attribute = options?.forceAttributePlaceholder
+      ? '{attribute}'
+      : firstStorageAttribute(dataClass)
     const attrPath =
       attribute === '{attribute}' ? `/rest/${name}/{attribute}` : `/rest/${name}/${attribute}`
     children.push(
@@ -681,13 +713,11 @@ function buildDataClassCrud(
           method: 'GET',
           path: attrPath,
           query: [{ key: '$compute', value: 'count' }],
-          ...(attribute === '{attribute}'
-            ? {
-                pathParams: [
-                  { name: 'attribute', example: '', description: 'Storage attribute name' },
-                ],
-              }
-            : {}),
+          pathParams: withParams(
+            attribute === '{attribute}'
+              ? [{ name: 'attribute', example: '', description: 'Storage attribute name' }]
+              : undefined
+          ),
         })
       )
     )
@@ -696,15 +726,15 @@ function buildDataClassCrud(
   return children
 }
 
-function buildDataClassFunctions(
+function buildDataClassFunctionScopes(
   dataClass: ToolkitCatalogDataClass,
   flags: ToolkitCategoryFlags
-): ToolkitFolderNode | null {
-  if (!flags.functions) return null
+): ToolkitNode[] {
+  if (!flags.functions) return []
   const methods = (dataClass.methods ?? []).filter((method) =>
     isMethodIncluded(method, flags.includeNonExposed)
   )
-  if (methods.length === 0) return null
+  if (methods.length === 0) return []
 
   const byScope: Record<FunctionScope, ToolkitCatalogMethod[]> = {
     dataclass: [],
@@ -824,25 +854,45 @@ function buildDataClassFunctions(
     if (node) scopeFolders.push(node)
   }
 
+  return scopeFolders
+}
+
+function wrapFunctionsFolder(
+  dataClassName: string,
+  scopes: ToolkitNode[]
+): ToolkitFolderNode | null {
   return folder(
-    `folder:dc:${dataClass.name}:functions`,
+    `folder:dc:${dataClassName}:functions`,
     PLAIN_FOLDERS.functions,
-    scopeFolders,
+    scopes,
     'folder.functions'
+  )
+}
+
+function buildDataClassTemplateFolder(flags: ToolkitCategoryFlags): ToolkitFolderNode | null {
+  return folder(
+    `folder:dc:${DATACLASS_VAR}`,
+    PLAIN_FOLDERS.dataClassTemplate,
+    buildDataClassCrud({ name: DATACLASS_PLACEHOLDER }, flags, {
+      extraPathParams: [dataclassParam()],
+      forceAttributePlaceholder: true,
+      catalogLabelName: `{{${DATACLASS_VAR}}}`,
+    }),
+    'folder.dataclass'
   )
 }
 
 function buildDataClassFolder(
   dataClass: ToolkitCatalogDataClass,
-  flags: ToolkitCategoryFlags
+  flags: ToolkitCategoryFlags,
+  dataclassMode: DataclassExportMode
 ): ToolkitFolderNode | null {
-  const children = [
-    ...buildDataClassCrud(dataClass, flags),
-    ...((): ToolkitNode[] => {
-      const fnFolder = buildDataClassFunctions(dataClass, flags)
-      return fnFolder ? [fnFolder] : []
-    })(),
-  ]
+  const scopes = buildDataClassFunctionScopes(dataClass, flags)
+  if (dataclassMode === 'collectionVar') {
+    return folder(`folder:dc:${dataClass.name}`, dataClass.name, scopes, 'folder.dataclass')
+  }
+  const fnFolder = wrapFunctionsFolder(dataClass.name, scopes)
+  const children = [...buildDataClassCrud(dataClass, flags), ...(fnFolder ? [fnFolder] : [])]
   return folder(`folder:dc:${dataClass.name}`, dataClass.name, children, 'folder.dataclass')
 }
 
@@ -866,8 +916,14 @@ export function buildToolkitInventory(
   if (datastore) nodes.push(datastore)
   if (singletons) nodes.push(singletons)
 
+  const dataclassMode = config.dataclassMode ?? 'expanded'
+  if (dataclassMode === 'collectionVar') {
+    const template = buildDataClassTemplateFolder(config.categories)
+    if (template) nodes.push(template)
+  }
+
   for (const dataClass of selectedClasses) {
-    const dcFolder = buildDataClassFolder(dataClass, config.categories)
+    const dcFolder = buildDataClassFolder(dataClass, config.categories, dataclassMode)
     if (dcFolder) nodes.push(dcFolder)
   }
 

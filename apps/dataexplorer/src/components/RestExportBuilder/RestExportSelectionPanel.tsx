@@ -1,83 +1,18 @@
-import { Checkbox, cn } from '@4d/ui'
+import { SegmentedControl } from '@4d/ui'
+import { Hexagon, Table2 } from 'lucide-react'
 import { useTranslation } from '~/i18n'
-import { triState } from '~/lib/rest-export'
-import { RestExportTriStateIconButton } from './RestExportTriStateIconButton'
-
-function SelectableList({
-  title,
-  names,
-  selected,
-  onToggle,
-  onSelectAll,
-  onSelectNone,
-  emptyLabel,
-}: {
-  title: string
-  names: string[]
-  selected: string[]
-  onToggle: (name: string, checked: boolean) => void
-  onSelectAll: () => void
-  onSelectNone: () => void
-  emptyLabel: string
-}) {
-  const { t } = useTranslation()
-  const selectedSet = new Set(selected)
-  const state = triState(selected.length, names.length)
-
-  return (
-    <div className="min-w-0 flex-1">
-      <div className="mb-1.5 flex items-center justify-between gap-2">
-        <p className="font-medium text-xs">{title}</p>
-        <RestExportTriStateIconButton
-          state={state}
-          labels={{
-            false: t('restExportBuilder.selectAll'),
-            indeterminate: t('restExportBuilder.selectAll'),
-            true: t('restExportBuilder.selectNone'),
-          }}
-          disabled={names.length === 0}
-          onToggle={(selectAll) => (selectAll ? onSelectAll() : onSelectNone())}
-        />
-      </div>
-      {names.length === 0 ? (
-        <p className="text-[11px] text-muted-foreground">{emptyLabel}</p>
-      ) : (
-        <div className="max-h-80 overflow-y-auto rounded-md border bg-muted/20">
-          {names.map((name) => {
-            const id = `rest-export-${title}-${name}`
-            const checked = selectedSet.has(name)
-            return (
-              <label
-                key={name}
-                htmlFor={id}
-                className={cn(
-                  'flex cursor-pointer items-center gap-2 border-border/50 border-b px-2 py-1.5 last:border-b-0',
-                  'hover:bg-muted/50'
-                )}
-              >
-                <Checkbox
-                  id={id}
-                  checked={checked}
-                  onCheckedChange={(value) => onToggle(name, value === true)}
-                />
-                <span className="min-w-0 truncate font-mono text-xs">{name}</span>
-              </label>
-            )
-          })}
-        </div>
-      )}
-      <p className="mt-1 text-[11px] text-muted-foreground">
-        {t('restExportBuilder.selectedCount', { count: selected.length })}
-      </p>
-    </div>
-  )
-}
+import type { DataclassExportMode } from '~/lib/rest-export'
+import { RestExportSelectableList } from './RestExportSelectableList'
 
 export function RestExportSelectionPanel({
   dataClassNames,
   singletonNames,
   selectedDataClasses,
   selectedSingletons,
+  dataclassMode,
+  dataClassFunctionCounts,
+  omittedWithoutFunctions,
+  onDataclassModeChange,
   onToggleDataClass,
   onToggleSingleton,
   onSelectAllDataClasses,
@@ -89,6 +24,10 @@ export function RestExportSelectionPanel({
   singletonNames: string[]
   selectedDataClasses: string[]
   selectedSingletons: string[]
+  dataclassMode: DataclassExportMode
+  dataClassFunctionCounts?: Record<string, number>
+  omittedWithoutFunctions?: number
+  onDataclassModeChange: (mode: DataclassExportMode) => void
   onToggleDataClass: (name: string, checked: boolean) => void
   onToggleSingleton: (name: string, checked: boolean) => void
   onSelectAllDataClasses: () => void
@@ -97,27 +36,69 @@ export function RestExportSelectionPanel({
   onSelectNoneSingletons: () => void
 }) {
   const { t } = useTranslation()
+  const collectionVar = dataclassMode === 'collectionVar'
+  const omitted = omittedWithoutFunctions ?? 0
+  const dataclassTitle = collectionVar
+    ? t('restExportBuilder.dataclassesWithFunctions')
+    : t('restExportBuilder.dataclasses')
 
   return (
-    <div className="flex flex-col gap-4 sm:flex-row">
-      <SelectableList
-        title={t('restExportBuilder.dataclasses')}
-        names={dataClassNames}
-        selected={selectedDataClasses}
-        onToggle={onToggleDataClass}
-        onSelectAll={onSelectAllDataClasses}
-        onSelectNone={onSelectNoneDataClasses}
-        emptyLabel={t('restExportBuilder.noDataclasses')}
-      />
-      <SelectableList
-        title={t('restExportBuilder.singletons')}
-        names={singletonNames}
-        selected={selectedSingletons}
-        onToggle={onToggleSingleton}
-        onSelectAll={onSelectAllSingletons}
-        onSelectNone={onSelectNoneSingletons}
-        emptyLabel={t('restExportBuilder.noSingletons')}
-      />
+    <div className="space-y-2">
+      <section className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <SegmentedControl
+          aria-label={t('restExportBuilder.dataclassModeAria')}
+          value={dataclassMode}
+          onValueChange={onDataclassModeChange}
+          options={[
+            { value: 'expanded', label: t('restExportBuilder.dataclassModeExpanded') },
+            {
+              value: 'collectionVar',
+              label: t('restExportBuilder.dataclassModeCollectionVar'),
+            },
+          ]}
+        />
+        <p className="text-[11px] text-muted-foreground">
+          {collectionVar
+            ? t('restExportBuilder.dataclassModeHintCollectionVar')
+            : t('restExportBuilder.dataclassModeHintExpanded')}
+        </p>
+      </section>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <RestExportSelectableList
+          icon={Table2}
+          title={dataclassTitle}
+          listId="dataclasses"
+          names={dataClassNames}
+          selected={selectedDataClasses}
+          onToggle={onToggleDataClass}
+          onSelectAll={onSelectAllDataClasses}
+          onSelectNone={onSelectNoneDataClasses}
+          emptyTitle={dataclassTitle}
+          emptyDescription={
+            collectionVar
+              ? t('restExportBuilder.noDataclassesWithFunctions')
+              : t('restExportBuilder.noDataclasses')
+          }
+          counts={dataClassFunctionCounts}
+          hint={
+            collectionVar && omitted > 0
+              ? t('restExportBuilder.omittedWithoutFunctions', { count: omitted })
+              : undefined
+          }
+        />
+        <RestExportSelectableList
+          icon={Hexagon}
+          title={t('restExportBuilder.singletons')}
+          listId="singletons"
+          names={singletonNames}
+          selected={selectedSingletons}
+          onToggle={onToggleSingleton}
+          onSelectAll={onSelectAllSingletons}
+          onSelectNone={onSelectNoneSingletons}
+          emptyTitle={t('restExportBuilder.singletons')}
+          emptyDescription={t('restExportBuilder.noSingletons')}
+        />
+      </div>
     </div>
   )
 }

@@ -1891,6 +1891,7 @@ export const fr = {
     stepsAria: 'Étapes d’export',
     stepHint: 'Étape {current} sur {total} — {label}',
     dataclasses: 'Dataclasses',
+    dataclassesWithFunctions: 'Dataclasses avec fonctions',
     singletons: 'Singletons',
     selectAll: 'Tout sélectionner',
     selectNone: 'Tout désélectionner',
@@ -1898,6 +1899,8 @@ export const fr = {
     emptyCatalog: 'Aucun catalogue chargé.',
     catalogError: 'Impossible de charger le catalogue.',
     noDataclasses: 'Aucune dataclass dans ce catalogue.',
+    noDataclassesWithFunctions:
+      'Aucune dataclass n’expose de fonctions. Le CRUD utilise toujours le modèle {{Dataclass}}.',
     noSingletons: 'Aucun singleton dans ce catalogue.',
     coreGroup: 'Essentiel',
     advancedGroup: 'Avancé',
@@ -1923,6 +1926,20 @@ export const fr = {
     categoryDirectoryLogin: 'Connexion directory',
     categoryHttpGetVariants: 'Variantes GET pour onHTTPGet',
     categoryIncludeNonExposed: 'Inclure les méthodes non exposées',
+    dataclassModeLabel: 'Mode dataclass',
+    dataclassModeAria: 'Mode d’export des dataclasses',
+    dataclassModeExpanded: 'Étendu',
+    dataclassModeCollectionVar: 'Variable de collection',
+    dataclassModeHint:
+      'Étendu duplique le CRUD par dataclass. Variable de collection utilise un modèle {{Dataclass}} ; les fonctions restent par dataclass.',
+    dataclassModeHintExpanded: 'Un dossier par dataclass avec chemins CRUD concrets et fonctions.',
+    dataclassModeHintCollectionVar:
+      'CRUD partagé via {{Dataclass}}. Seules les dataclasses avec fonctions membres sont listées.',
+    functionCountAria: '{count} fonctions',
+    omittedWithoutFunctions:
+      '{count} dataclasses sans fonctions utilisent le modèle {{Dataclass}}.',
+    dataclassVariableHint:
+      'Les chemins CRUD utilisent {{Dataclass}}. Changez cette variable de collection pour cibler une autre dataclass.',
     collectionName: 'Nom',
     collectionDescription: 'Description',
     collectionNamePlaceholder: 'Nom de l’API',

@@ -88,6 +88,9 @@ function nodesToItems(nodes: ToolkitNode[]): PostmanItem[] {
 function buildVariables(variables: ToolkitVariables): PostmanVariable[] {
   return [
     { key: 'baseUrl', value: variables.baseUrl.replace(/\/$/, ''), type: 'string' },
+    ...(variables.dataclass !== undefined
+      ? [{ key: 'Dataclass', value: variables.dataclass, type: 'string' as const }]
+      : []),
     { key: 'accessKey', value: variables.accessKey, type: 'secret' },
     { key: 'username', value: variables.username, type: 'string' },
     { key: 'password', value: variables.password, type: 'secret' },

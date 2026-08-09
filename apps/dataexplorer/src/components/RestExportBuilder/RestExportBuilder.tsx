@@ -8,8 +8,10 @@ import { getBaseUrl, getConnectionStoreAPI, isMobileShell } from '~/lib/platform
 import { serializePostmanCollection } from '~/lib/postman'
 import {
   buildToolkitInventory,
+  dataClassesWithMemberFunctions,
   emitOpenApiDocument,
   emitPostmanCollection,
+  memberFunctionCount,
   type RestExportType,
   restExportOpenApiFilename,
   restExportPostmanFilename,
@@ -53,6 +55,17 @@ function resolveSelected(persisted: string[] | null, available: string[]): strin
   return persisted.filter((name) => availableSet.has(name))
 }
 
+function mergeVisibleSelection(
+  persisted: string[] | null,
+  allNames: string[],
+  visibleNames: string[],
+  nextVisibleSelected: string[]
+): string[] {
+  const current = resolveSelected(persisted, allNames)
+  const visibleSet = new Set(visibleNames)
+  return [...current.filter((name) => !visibleSet.has(name)), ...nextVisibleSelected]
+}
+
 export function RestExportBuilder() {
   const { t } = useTranslation()
   const toast = useToast()
@@ -66,6 +79,7 @@ export function RestExportBuilder() {
   const exportType = useRestExportBuilderStore((s) => s.exportType)
   const includeAccessKeyLogin = useRestExportBuilderStore((s) => s.includeAccessKeyLogin)
   const includeDocs = useRestExportBuilderStore((s) => s.includeDocs)
+  const dataclassMode = useRestExportBuilderStore((s) => s.dataclassMode)
   const emoji = useRestExportBuilderStore((s) => s.emoji)
   const setName = useRestExportBuilderStore((s) => s.setName)
   const setDescription = useRestExportBuilderStore((s) => s.setDescription)
@@ -76,6 +90,7 @@ export function RestExportBuilder() {
   const setExportType = useRestExportBuilderStore((s) => s.setExportType)
   const setIncludeAccessKeyLogin = useRestExportBuilderStore((s) => s.setIncludeAccessKeyLogin)
   const setIncludeDocs = useRestExportBuilderStore((s) => s.setIncludeDocs)
+  const setDataclassMode = useRestExportBuilderStore((s) => s.setDataclassMode)
   const setEmojiEnabled = useRestExportBuilderStore((s) => s.setEmojiEnabled)
   const setDataclassFolderEmoji = useRestExportBuilderStore((s) => s.setDataclassFolderEmoji)
   const setCustomEmoji = useRestExportBuilderStore((s) => s.setCustomEmoji)
@@ -130,14 +145,30 @@ export function RestExportBuilder() {
     }
   }, [reloadToken, t])
 
-  const dataClassNames = catalog?.dataClasses.map((dc) => dc.name) ?? []
+  const allDataClassNames = catalog?.dataClasses.map((dc) => dc.name) ?? []
+  const functionDataClasses = dataClassesWithMemberFunctions(
+    catalog?.dataClasses ?? [],
+    categories.includeNonExposed
+  )
+  const visibleDataClassNames =
+    dataclassMode === 'collectionVar' ? functionDataClasses.map((dc) => dc.name) : allDataClassNames
+  const dataClassFunctionCounts =
+    dataclassMode === 'collectionVar'
+      ? Object.fromEntries(
+          functionDataClasses.map((dc) => [
+            dc.name,
+            memberFunctionCount(dc, categories.includeNonExposed),
+          ])
+        )
+      : undefined
   const singletonNames = (catalog?.singletons ?? []).map((singleton) => singleton.name)
-  const selectedDataClasses = resolveSelected(persistedDataClasses, dataClassNames)
+  const selectedDataClasses = resolveSelected(persistedDataClasses, visibleDataClassNames)
   const selectedSingletons = resolveSelected(persistedSingletons, singletonNames)
 
   const toolkitVariables: ToolkitVariables = {
     ...variables,
     includeAccessKeyLogin,
+    ...(dataclassMode === 'collectionVar' ? { dataclass: selectedDataClasses[0] ?? '' } : {}),
   }
 
   const config: ToolkitConfig = {
@@ -150,6 +181,7 @@ export function RestExportBuilder() {
     exportType,
     emoji,
     includeDocs,
+    dataclassMode,
   }
 
   const inventory = catalog ? buildToolkitInventory(catalog, config) : { nodes: [] }
@@ -242,15 +274,30 @@ export function RestExportBuilder() {
           <p className="text-muted-foreground text-xs">{t('restExportBuilder.emptyCatalog')}</p>
         ) : stepId === 'selection' ? (
           <RestExportSelectionPanel
-            dataClassNames={dataClassNames}
+            dataClassNames={visibleDataClassNames}
             singletonNames={singletonNames}
             selectedDataClasses={selectedDataClasses}
             selectedSingletons={selectedSingletons}
+            dataclassMode={dataclassMode}
+            dataClassFunctionCounts={dataClassFunctionCounts}
+            omittedWithoutFunctions={
+              dataclassMode === 'collectionVar'
+                ? allDataClassNames.length - visibleDataClassNames.length
+                : 0
+            }
+            onDataclassModeChange={setDataclassMode}
             onToggleDataClass={(itemName, checked) => {
-              const next = checked
+              const nextVisible = checked
                 ? [...selectedDataClasses, itemName]
                 : selectedDataClasses.filter((dcName) => dcName !== itemName)
-              setSelectedDataClasses(next)
+              setSelectedDataClasses(
+                mergeVisibleSelection(
+                  persistedDataClasses,
+                  allDataClassNames,
+                  visibleDataClassNames,
+                  nextVisible
+                )
+              )
             }}
             onToggleSingleton={(itemName, checked) => {
               const next = checked
@@ -258,8 +305,26 @@ export function RestExportBuilder() {
                 : selectedSingletons.filter((singletonName) => singletonName !== itemName)
               setSelectedSingletons(next)
             }}
-            onSelectAllDataClasses={() => setSelectedDataClasses(dataClassNames)}
-            onSelectNoneDataClasses={() => setSelectedDataClasses([])}
+            onSelectAllDataClasses={() =>
+              setSelectedDataClasses(
+                mergeVisibleSelection(
+                  persistedDataClasses,
+                  allDataClassNames,
+                  visibleDataClassNames,
+                  visibleDataClassNames
+                )
+              )
+            }
+            onSelectNoneDataClasses={() =>
+              setSelectedDataClasses(
+                mergeVisibleSelection(
+                  persistedDataClasses,
+                  allDataClassNames,
+                  visibleDataClassNames,
+                  []
+                )
+              )
+            }
             onSelectAllSingletons={() => setSelectedSingletons(singletonNames)}
             onSelectNoneSingletons={() => setSelectedSingletons([])}
           />
@@ -279,6 +344,7 @@ export function RestExportBuilder() {
             onVariablesChange={setVariables}
             includeAccessKeyLogin={includeAccessKeyLogin}
             onIncludeAccessKeyLoginChange={setIncludeAccessKeyLogin}
+            dataclassMode={dataclassMode}
           />
         ) : (
           <RestExportPreviewPanel

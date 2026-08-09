@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import {
+  type DataclassExportMode,
+  DEFAULT_DATACLASS_MODE,
   DEFAULT_INCLUDE_DOCS,
   DEFAULT_TOOLKIT_CATEGORIES,
   DEFAULT_TOOLKIT_EMOJI,
@@ -13,7 +15,7 @@ import {
   type ToolkitEmojiKey,
 } from '~/lib/rest-export'
 
-const PREFS_VERSION = 3
+const PREFS_VERSION = 4
 
 export type RestExportBuilderPersistedState = {
   prefsVersion: number
@@ -26,6 +28,7 @@ export type RestExportBuilderPersistedState = {
   includeAccessKeyLogin: boolean
   includeDocs: boolean
   emoji: ToolkitEmojiConfig
+  dataclassMode: DataclassExportMode
 }
 
 type RestExportBuilderState = RestExportBuilderPersistedState & {
@@ -38,6 +41,7 @@ type RestExportBuilderState = RestExportBuilderPersistedState & {
   setExportType: (exportType: RestExportType) => void
   setIncludeAccessKeyLogin: (value: boolean) => void
   setIncludeDocs: (includeDocs: boolean) => void
+  setDataclassMode: (dataclassMode: DataclassExportMode) => void
   setEmojiEnabled: (enabled: boolean) => void
   setDataclassFolderEmoji: (dataclassFolderEmoji: boolean) => void
   setCustomEmoji: (key: ToolkitEmojiKey, emoji: string, options?: { category?: boolean }) => void
@@ -55,6 +59,7 @@ export const useRestExportBuilderStore = create<RestExportBuilderState>()(
       exportType: 'postman',
       includeAccessKeyLogin: true,
       includeDocs: DEFAULT_INCLUDE_DOCS,
+      dataclassMode: DEFAULT_DATACLASS_MODE,
       emoji: { ...DEFAULT_TOOLKIT_EMOJI, custom: {} },
       setName: (name) => set({ name }),
       setDescription: (description) => set({ description }),
@@ -67,6 +72,7 @@ export const useRestExportBuilderStore = create<RestExportBuilderState>()(
       setExportType: (exportType) => set({ exportType }),
       setIncludeAccessKeyLogin: (includeAccessKeyLogin) => set({ includeAccessKeyLogin }),
       setIncludeDocs: (includeDocs) => set({ includeDocs }),
+      setDataclassMode: (dataclassMode) => set({ dataclassMode }),
       setEmojiEnabled: (enabled) => set((state) => ({ emoji: { ...state.emoji, enabled } })),
       setDataclassFolderEmoji: (dataclassFolderEmoji) =>
         set((state) => ({ emoji: { ...state.emoji, dataclassFolderEmoji } })),
@@ -100,6 +106,7 @@ export const useRestExportBuilderStore = create<RestExportBuilderState>()(
         exportType: state.exportType,
         includeAccessKeyLogin: state.includeAccessKeyLogin,
         includeDocs: state.includeDocs,
+        dataclassMode: state.dataclassMode,
         emoji: state.emoji,
       }),
       merge: (persisted, current) => {
@@ -124,6 +131,7 @@ export const useRestExportBuilderStore = create<RestExportBuilderState>()(
           prefsVersion: PREFS_VERSION,
           categories,
           includeDocs: saved?.includeDocs ?? DEFAULT_INCLUDE_DOCS,
+          dataclassMode: saved?.dataclassMode ?? DEFAULT_DATACLASS_MODE,
           emoji,
         }
       },

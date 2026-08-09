@@ -1,5 +1,10 @@
 import { DEFAULT_TOOLKIT_EMOJI, type ToolkitEmojiConfig } from './toolkit-emoji'
-import type { ToolkitCategoryFlags, ToolkitConfig, ToolkitVariables } from './toolkit-types'
+import type {
+  DataclassExportMode,
+  ToolkitCategoryFlags,
+  ToolkitConfig,
+  ToolkitVariables,
+} from './toolkit-types'
 
 export const DEFAULT_TOOLKIT_CATEGORIES: ToolkitCategoryFlags = {
   auth: true,
@@ -38,6 +43,8 @@ export const DEFAULT_TOOLKIT_NAME = '4D REST API'
 
 export const DEFAULT_INCLUDE_DOCS = true
 
+export const DEFAULT_DATACLASS_MODE: DataclassExportMode = 'expanded'
+
 export function createDefaultToolkitConfig(
   overrides?: Partial<Omit<ToolkitConfig, 'categories' | 'variables' | 'emoji'>> & {
     categories?: Partial<ToolkitCategoryFlags>
@@ -52,6 +59,7 @@ export function createDefaultToolkitConfig(
     selectedSingletons: overrides?.selectedSingletons ?? [],
     exportType: overrides?.exportType ?? 'postman',
     includeDocs: overrides?.includeDocs ?? DEFAULT_INCLUDE_DOCS,
+    dataclassMode: overrides?.dataclassMode ?? DEFAULT_DATACLASS_MODE,
     categories: { ...DEFAULT_TOOLKIT_CATEGORIES, ...overrides?.categories },
     variables: { ...DEFAULT_TOOLKIT_VARIABLES, ...overrides?.variables },
     emoji: {

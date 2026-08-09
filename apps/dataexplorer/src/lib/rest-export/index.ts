@@ -1,5 +1,10 @@
 export { officialDocsMarkdown } from './4d-docs-pages'
 export { buildToolkitInventory } from './build-toolkit-inventory'
+export {
+  dataClassesWithMemberFunctions,
+  hasMemberFunctions,
+  memberFunctionCount,
+} from './catalog-member-functions'
 export type { OpenApiDocument } from './emit-openapi'
 export {
   emitOpenApiDocument,
@@ -9,6 +14,7 @@ export {
 export { emitPostmanCollection, restExportPostmanFilename } from './emit-postman'
 export {
   createDefaultToolkitConfig,
+  DEFAULT_DATACLASS_MODE,
   DEFAULT_INCLUDE_DOCS,
   DEFAULT_TOOLKIT_CATEGORIES,
   DEFAULT_TOOLKIT_NAME,
@@ -45,6 +51,7 @@ export {
   reconcileCollapsedFolderIds,
 } from './toolkit-tree'
 export type {
+  DataclassExportMode,
   RestExportType,
   ToolkitCatalogInput,
   ToolkitCategoryFlags,

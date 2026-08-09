@@ -346,4 +346,84 @@ describe('buildToolkitInventory', () => {
     expect(plainInfo?.docsUrl).toBeUndefined()
     expect(plainInfo?.description).toBeUndefined()
   })
+
+  it('uses a shared {{Dataclass}} CRUD template in collectionVar mode', () => {
+    const inventory = buildToolkitInventory(
+      catalog,
+      createDefaultToolkitConfig({
+        selectedDataClasses: ['Company', 'Employee'],
+        dataclassMode: 'collectionVar',
+      })
+    )
+
+    expect(folderNames(inventory.nodes)).toEqual([
+      toolkitFolders.auth,
+      toolkitFolders.catalog,
+      toolkitFolders.info,
+      toolkitFolders.datastoreFunctions,
+      toolkitFolders.dataClassTemplate,
+      'Company',
+      'Employee',
+    ])
+
+    const templateOps = flattenToolkitOperations(
+      childFolder(inventory.nodes, toolkitFolders.dataClassTemplate)
+    )
+    expect(templateOps[0]?.path).toBe('/rest/$catalog/{Dataclass}')
+    expect(templateOps[0]?.label).toBe(toolkitLabels.catalogDataClass('{{Dataclass}}'))
+    expect(templateOps[0]?.pathParams?.some((param) => param.name === 'Dataclass')).toBe(true)
+    expect(templateOps.some((op) => op.path === '/rest/{Dataclass}')).toBe(true)
+    expect(templateOps.some((op) => op.path === '/rest/{Dataclass}({key})')).toBe(true)
+    expect(templateOps.some((op) => op.path === '/rest/Company')).toBe(false)
+
+    const company = childFolder(inventory.nodes, 'Company')
+    expect(folderNames(company)).toEqual([
+      toolkitFolders.dataclassScope,
+      toolkitFolders.entityScope,
+      toolkitFolders.entitySelectionScope,
+    ])
+    expect(folderNames(company)).not.toContain(toolkitFolders.functions)
+    expect(flattenToolkitOperations(company).map((op) => op.path)).toEqual([
+      '/rest/Company/allActive',
+      '/rest/Company({key})/fullName',
+      '/rest/Company/summarize',
+      '/rest/Company/summarize/$entityset/{entitySetId}',
+    ])
+
+    const employee = childFolder(inventory.nodes, 'Employee')
+    expect(folderNames(employee)).toEqual([toolkitFolders.entityScope])
+    expect(flattenToolkitOperations(employee).map((op) => op.path)).toEqual([
+      '/rest/Employee({key})/raise',
+    ])
+  })
+
+  it('emits CRUD template without selected dataclasses in collectionVar mode', () => {
+    const inventory = buildToolkitInventory(
+      catalog,
+      createDefaultToolkitConfig({
+        selectedDataClasses: [],
+        dataclassMode: 'collectionVar',
+        categories: { functions: false, datastoreFunctions: false, singletons: false },
+      })
+    )
+    expect(folderNames(inventory.nodes)).toContain(toolkitFolders.dataClassTemplate)
+    expect(folderNames(inventory.nodes)).not.toContain('Company')
+    expect(folderNames(inventory.nodes)).not.toContain('Employee')
+  })
+
+  it('uses {attribute} for compute in collectionVar mode', () => {
+    const inventory = buildToolkitInventory(
+      catalog,
+      createDefaultToolkitConfig({
+        selectedDataClasses: ['Company'],
+        dataclassMode: 'collectionVar',
+        categories: { compute: true, functions: false },
+      })
+    )
+    const templateOps = flattenToolkitOperations(
+      childFolder(inventory.nodes, toolkitFolders.dataClassTemplate)
+    )
+    expect(templateOps.some((op) => op.path === '/rest/{Dataclass}/{attribute}')).toBe(true)
+    expect(templateOps.some((op) => op.path === '/rest/Company/name')).toBe(false)
+  })
 })

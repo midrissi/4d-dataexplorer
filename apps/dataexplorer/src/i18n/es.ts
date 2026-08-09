@@ -1881,6 +1881,7 @@ export const es = {
     stepsAria: 'Pasos de exportación',
     stepHint: 'Paso {current} de {total} — {label}',
     dataclasses: 'Dataclasses',
+    dataclassesWithFunctions: 'Dataclasses con funciones',
     singletons: 'Singletons',
     selectAll: 'Seleccionar todo',
     selectNone: 'Seleccionar nada',
@@ -1888,6 +1889,8 @@ export const es = {
     emptyCatalog: 'No hay catálogo cargado.',
     catalogError: 'No se pudo cargar el catálogo.',
     noDataclasses: 'No hay dataclasses en este catálogo.',
+    noDataclassesWithFunctions:
+      'Ninguna dataclass expone funciones. El CRUD sigue usando la plantilla {{Dataclass}}.',
     noSingletons: 'No hay singletons en este catálogo.',
     coreGroup: 'Principal',
     advancedGroup: 'Avanzado',
@@ -1913,6 +1916,19 @@ export const es = {
     categoryDirectoryLogin: 'Inicio de sesión directory',
     categoryHttpGetVariants: 'Variantes GET para onHTTPGet',
     categoryIncludeNonExposed: 'Incluir métodos no expuestos',
+    dataclassModeLabel: 'Modo dataclass',
+    dataclassModeAria: 'Modo de exportación de dataclasses',
+    dataclassModeExpanded: 'Expandido',
+    dataclassModeCollectionVar: 'Variable de colección',
+    dataclassModeHint:
+      'Expandido duplica el CRUD por dataclass. Variable de colección usa una plantilla {{Dataclass}}; las funciones siguen por dataclass.',
+    dataclassModeHintExpanded: 'Una carpeta por dataclass con rutas CRUD concretas y funciones.',
+    dataclassModeHintCollectionVar:
+      'CRUD compartido con {{Dataclass}}. Solo se listan dataclasses con funciones miembro.',
+    functionCountAria: '{count} funciones',
+    omittedWithoutFunctions: '{count} dataclasses sin funciones usan la plantilla {{Dataclass}}.',
+    dataclassVariableHint:
+      'Las rutas CRUD usan {{Dataclass}}. Cambie esa variable de colección para apuntar a otra dataclass.',
     collectionName: 'Nombre',
     collectionDescription: 'Descripción',
     collectionNamePlaceholder: 'Nombre de la API',

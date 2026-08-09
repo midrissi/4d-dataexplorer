@@ -112,6 +112,7 @@ export const PLAIN_FOLDERS = {
   datastoreFunctions: 'Datastore functions',
   singletons: 'Singletons',
   functions: 'Functions',
+  dataClassTemplate: 'DataClass',
   dataclassScope: 'dataclass',
   entityScope: 'entity',
   entitySelectionScope: 'entitySelection',
@@ -259,6 +260,11 @@ export const toolkitFolders = {
     DEFAULT_TOOLKIT_EMOJI
   ),
   functions: formatToolkitTitle(PLAIN_FOLDERS.functions, 'folder.functions', DEFAULT_TOOLKIT_EMOJI),
+  dataClassTemplate: formatToolkitTitle(
+    PLAIN_FOLDERS.dataClassTemplate,
+    'folder.dataclass',
+    DEFAULT_TOOLKIT_EMOJI
+  ),
   dataclassScope: PLAIN_FOLDERS.dataclassScope,
   entityScope: PLAIN_FOLDERS.entityScope,
   entitySelectionScope: PLAIN_FOLDERS.entitySelectionScope,

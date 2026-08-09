@@ -1,7 +1,7 @@
 import { Input, Label } from '@4d/ui'
 import { PostmanExportVariablesForm } from '~/components/PostmanExport/PostmanExportVariablesForm'
 import { useTranslation } from '~/i18n'
-import type { ToolkitVariables } from '~/lib/rest-export'
+import type { DataclassExportMode, ToolkitVariables } from '~/lib/rest-export'
 
 export function RestExportVariablesPanel({
   name,
@@ -12,6 +12,7 @@ export function RestExportVariablesPanel({
   onVariablesChange,
   includeAccessKeyLogin,
   onIncludeAccessKeyLoginChange,
+  dataclassMode,
 }: {
   name: string
   description: string
@@ -21,6 +22,7 @@ export function RestExportVariablesPanel({
   onVariablesChange: (value: Omit<ToolkitVariables, 'includeAccessKeyLogin'>) => void
   includeAccessKeyLogin: boolean
   onIncludeAccessKeyLoginChange: (value: boolean) => void
+  dataclassMode: DataclassExportMode
 }) {
   const { t } = useTranslation()
 
@@ -62,6 +64,11 @@ export function RestExportVariablesPanel({
         includeAccessKeyLogin={includeAccessKeyLogin}
         onIncludeAccessKeyLoginChange={onIncludeAccessKeyLoginChange}
       />
+      {dataclassMode === 'collectionVar' ? (
+        <p className="text-[11px] text-muted-foreground">
+          {t('restExportBuilder.dataclassVariableHint')}
+        </p>
+      ) : null}
     </div>
   )
 }

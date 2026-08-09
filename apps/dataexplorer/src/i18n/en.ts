@@ -1854,6 +1854,7 @@ export const en = {
     stepsAria: 'Export steps',
     stepHint: 'Step {current} of {total} — {label}',
     dataclasses: 'Dataclasses',
+    dataclassesWithFunctions: 'Dataclasses with functions',
     singletons: 'Singletons',
     selectAll: 'Select all',
     selectNone: 'Select none',
@@ -1861,6 +1862,8 @@ export const en = {
     emptyCatalog: 'No catalog loaded.',
     catalogError: 'Could not load catalog.',
     noDataclasses: 'No dataclasses in this catalog.',
+    noDataclassesWithFunctions:
+      'No dataclasses expose member functions. CRUD still uses the {{Dataclass}} template.',
     noSingletons: 'No singletons in this catalog.',
     coreGroup: 'Core',
     advancedGroup: 'Advanced',
@@ -1886,6 +1889,20 @@ export const en = {
     categoryDirectoryLogin: 'Directory login',
     categoryHttpGetVariants: 'GET variants for onHTTPGet',
     categoryIncludeNonExposed: 'Include non-exposed methods',
+    dataclassModeLabel: 'Dataclass mode',
+    dataclassModeAria: 'Dataclass export mode',
+    dataclassModeExpanded: 'Expanded',
+    dataclassModeCollectionVar: 'Collection variable',
+    dataclassModeHint:
+      'Expanded duplicates CRUD per dataclass. Collection variable uses one {{Dataclass}} template; functions stay per dataclass.',
+    dataclassModeHintExpanded: 'One folder per dataclass with concrete CRUD paths and functions.',
+    dataclassModeHintCollectionVar:
+      'Shared CRUD via {{Dataclass}}. Only dataclasses with member functions are listed.',
+    functionCountAria: '{count} functions',
+    omittedWithoutFunctions:
+      '{count} dataclasses without functions use the shared {{Dataclass}} template.',
+    dataclassVariableHint:
+      'CRUD paths use {{Dataclass}}. Change that collection variable to target another dataclass.',
     collectionName: 'Name',
     collectionDescription: 'Description',
     collectionNamePlaceholder: 'API name',

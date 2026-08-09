@@ -4,6 +4,8 @@ export type { ToolkitEmojiConfig, ToolkitEmojiKey }
 
 export type RestExportType = 'postman' | 'openapi'
 
+export type DataclassExportMode = 'expanded' | 'collectionVar'
+
 export type ToolkitHttpMethod = 'GET' | 'POST'
 
 export type ToolkitQueryParam = {
@@ -91,6 +93,8 @@ export type ToolkitVariables = {
   username: string
   password: string
   includeAccessKeyLogin: boolean
+  /** Collection variable used when dataclassMode is `collectionVar`. */
+  dataclass?: string
 }
 
 export type ToolkitConfig = {
@@ -104,6 +108,11 @@ export type ToolkitConfig = {
   emoji: ToolkitEmojiConfig
   /** Attach official 4D REST docs (description + link) on each request. */
   includeDocs: boolean
+  /**
+   * `expanded` — one folder per dataclass with concrete paths.
+   * `collectionVar` — one shared CRUD template using `{Dataclass}`.
+   */
+  dataclassMode: DataclassExportMode
 }
 
 export type ToolkitCatalogMethod = {
