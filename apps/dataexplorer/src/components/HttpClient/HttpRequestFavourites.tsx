@@ -1,6 +1,7 @@
-import { cn, useConfirm } from '@4d/ui'
-import { Star } from 'lucide-react'
+import { Button, cn, useConfirm } from '@4d/ui'
+import { Download, Star } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { PostmanExportModal } from '~/components/PostmanExport'
 import {
   FavouriteInlineMetaEditor,
   FavouritePrimaryLabel,
@@ -13,10 +14,38 @@ import {
 import { TagList } from '~/components/Tags'
 import { useTranslation } from '~/i18n'
 import { isMobileShell } from '~/lib/platform'
+import {
+  httpSeedExportLabel,
+  httpSeedToPostmanItem,
+  type PostmanExportItemInput,
+} from '~/lib/postman'
 import type { HttpClientSeed } from '~/store/http-client-types'
 import type { HttpRequestFavourite } from '~/store/http-request-favourites'
 import { useUsedTagsStore } from '~/store/used-tags'
 import { httpMethodTone, httpRequestLabel } from './http-request-display'
+
+function toPostmanExportItems(favourites: HttpRequestFavourite[]): PostmanExportItemInput[] {
+  return favourites.map((favourite) => {
+    const { method, path, fullUrl, isCustomOrigin } = httpRequestLabel(favourite.seed)
+    const methodStyles = httpMethodTone(method)
+    const fallback = isCustomOrigin ? fullUrl : path || httpSeedExportLabel(favourite.seed)
+    const displayName = favourite.name?.trim() || undefined
+    const name = displayName || fallback
+    const tags = favourite.tags
+    const description = tags?.length ? tags.join(', ') : undefined
+    return {
+      id: favourite.id,
+      name,
+      displayName,
+      listDetail: fallback,
+      badgeLabel: method,
+      badgeClassName: cn(methodStyles.bg, methodStyles.text),
+      description,
+      tags,
+      item: httpSeedToPostmanItem(favourite.seed, { name, description }),
+    }
+  })
+}
 
 function FavouriteRequestRow({
   favourite,
@@ -117,10 +146,13 @@ export function HttpRequestFavourites({
   const registerTags = useUsedTagsStore((state) => state.registerTags)
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [exportOpen, setExportOpen] = useState(false)
 
   useEffect(() => {
     registerTags(favourites.flatMap((favourite) => favourite.tags ?? []))
   }, [favourites, registerTags])
+
+  const exportItems = useMemo(() => toPostmanExportItems(favourites), [favourites])
 
   const allTags = useMemo(() => {
     const seen = new Map<string, string>()
@@ -163,6 +195,18 @@ export function HttpRequestFavourites({
         title={t('httpClient.favourites')}
         titleId={mobile ? 'http-request-favourites-title' : undefined}
         count={favourites.length}
+        headerExtra={
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn('h-6 px-2 text-[11px] text-muted-foreground', mobile && 'h-9 text-xs')}
+            onClick={() => setExportOpen(true)}
+            disabled={favourites.length === 0}
+          >
+            <Download className="mr-1 h-3.5 w-3.5" aria-hidden />
+            {t('httpClient.exportToPostman')}
+          </Button>
+        }
         clearLabel={t('httpClient.clearAll')}
         onClear={onClearFavourites}
         clearConfirm={{
@@ -206,6 +250,13 @@ export function HttpRequestFavourites({
           ))
         )}
       </SavedListPanel>
+      <PostmanExportModal
+        open={exportOpen}
+        onOpenChange={setExportOpen}
+        items={exportItems}
+        defaultCollectionName={t('postmanExport.defaultHttpName')}
+        signatureLabel={t('favouriteMeta.viewPath')}
+      />
       <ConfirmDialog />
     </>
   )

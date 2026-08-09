@@ -26,12 +26,6 @@ export function EntitySelectionResult({
   const isEmpty = result.count === 0 || preview.length === 0
   const entitySetId = result.entitySetId?.trim() || undefined
 
-  if (isEmpty) {
-    return <EmptyEntitySelection dataClass={result.dataClass ?? null} entitySetId={entitySetId} />
-  }
-
-  const columns = previewSelectionColumns(preview)
-
   const openAll = () => {
     if (!result.dataClass) return
     if (entitySetId) {
@@ -45,6 +39,19 @@ export function EntitySelectionResult({
     }
     openTab(result.dataClass)
   }
+
+  if (isEmpty) {
+    return (
+      <EmptyEntitySelection
+        dataClass={result.dataClass ?? null}
+        entitySetId={entitySetId}
+        count={result.count}
+        onOpenSelection={result.dataClass ? openAll : undefined}
+      />
+    )
+  }
+
+  const columns = previewSelectionColumns(preview)
 
   const summary = t('methodExecutor.showingFirst', {
     name: result.dataClass ?? t('methodExecutor.entitySelection'),

@@ -1,6 +1,7 @@
-import { cn, useConfirm } from '@4d/ui'
-import { Star } from 'lucide-react'
+import { Button, cn, useConfirm } from '@4d/ui'
+import { Download, Star } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
+import { PostmanExportModal } from '~/components/PostmanExport'
 import {
   FavouriteInlineMetaEditor,
   FavouritePrimaryLabel,
@@ -13,6 +14,11 @@ import {
 import { TagList } from '~/components/Tags'
 import { useTranslation } from '~/i18n'
 import { isMobileShell } from '~/lib/platform'
+import {
+  methodSeedExportLabel,
+  methodSeedToPostmanItem,
+  type PostmanExportItemInput,
+} from '~/lib/postman'
 import type { MethodExecutorSeed } from '~/store/method-executor-types'
 import type { MethodFavourite } from '~/store/method-favourites'
 import { useUsedTagsStore } from '~/store/used-tags'
@@ -22,6 +28,27 @@ import {
   methodArgCountMeta,
   methodScopeShortLabel,
 } from './method-list-display'
+
+function toPostmanExportItems(favourites: MethodFavourite[]): PostmanExportItemInput[] {
+  return favourites.map((favourite) => {
+    const fallback = methodSeedExportLabel(favourite.config)
+    const displayName = favourite.name?.trim() || undefined
+    const name = displayName || fallback
+    const tags = favourite.tags
+    const description = tags?.length ? tags.join(', ') : undefined
+    return {
+      id: favourite.id,
+      name,
+      displayName,
+      listDetail: fallback,
+      badgeLabel: methodScopeShortLabel(favourite.config.scope),
+      badgeClassName: cn(cnMethodScopeBadge(favourite.config.scope), 'normal-case'),
+      description,
+      tags,
+      item: methodSeedToPostmanItem(favourite.config, { name, description }),
+    }
+  })
+}
 
 function FavouriteRow({
   favourite,
@@ -127,10 +154,13 @@ export function MethodFavourites({
   const registerTags = useUsedTagsStore((state) => state.registerTags)
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [exportOpen, setExportOpen] = useState(false)
 
   useEffect(() => {
     registerTags(favourites.flatMap((favourite) => favourite.tags ?? []))
   }, [favourites, registerTags])
+
+  const exportItems = useMemo(() => toPostmanExportItems(favourites), [favourites])
 
   const allTags = useMemo(() => {
     const seen = new Map<string, string>()
@@ -172,6 +202,18 @@ export function MethodFavourites({
         title={t('methodExecutor.favourites')}
         titleId={mobile ? 'method-favourites-title' : undefined}
         count={favourites.length}
+        headerExtra={
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn('h-6 px-2 text-[11px] text-muted-foreground', mobile && 'h-9 text-xs')}
+            onClick={() => setExportOpen(true)}
+            disabled={favourites.length === 0}
+          >
+            <Download className="mr-1 h-3.5 w-3.5" aria-hidden />
+            {t('methodExecutor.exportToPostman')}
+          </Button>
+        }
         clearLabel={t('methodExecutor.clearAll')}
         onClear={onClearFavourites}
         clearConfirm={{
@@ -215,6 +257,13 @@ export function MethodFavourites({
           ))
         )}
       </SavedListPanel>
+      <PostmanExportModal
+        open={exportOpen}
+        onOpenChange={setExportOpen}
+        items={exportItems}
+        defaultCollectionName={t('postmanExport.defaultMethodName')}
+        signatureLabel={t('favouriteMeta.viewSignature')}
+      />
       <ConfirmDialog />
     </>
   )
