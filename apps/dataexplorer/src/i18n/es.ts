@@ -1844,9 +1844,11 @@ export const es = {
     accessKey: 'accessKey',
     username: 'username',
     password: 'password',
-    includeAccessKeyLogin: 'Incluir pre-request de inicio de sesión con access key',
+    includeAccessKeyLogin: 'Incluir petición de inicio de sesión con access key',
     includeAccessKeyLoginHelp:
-      'Ejecuta POST {{baseUrl}}/api/login con la variable accessKey para que Postman reutilice la cookie de sesión.',
+      'Añade una petición Login (POST {{baseUrl}}/api/login) y un pre-request de colección que inicia sesión con {{accessKey}} para las cookies de sesión.',
+    includeAccessKeyLoginNeedKey:
+      'Introduzca un accessKey arriba para incluir una petición de inicio de sesión en la colección.',
     defaultHttpName: '4D Data Explorer — HTTP',
     defaultMethodName: '4D Data Explorer — Métodos',
     export: 'Exportar',

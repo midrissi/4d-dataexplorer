@@ -1854,9 +1854,11 @@ export const fr = {
     accessKey: 'accessKey',
     username: 'username',
     password: 'password',
-    includeAccessKeyLogin: 'Inclure la pré-requête de connexion par clé d’accès',
+    includeAccessKeyLogin: 'Inclure la requête de connexion par clé d’accès',
     includeAccessKeyLoginHelp:
-      'Exécute POST {{baseUrl}}/api/login avec la variable accessKey pour que Postman réutilise le cookie de session.',
+      'Ajoute une requête Login (POST {{baseUrl}}/api/login) et une pré-requête de collection qui se connecte avec {{accessKey}} pour les cookies de session.',
+    includeAccessKeyLoginNeedKey:
+      'Saisissez une accessKey ci-dessus pour inclure une requête de connexion dans la collection.',
     defaultHttpName: '4D Data Explorer — HTTP',
     defaultMethodName: '4D Data Explorer — Méthodes',
     export: 'Exporter',

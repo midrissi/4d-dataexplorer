@@ -6,6 +6,7 @@ import {
   type PostmanItem,
   type PostmanVariable,
 } from './types'
+import { buildPostmanUrl } from './url'
 
 const ACCESS_KEY_LOGIN_SCRIPT = [
   '// Sign in with the collection accessKey so session cookies are available.',
@@ -27,6 +28,8 @@ const ACCESS_KEY_LOGIN_SCRIPT = [
   '});',
 ]
 
+export const ACCESS_KEY_LOGIN_REQUEST_NAME = 'Login (access key)'
+
 function buildVariables(options: BuildPostmanCollectionOptions): PostmanVariable[] {
   const { baseUrl, accessKey, username, password } = options.variables
   return [
@@ -43,6 +46,24 @@ function buildLoginEvent(): PostmanEvent {
     script: {
       type: 'text/javascript',
       exec: ACCESS_KEY_LOGIN_SCRIPT,
+    },
+  }
+}
+
+/** Standalone POST /api/login request using {{baseUrl}} and {{accessKey}}. */
+export function buildAccessKeyLoginItem(): PostmanItem {
+  return {
+    name: ACCESS_KEY_LOGIN_REQUEST_NAME,
+    description:
+      'Signs in with the collection accessKey variable (multipart form). Run this once, or rely on the collection pre-request script.',
+    request: {
+      method: 'POST',
+      header: [],
+      url: buildPostmanUrl({ pathWithQuery: '/api/login', useBaseUrlVar: true }),
+      body: {
+        mode: 'formdata',
+        formdata: [{ key: 'accessKey', value: '{{accessKey}}', type: 'text' }],
+      },
     },
   }
 }
@@ -94,10 +115,13 @@ function groupItemsByTags(
 
 export function buildPostmanCollection(options: BuildPostmanCollectionOptions): PostmanCollection {
   const untaggedFolderName = options.untaggedFolderName ?? 'Untagged'
-  const item =
+  const favouriteItems =
     options.folderMode === 'byTags'
       ? groupItemsByTags(options.items, untaggedFolderName)
       : options.items.map(requestItemFromInput)
+
+  const includeLogin = options.includeAccessKeyLogin && Boolean(options.variables.accessKey.trim())
+  const item = includeLogin ? [buildAccessKeyLoginItem(), ...favouriteItems] : favouriteItems
 
   return {
     info: {
@@ -106,7 +130,7 @@ export function buildPostmanCollection(options: BuildPostmanCollectionOptions): 
       schema: POSTMAN_COLLECTION_SCHEMA,
     },
     variable: buildVariables(options),
-    ...(options.includeAccessKeyLogin ? { event: [buildLoginEvent()] } : {}),
+    ...(includeLogin ? { event: [buildLoginEvent()] } : {}),
     item,
   }
 }

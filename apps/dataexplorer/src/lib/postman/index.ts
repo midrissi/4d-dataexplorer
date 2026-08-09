@@ -1,4 +1,6 @@
 export {
+  ACCESS_KEY_LOGIN_REQUEST_NAME,
+  buildAccessKeyLoginItem,
   buildPostmanCollection,
   postmanCollectionFilename,
   serializePostmanCollection,

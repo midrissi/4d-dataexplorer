@@ -52,11 +52,22 @@ describe('buildPostmanCollection', () => {
     ])
     expect(collection.event?.[0]?.listen).toBe('prerequest')
     expect(collection.event?.[0]?.script.exec.join('\n')).toContain('/api/login')
-    expect(collection.item).toHaveLength(2)
-    expect(collection.item.map((item) => item.name)).toEqual(['Alpha', 'Beta'])
+    expect(collection.item).toHaveLength(3)
+    expect(collection.item.map((item) => item.name)).toEqual([
+      'Login (access key)',
+      'Alpha',
+      'Beta',
+    ])
+    const login = collection.item[0]
+    expect(login && 'request' in login ? login.request.method : undefined).toBe('POST')
+    expect(login && 'request' in login ? login.request.url.raw : undefined).toContain('/api/login')
+    expect(login && 'request' in login ? login.request.body : undefined).toEqual({
+      mode: 'formdata',
+      formdata: [{ key: 'accessKey', value: '{{accessKey}}', type: 'text' }],
+    })
   })
 
-  it('omits login pre-request when disabled', () => {
+  it('omits login request and pre-request when disabled', () => {
     const collection = buildPostmanCollection({
       name: 'Demo',
       variables: {
@@ -70,6 +81,24 @@ describe('buildPostmanCollection', () => {
       items: [httpItem('a', 'Alpha')],
     })
     expect(collection.event).toBeUndefined()
+    expect(collection.item.map((item) => item.name)).toEqual(['Alpha'])
+  })
+
+  it('skips login item when enabled but accessKey is empty', () => {
+    const collection = buildPostmanCollection({
+      name: 'Demo',
+      variables: {
+        baseUrl: 'https://example.com',
+        accessKey: '   ',
+        username: '',
+        password: '',
+      },
+      includeAccessKeyLogin: true,
+      folderMode: 'flat',
+      items: [httpItem('a', 'Alpha')],
+    })
+    expect(collection.event).toBeUndefined()
+    expect(collection.item.map((item) => item.name)).toEqual(['Alpha'])
   })
 
   it('groups by first tag and puts untagged in a folder when tags exist', () => {

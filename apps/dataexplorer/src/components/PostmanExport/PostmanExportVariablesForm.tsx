@@ -25,9 +25,14 @@ export function PostmanExportVariablesForm({
   onIncludeAccessKeyLoginChange: (value: boolean) => void
 }) {
   const { t } = useTranslation()
+  const hasAccessKey = Boolean(variables.accessKey.trim())
 
   const setVariable = (key: keyof PostmanExportVariableValues, value: string) => {
-    onVariablesChange({ ...variables, [key]: value })
+    const next = { ...variables, [key]: value }
+    onVariablesChange(next)
+    if (key === 'accessKey' && !value.trim() && includeAccessKeyLogin) {
+      onIncludeAccessKeyLoginChange(false)
+    }
   }
 
   return (
@@ -80,44 +85,50 @@ export function PostmanExportVariablesForm({
         </div>
       </div>
 
-      <div
-        className={cn(
-          'rounded-md px-2 py-1.5 transition-colors duration-150',
-          includeAccessKeyLogin ? 'bg-amber-500/10' : 'bg-muted/20'
-        )}
-      >
-        <div className="flex items-start gap-1.5">
-          <div
-            className={cn(
-              'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-sm',
-              includeAccessKeyLogin
-                ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
-                : 'bg-muted/40 text-muted-foreground'
-            )}
-          >
-            <KeyRound className="size-3" aria-hidden />
-          </div>
-          <div className="flex min-w-0 flex-1 items-start gap-1.5">
-            <Checkbox
-              id="postman-include-login"
-              className="mt-0.5"
-              checked={includeAccessKeyLogin}
-              onCheckedChange={(value) => onIncludeAccessKeyLoginChange(value === true)}
-            />
-            <div className="min-w-0 space-y-0.5">
-              <label
-                htmlFor="postman-include-login"
-                className="cursor-pointer font-medium text-xs leading-snug"
-              >
-                {t('postmanExport.includeAccessKeyLogin')}
-              </label>
-              <p className="text-[11px] text-muted-foreground leading-snug">
-                {t('postmanExport.includeAccessKeyLoginHelp')}
-              </p>
+      {hasAccessKey ? (
+        <div
+          className={cn(
+            'rounded-md px-2 py-1.5 transition-colors duration-150',
+            includeAccessKeyLogin ? 'bg-amber-500/10' : 'bg-muted/20'
+          )}
+        >
+          <div className="flex items-start gap-1.5">
+            <div
+              className={cn(
+                'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-sm',
+                includeAccessKeyLogin
+                  ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                  : 'bg-muted/40 text-muted-foreground'
+              )}
+            >
+              <KeyRound className="size-3" aria-hidden />
+            </div>
+            <div className="flex min-w-0 flex-1 items-start gap-1.5">
+              <Checkbox
+                id="postman-include-login"
+                className="mt-0.5"
+                checked={includeAccessKeyLogin}
+                onCheckedChange={(value) => onIncludeAccessKeyLoginChange(value === true)}
+              />
+              <div className="min-w-0 space-y-0.5">
+                <label
+                  htmlFor="postman-include-login"
+                  className="cursor-pointer font-medium text-xs leading-snug"
+                >
+                  {t('postmanExport.includeAccessKeyLogin')}
+                </label>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  {t('postmanExport.includeAccessKeyLoginHelp')}
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      ) : (
+        <p className="text-[11px] text-muted-foreground leading-snug">
+          {t('postmanExport.includeAccessKeyLoginNeedKey')}
+        </p>
+      )}
     </div>
   )
 }
