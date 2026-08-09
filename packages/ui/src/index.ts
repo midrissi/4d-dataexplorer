@@ -49,6 +49,13 @@ export {
   DEFAULT_EDITOR_PREFS,
   type EditorPrefs,
 } from './components/editor-prefs'
+export {
+  DEFAULT_EMOJI_PICKER_LABELS,
+  EmojiPicker,
+  type EmojiPickerLabels,
+  type EmojiPickerProps,
+  type EmojiSelectModifiers,
+} from './components/emoji-picker'
 export { Input } from './components/input'
 export { Label } from './components/label'
 export {
@@ -111,6 +118,14 @@ export {
 export { type ConfirmOptions, useConfirm } from './hooks/use-confirm'
 export { useEscapeToDismiss } from './hooks/use-escape-to-dismiss'
 export { type ToastInput, ToastProvider, useToast } from './hooks/use-toast'
+export {
+  allEmojis,
+  EMOJI_CATEGORIES,
+  EMOJI_CATEGORY_IDS,
+  type EmojiCategory,
+  type EmojiCategoryId,
+  filterEmojis,
+} from './lib/emoji-data'
 export { cn } from './lib/utils'
 // Themes
 export { defaultTheme, type ThemeName, themes } from './themes'

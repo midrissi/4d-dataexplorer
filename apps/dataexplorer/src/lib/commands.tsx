@@ -9,6 +9,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Edit,
+  FileDown,
   FileStack,
   FolderOpen,
   Hash,
@@ -101,6 +102,7 @@ export type CommandContext = {
   openAssistantMetadataTab: () => void
   openMethodExecutorTab: () => string
   openHttpClientTab: () => string
+  openRestExportBuilderTab: () => void
   // Entities
   entities: Entity[]
   selectedEntityId: string | null
@@ -442,6 +444,18 @@ function buildNavigationCommandsContinued(ctx: CommandContext): Command[] {
       category: 'Navigation',
       action: () => {
         ctx.openHttpClientTab()
+        ctx.onClose()
+      },
+    },
+    {
+      id: 'open-rest-export-builder',
+      label: ctx.t('command.openRestExportBuilder'),
+      description: ctx.t('commandDesc.openRestExportBuilder'),
+      keywords: ['postman', 'openapi', 'export', 'collection', 'swagger', 'rest', 'api'],
+      icon: <FileDown className="h-4 w-4" />,
+      category: 'Navigation',
+      action: () => {
+        ctx.openRestExportBuilderTab()
         ctx.onClose()
       },
     },

@@ -41,6 +41,7 @@ function appendQueryString(query: PostmanQueryParam[]): string {
   if (query.length === 0) return ''
   const search = new URLSearchParams()
   for (const param of query) {
+    if (param.disabled || !param.key.trim()) continue
     search.append(param.key, param.value)
   }
   const text = search.toString()

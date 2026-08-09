@@ -1,11 +1,17 @@
 import { Button, Checkbox, cn, Label } from '@4d/ui'
-import { ChevronLeft, Clock3, Loader2, Play, Star } from 'lucide-react'
+import { ChevronLeft, Clock3, Download, Loader2, Play, Star } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { MobileFullscreenSheet } from '~/components/MobileFullscreenSheet'
+import { PostmanExportModal } from '~/components/PostmanExport'
 import { RequestResponseSplit } from '~/components/RequestResponseSplit'
 import { useTranslation } from '~/i18n'
 import { api } from '~/lib/api'
 import { isMobileShell } from '~/lib/platform'
+import {
+  methodSeedExportLabel,
+  methodSeedToPostmanItem,
+  type PostmanExportItemInput,
+} from '~/lib/postman'
 import type {
   MethodExecutorSeed,
   MethodScope,
@@ -21,6 +27,7 @@ import { MethodRunHistory } from './MethodRunHistory'
 import { MethodSelector } from './MethodSelector'
 import { flushPendingWrapperText, MethodWrapperEditor } from './MethodWrapperEditor'
 import { DEFAULT_METHOD_WRAPPER_TEXT } from './method-json-snippets'
+import { cnMethodScopeBadge, methodScopeShortLabel } from './method-list-display'
 import { type MethodResponseMeta, methodResponseMetaFromCall } from './method-response-meta'
 import { parseParamsText } from './parse-params-text'
 import { parseWrapperText } from './parse-wrapper-text'
@@ -90,6 +97,7 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
   const [error, setError] = useState<string | null>(null)
   const [executing, setExecuting] = useState(false)
   const [sidePanel, setSidePanel] = useState<SidePanel>('none')
+  const [exportOpen, setExportOpen] = useState(false)
   // Mobile presents a wizard (pick method -> args -> result) instead of the
   // desktop request/response split; unused on desktop.
   const [mobileStep, setMobileStep] = useState<'method' | 'args' | 'result'>('method')
@@ -184,6 +192,29 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
   const builderSeed = currentConfig()
   const isCurrentFavourite =
     Boolean(methodName) && favourites.some((item) => sameMethodConfig(item.config, builderSeed))
+  const currentExportLabel = methodName ? methodSeedExportLabel(builderSeed) : ''
+  const currentExportItems: PostmanExportItemInput[] = methodName
+    ? [
+        {
+          id: 'current',
+          name: currentExportLabel,
+          listDetail: currentExportLabel,
+          badgeLabel: methodScopeShortLabel(builderSeed.scope),
+          badgeClassName: cn(cnMethodScopeBadge(builderSeed.scope), 'normal-case'),
+          item: methodSeedToPostmanItem(builderSeed, { name: currentExportLabel }),
+        },
+      ]
+    : []
+  const exportModal = (
+    <PostmanExportModal
+      open={exportOpen}
+      onOpenChange={setExportOpen}
+      items={currentExportItems}
+      defaultCollectionName={t('postmanExport.defaultMethodName')}
+      signatureLabel={t('favouriteMeta.viewSignature')}
+      itemsSectionLabel={t('postmanExport.currentRequestSection')}
+    />
+  )
 
   const toggleCurrentFavourite = () => {
     if (!methodName) return
@@ -504,6 +535,17 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
                   />
                 </Button>
                 <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-11 w-11"
+                  disabled={!canExecute}
+                  onClick={() => setExportOpen(true)}
+                  aria-label={t('methodExecutor.exportCurrent')}
+                  title={t('methodExecutor.exportCurrent')}
+                >
+                  <Download className="h-4 w-4" />
+                </Button>
+                <Button
                   size="sm"
                   className="h-11 px-4"
                   onClick={() => void execute()}
@@ -545,6 +587,7 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
             />
           </MobileFullscreenSheet>
         ) : null}
+        {exportModal}
         {sidePanel === 'favourites' ? (
           <MobileFullscreenSheet open labelledBy="method-favourites-title">
             <MethodFavourites
@@ -565,192 +608,208 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
   }
 
   return (
-    <RequestResponseSplit
-      kind="methodExecutor"
-      requestClassName="bg-background p-3"
-      responseClassName="min-h-105 bg-muted/10 p-3 lg:min-h-0"
-      request={
-        <div className="flex flex-col gap-3">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="font-semibold text-base">{t('methodExecutor.title')}</p>
-              <p className="text-muted-foreground text-xs">{t('methodExecutor.subtitle')}</p>
-            </div>
-            <div className="flex shrink-0 items-center gap-1.5">
-              <Button
-                variant={sidePanel === 'favourites' ? 'secondary' : 'outline'}
-                size="xs"
-                className="h-6 gap-1 px-2"
-                onClick={() =>
-                  setSidePanel((panel) => (panel === 'favourites' ? 'none' : 'favourites'))
-                }
-              >
-                <Star className="h-3.5 w-3.5" />
-                {t('methodExecutor.favourites')}
-              </Button>
-              <Button
-                variant={sidePanel === 'history' ? 'secondary' : 'outline'}
-                size="xs"
-                className="h-6 gap-1 px-2"
-                onClick={() => setSidePanel((panel) => (panel === 'history' ? 'none' : 'history'))}
-              >
-                <Clock3 className="h-3.5 w-3.5" />
-                {t('methodExecutor.history')}
-              </Button>
-            </div>
-          </div>
-
-          {sidePanel === 'favourites' ? (
-            <MethodFavourites
-              favourites={favourites}
-              onOpenFavourite={openMethodExecutorTab}
-              onRemoveFavourite={removeFavourite}
-              onClearFavourites={clearFavourites}
-              onUpdateFavouriteMeta={updateFavouriteMeta}
-              onClose={() => setSidePanel('none')}
-            />
-          ) : null}
-
-          {sidePanel === 'history' ? (
-            <MethodRunHistory
-              runs={runs}
-              onOpenRun={openMethodExecutorTab}
-              onRemoveRun={removeRun}
-              onClearRuns={clearRuns}
-              onClose={() => setSidePanel('none')}
-            />
-          ) : null}
-
-          <div
-            className={cn('space-y-3', sidePanel !== 'none' && 'border-border/70 border-t pt-4')}
-          >
-            {sidePanel !== 'none' ? (
-              <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
-                {t('methodExecutor.methodComposer')}
-              </p>
-            ) : null}
-
-            <MethodSelector
-              scope={scope}
-              methodName={methodName}
-              dataClass={dataClass}
-              singletonName={singletonName}
-              keyValue={key}
-              entitySetId={entitySetId}
-              methods={methods}
-              dataClasses={dataClasses}
-              singletons={singletons}
-              catalogLoading={catalogLoading}
-              catalogError={catalogError}
-              onScopeChange={(next) => {
-                setScope(next)
-                clearMethod()
-              }}
-              onChooseMethod={chooseMethod}
-              onClearMethod={clearMethod}
-              onDataClassChange={setDataClass}
-              onSingletonNameChange={setSingletonName}
-              onKeyChange={setKey}
-              onEntitySetIdChange={setEntitySetId}
-            />
-
-            <RuntimeArgumentsEditor
-              argumentsList={argumentsList}
-              dataClasses={dataClasses}
-              onChange={setArgumentsList}
-            />
-
-            <MethodWrapperEditor
-              enabled={wrapperEnabled}
-              onEnabledChange={(next) => {
-                setWrapperEnabled(next)
-                if (next) setUseGet(false)
-              }}
-              value={wrapperText}
-              onChange={(next) => {
-                setWrapperText(next)
-                if (next.trim()) setUseGet(false)
-              }}
-            />
-
-            {error ? (
-              <p className="rounded-md bg-destructive/10 p-3 text-destructive text-sm">{error}</p>
-            ) : null}
-
-            <div className="sticky bottom-0 flex items-center justify-between gap-3 border-t bg-background/95 py-2 backdrop-blur">
-              {allowedOnHTTPGET ? (
-                <Label
-                  className="flex items-center gap-2 text-xs"
-                  title={wrapperEnabled ? t('methodExecutor.wrapperRequiresPost') : undefined}
-                >
-                  <Checkbox
-                    checked={useGet}
-                    disabled={wrapperEnabled}
-                    onCheckedChange={(checked) => setUseGet(checked === true)}
-                  />
-                  {t('methodExecutor.executeWithGet')}
-                </Label>
-              ) : (
-                <span className="text-muted-foreground text-xs">
-                  {t('methodExecutor.postRequest')}
-                </span>
-              )}
-              <div className="flex items-center gap-1.5">
+    <>
+      <RequestResponseSplit
+        kind="methodExecutor"
+        requestClassName="bg-background p-3"
+        responseClassName="min-h-105 bg-muted/10 p-3 lg:min-h-0"
+        request={
+          <div className="flex flex-col gap-3">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="font-semibold text-base">{t('methodExecutor.title')}</p>
+                <p className="text-muted-foreground text-xs">{t('methodExecutor.subtitle')}</p>
+              </div>
+              <div className="flex shrink-0 items-center gap-1.5">
                 <Button
-                  variant="outline"
-                  size="icon"
-                  className={cn(mobile ? 'h-11 w-11' : 'h-8 w-8')}
-                  disabled={!canExecute}
-                  onClick={toggleCurrentFavourite}
-                  aria-label={
-                    isCurrentFavourite
-                      ? t('methodExecutor.removeFavourite')
-                      : t('methodExecutor.addFavourite')
+                  variant={sidePanel === 'favourites' ? 'secondary' : 'outline'}
+                  size="xs"
+                  className="h-6 gap-1 px-2"
+                  onClick={() =>
+                    setSidePanel((panel) => (panel === 'favourites' ? 'none' : 'favourites'))
                   }
-                  title={
-                    isCurrentFavourite
-                      ? t('methodExecutor.removeFavourite')
-                      : t('methodExecutor.addFavourite')
-                  }
-                  aria-pressed={isCurrentFavourite}
                 >
-                  <Star
-                    className={cn(
-                      'h-3.5 w-3.5',
-                      isCurrentFavourite && 'fill-current text-amber-500'
-                    )}
-                  />
+                  <Star className="h-3.5 w-3.5" />
+                  {t('methodExecutor.favourites')}
                 </Button>
                 <Button
-                  size="sm"
-                  className={cn(mobile ? 'h-11 px-4' : 'h-8')}
-                  onClick={() => void execute()}
-                  disabled={executing || !canExecute}
-                  title={`${t('methodExecutor.execute')} (⌘/Ctrl+Enter)`}
+                  variant={sidePanel === 'history' ? 'secondary' : 'outline'}
+                  size="xs"
+                  className="h-6 gap-1 px-2"
+                  onClick={() =>
+                    setSidePanel((panel) => (panel === 'history' ? 'none' : 'history'))
+                  }
                 >
-                  {executing ? (
-                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Play className="mr-1.5 h-3.5 w-3.5" />
-                  )}
-                  {t('methodExecutor.execute')}
+                  <Clock3 className="h-3.5 w-3.5" />
+                  {t('methodExecutor.history')}
                 </Button>
               </div>
             </div>
+
+            {sidePanel === 'favourites' ? (
+              <MethodFavourites
+                favourites={favourites}
+                onOpenFavourite={openMethodExecutorTab}
+                onRemoveFavourite={removeFavourite}
+                onClearFavourites={clearFavourites}
+                onUpdateFavouriteMeta={updateFavouriteMeta}
+                onClose={() => setSidePanel('none')}
+              />
+            ) : null}
+
+            {sidePanel === 'history' ? (
+              <MethodRunHistory
+                runs={runs}
+                onOpenRun={openMethodExecutorTab}
+                onRemoveRun={removeRun}
+                onClearRuns={clearRuns}
+                onClose={() => setSidePanel('none')}
+              />
+            ) : null}
+
+            <div
+              className={cn('space-y-3', sidePanel !== 'none' && 'border-border/70 border-t pt-4')}
+            >
+              {sidePanel !== 'none' ? (
+                <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
+                  {t('methodExecutor.methodComposer')}
+                </p>
+              ) : null}
+
+              <MethodSelector
+                scope={scope}
+                methodName={methodName}
+                dataClass={dataClass}
+                singletonName={singletonName}
+                keyValue={key}
+                entitySetId={entitySetId}
+                methods={methods}
+                dataClasses={dataClasses}
+                singletons={singletons}
+                catalogLoading={catalogLoading}
+                catalogError={catalogError}
+                onScopeChange={(next) => {
+                  setScope(next)
+                  clearMethod()
+                }}
+                onChooseMethod={chooseMethod}
+                onClearMethod={clearMethod}
+                onDataClassChange={setDataClass}
+                onSingletonNameChange={setSingletonName}
+                onKeyChange={setKey}
+                onEntitySetIdChange={setEntitySetId}
+              />
+
+              <RuntimeArgumentsEditor
+                argumentsList={argumentsList}
+                dataClasses={dataClasses}
+                onChange={setArgumentsList}
+              />
+
+              <MethodWrapperEditor
+                enabled={wrapperEnabled}
+                onEnabledChange={(next) => {
+                  setWrapperEnabled(next)
+                  if (next) setUseGet(false)
+                }}
+                value={wrapperText}
+                onChange={(next) => {
+                  setWrapperText(next)
+                  if (next.trim()) setUseGet(false)
+                }}
+              />
+
+              {error ? (
+                <p className="rounded-md bg-destructive/10 p-3 text-destructive text-sm">{error}</p>
+              ) : null}
+
+              <div className="sticky bottom-0 flex items-center justify-between gap-3 border-t bg-background/95 py-2 backdrop-blur">
+                {allowedOnHTTPGET ? (
+                  <Label
+                    className="flex items-center gap-2 text-xs"
+                    title={wrapperEnabled ? t('methodExecutor.wrapperRequiresPost') : undefined}
+                  >
+                    <Checkbox
+                      checked={useGet}
+                      disabled={wrapperEnabled}
+                      onCheckedChange={(checked) => setUseGet(checked === true)}
+                    />
+                    {t('methodExecutor.executeWithGet')}
+                  </Label>
+                ) : (
+                  <span className="text-muted-foreground text-xs">
+                    {t('methodExecutor.postRequest')}
+                  </span>
+                )}
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className={cn(mobile ? 'h-11 w-11' : 'h-8 w-8')}
+                    disabled={!canExecute}
+                    onClick={toggleCurrentFavourite}
+                    aria-label={
+                      isCurrentFavourite
+                        ? t('methodExecutor.removeFavourite')
+                        : t('methodExecutor.addFavourite')
+                    }
+                    title={
+                      isCurrentFavourite
+                        ? t('methodExecutor.removeFavourite')
+                        : t('methodExecutor.addFavourite')
+                    }
+                    aria-pressed={isCurrentFavourite}
+                  >
+                    <Star
+                      className={cn(
+                        'h-3.5 w-3.5',
+                        isCurrentFavourite && 'fill-current text-amber-500'
+                      )}
+                    />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className={cn(mobile ? 'h-11 w-11' : 'h-8 w-8')}
+                    disabled={!canExecute}
+                    onClick={() => setExportOpen(true)}
+                    aria-label={t('methodExecutor.exportCurrent')}
+                    title={t('methodExecutor.exportCurrent')}
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    className={cn(mobile ? 'h-11 px-4' : 'h-8')}
+                    onClick={() => void execute()}
+                    disabled={executing || !canExecute}
+                    title={`${t('methodExecutor.execute')} (⌘/Ctrl+Enter)`}
+                  >
+                    {executing ? (
+                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Play className="mr-1.5 h-3.5 w-3.5" />
+                    )}
+                    {t('methodExecutor.execute')}
+                  </Button>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      }
-      response={
-        <>
-          <div className="mb-2 shrink-0">
-            <h2 className="font-medium text-sm">{t('methodExecutor.result')}</h2>
-            <p className="text-muted-foreground text-xs">{t('methodExecutor.resultHint')}</p>
-          </div>
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <ResultPanel result={result} rawBody={rawBody} responseMeta={responseMeta} />
-          </div>
-        </>
-      }
-    />
+        }
+        response={
+          <>
+            <div className="mb-2 shrink-0">
+              <h2 className="font-medium text-sm">{t('methodExecutor.result')}</h2>
+              <p className="text-muted-foreground text-xs">{t('methodExecutor.resultHint')}</p>
+            </div>
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+              <ResultPanel result={result} rawBody={rawBody} responseMeta={responseMeta} />
+            </div>
+          </>
+        }
+      />
+      {exportModal}
+    </>
   )
 }

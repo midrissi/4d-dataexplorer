@@ -20,6 +20,7 @@ import {
   useIsAssistantMetadataTabActive,
   useIsGraphTabActive,
   useIsHomeTabActive,
+  useIsRestExportBuilderTabActive,
   useIsSchemaBuilderTabActive,
   useIsSettingsTabActive,
   useIsStaticTabActive,
@@ -53,6 +54,11 @@ const MethodExecutorTabView = lazy(() =>
 )
 const HttpClientTabView = lazy(() =>
   import('./HttpClient/HttpClientTabView').then((m) => ({ default: m.HttpClientTabView }))
+)
+const RestExportBuilderTabView = lazy(() =>
+  import('./RestExportBuilder/RestExportBuilderTabView').then((m) => ({
+    default: m.RestExportBuilderTabView,
+  }))
 )
 
 function OverlayFallback({ label }: { label: string }) {
@@ -193,6 +199,7 @@ export function DataclassView() {
   const isStaticTabActive = useIsStaticTabActive()
   const isSchemaBuilderTabActive = useIsSchemaBuilderTabActive()
   const isAssistantMetadataTabActive = useIsAssistantMetadataTabActive()
+  const isRestExportBuilderTabActive = useIsRestExportBuilderTabActive()
 
   const activeDataclassTabId = useMemo(() => {
     const tab = tabs.find((t) => t.id === activeTabId)
@@ -362,6 +369,12 @@ export function DataclassView() {
     overlay = (
       <Suspense fallback={<OverlayFallback label={loadingLabel} />}>
         <AssistantMetadataTabView />
+      </Suspense>
+    )
+  } else if (isRestExportBuilderTabActive) {
+    overlay = (
+      <Suspense fallback={<OverlayFallback label={loadingLabel} />}>
+        <RestExportBuilderTabView />
       </Suspense>
     )
   } else if (!activeDataclassTabId && !activeMethodExecutorTabId && !activeHttpClientTabId) {

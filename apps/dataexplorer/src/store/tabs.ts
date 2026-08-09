@@ -217,6 +217,13 @@ export type HttpClientTab = BaseTab & {
 }
 
 /**
+ * REST Export Builder tab — Postman / OpenAPI catalog export.
+ */
+export type RestExportBuilderTab = BaseTab & {
+  type: 'rest-export-builder'
+}
+
+/**
  * Union type for all tab types.
  * Use type guards (isHomeTab, isDataclassTab, isSettingsTab, isGraphTab, isStaticTab, isSchemaBuilderTab, isAssistantMetadataTab) to narrow the type.
  */
@@ -230,6 +237,7 @@ export type Tab =
   | AssistantMetadataTab
   | MethodExecutorTab
   | HttpClientTab
+  | RestExportBuilderTab
 
 // =============================================================================
 // Type Guards
@@ -290,6 +298,10 @@ export function isMethodExecutorTab(tab: Tab): tab is MethodExecutorTab {
 
 export function isHttpClientTab(tab: Tab): tab is HttpClientTab {
   return tab.type === 'http-client'
+}
+
+export function isRestExportBuilderTab(tab: Tab): tab is RestExportBuilderTab {
+  return tab.type === 'rest-export-builder'
 }
 
 // =============================================================================
@@ -466,6 +478,12 @@ const createHttpClientTab = (seed?: HttpClientSeed): HttpClientTab => ({
   seed,
 })
 
+const createRestExportBuilderTab = (): RestExportBuilderTab => ({
+  id: generateTabId(),
+  type: 'rest-export-builder',
+  isPinned: false,
+})
+
 // =============================================================================
 // Store Types
 // =============================================================================
@@ -503,6 +521,7 @@ type TabsState = {
   openAssistantMetadataTab: () => void
   openMethodExecutorTab: (seed?: MethodExecutorSeed) => string
   openHttpClientTab: (seed?: HttpClientSeed) => string
+  openRestExportBuilderTab: () => void
   /** Called by DataclassGraph when mounted and ready to receive highlight events */
   notifyGraphTabReady: () => void
   closeTab: (tabId: string) => void
@@ -876,6 +895,20 @@ export const useTabsStore = create<TabsState>()(
           const newTabs = [...tabs.slice(0, insertAt), newTab, ...tabs.slice(insertAt)]
           set({ tabs: newTabs, activeTabId: newTab.id })
           return newTab.id
+        },
+
+        openRestExportBuilderTab: () => {
+          const { tabs } = get()
+          const existingTab = tabs.find((t) => t.type === 'rest-export-builder')
+          if (existingTab) {
+            set({ activeTabId: existingTab.id })
+            return
+          }
+
+          const newTab = createRestExportBuilderTab()
+          const pinnedCount = tabs.filter((t) => t.isPinned).length
+          const newTabs = [...tabs.slice(0, pinnedCount), newTab, ...tabs.slice(pinnedCount)]
+          set({ tabs: newTabs, activeTabId: newTab.id })
         },
 
         notifyGraphTabReady: () => {
@@ -1469,4 +1502,14 @@ export const useIsHttpClientTabActive = () => {
 export const useActiveHttpClientTab = () => {
   const activeTab = useActiveTab()
   return activeTab && isHttpClientTab(activeTab) ? activeTab : null
+}
+
+export const useIsRestExportBuilderTabActive = () => {
+  const activeTab = useActiveTab()
+  return activeTab ? isRestExportBuilderTab(activeTab) : false
+}
+
+export const useActiveRestExportBuilderTab = () => {
+  const activeTab = useActiveTab()
+  return activeTab && isRestExportBuilderTab(activeTab) ? activeTab : null
 }

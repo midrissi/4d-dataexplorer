@@ -10,6 +10,7 @@ export function PostmanExportCollectionForm({
   onCollectionDescriptionChange,
   folderMode,
   onFolderModeChange,
+  showFolderMode = true,
 }: {
   collectionName: string
   onCollectionNameChange: (value: string) => void
@@ -17,6 +18,7 @@ export function PostmanExportCollectionForm({
   onCollectionDescriptionChange: (value: string) => void
   folderMode: PostmanFolderMode
   onFolderModeChange: (value: PostmanFolderMode) => void
+  showFolderMode?: boolean
 }) {
   const { t } = useTranslation()
 
@@ -54,33 +56,35 @@ export function PostmanExportCollectionForm({
         </div>
       </div>
 
-      <div className="space-y-1 rounded-md bg-sky-500/5 p-2">
-        <div className="flex items-baseline justify-between gap-2">
-          <Label className="text-foreground text-xs">{t('postmanExport.folderMode')}</Label>
-          <span className="text-[10px] text-muted-foreground">
-            {t('postmanExport.folderModeHint')}
-          </span>
+      {showFolderMode ? (
+        <div className="space-y-1 rounded-md bg-sky-500/5 p-2">
+          <div className="flex items-baseline justify-between gap-2">
+            <Label className="text-foreground text-xs">{t('postmanExport.folderMode')}</Label>
+            <span className="text-[10px] text-muted-foreground">
+              {t('postmanExport.folderModeHint')}
+            </span>
+          </div>
+          <SegmentedControl
+            aria-label={t('postmanExport.folderMode')}
+            value={folderMode}
+            onValueChange={onFolderModeChange}
+            fullWidth
+            size="sm"
+            options={[
+              {
+                value: 'flat',
+                label: t('postmanExport.folderModeFlat'),
+                icon: List,
+              },
+              {
+                value: 'byTags',
+                label: t('postmanExport.folderModeByTags'),
+                icon: Layers,
+              },
+            ]}
+          />
         </div>
-        <SegmentedControl
-          aria-label={t('postmanExport.folderMode')}
-          value={folderMode}
-          onValueChange={onFolderModeChange}
-          fullWidth
-          size="sm"
-          options={[
-            {
-              value: 'flat',
-              label: t('postmanExport.folderModeFlat'),
-              icon: List,
-            },
-            {
-              value: 'byTags',
-              label: t('postmanExport.folderModeByTags'),
-              icon: Layers,
-            },
-          ]}
-        />
-      </div>
+      ) : null}
     </div>
   )
 }

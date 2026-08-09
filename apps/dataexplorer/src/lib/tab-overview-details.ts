@@ -7,6 +7,7 @@ import {
   isHomeTab,
   isHttpClientTab,
   isMethodExecutorTab,
+  isRestExportBuilderTab,
   isSchemaBuilderTab,
   isSettingsTab,
   isStaticTab,
@@ -90,6 +91,9 @@ export function getTabOverviewDetails(
   }
   if (isAssistantMetadataTab(tab)) {
     return { subtitle: t('tabs.assistantMetadata'), chips: [] }
+  }
+  if (isRestExportBuilderTab(tab)) {
+    return { subtitle: t('tabs.restExport'), chips: [] }
   }
   if (isStaticTab(tab)) {
     return { subtitle: t('tabs.releaseNotes'), chips: [] }

@@ -18,6 +18,7 @@ import {
   ChevronDown,
   Copy,
   Database,
+  FileDown,
   FileText,
   Home,
   Network,
@@ -52,6 +53,7 @@ import {
   isHomeTab,
   isHttpClientTab,
   isMethodExecutorTab,
+  isRestExportBuilderTab,
   isSchemaBuilderTab,
   isSettingsTab,
   isStaticTab,
@@ -130,6 +132,9 @@ export function TabBar() {
           return `${method} ${tab.seed.path?.split('?')[0] || '/'}`
         }
         return mobile ? t('tabs.httpClientShort') : t('tabs.httpClient')
+      }
+      if (isRestExportBuilderTab(tab)) {
+        return mobile ? t('tabs.restExportShort') : t('tabs.restExport')
       }
       if (isStaticTab(tab)) return t(STATIC_TAB_TITLE_KEYS[tab.staticId] ?? 'tabs.releaseNotes')
       if (isDataclassTab(tab) && tab.customTitle) {
@@ -384,7 +389,8 @@ export function TabBar() {
         isSchemaBuilderTab(tab) ||
         isAssistantMetadataTab(tab) ||
         isMethodExecutorTab(tab) ||
-        isHttpClientTab(tab)
+        isHttpClientTab(tab) ||
+        isRestExportBuilderTab(tab)
       ) {
         return 0
       }
@@ -465,6 +471,7 @@ export function TabBar() {
       if (isAssistantMetadataTab(tab)) return <BookText className={className} />
       if (isMethodExecutorTab(tab)) return <Play className={className} />
       if (isHttpClientTab(tab)) return <Send className={className} />
+      if (isRestExportBuilderTab(tab)) return <FileDown className={className} />
       if (isStaticTab(tab)) return <FileText className={className} />
       if (isDataclassTab(tab)) {
         return (
@@ -523,6 +530,7 @@ export function TabBar() {
               const isAssistantMetadata = isAssistantMetadataTab(tab)
               const isMethodExecutor = isMethodExecutorTab(tab)
               const isHttpClient = isHttpClientTab(tab)
+              const isRestExport = isRestExportBuilderTab(tab)
               const isDataclass = isDataclassTab(tab)
               const showCount =
                 !isHome &&
@@ -532,7 +540,8 @@ export function TabBar() {
                 !isSchemaBuilder &&
                 !isAssistantMetadata &&
                 !isMethodExecutor &&
-                !isHttpClient
+                !isHttpClient &&
+                !isRestExport
 
               // Get customization for dataclass tabs
               const customization = isDataclass

@@ -54,7 +54,7 @@ export function buildNavigationTools(): AssistantToolHandler[] {
       definition: {
         name: '@navigation/open-tab',
         description:
-          'Open a tab immediately without confirmation: home, structure, settings, release-notes, schema-builder, assistant-metadata, method-executor, http-client, or a dataclass data tab. For dataclass tabs, optionally bind to an existing entity set by ID or apply query options. Safe read-only navigation.',
+          'Open a tab immediately without confirmation: home, structure, settings, release-notes, schema-builder, assistant-metadata, method-executor, http-client, rest-export-builder, or a dataclass data tab. For dataclass tabs, optionally bind to an existing entity set by ID or apply query options. Safe read-only navigation.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -69,6 +69,7 @@ export function buildNavigationTools(): AssistantToolHandler[] {
                 'assistant-metadata',
                 'method-executor',
                 'http-client',
+                'rest-export-builder',
                 'dataclass',
               ],
             },
@@ -156,6 +157,9 @@ export function buildNavigationTools(): AssistantToolHandler[] {
           case 'http-client':
             tabsState.openHttpClientTab()
             return toolResultOk({ opened: 'http-client' })
+          case 'rest-export-builder':
+            tabsState.openRestExportBuilderTab()
+            return toolResultOk({ opened: 'rest-export-builder' })
           case 'dataclass': {
             if (args.openAll) {
               tabsState.openAllDataclasses(dataState.dataclasses.map((d) => d.name))

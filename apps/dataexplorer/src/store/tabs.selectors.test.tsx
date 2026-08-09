@@ -9,6 +9,7 @@ import {
   useActiveDataclassName,
   useActiveDataclassTab,
   useActiveGraphTab,
+  useActiveRestExportBuilderTab,
   useActiveSchemaBuilderTab,
   useActiveSettingsTab,
   useActiveStaticTab,
@@ -17,6 +18,7 @@ import {
   useIsAssistantMetadataTabActive,
   useIsGraphTabActive,
   useIsHomeTabActive,
+  useIsRestExportBuilderTabActive,
   useIsSchemaBuilderTabActive,
   useIsSettingsTabActive,
   useIsStaticTabActive,
@@ -115,6 +117,12 @@ describe('store/tabs selectors', () => {
     useTabsStore.getState().openSchemaBuilderTab()
     expect(readHook(useIsSchemaBuilderTabActive)).toBe(true)
     expect(readHook(useActiveSchemaBuilderTab)?.type).toBe('schema-builder')
+  })
+
+  it('rest export builder tab selector', () => {
+    useTabsStore.getState().openRestExportBuilderTab()
+    expect(readHook(useIsRestExportBuilderTabActive)).toBe(true)
+    expect(readHook(useActiveRestExportBuilderTab)?.type).toBe('rest-export-builder')
   })
 
   it('assistant metadata tab selector', () => {

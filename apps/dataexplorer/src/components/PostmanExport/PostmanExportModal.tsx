@@ -7,6 +7,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  SegmentedControl,
   Tabs,
   TabsContent,
   TabsList,
@@ -21,10 +22,14 @@ import { mobileFullscreenDialogClass } from '~/lib/mobile-menu'
 import { getBaseUrl, getConnectionStoreAPI, isMobileShell } from '~/lib/platform'
 import {
   buildPostmanCollection,
+  emitOpenApiFromPostmanItems,
+  openApiDocumentFilename,
   type PostmanExportItemInput,
   type PostmanExportVariableValues,
   type PostmanFolderMode,
   postmanCollectionFilename,
+  type RestCollectionExportType,
+  serializeOpenApiDocument,
   serializePostmanCollection,
 } from '~/lib/postman'
 import { PostmanExportCollectionForm } from './PostmanExportCollectionForm'
@@ -63,6 +68,7 @@ export function PostmanExportModal({
   items,
   defaultCollectionName,
   signatureLabel,
+  itemsSectionLabel,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -70,13 +76,16 @@ export function PostmanExportModal({
   defaultCollectionName: string
   /** Accessible label for the signature/path info control (matches Favourites list). */
   signatureLabel?: string
+  itemsSectionLabel?: string
 }) {
   const { t } = useTranslation()
   const toast = useToast()
   const mobile = isMobileShell()
   const resolvedSignatureLabel = signatureLabel ?? t('favouriteMeta.viewSignature')
+  const resolvedItemsSection = itemsSectionLabel ?? t('postmanExport.itemsSection')
 
   const [tab, setTab] = useState<PostmanExportTab>('items')
+  const [exportType, setExportType] = useState<RestCollectionExportType>('postman')
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set())
   const [collectionName, setCollectionName] = useState(defaultCollectionName)
   const [collectionDescription, setCollectionDescription] = useState('')
@@ -93,6 +102,7 @@ export function PostmanExportModal({
   useEffect(() => {
     if (!open) return
     setTab('items')
+    setExportType('postman')
     setSelectedIds(new Set(items.map((item) => item.id)))
     setCollectionName(defaultCollectionName)
     setCollectionDescription('')
@@ -129,22 +139,38 @@ export function PostmanExportModal({
 
     setExporting(true)
     try {
-      const collection = buildPostmanCollection({
-        name: collectionName.trim() || defaultCollectionName,
-        description: collectionDescription,
-        variables,
-        includeAccessKeyLogin,
-        folderMode,
-        items: selectedItems,
-        untaggedFolderName: t('postmanExport.untaggedFolder'),
-      })
-      const json = serializePostmanCollection(collection)
-      const bytes = new TextEncoder().encode(json)
-      await downloadBytes({
-        filename: postmanCollectionFilename(collection.info.name),
-        bytes,
-        mime: 'application/json',
-      })
+      const name = collectionName.trim() || defaultCollectionName
+      if (exportType === 'openapi') {
+        const document = emitOpenApiFromPostmanItems({
+          name,
+          description: collectionDescription,
+          variables,
+          includeAccessKeyLogin,
+          items: selectedItems,
+        })
+        const json = serializeOpenApiDocument(document)
+        await downloadBytes({
+          filename: openApiDocumentFilename(name),
+          bytes: new TextEncoder().encode(json),
+          mime: 'application/json',
+        })
+      } else {
+        const collection = buildPostmanCollection({
+          name,
+          description: collectionDescription,
+          variables,
+          includeAccessKeyLogin,
+          folderMode,
+          items: selectedItems,
+          untaggedFolderName: t('postmanExport.untaggedFolder'),
+        })
+        const json = serializePostmanCollection(collection)
+        await downloadBytes({
+          filename: postmanCollectionFilename(collection.info.name),
+          bytes: new TextEncoder().encode(json),
+          mime: 'application/json',
+        })
+      }
       onOpenChange(false)
     } catch (error) {
       toast.error(t('postmanExport.exportFailed'), {
@@ -210,7 +236,7 @@ export function PostmanExportModal({
                   className="size-3 shrink-0 text-muted-foreground group-data-[state=active]:text-primary"
                   aria-hidden
                 />
-                <span className="truncate">{t('postmanExport.itemsSection')}</span>
+                <span className="truncate">{resolvedItemsSection}</span>
                 <Badge
                   variant="secondary"
                   className="ml-0.5 h-3.5 min-w-3.5 justify-center border-0 bg-muted/80 px-1 font-mono text-[9px] tabular-nums group-data-[state=active]:bg-primary/15 group-data-[state=active]:text-primary"
@@ -275,6 +301,7 @@ export function PostmanExportModal({
                 onCollectionDescriptionChange={setCollectionDescription}
                 folderMode={folderMode}
                 onFolderModeChange={setFolderMode}
+                showFolderMode={exportType === 'postman'}
               />
             </TabsContent>
 
@@ -304,7 +331,16 @@ export function PostmanExportModal({
               name: footerName,
             })}
           </p>
-          <div className={cn('flex gap-1.5', mobile && 'w-full flex-col')}>
+          <div className={cn('flex flex-wrap items-center gap-1.5', mobile && 'w-full flex-col')}>
+            <SegmentedControl
+              aria-label={t('postmanExport.formatAria')}
+              value={exportType}
+              onValueChange={(value) => setExportType(value as RestCollectionExportType)}
+              options={[
+                { value: 'postman', label: t('postmanExport.formatPostman') },
+                { value: 'openapi', label: t('postmanExport.formatOpenApi') },
+              ]}
+            />
             <Button
               variant="outline"
               size="sm"

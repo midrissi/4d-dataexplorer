@@ -9,6 +9,7 @@ import {
   isHomeTab,
   isHttpClientTab,
   isMethodExecutorTab,
+  isRestExportBuilderTab,
   isSchemaBuilderTab,
   isSettingsTab,
   isStaticTab,
@@ -678,6 +679,19 @@ describe('store/tabs', () => {
       expect(useTabsStore.getState().tabs.filter((t) => t.type === 'schema-builder')).toHaveLength(
         1
       )
+    })
+
+    it('isRestExportBuilderTab and openRestExportBuilderTab', () => {
+      expect(
+        isRestExportBuilderTab({ id: 'reb', type: 'rest-export-builder', isPinned: false })
+      ).toBe(true)
+      useTabsStore.getState().openRestExportBuilderTab()
+      const firstId = useTabsStore.getState().activeTabId
+      useTabsStore.getState().openRestExportBuilderTab()
+      expect(useTabsStore.getState().activeTabId).toBe(firstId)
+      expect(
+        useTabsStore.getState().tabs.filter((t) => t.type === 'rest-export-builder')
+      ).toHaveLength(1)
     })
 
     it('isAssistantMetadataTab and openAssistantMetadataTab', () => {

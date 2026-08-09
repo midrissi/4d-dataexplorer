@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@4d/ui'
 import {
+  FileDown,
   FileText,
   Info,
   MoreHorizontal,
@@ -49,6 +50,7 @@ export function MobileAppFooter() {
   )
   const openMethodExecutorTab = useTabsStore((state) => state.openMethodExecutorTab)
   const openHttpClientTab = useTabsStore((state) => state.openHttpClientTab)
+  const openRestExportBuilderTab = useTabsStore((state) => state.openRestExportBuilderTab)
   const openSettingsTab = useTabsStore((state) => state.openSettingsTab)
   const openStaticTab = useTabsStore((state) => state.openStaticTab)
 
@@ -124,6 +126,10 @@ export function MobileAppFooter() {
             <DropdownMenuItem className={mobileMenuItemClass()} onClick={() => openHttpClientTab()}>
               <Send className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
               {t('tabs.httpClient')}
+            </DropdownMenuItem>
+            <DropdownMenuItem className={mobileMenuItemClass()} onClick={openRestExportBuilderTab}>
+              <FileDown className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+              {t('tabs.restExport')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className={mobileMenuItemClass()} onClick={openSettingsTab}>

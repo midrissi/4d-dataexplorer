@@ -40,12 +40,19 @@ export type PostmanBody =
   | { mode: 'formdata'; formdata: PostmanFormDataField[] }
   | { mode: 'file'; file: { src?: string } }
 
+export type PostmanDescription =
+  | string
+  | {
+      content: string
+      type?: 'text/plain' | 'text/markdown'
+    }
+
 export type PostmanRequest = {
   method: string
   header: PostmanHeader[]
   url: PostmanUrl
   body?: PostmanBody
-  description?: string
+  description?: PostmanDescription
 }
 
 export type PostmanEvent = {
@@ -59,13 +66,13 @@ export type PostmanEvent = {
 export type PostmanItem =
   | {
       name: string
-      description?: string
+      description?: PostmanDescription
       request: PostmanRequest
       event?: PostmanEvent[]
     }
   | {
       name: string
-      description?: string
+      description?: PostmanDescription
       item: PostmanItem[]
     }
 

@@ -40,7 +40,7 @@ function buildVariables(options: BuildPostmanCollectionOptions): PostmanVariable
   ]
 }
 
-function buildLoginEvent(): PostmanEvent {
+export function buildAccessKeyLoginPrerequestEvent(): PostmanEvent {
   return {
     listen: 'prerequest',
     script: {
@@ -130,7 +130,7 @@ export function buildPostmanCollection(options: BuildPostmanCollectionOptions): 
       schema: POSTMAN_COLLECTION_SCHEMA,
     },
     variable: buildVariables(options),
-    ...(includeLogin ? { event: [buildLoginEvent()] } : {}),
+    ...(includeLogin ? { event: [buildAccessKeyLoginPrerequestEvent()] } : {}),
     item,
   }
 }

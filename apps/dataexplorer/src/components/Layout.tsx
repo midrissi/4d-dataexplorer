@@ -25,6 +25,7 @@ import {
   ChevronsRight,
   Command,
   Eye,
+  FileDown,
   Keyboard,
   List,
   Loader2,
@@ -125,6 +126,7 @@ export function Layout({
   const openAssistantMetadataTab = useTabsStore((state) => state.openAssistantMetadataTab)
   const openMethodExecutorTab = useTabsStore((state) => state.openMethodExecutorTab)
   const openHttpClientTab = useTabsStore((state) => state.openHttpClientTab)
+  const openRestExportBuilderTab = useTabsStore((state) => state.openRestExportBuilderTab)
   const closeTab = useTabsStore((state) => state.closeTab)
   const togglePinTab = useTabsStore((state) => state.togglePinTab)
   const setActiveTab = useTabsStore((state) => state.setActiveTab)
@@ -906,6 +908,10 @@ export function Layout({
                 <DropdownMenuItem onClick={() => openHttpClientTab()}>
                   <Send className="mr-2 h-4 w-4" />
                   {t('tabs.httpClient')}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={openRestExportBuilderTab}>
+                  <FileDown className="mr-2 h-4 w-4" />
+                  {t('tabs.restExport')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
