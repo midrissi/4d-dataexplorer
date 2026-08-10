@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import { api } from '~/lib/api'
+import { AUTO_COUNT_THRESHOLD } from '~/lib/dataclass-counts'
 import { removeStatusField } from '~/lib/entitySanitizer'
 import { eventBus } from '~/lib/eventBus'
 import { isDataclassTab, normalizeQueryOptions, type QueryOptions, useTabsStore } from './tabs'
@@ -8,7 +9,8 @@ import { isDataclassTab, normalizeQueryOptions, type QueryOptions, useTabsStore 
 export type Dataclass = {
   name: string
   collectionName: string
-  count: number
+  /** Entity count; `null` means not loaded yet. */
+  count: number | null
 }
 
 export type Entity = Record<string, unknown> & {
@@ -61,6 +63,10 @@ type DataExplorerState = {
   dataclasses: Dataclass[]
   dataclassesLoading: boolean
   dataclassesError: string | null
+  /** Names currently fetching an entity count. */
+  countLoadingNames: Record<string, true>
+  /** True while a batch "load all counts" is in progress. */
+  countsLoadingAll: boolean
 
   // Selected dataclass
   selectedDataclass: string | null
@@ -87,6 +93,10 @@ type DataExplorerState = {
 
   // Actions
   fetchDataclasses: () => Promise<void>
+  /** Load entity count for one dataclass (no-op if already loading). */
+  fetchDataclassCount: (name: string) => Promise<void>
+  /** Load counts for all dataclasses that still have `count === null`. */
+  fetchAllDataclassCounts: () => Promise<void>
   selectDataclass: (name: string | null) => void
   fetchEntities: (
     page?: number,
@@ -170,6 +180,8 @@ export const useDataExplorerStore = create<DataExplorerState>()(
         dataclasses: [],
         dataclassesLoading: false,
         dataclassesError: null,
+        countLoadingNames: {},
+        countsLoadingAll: false,
         selectedDataclass: null,
         entities: [],
         entitiesLoading: false,
@@ -184,18 +196,92 @@ export const useDataExplorerStore = create<DataExplorerState>()(
 
         // Actions
         fetchDataclasses: async () => {
-          set({ dataclassesLoading: true, dataclassesError: null })
+          set({
+            dataclassesLoading: true,
+            dataclassesError: null,
+            countLoadingNames: {},
+            countsLoadingAll: false,
+          })
           try {
             // Drop cached /$catalog/$all so schema/dataclass changes appear on web reload.
             api.clearCatalogCache()
-            const dataclasses = await api.getDataclasses()
+            const dataclasses = await api.getDataclassList()
             set({ dataclasses, dataclassesLoading: false })
             eventBus.emit('catalog-reloaded')
+            if (dataclasses.length > 0 && dataclasses.length < AUTO_COUNT_THRESHOLD) {
+              void get().fetchAllDataclassCounts()
+            }
           } catch (error) {
             set({
               dataclassesError:
                 error instanceof Error ? error.message : 'Failed to fetch dataclasses',
               dataclassesLoading: false,
+            })
+          }
+        },
+
+        fetchDataclassCount: async (name) => {
+          const { countLoadingNames, dataclasses } = get()
+          if (countLoadingNames[name]) return
+          const existing = dataclasses.find((dc) => dc.name === name)
+          if (!existing) return
+
+          set({ countLoadingNames: { ...countLoadingNames, [name]: true } })
+          try {
+            const count = await api.getDataclassCount(name)
+            set((state) => {
+              const nextLoading = { ...state.countLoadingNames }
+              delete nextLoading[name]
+              return {
+                dataclasses: state.dataclasses.map((dc) =>
+                  dc.name === name ? { ...dc, count } : dc
+                ),
+                countLoadingNames: nextLoading,
+              }
+            })
+          } catch {
+            set((state) => {
+              const nextLoading = { ...state.countLoadingNames }
+              delete nextLoading[name]
+              return {
+                dataclasses: state.dataclasses.map((dc) =>
+                  dc.name === name ? { ...dc, count: 0 } : dc
+                ),
+                countLoadingNames: nextLoading,
+              }
+            })
+          }
+        },
+
+        fetchAllDataclassCounts: async () => {
+          const { dataclasses, countsLoadingAll } = get()
+          if (countsLoadingAll) return
+          const names = dataclasses.filter((dc) => dc.count === null).map((dc) => dc.name)
+          if (names.length === 0) return
+
+          const loadingPatch = Object.fromEntries(names.map((n) => [n, true as const]))
+          set({
+            countsLoadingAll: true,
+            countLoadingNames: { ...get().countLoadingNames, ...loadingPatch },
+          })
+          try {
+            const counts = await api.getDataclassCounts(names)
+            set((state) => {
+              const nextLoading = { ...state.countLoadingNames }
+              for (const name of names) delete nextLoading[name]
+              return {
+                dataclasses: state.dataclasses.map((dc) =>
+                  counts.has(dc.name) ? { ...dc, count: counts.get(dc.name) ?? 0 } : dc
+                ),
+                countLoadingNames: nextLoading,
+                countsLoadingAll: false,
+              }
+            })
+          } catch {
+            set((state) => {
+              const nextLoading = { ...state.countLoadingNames }
+              for (const name of names) delete nextLoading[name]
+              return { countLoadingNames: nextLoading, countsLoadingAll: false }
             })
           }
         },
@@ -389,7 +475,7 @@ export const useDataExplorerStore = create<DataExplorerState>()(
           if (!selectedDataclass) return
 
           await api.createEntity(selectedDataclass, data)
-          await get().fetchDataclasses()
+          await get().fetchDataclassCount(selectedDataclass)
           await get().fetchEntities()
         },
 
@@ -420,7 +506,7 @@ export const useDataExplorerStore = create<DataExplorerState>()(
             isEditing: false,
             editedEntity: null,
           })
-          await get().fetchDataclasses()
+          await get().fetchDataclassCount(selectedDataclass)
           await get().fetchEntities(pagination?.page || 1)
         },
 
@@ -461,7 +547,7 @@ export const useDataExplorerStore = create<DataExplorerState>()(
             isEditing: false,
             editedEntity: null,
           })
-          await get().fetchDataclasses()
+          await get().fetchDataclassCount(selectedDataclass)
           await get().fetchEntities(1)
           return { count: result.count ?? 0 }
         },

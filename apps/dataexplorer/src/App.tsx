@@ -12,6 +12,7 @@ import { TabBar } from './components/TabBar'
 import { useTranslation } from './i18n'
 import { api, clearCatalogCacheAndStorage, formatThrownError, isTransportError } from './lib/api'
 import '~/lib/assistant-llm-configured'
+import { AUTO_COUNT_THRESHOLD } from './lib/dataclass-counts'
 import { getConnectionStoreAPI, isDesktop, isMobileShell } from './lib/platform'
 import { KeyboardShortcutsProvider } from './providers/KeyboardShortcutsProvider'
 import { ShortcutController } from './providers/ShortcutController'
@@ -117,9 +118,9 @@ function AppContent({ onDisconnect, onSwitchConnection, onEditConnection }: AppC
       if (generation !== loadGenerationRef.current) return
       updateStep('catalog', { status: 'done', detail: t('loading.connected') })
 
-      // Step 2: Fetch dataclasses
+      // Step 2: Fetch dataclass names (counts load lazily / auto when < threshold)
       updateStep('dataclasses', { status: 'loading', detail: t('loading.fetchingMetadata') })
-      const fetchedDataclasses = await api.getDataclasses()
+      const fetchedDataclasses = await api.getDataclassList()
       if (generation !== loadGenerationRef.current) return
 
       // Update store directly
@@ -127,18 +128,22 @@ function AppContent({ onDisconnect, onSwitchConnection, onEditConnection }: AppC
         dataclasses: fetchedDataclasses,
         dataclassesLoading: false,
         dataclassesError: null,
+        countLoadingNames: {},
+        countsLoadingAll: false,
       })
 
       if (fetchedDataclasses.length === 0) {
         updateStep('dataclasses', { status: 'done', detail: t('loading.noDataclassesFound') })
         setAppState('empty')
       } else {
-        const totalEntities = fetchedDataclasses.reduce((sum, dc) => sum + dc.count, 0)
         updateStep('dataclasses', {
           status: 'done',
-          detail: `${fetchedDataclasses.length} dataclasses, ${totalEntities.toLocaleString()} entities`,
+          detail: t('loading.dataclassesReady', { count: fetchedDataclasses.length }),
         })
         setAppState('ready')
+        if (fetchedDataclasses.length < AUTO_COUNT_THRESHOLD) {
+          void useDataExplorerStore.getState().fetchAllDataclassCounts()
+        }
       }
     } catch (error) {
       if (generation !== loadGenerationRef.current) return

@@ -90,7 +90,7 @@ export type CommandContext = {
   toggleSidebarCollapsed: () => void
 
   // Dataclasses
-  dataclasses: Array<{ name: string; count: number }>
+  dataclasses: Array<{ name: string; count: number | null }>
   selectedDataclass: string | null
   selectDataclass: (name: string) => void
   fetchDataclasses: () => void
@@ -600,7 +600,10 @@ function buildDataclassCommands(ctx: CommandContext): Command[] {
         id: `open-dataclass-${dataclass.name}`,
         label: ctx.t('command.openDataclass', { name: dataclass.name }),
         description: ctx.t('commandDesc.openDataclass', {
-          count: dataclass.count.toLocaleString(),
+          count:
+            dataclass.count == null
+              ? ctx.t('sidebar.countUnknown')
+              : dataclass.count.toLocaleString(),
         }),
         icon: <FolderOpen className="h-4 w-4" />,
         category: 'Dataclasses',

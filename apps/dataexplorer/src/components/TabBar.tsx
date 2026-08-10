@@ -402,7 +402,7 @@ export function TabBar() {
         if (tab.selectionCount != null) return tab.selectionCount
       }
 
-      return dataclasses.find((c) => c.name === tab.dataclassName)?.count || 0
+      return dataclasses.find((c) => c.name === tab.dataclassName)?.count ?? 0
     },
     [activeTabId, dataclasses, pagination, selectedDataclass]
   )

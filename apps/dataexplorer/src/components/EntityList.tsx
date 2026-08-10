@@ -86,6 +86,7 @@ export function EntityList({ tabId }: { tabId: string }) {
     createEntity,
     updateEntity,
     refreshApp,
+    fetchDataclassCount,
   } = useDataExplorerStore()
 
   // This list renders a specific tab (kept mounted across tab switches), so it
@@ -108,6 +109,12 @@ export function EntityList({ tabId }: { tabId: string }) {
     const dc = dataclasses.find((d) => d.name === selectedDataclass)
     return dc?.count ?? null
   }, [dataclasses, selectedDataclass])
+
+  // Opening a table is an explicit ask to know its size when counts were deferred.
+  useEffect(() => {
+    if (!selectedDataclass || dataclassTotalCount !== null) return
+    void fetchDataclassCount(selectedDataclass)
+  }, [selectedDataclass, dataclassTotalCount, fetchDataclassCount])
 
   const setViewMode = useTabsStore((s) => s.setViewMode)
 

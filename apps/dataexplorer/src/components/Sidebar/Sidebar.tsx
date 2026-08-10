@@ -74,6 +74,11 @@ export function Sidebar({ collapsed = false, onDataclassOpened, onClose }: Sideb
       result = result.filter((c) => c.name.toLowerCase().includes(query))
     }
 
+    const countValue = (n: number | null, forDesc: boolean) => {
+      if (n == null) return forDesc ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY
+      return n
+    }
+
     switch (sortOption) {
       case 'name-asc':
         result.sort((a, b) => a.name.localeCompare(b.name))
@@ -82,10 +87,10 @@ export function Sidebar({ collapsed = false, onDataclassOpened, onClose }: Sideb
         result.sort((a, b) => b.name.localeCompare(a.name))
         break
       case 'count-asc':
-        result.sort((a, b) => a.count - b.count)
+        result.sort((a, b) => countValue(a.count, false) - countValue(b.count, false))
         break
       case 'count-desc':
-        result.sort((a, b) => b.count - a.count)
+        result.sort((a, b) => countValue(b.count, true) - countValue(a.count, true))
         break
     }
 
@@ -93,9 +98,11 @@ export function Sidebar({ collapsed = false, onDataclassOpened, onClose }: Sideb
   }, [dataclasses, searchQuery, sortOption])
 
   const totalEntities = useMemo(
-    () => dataclasses.reduce((sum, c) => sum + c.count, 0),
+    () => dataclasses.reduce((sum, c) => sum + (c.count ?? 0), 0),
     [dataclasses]
   )
+
+  const countsIncomplete = useMemo(() => dataclasses.some((c) => c.count === null), [dataclasses])
 
   if (collapsed) {
     return (
@@ -117,6 +124,7 @@ export function Sidebar({ collapsed = false, onDataclassOpened, onClose }: Sideb
       <div className="flex h-full w-full min-w-0 flex-col bg-muted/30">
         <SidebarHeader
           totalEntities={totalEntities}
+          countsIncomplete={countsIncomplete}
           searchQuery={searchQuery}
           setSearchQuery={setSearchQuery}
           sortOption={sortOption}

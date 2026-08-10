@@ -9,7 +9,6 @@ import {
 } from '@4d/ui'
 import { Home, Loader2, Network, Settings } from 'lucide-react'
 import { useTranslation } from '~/i18n'
-import { formatCount } from '~/lib/utils'
 import { useDataExplorerStore } from '~/store'
 import { formatShortcut, getShortcutById, useShortcuts } from '~/store/settings'
 import { useActiveDataclassName, useIsHomeTabActive, useTabsStore } from '~/store/tabs'
@@ -18,6 +17,7 @@ import {
   DataclassIcon,
   getDataclassColorClasses,
 } from '../DataclassCustomizeModal'
+import { DataclassCountCell, DataclassLoadCountAction } from './DataclassCountCell'
 
 type SidebarCollapsedProps = {
   dataclassCustomizations: Record<string, { color?: string; description?: string }>
@@ -163,10 +163,18 @@ export function SidebarCollapsed({
                               </p>
                             )}
                             <p className="text-muted-foreground text-xs">
-                              {formatCount(dataclass.count)} entities
+                              <DataclassCountCell
+                                name={dataclass.name}
+                                count={dataclass.count}
+                                showEntitiesLabel
+                              />
                             </p>
                           </div>
                           <div className="flex shrink-0 gap-0.5">
+                            <DataclassLoadCountAction
+                              name={dataclass.name}
+                              count={dataclass.count}
+                            />
                             <Button
                               type="button"
                               variant="ghost"

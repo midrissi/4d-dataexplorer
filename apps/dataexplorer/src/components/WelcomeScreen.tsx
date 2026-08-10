@@ -56,6 +56,8 @@ export function WelcomeScreen() {
   const dataclassesLoading = useDataExplorerStore((s) => s.dataclassesLoading)
   const dataclassesError = useDataExplorerStore((s) => s.dataclassesError)
   const refreshApp = useDataExplorerStore((s) => s.refreshApp)
+  const fetchAllDataclassCounts = useDataExplorerStore((s) => s.fetchAllDataclassCounts)
+  const countsLoadingAll = useDataExplorerStore((s) => s.countsLoadingAll)
   const openTab = useTabsStore((s) => s.openTab)
   const openEntitySetTab = useTabsStore((s) => s.openEntitySetTab)
   const openGraphTab = useTabsStore((s) => s.openGraphTab)
@@ -125,9 +127,23 @@ export function WelcomeScreen() {
     })
   }
 
+  const countsReady = useMemo(
+    () => dataclasses.length > 0 && dataclasses.every((c) => c.count !== null),
+    [dataclasses]
+  )
+
   const stats = useMemo(() => {
-    const totalEntities = dataclasses.reduce((sum, c) => sum + c.count, 0)
-    const sortedByCount = [...dataclasses].sort((a, b) => b.count - a.count)
+    if (!countsReady) {
+      return {
+        totalEntities: 0,
+        totalDataclasses: dataclasses.length,
+        largest: null as (typeof dataclasses)[number] | null,
+        avgPerDataclass: 0,
+        sortedByCount: [] as typeof dataclasses,
+      }
+    }
+    const totalEntities = dataclasses.reduce((sum, c) => sum + (c.count ?? 0), 0)
+    const sortedByCount = [...dataclasses].sort((a, b) => (b.count ?? 0) - (a.count ?? 0))
     const largest = sortedByCount[0]
     const avgPerDataclass =
       dataclasses.length > 0 ? Math.round(totalEntities / dataclasses.length) : 0
@@ -139,28 +155,30 @@ export function WelcomeScreen() {
       avgPerDataclass,
       sortedByCount,
     }
-  }, [dataclasses])
+  }, [dataclasses, countsReady])
 
   // Prepare chart data with colors included
   const barChartData = useMemo(() => {
+    if (!countsReady) return []
     return [...dataclasses]
-      .sort((a, b) => b.count - a.count)
+      .sort((a, b) => (b.count ?? 0) - (a.count ?? 0))
       .slice(0, 10)
       .map((c, index) => ({
         name: c.name,
-        count: c.count,
+        count: c.count ?? 0,
         fill: CHART_COLORS[index % CHART_COLORS.length],
       }))
-  }, [dataclasses])
+  }, [dataclasses, countsReady])
 
   const pieChartData = useMemo(() => {
-    const sorted = [...dataclasses].sort((a, b) => b.count - a.count)
+    if (!countsReady) return []
+    const sorted = [...dataclasses].sort((a, b) => (b.count ?? 0) - (a.count ?? 0))
     const top5 = sorted.slice(0, 5)
-    const othersCount = sorted.slice(5).reduce((sum, c) => sum + c.count, 0)
+    const othersCount = sorted.slice(5).reduce((sum, c) => sum + (c.count ?? 0), 0)
 
     const data = top5.map((c, index) => ({
       name: c.name,
-      count: c.count,
+      count: c.count ?? 0,
       fill: CHART_COLORS[index % CHART_COLORS.length],
     }))
 
@@ -173,7 +191,7 @@ export function WelcomeScreen() {
     }
 
     return data
-  }, [dataclasses, t])
+  }, [dataclasses, t, countsReady])
 
   const isRefreshingDataclasses = dataclassesLoading && dataclasses.length > 0
   const mobile = isMobileShell()
@@ -380,19 +398,25 @@ export function WelcomeScreen() {
           <WelcomeStatCard
             icon={FileText}
             label={t('welcome.totalEntities')}
-            value={formatCount(stats.totalEntities)}
-            subtext={t('welcome.acrossAllDataclasses')}
+            value={countsReady ? formatCount(stats.totalEntities) : t('welcome.na')}
+            subtext={
+              countsReady ? t('welcome.acrossAllDataclasses') : t('welcome.loadCountsToSeeCharts')
+            }
           />
           <WelcomeStatCard
             icon={HardDrive}
             label={t('welcome.largestDataclass')}
-            value={stats.largest ? formatCount(stats.largest.count) : t('welcome.na')}
-            subtext={stats.largest?.name}
+            value={
+              countsReady && stats.largest?.count != null
+                ? formatCount(stats.largest.count)
+                : t('welcome.na')
+            }
+            subtext={countsReady ? stats.largest?.name : undefined}
           />
           <WelcomeStatCard
             icon={TrendingUp}
             label={t('welcome.averageSize')}
-            value={formatCount(stats.avgPerDataclass)}
+            value={countsReady ? formatCount(stats.avgPerDataclass) : t('welcome.na')}
             subtext={t('welcome.entitiesPerDataclass')}
           />
         </div>
@@ -573,86 +597,119 @@ export function WelcomeScreen() {
               isRefreshingDataclasses && 'opacity-70'
             )}
           >
-            {/* Bar Chart */}
-            <div className="rounded-md border bg-card p-3">
-              <h3 className="mb-4 font-medium text-foreground">
-                {t('welcome.entitiesByDataclass')}
-              </h3>
-              <div className="h-75 min-h-75">
-                {chartsReady && barChartData.length > 0 && (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <BarChart
-                      data={barChartData}
-                      layout="vertical"
-                      margin={{ top: 0, right: 20, bottom: 0, left: 10 }}
-                    >
-                      <XAxis
-                        type="number"
-                        tickFormatter={(value) => formatCount(value)}
-                        tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }}
-                        axisLine={{ stroke: 'var(--border)' }}
-                        tickLine={false}
-                      />
-                      <YAxis
-                        type="category"
-                        dataKey="name"
-                        tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }}
-                        axisLine={false}
-                        tickLine={false}
-                        width={140}
-                      />
-                      <Tooltip
-                        content={<WelcomeBarTooltip entitiesLabel={t('welcome.entities')} />}
-                        cursor={{ fill: 'color-mix(in oklch, var(--muted) 50%, transparent)' }}
-                      />
-                      <Bar dataKey="count" radius={[0, 4, 4, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                )}
-              </div>
-            </div>
-
-            {/* Pie Chart */}
-            <div className="rounded-md border bg-card p-3">
-              <h3 className="mb-3 font-medium text-foreground text-sm">
-                {t('welcome.distribution')}
-              </h3>
-              <div className="h-75 min-h-75">
-                {chartsReady && pieChartData.length > 0 && (
-                  <ResponsiveContainer width="100%" height={300}>
-                    <PieChart>
-                      <Pie
-                        data={pieChartData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={100}
-                        paddingAngle={2}
-                        dataKey="count"
-                        stroke="none"
-                        isAnimationActive={false}
-                      />
-                      <Tooltip
-                        content={<WelcomePieTooltip entitiesLabel={t('welcome.entities')} />}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                )}
-              </div>
-
-              {/* Legend */}
-              <div className="mt-4 flex flex-wrap justify-center gap-3">
-                {pieChartData.map((entry, index) => (
-                  <div key={entry.name} className="flex items-center gap-1.5">
-                    <div
-                      className="h-2.5 w-2.5 rounded-full"
-                      style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
-                    />
-                    <span className="text-muted-foreground text-xs">{entry.name}</span>
+            {!countsReady ? (
+              <div className="rounded-md border bg-card p-6 lg:col-span-2">
+                <div className="flex flex-col items-center gap-3 text-center">
+                  <TrendingUp className="h-8 w-8 text-muted-foreground" aria-hidden />
+                  <div className="space-y-1">
+                    <p className="font-medium text-sm">{t('welcome.loadCountsTitle')}</p>
+                    <p className="text-muted-foreground text-xs">
+                      {t('welcome.loadCountsToSeeCharts')}
+                    </p>
                   </div>
-                ))}
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className="gap-1.5"
+                    disabled={countsLoadingAll}
+                    onClick={() => void fetchAllDataclassCounts()}
+                  >
+                    {countsLoadingAll ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+                    ) : (
+                      <RefreshCw className="h-3.5 w-3.5" aria-hidden />
+                    )}
+                    {t('sidebar.loadAllCounts')}
+                  </Button>
+                </div>
               </div>
-            </div>
+            ) : (
+              <>
+                {/* Bar Chart */}
+                <div className="rounded-md border bg-card p-3">
+                  <h3 className="mb-4 font-medium text-foreground">
+                    {t('welcome.entitiesByDataclass')}
+                  </h3>
+                  <div className="h-75 min-h-75">
+                    {chartsReady && barChartData.length > 0 && (
+                      <ResponsiveContainer width="100%" height={300}>
+                        <BarChart
+                          data={barChartData}
+                          layout="vertical"
+                          margin={{ top: 0, right: 20, bottom: 0, left: 10 }}
+                        >
+                          <XAxis
+                            type="number"
+                            tickFormatter={(value) => formatCount(value)}
+                            tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }}
+                            axisLine={{ stroke: 'var(--border)' }}
+                            tickLine={false}
+                          />
+                          <YAxis
+                            type="category"
+                            dataKey="name"
+                            tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }}
+                            axisLine={false}
+                            tickLine={false}
+                            width={140}
+                          />
+                          <Tooltip
+                            content={<WelcomeBarTooltip entitiesLabel={t('welcome.entities')} />}
+                            cursor={{
+                              fill: 'color-mix(in oklch, var(--muted) 50%, transparent)',
+                            }}
+                          />
+                          <Bar dataKey="count" radius={[0, 4, 4, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+                </div>
+
+                {/* Pie Chart */}
+                <div className="rounded-md border bg-card p-3">
+                  <h3 className="mb-3 font-medium text-foreground text-sm">
+                    {t('welcome.distribution')}
+                  </h3>
+                  <div className="h-75 min-h-75">
+                    {chartsReady && pieChartData.length > 0 && (
+                      <ResponsiveContainer width="100%" height={300}>
+                        <PieChart>
+                          <Pie
+                            data={pieChartData}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={60}
+                            outerRadius={100}
+                            paddingAngle={2}
+                            dataKey="count"
+                            stroke="none"
+                            isAnimationActive={false}
+                          />
+                          <Tooltip
+                            content={<WelcomePieTooltip entitiesLabel={t('welcome.entities')} />}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    )}
+                  </div>
+
+                  {/* Legend */}
+                  <div className="mt-4 flex flex-wrap justify-center gap-3">
+                    {pieChartData.map((entry, index) => (
+                      <div key={entry.name} className="flex items-center gap-1.5">
+                        <div
+                          className="h-2.5 w-2.5 rounded-full"
+                          style={{ backgroundColor: CHART_COLORS[index % CHART_COLORS.length] }}
+                        />
+                        <span className="text-muted-foreground text-xs">{entry.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -668,7 +725,10 @@ export function WelcomeScreen() {
               {t('welcome.allDataclasses')}
             </h3>
             <div className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {stats.sortedByCount.map((dataclass, index) => (
+              {(countsReady
+                ? stats.sortedByCount
+                : [...dataclasses].sort((a, b) => a.name.localeCompare(b.name))
+              ).map((dataclass, index) => (
                 <DataclassRow
                   key={dataclass.name}
                   dataclass={dataclass}

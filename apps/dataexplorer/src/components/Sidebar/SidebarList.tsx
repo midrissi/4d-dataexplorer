@@ -15,10 +15,15 @@ import { EmptyPanel, EmptyPanelAction } from '~/components/EmptyPanel'
 import { PullToRefresh } from '~/components/PullToRefresh'
 import { useTranslation } from '~/i18n'
 import { isMobileShell } from '~/lib/platform'
-import { formatCount } from '~/lib/utils'
 import type { Dataclass } from '~/store'
 import { useDataExplorerStore } from '~/store'
 import { DataclassIcon, getDataclassColorClasses } from '../DataclassCustomizeModal'
+import { DataclassCountCell, DataclassLoadCountAction } from './DataclassCountCell'
+
+function dataclassCountAria(name: string, count: number | null, entitiesLabel: string): string {
+  if (count === null) return name
+  return `${name} - ${count.toLocaleString()} ${entitiesLabel}`
+}
 
 type SidebarListProps = {
   filteredDataclasses: Dataclass[]
@@ -229,7 +234,11 @@ function SidebarListIcons({
                 <button
                   type="button"
                   aria-current={isActive ? 'page' : undefined}
-                  aria-label={`${dataclass.name} - ${dataclass.count.toLocaleString()} entities`}
+                  aria-label={dataclassCountAria(
+                    dataclass.name,
+                    dataclass.count,
+                    t('entity.entities')
+                  )}
                   onClick={() => handleDataclassClick(dataclass.name)}
                   className="flex w-full flex-col items-center gap-1 rounded-sm text-left"
                 >
@@ -269,7 +278,7 @@ function SidebarListIcons({
                       mobile ? 'text-[10px]' : 'text-[10px] opacity-0 group-hover:opacity-100'
                     )}
                   >
-                    {formatCount(dataclass.count)}
+                    <DataclassCountCell name={dataclass.name} count={dataclass.count} />
                   </span>
                 </button>
                 <div
@@ -278,6 +287,7 @@ function SidebarListIcons({
                     mobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
                   )}
                 >
+                  <DataclassLoadCountAction name={dataclass.name} count={dataclass.count} />
                   {!mobile ? <AiActionsMenu dataclassName={dataclass.name} variant="icon" /> : null}
                   <Button
                     type="button"
@@ -312,12 +322,16 @@ function SidebarListIcons({
               <TooltipContent
                 side="right"
                 sideOffset={4}
-                className="max-w-[220px] border border-border/80 bg-popover shadow-lg dark:border-border dark:bg-popover"
+                className="max-w-55 border border-border/80 bg-popover shadow-lg dark:border-border dark:bg-popover"
               >
                 <div className="flex flex-col gap-1">
                   <p className="font-semibold">{dataclass.name}</p>
                   <p className="text-muted-foreground text-xs">
-                    {formatCount(dataclass.count)} {t('entity.entities')}
+                    <DataclassCountCell
+                      name={dataclass.name}
+                      count={dataclass.count}
+                      showEntitiesLabel
+                    />
                   </p>
                   <Button
                     type="button"
@@ -365,7 +379,7 @@ function SidebarListTable({
               role="button"
               tabIndex={0}
               aria-current={isActive ? 'page' : undefined}
-              aria-label={`${dataclass.name} - ${dataclass.count.toLocaleString()} entities`}
+              aria-label={dataclassCountAria(dataclass.name, dataclass.count, t('entity.entities'))}
               style={colorClasses.style}
               className={cn(
                 'flex min-h-12 w-full min-w-0 cursor-pointer items-center gap-3 px-3 py-2.5 text-left transition-colors',
@@ -406,7 +420,7 @@ function SidebarListTable({
                 ) : null}
               </span>
               <span className="shrink-0 font-mono text-muted-foreground text-xs tabular-nums">
-                {formatCount(dataclass.count)}
+                <DataclassCountCell name={dataclass.name} count={dataclass.count} />
               </span>
               <Button
                 type="button"
@@ -462,7 +476,11 @@ function SidebarListTable({
                     <button
                       type="button"
                       aria-current={isActive ? 'page' : undefined}
-                      aria-label={`${dataclass.name} - ${dataclass.count.toLocaleString()} entities`}
+                      aria-label={dataclassCountAria(
+                        dataclass.name,
+                        dataclass.count,
+                        t('entity.entities')
+                      )}
                       onClick={() => handleDataclassClick(dataclass.name)}
                       className={cn(
                         'flex h-6 min-w-0 flex-1 items-center gap-1.5 text-left',
@@ -492,11 +510,17 @@ function SidebarListTable({
                         )}
                       </span>
                     </button>
-                    <span className="w-10 shrink-0 text-right text-muted-foreground text-xs tabular-nums">
-                      {formatCount(dataclass.count)}
+                    <span
+                      className={cn(
+                        'w-10 shrink-0 text-right text-muted-foreground text-xs tabular-nums',
+                        dataclass.count === null && 'group-hover:opacity-0'
+                      )}
+                    >
+                      <DataclassCountCell name={dataclass.name} count={dataclass.count} />
                     </span>
                     <div className="pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center pr-1 opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100">
                       <div className="flex items-center gap-0.5 rounded-sm bg-sidebar-accent p-0.5 ring-1 ring-border/50">
+                        <DataclassLoadCountAction name={dataclass.name} count={dataclass.count} />
                         <AiActionsMenu dataclassName={dataclass.name} variant="icon" />
                         <Button
                           type="button"
@@ -567,7 +591,7 @@ function SidebarListCards({
             role="button"
             tabIndex={0}
             aria-current={isActive ? 'page' : undefined}
-            aria-label={`${dataclass.name} - ${dataclass.count.toLocaleString()} entities`}
+            aria-label={dataclassCountAria(dataclass.name, dataclass.count, t('entity.entities'))}
             style={colorClasses.style}
             className={cn(
               'group relative flex w-full min-w-0 cursor-pointer items-center overflow-hidden rounded-none border-l-2 text-left transition-colors',
@@ -632,26 +656,34 @@ function SidebarListCards({
               className={cn(
                 'shrink-0 tabular-nums',
                 mobile ? 'min-w-12 text-right text-sm' : 'text-[11px]',
-                isActive ? 'font-medium text-foreground' : 'text-muted-foreground'
+                isActive ? 'font-medium text-foreground' : 'text-muted-foreground',
+                !mobile && dataclass.count === null && 'group-hover:opacity-0'
               )}
             >
-              {formatCount(dataclass.count)}
+              <DataclassCountCell name={dataclass.name} count={dataclass.count} />
             </span>
 
             {mobile ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-10 w-10 shrink-0"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleOpenCustomize(e, dataclass.name)
-                }}
-                aria-label={t('sidebar.customize')}
-              >
-                <Settings className="h-4 w-4" />
-              </Button>
+              <>
+                <DataclassLoadCountAction
+                  name={dataclass.name}
+                  count={dataclass.count}
+                  className="h-10 w-10 shrink-0"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-10 w-10 shrink-0"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleOpenCustomize(e, dataclass.name)
+                  }}
+                  aria-label={t('sidebar.customize')}
+                >
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </>
             ) : (
               <div className="pointer-events-none absolute inset-y-0 right-0 z-10 flex items-center pr-2 opacity-0 transition-opacity group-hover:pointer-events-auto group-hover:opacity-100">
                 <div
@@ -660,6 +692,7 @@ function SidebarListCards({
                     !isActive && 'shadow-sm'
                   )}
                 >
+                  <DataclassLoadCountAction name={dataclass.name} count={dataclass.count} />
                   <AiActionsMenu dataclassName={dataclass.name} variant="icon" />
                   <Tooltip>
                     <TooltipTrigger asChild>

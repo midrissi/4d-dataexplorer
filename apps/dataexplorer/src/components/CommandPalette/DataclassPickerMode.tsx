@@ -11,8 +11,8 @@ export type DataclassPickerModeProps = {
   setDataclassSearch: (value: string) => void
   dataclassInputRef: RefObject<HTMLInputElement | null>
   onKeyDown: (e: React.KeyboardEvent) => void
-  dataclasses: Array<{ name: string; count: number }>
-  filteredDataclasses: Array<{ name: string; count: number }>
+  dataclasses: Array<{ name: string; count: number | null }>
+  filteredDataclasses: Array<{ name: string; count: number | null }>
   selectedIndex: number
   setSelectedIndex: (index: number) => void
   listRef: RefObject<HTMLDivElement | null>
@@ -131,7 +131,9 @@ export function DataclassPickerModeContent({
                         isSelected ? 'text-accent-foreground/70' : 'text-muted-foreground'
                       )}
                     >
-                      {dc.count.toLocaleString()} {t('entity.entities')}
+                      {dc.count == null
+                        ? t('sidebar.countUnknown')
+                        : `${dc.count.toLocaleString()} ${t('entity.entities')}`}
                     </div>
                   </div>
                 </Button>

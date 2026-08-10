@@ -14,10 +14,12 @@ import {
 import {
   ChevronsLeft,
   Dices,
+  Hash,
   Home,
   Layers,
   LayoutGrid,
   LayoutTemplate,
+  Loader2,
   RefreshCw,
   Search,
   SortAsc,
@@ -49,6 +51,7 @@ import { SORT_LABEL_KEYS, SORT_OPTIONS, type SortOption } from './types'
 
 type SidebarHeaderProps = {
   totalEntities: number
+  countsIncomplete: boolean
   searchQuery: string
   setSearchQuery: (q: string) => void
   sortOption: SortOption
@@ -60,6 +63,7 @@ type SidebarHeaderProps = {
 
 export function SidebarHeader({
   totalEntities,
+  countsIncomplete,
   searchQuery,
   setSearchQuery,
   sortOption,
@@ -68,7 +72,13 @@ export function SidebarHeader({
   handleOpenAllDataclasses,
   onClose,
 }: SidebarHeaderProps) {
-  const { dataclasses, dataclassesLoading, fetchDataclasses } = useDataExplorerStore()
+  const {
+    dataclasses,
+    dataclassesLoading,
+    fetchDataclasses,
+    fetchAllDataclassCounts,
+    countsLoadingAll,
+  } = useDataExplorerStore()
   const sidebarViewMode = useSidebarViewMode()
   const setSidebarViewMode = useSettingsStore((state) => state.setSidebarViewMode)
   const dataclassCustomizations = useDataclassCustomizations()
@@ -111,7 +121,9 @@ export function SidebarHeader({
             {t('sidebar.dataclasses')}
           </h2>
           <p className={cn('text-muted-foreground', mobile ? 'text-sm' : 'text-xs')}>
-            {formatCount(totalEntities)} {t('sidebar.totalEntities')}
+            {countsIncomplete
+              ? t('sidebar.countsPartial', { loaded: formatCount(totalEntities) })
+              : `${formatCount(totalEntities)} ${t('sidebar.totalEntities')}`}
           </p>
         </div>
         {mobile && onClose ? (
@@ -207,6 +219,27 @@ export function SidebarHeader({
             </TooltipTrigger>
             <TooltipContent>{t('sidebar.refreshDataclasses')}</TooltipContent>
           </Tooltip>
+          {countsIncomplete ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={controlSize}
+                  onClick={() => void fetchAllDataclassCounts()}
+                  disabled={countsLoadingAll || dataclassesLoading || dataclasses.length === 0}
+                  aria-label={t('sidebar.loadAllCounts')}
+                >
+                  {countsLoadingAll ? (
+                    <Loader2 className={cn(iconSize, 'animate-spin')} aria-hidden />
+                  ) : (
+                    <Hash className={iconSize} aria-hidden />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>{t('sidebar.loadAllCounts')}</TooltipContent>
+            </Tooltip>
+          ) : null}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button

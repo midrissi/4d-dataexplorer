@@ -14,6 +14,7 @@ import {
   RESTClient,
 } from '@4d/rest'
 import type { MethodToolInvokeInput } from '@4djs/assistant/tools'
+import { COUNT_FETCH_CONCURRENCY, mapWithConcurrency } from '~/lib/dataclass-counts'
 import { getBaseUrl, getCustomHeaders, getLoggingFetch, getTimeout } from '~/lib/platform'
 import { getCurrentBaseId, getDataclassCustomizations, setCurrentBaseId } from '~/lib/storage'
 import type { Dataclass, Entity, Pagination } from '~/store'
@@ -406,36 +407,58 @@ export const api = {
   },
 
   /**
-   * Get all dataclasses with their entity counts
+   * Catalog names only — no entity counts (fast connect path for large schemas).
    */
-  getDataclasses: async (): Promise<Dataclass[]> => {
+  getDataclassList: async (): Promise<Dataclass[]> => {
     const catalog = await client.catalog.getAllWithMetadataCached()
-
-    // Handle case where no dataclasses exist
     if (!catalog.dataClasses || catalog.dataClasses.length === 0) {
       return []
     }
+    return catalog.dataClasses.map((dc) => ({
+      name: dc.name,
+      collectionName: dc.collectionName,
+      count: null,
+    }))
+  },
 
-    const dataclassesWithCounts = await Promise.all(
-      catalog.dataClasses.map(async (dc) => {
-        try {
-          const count = await client.dataclass(dc.name).count()
-          return {
-            name: dc.name,
-            collectionName: dc.collectionName,
-            count,
-          }
-        } catch {
-          return {
-            name: dc.name,
-            collectionName: dc.collectionName,
-            count: 0,
-          }
-        }
-      })
-    )
+  /**
+   * Entity count for one dataclass (`$top=0` → `__COUNT`).
+   * Failed counts resolve to `0` so the UI can show a loaded value.
+   */
+  getDataclassCount: async (name: string): Promise<number> => {
+    try {
+      return await client.dataclass(name).count()
+    } catch {
+      return 0
+    }
+  },
 
-    return dataclassesWithCounts
+  /**
+   * Fetch counts for many dataclasses with bounded concurrency.
+   */
+  getDataclassCounts: async (
+    names: readonly string[],
+    options?: { concurrency?: number }
+  ): Promise<Map<string, number>> => {
+    const concurrency = options?.concurrency ?? COUNT_FETCH_CONCURRENCY
+    const pairs = await mapWithConcurrency(names, concurrency, async (name) => {
+      const count = await api.getDataclassCount(name)
+      return [name, count] as const
+    })
+    return new Map(pairs)
+  },
+
+  /**
+   * Catalog list + all entity counts (pooled). Prefer list + selective counts for UI.
+   */
+  getDataclasses: async (): Promise<Dataclass[]> => {
+    const list = await api.getDataclassList()
+    if (list.length === 0) return []
+    const counts = await api.getDataclassCounts(list.map((dc) => dc.name))
+    return list.map((dc) => ({
+      ...dc,
+      count: counts.get(dc.name) ?? 0,
+    }))
   },
 
   /**

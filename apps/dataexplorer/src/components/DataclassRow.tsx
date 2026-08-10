@@ -19,7 +19,8 @@ export function DataclassRow({
   customization,
   onClick,
 }: DataclassRowProps) {
-  const percentage = maxCount > 0 ? (dataclass.count / maxCount) * 100 : 0
+  const percentage =
+    maxCount > 0 && dataclass.count != null ? (dataclass.count / maxCount) * 100 : 0
   const colorClasses = getDataclassColorClasses(customization)
 
   return (
@@ -59,7 +60,7 @@ export function DataclassRow({
             colorClasses.text
           )}
         >
-          {formatCount(dataclass.count)}
+          {dataclass.count == null ? '—' : formatCount(dataclass.count)}
         </span>
       </div>
     </Button>

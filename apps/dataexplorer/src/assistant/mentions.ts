@@ -67,7 +67,7 @@ function summarizeDataclass(dataclassName: string, catalog: Catalog): string {
 }
 
 function toMentionItems(
-  dataclasses: Array<{ name: string; count?: number }>
+  dataclasses: Array<{ name: string; count?: number | null }>
 ): AssistantMentionItem[] {
   return [...dataclasses]
     .map((dc) => ({
