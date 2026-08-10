@@ -46,6 +46,18 @@ ds.Car.query("color.label=:1", "black")
 await ds.Car.get(12).select("name")
 ```
 
+The REPL also injects **`faker`** ([Faker.js](https://fakerjs.dev/api/)) — the same English instance used by `{{$faker…}}` templates — with module/method autocomplete:
+
+```js
+faker.person.firstName()
+faker.internet.email()
+faker.string.uuid()
+const rows = Array.from({ length: 5 }, () => ({
+  name: faker.person.fullName(),
+  city: faker.location.city(),
+}))
+```
+
 Multi-line snippets with `await` and `console.log`:
 
 ```js

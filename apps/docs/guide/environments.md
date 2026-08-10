@@ -115,9 +115,12 @@ Wall-clock values that are not Faker methods:
 
 ## ORDA Terminal
 
-In the terminal, embed <code>&#123;&#123;variable&#125;&#125;</code> in snippet source (substituted before run), or use the `app.environment` API:
+In the terminal, embed <code>&#123;&#123;variable&#125;&#125;</code> in snippet source (substituted before run), call **`faker`** directly (same instance as <code>&#123;&#123;$faker…&#125;&#125;</code>), or use the `app.environment` API:
 
 ```js
+faker.person.firstName()
+faker.string.uuid()
+
 app.environment.get("baseUrl")
 app.environment.set("token", "abc")
 app.environment.use("Local")
