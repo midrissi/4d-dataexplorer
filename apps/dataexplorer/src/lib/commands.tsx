@@ -127,7 +127,7 @@ export type CommandContext = {
   unpinAllTabs: () => void
 
   // Settings
-  openSettingsTab: () => void
+  openSettingsTab: (options?: { section?: 'shortcuts' }) => void
   readonlyMode: boolean
   toggleReadonlyMode: () => void
   shortcuts: KeyboardShortcut[]

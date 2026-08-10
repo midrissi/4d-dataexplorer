@@ -34,6 +34,19 @@
   shape-rendering: optimizeSpeed;
 }
 
+/* Theme-aware React Flow chrome (controls / minimap use full color tokens). */
+.structure-graph .react-flow {
+  --xy-controls-button-background-color: var(--card);
+  --xy-controls-button-background-color-hover: var(--muted);
+  --xy-controls-button-color: var(--foreground);
+  --xy-controls-button-color-hover: var(--foreground);
+  --xy-controls-button-border-color: var(--border);
+  --xy-controls-box-shadow: 0 0 2px 1px color-mix(in oklch, var(--foreground) 8%, transparent);
+  --xy-minimap-background-color: var(--card);
+  --xy-minimap-mask-background-color: color-mix(in oklch, var(--background) 55%, transparent);
+  --xy-minimap-node-stroke-color: var(--border);
+}
+
 /* Hide focus outline/ring on buttons */
 button:focus-visible,
 [role="button"]:focus-visible {

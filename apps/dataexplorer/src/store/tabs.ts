@@ -170,6 +170,16 @@ export type SettingsTab = BaseTab & {
   dataclassesExpanded: boolean
   assistantToolsExpanded: boolean
   widgetsExpanded: boolean
+  /**
+   * One-shot navigation hint. SettingsPage scrolls to the section when the tab
+   * becomes active, then clears this field.
+   */
+  scrollToSection?: 'shortcuts' | null
+}
+
+export type OpenSettingsTabOptions = {
+  /** Expand and scroll to a settings section after opening the tab. */
+  section?: 'shortcuts'
 }
 
 /**
@@ -514,7 +524,7 @@ type TabsState = {
   }) => string
   openAllDataclasses: (dataclassNames: string[]) => void
   openHomeTab: () => void
-  openSettingsTab: () => void
+  openSettingsTab: (options?: OpenSettingsTabOptions) => void
   openGraphTab: () => Promise<void>
   openStaticTab: (staticId: string) => void
   openSchemaBuilderTab: () => void
@@ -557,6 +567,7 @@ type TabsState = {
   setSettingsDataclassesExpanded: (tabId: string, expanded: boolean) => void
   setSettingsAssistantToolsExpanded: (tabId: string, expanded: boolean) => void
   setSettingsWidgetsExpanded: (tabId: string, expanded: boolean) => void
+  clearSettingsScrollToSection: (tabId: string) => void
 
   // Apply default settings to all existing dataclass tabs
   applyDefaultViewModeToAllTabs: (viewMode: ViewMode) => void
@@ -752,18 +763,30 @@ export const useTabsStore = create<TabsState>()(
 
         /**
          * Opens the Settings tab. If a settings tab already exists, activates it.
+         * Pass `{ section: 'shortcuts' }` to expand Keyboard Shortcuts and scroll to it.
          */
-        openSettingsTab: () => {
+        openSettingsTab: (options) => {
           const { tabs } = get()
-          // Check if settings tab already exists
+          const focusShortcuts = options?.section === 'shortcuts'
           const existingSettingsTab = tabs.find(isSettingsTab)
+
           if (existingSettingsTab) {
-            set({ activeTabId: existingSettingsTab.id })
+            set({
+              activeTabId: existingSettingsTab.id,
+              tabs: focusShortcuts
+                ? updateSettingsTab(tabs, existingSettingsTab.id, {
+                    // Expand on the next SettingsPage paint so the shell can render first.
+                    scrollToSection: 'shortcuts',
+                  })
+                : tabs,
+            })
             return
           }
 
-          // Create new settings tab
-          const settingsTab = createSettingsTab()
+          const settingsTab: SettingsTab = {
+            ...createSettingsTab(),
+            ...(focusShortcuts ? { scrollToSection: 'shortcuts' as const } : {}),
+          }
 
           // Insert after pinned tabs
           const pinnedCount = tabs.filter((t) => t.isPinned).length
@@ -1256,6 +1279,10 @@ export const useTabsStore = create<TabsState>()(
 
         setSettingsWidgetsExpanded: (tabId, expanded) => {
           set({ tabs: updateSettingsTab(get().tabs, tabId, { widgetsExpanded: expanded }) })
+        },
+
+        clearSettingsScrollToSection: (tabId) => {
+          set({ tabs: updateSettingsTab(get().tabs, tabId, { scrollToSection: null }) })
         },
 
         // Apply default view mode to all existing dataclass tabs

@@ -170,6 +170,11 @@ function AppContent({ onDisconnect, onSwitchConnection, onEditConnection }: AppC
 
   const leaveToConnections = onDisconnect ?? onSwitchConnection ?? onEditConnection
 
+  const handleReloadCatalog = useCallback(() => {
+    clearCatalogCacheAndStorage()
+    void initializeApp()
+  }, [initializeApp])
+
   const handleCancelLoading = useCallback(() => {
     loadGenerationRef.current += 1
     leaveToConnections?.()
@@ -227,7 +232,7 @@ function AppContent({ onDisconnect, onSwitchConnection, onEditConnection }: AppC
 
   // Show empty state
   if (appState === 'empty') {
-    return <EmptyState onRetry={initializeApp} />
+    return <EmptyState onRetry={handleReloadCatalog} onBack={leaveToConnections} />
   }
 
   return (

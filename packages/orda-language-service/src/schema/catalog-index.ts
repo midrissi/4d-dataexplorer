@@ -54,10 +54,22 @@ export function getAttribute(
 
 /**
  * Get all attributes of a dataclass, or an empty array if not found.
+ * Duplicate names (case-insensitive) are collapsed to the first occurrence —
+ * some 4D catalog payloads list the same attribute more than once.
  */
 export function getAttributes(dataclassName: string, index: CatalogIndex): DataClassAttribute[] {
   const dc = getDataClass(dataclassName, index)
-  return dc ? dc.attributes : []
+  if (!dc) return []
+
+  const seen = new Set<string>()
+  const unique: DataClassAttribute[] = []
+  for (const attr of dc.attributes) {
+    const key = attr.name.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    unique.push(attr)
+  }
+  return unique
 }
 
 /**

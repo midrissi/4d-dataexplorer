@@ -270,7 +270,7 @@ export function Layout({
       registerShortcutHandler('toggle-console', toggleConsoleOpen),
       registerShortcutHandler('toggle-terminal', toggleTerminalOpen),
       registerShortcutHandler('toggle-theme', toggleTheme),
-      registerShortcutHandler('open-settings', openSettingsTab),
+      registerShortcutHandler('open-settings', () => openSettingsTab()),
       registerShortcutHandler('toggle-readonly', toggleReadonlyMode),
       registerShortcutHandler('open-home', openHomeTab),
       ...(isMobileShell()
@@ -1036,7 +1036,7 @@ export function Layout({
                     variant="ghost"
                     size="icon"
                     className="h-6 w-6"
-                    onClick={openSettingsTab}
+                    onClick={() => openSettingsTab()}
                     aria-label={t('layout.settingsAria')}
                   >
                     <Settings className="h-3 w-3" />

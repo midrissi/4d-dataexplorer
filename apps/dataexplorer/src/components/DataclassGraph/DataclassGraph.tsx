@@ -58,6 +58,7 @@ import {
   getGraphEditorState,
   saveGraphEditorState,
 } from '~/lib/storage'
+import { useTheme } from '~/providers/ThemeProvider'
 import { useGraphInteractionStore } from '~/store/graph-interaction'
 import { type DataclassCustomization, useSettingsStore } from '~/store/settings'
 import { useTabsStore } from '~/store/tabs'
@@ -81,6 +82,7 @@ type RelationFilter = 'all' | 'none' | 'selected'
 
 export function DataclassGraph() {
   const { t } = useTranslation()
+  const { theme } = useTheme()
   const [catalog, setCatalog] = useState<DataClass[]>([])
   const [singletons, setSingletons] = useState<SingletonFull[]>([])
   const [catalogMethods, setCatalogMethods] = useState<DatastoreMethod[]>([])
@@ -1116,6 +1118,7 @@ export function DataclassGraph() {
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
             onlyRenderVisibleElements
+            colorMode={theme}
             defaultViewport={savedViewport || undefined}
             fitView={savedViewport ? false : isInitialLoad}
             minZoom={GRAPH_MIN_ZOOM}
@@ -1133,8 +1136,8 @@ export function DataclassGraph() {
               showInteractive={false}
               position="top-left"
               style={{
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
+                backgroundColor: 'var(--card)',
+                border: '1px solid var(--border)',
                 borderRadius: '6px',
               }}
               className="[&>button:hover]:bg-muted [&>button]:border-border [&>button]:bg-card [&>button]:text-foreground"
@@ -1169,8 +1172,8 @@ export function DataclassGraph() {
               nodeStrokeWidth={2}
               maskColor="rgba(0, 0, 0, 0.3)"
               style={{
-                backgroundColor: 'hsl(var(--card))',
-                border: '1px solid hsl(var(--border))',
+                backgroundColor: 'var(--card)',
+                border: '1px solid var(--border)',
                 borderRadius: '6px',
               }}
             />

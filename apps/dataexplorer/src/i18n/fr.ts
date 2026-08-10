@@ -78,6 +78,8 @@ export const fr = {
     description:
       "La base 4D connectée n'expose aucune dataclass. Vérifiez que les dataclasses sont configurées et exposées dans l'API REST.",
     retry: 'Réessayer',
+    reloadCatalog: 'Recharger le catalogue',
+    backToConnections: 'Retour aux connexions',
     howToExpose: 'Comment exposer les dataclasses',
     step1: 'Ouvrez les paramètres de votre projet 4D',
     step2: 'Allez dans Web > Ressource REST',
@@ -1069,6 +1071,7 @@ export const fr = {
     randomIconAndColor: 'Icône et couleur aléatoires',
     keyboardShortcutsDescription: 'Actions rapides pour naviguer et gérer les entités',
     customize: 'Personnaliser',
+    openingSettings: 'Ouverture des paramètres…',
     allShortcutsDisabled: 'Tous les raccourcis sont désactivés',
     enableInSettings: 'Activer dans les paramètres',
     pressAnytimeToShowThis: 'Appuyez sur ? pour afficher',

@@ -197,4 +197,26 @@ describe('complete', () => {
     expect(labels).toContain('ASC')
     expect(labels).toContain('DESC')
   })
+
+  test('duplicate catalog attributes appear once in completions', () => {
+    const dupCatalog = {
+      ...testCatalog,
+      dataClasses: testCatalog.dataClasses.map((dc) =>
+        dc.name === 'Users'
+          ? {
+              ...dc,
+              attributes: [
+                ...dc.attributes,
+                { name: 'firstName', kind: 'storage' as const, type: 'string' },
+                { name: 'FirstName', kind: 'storage' as const, type: 'string' },
+              ],
+            }
+          : dc
+      ),
+    }
+    const dupIndex = buildCatalogIndex(dupCatalog)
+    const items = complete('', 0, dupIndex, 'Users')
+    const firstNameItems = items.filter((i) => i.label.toLowerCase() === 'firstname')
+    expect(firstNameItems).toHaveLength(1)
+  })
 })

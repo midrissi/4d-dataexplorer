@@ -572,7 +572,7 @@ export function FieldManager({
       <div
         className={cn(
           'flex items-center gap-0.5 rounded-lg border border-border bg-muted/40 p-0.5',
-          mobile && 'w-full'
+          mobile ? 'w-full' : 'shrink-0'
         )}
         role="tablist"
         aria-label={t('fieldManager.title')}
@@ -583,14 +583,14 @@ export function FieldManager({
           aria-selected={view === 'table'}
           onClick={() => setView('table')}
           className={cn(
-            'flex flex-1 items-center justify-center gap-1.5 rounded-md transition-colors',
-            mobile ? 'h-10 px-3 text-sm' : 'h-5 gap-1 px-1.5 text-[11px]',
+            'flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md transition-colors',
+            mobile ? 'h-10 flex-1 px-3 text-sm' : 'h-5 gap-1 px-1.5 text-[11px]',
             view === 'table'
               ? 'bg-primary text-primary-foreground shadow-xs'
               : 'text-muted-foreground hover:text-foreground'
           )}
         >
-          <Table2 className="h-3.5 w-3.5" />
+          <Table2 className="h-3.5 w-3.5 shrink-0" />
           {t('fieldManager.tableColumns')}
           {fieldConfig.table.length > 0 && (
             <span className="font-mono text-[10px]">({fieldConfig.table.length})</span>
@@ -602,14 +602,14 @@ export function FieldManager({
           aria-selected={view === 'cards'}
           onClick={() => setView('cards')}
           className={cn(
-            'flex flex-1 items-center justify-center gap-1.5 rounded-md transition-colors',
-            mobile ? 'h-10 px-3 text-sm' : 'h-5 gap-1 px-1.5 text-[11px]',
+            'flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md transition-colors',
+            mobile ? 'h-10 flex-1 px-3 text-sm' : 'h-5 gap-1 px-1.5 text-[11px]',
             view === 'cards'
               ? 'bg-primary text-primary-foreground shadow-xs'
               : 'text-muted-foreground hover:text-foreground'
           )}
         >
-          <LayoutGrid className="h-3.5 w-3.5" />
+          <LayoutGrid className="h-3.5 w-3.5 shrink-0" />
           {t('fieldManager.cardFields')}
           {fieldConfig.cards.length > 0 && (
             <span className="font-mono text-[10px]">({fieldConfig.cards.length})</span>

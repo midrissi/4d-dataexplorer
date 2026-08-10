@@ -1,6 +1,11 @@
 import type { DataClassAttribute } from '@4d/rest'
 import type { CatalogIndex, ResolvedAttribute } from '../types/service.ts'
-import { getAttribute, getDataClass, getRelatedDataclassName } from './catalog-index.ts'
+import {
+  getAttribute,
+  getAttributes,
+  getDataClass,
+  getRelatedDataclassName,
+} from './catalog-index.ts'
 
 /**
  * Resolve a dot-separated attribute path string against a starting dataclass.
@@ -98,7 +103,7 @@ function _collectAttributes(
   const dc = getDataClass(dataclassName, index)
   if (!dc) return
 
-  for (const attr of dc.attributes) {
+  for (const attr of getAttributes(dataclassName, index)) {
     const path = prefix ? `${prefix}.${attr.name}` : attr.name
     result.push({ path, attribute: attr, dataclassName: dc.name })
 

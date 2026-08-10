@@ -171,11 +171,16 @@ export function SettingsPage() {
 
   // Get settings tab state from tabs store
   const settingsTab = useActiveSettingsTab()
-  const { setSettingsShortcutsExpanded, setSettingsDataclassesExpanded } = useTabsStore()
+  const {
+    setSettingsShortcutsExpanded,
+    setSettingsDataclassesExpanded,
+    clearSettingsScrollToSection,
+  } = useTabsStore()
 
   // Use tab state for expanded sections (with fallback for safety)
   const shortcutsExpanded = settingsTab?.shortcutsExpanded ?? false
   const dataclassesExpanded = settingsTab?.dataclassesExpanded ?? false
+  const shortcutsSectionRef = useRef<HTMLDivElement>(null)
 
   const setShortcutsExpanded = (expanded: boolean) => {
     if (settingsTab) {
@@ -318,6 +323,33 @@ export function SettingsPage() {
   useEffect(() => {
     syncShortcutsWithDefaults()
   }, [syncShortcutsWithDefaults])
+
+  // Deep-link from Keyboard Shortcuts modal: expand section and scroll into view.
+  const settingsScrollToSection = settingsTab?.scrollToSection
+  const settingsTabId = settingsTab?.id
+  useEffect(() => {
+    if (settingsScrollToSection !== 'shortcuts' || !settingsTabId) return
+
+    if (!shortcutsExpanded) {
+      setSettingsShortcutsExpanded(settingsTabId, true)
+      return
+    }
+
+    const section = shortcutsSectionRef.current
+    if (!section) return
+
+    const frame = window.requestAnimationFrame(() => {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      clearSettingsScrollToSection(settingsTabId)
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [
+    settingsScrollToSection,
+    settingsTabId,
+    shortcutsExpanded,
+    setSettingsShortcutsExpanded,
+    clearSettingsScrollToSection,
+  ])
 
   useEffect(() => {
     if (!shortcutsExpanded || visibleShortcutCategories.length === 0) return
@@ -1204,7 +1236,11 @@ export function SettingsPage() {
 
         {/* Keyboard shortcuts - full width (desktop only; recording shortcuts needs a physical keyboard) */}
         {!mobile && (
-          <SettingsCard className="mb-3">
+          <SettingsCard
+            ref={shortcutsSectionRef}
+            id="settings-keyboard-shortcuts"
+            className="mb-3 scroll-mt-3"
+          >
             <Button
               type="button"
               variant="ghost"
@@ -1236,7 +1272,7 @@ export function SettingsPage() {
                         }
                       }}
                     >
-                      <SelectTrigger className="h-6 w-[140px]">
+                      <SelectTrigger className="h-6 w-35">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1268,7 +1304,7 @@ export function SettingsPage() {
                   <span className="pl-1 font-medium text-sm">
                     {t('settings.enableAllShortcuts')}
                   </span>
-                  <div className="mr-3 flex min-w-[70px] justify-end">
+                  <div className="mr-3 flex min-w-17.5 justify-end">
                     <Checkbox
                       checked={getShortcutsCheckState(shortcuts)}
                       onCheckedChange={() => {
@@ -1322,10 +1358,7 @@ export function SettingsPage() {
                 ) : null}
 
                 {/* Shortcuts by category (same layout as Keyboard Shortcuts modal) */}
-                <div
-                  ref={shortcutsListRef}
-                  className="max-h-[410px] space-y-3 overflow-y-auto pr-1"
-                >
+                <div ref={shortcutsListRef} className="max-h-102.5 space-y-3 overflow-y-auto pr-1">
                   {CATEGORY_ORDER.map((category) => {
                     const groupShortcuts = filteredShortcuts.filter(
                       (shortcut) => shortcut.category === category

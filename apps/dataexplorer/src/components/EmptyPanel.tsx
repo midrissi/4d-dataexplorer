@@ -223,20 +223,22 @@ export function EmptyPanel({
   )
 }
 
-/** Convenience outline button sized for EmptyPanel actions. */
+/** Convenience button sized for EmptyPanel actions. */
 export function EmptyPanelAction({
   children,
   onClick,
   disabled,
   icon: ActionIcon,
+  variant = 'outline',
 }: {
   children: ReactNode
   onClick?: (event: MouseEvent<HTMLButtonElement>) => void
   disabled?: boolean
   icon?: LucideIcon
+  variant?: 'outline' | 'ghost' | 'default' | 'secondary'
 }) {
   return (
-    <Button type="button" variant="outline" size="xs" onClick={onClick} disabled={disabled}>
+    <Button type="button" variant={variant} size="xs" onClick={onClick} disabled={disabled}>
       {ActionIcon ? <ActionIcon /> : null}
       {children}
     </Button>

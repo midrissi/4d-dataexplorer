@@ -73,6 +73,8 @@ export const en = {
     description:
       "The connected 4D database doesn't have any exposed dataclasses. Make sure your dataclasses are properly configured and exposed in the REST API.",
     retry: 'Retry',
+    reloadCatalog: 'Reload catalog',
+    backToConnections: 'Back to connections',
     howToExpose: 'How to expose dataclasses',
     step1: 'Open your 4D project settings',
     step2: 'Navigate to Web > REST Resource',
@@ -1047,6 +1049,7 @@ export const en = {
     randomIconAndColor: 'Random Icon & Color',
     keyboardShortcutsDescription: 'Quick actions for navigating and managing entities',
     customize: 'Customize',
+    openingSettings: 'Opening settings…',
     allShortcutsDisabled: 'All shortcuts are disabled',
     enableInSettings: 'Enable in Settings',
     pressAnytimeToShowThis: 'Press ? anytime to show this',

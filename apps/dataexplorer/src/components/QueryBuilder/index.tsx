@@ -85,6 +85,7 @@ import {
   ORDA_MONARCH_LANGUAGE,
 } from './orda-language'
 import { offsetToEditorPosition } from './orda-position'
+import { clearOrdaProviders, replaceOrdaProviders } from './orda-providers'
 
 const FILTER_ARGUMENT_KINDS = [
   'string',
@@ -156,7 +157,6 @@ export function QueryBuilder() {
 
   const filterEditorRef = useRef<CodeEditorInstance | null>(null)
   const ordaServiceRef = useRef<LanguageService | null>(null)
-  const ordaProvidersRef = useRef<Array<{ dispose: () => void }>>([])
   const ordaLanguageConfiguredRef = useRef(false)
 
   ordaServiceRef.current = ordaService
@@ -431,11 +431,6 @@ export function QueryBuilder() {
   }, [localFilter, ordaService])
 
   const registerOrdaProviders = useCallback((monaco: typeof MonacoEditor) => {
-    for (const provider of ordaProvidersRef.current) {
-      provider.dispose()
-    }
-    ordaProvidersRef.current = []
-
     const completionProvider = monaco.languages.registerCompletionItemProvider(ORDA_LANGUAGE_ID, {
       triggerCharacters: ['.', ' ', ':', '=', '!', '<', '>'],
       provideCompletionItems(
@@ -454,7 +449,9 @@ export function QueryBuilder() {
 
         const seen = new Set<string>()
         const suggestions = items.flatMap((item) => {
-          const dedupeKey = `${item.label}\0${item.insertText}`
+          // Prefer label+kind so identical attribute rows from overlapping
+          // providers / catalog dupes collapse even when insertText differs.
+          const dedupeKey = `${item.kind}\0${item.label}`
           if (seen.has(dedupeKey)) return []
           seen.add(dedupeKey)
 
@@ -558,7 +555,7 @@ export function QueryBuilder() {
       }
     )
 
-    ordaProvidersRef.current = [completionProvider, hoverProvider, formatProvider]
+    replaceOrdaProviders([completionProvider, hoverProvider, formatProvider])
   }, [])
 
   const handleFilterEditorMount = useCallback(
@@ -586,10 +583,7 @@ export function QueryBuilder() {
 
   useEffect(() => {
     return () => {
-      for (const provider of ordaProvidersRef.current) {
-        provider.dispose()
-      }
-      ordaProvidersRef.current = []
+      clearOrdaProviders()
     }
   }, [])
 
@@ -670,7 +664,7 @@ export function QueryBuilder() {
           size="sm"
         />
       ) : (
-        <ScrollArea className={mobile ? undefined : 'max-h-[200px]'}>
+        <ScrollArea className={mobile ? undefined : 'max-h-50'}>
           <div className="space-y-1">
             {history.map((item) => (
               <div
@@ -738,7 +732,7 @@ export function QueryBuilder() {
       {/* Collapsed header — stays pinned so Run / Close remain reachable on mobile */}
       <div
         className={cn(
-          '@container/query flex shrink-0 flex-wrap items-center gap-1.5 bg-background p-2 pr-[18px]',
+          '@container/query flex shrink-0 flex-wrap items-center gap-1.5 bg-background p-2 pr-4.5',
           mobile && 'z-10 gap-1.5 border-b'
         )}
       >
@@ -765,7 +759,7 @@ export function QueryBuilder() {
             <X className="h-4 w-4" />
           </Button>
         ) : null}
-        <div className="min-w-0 flex-1 basis-[6rem]">
+        <div className="min-w-0 flex-1 basis-24">
           {!isExpanded && boundEntitySetId && (
             <code className="mr-2 inline-block max-w-full truncate rounded bg-muted px-2 py-1 font-mono text-muted-foreground text-xs">
               {t('query.entitySetId')}:{' '}

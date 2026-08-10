@@ -318,6 +318,19 @@ describe('store/tabs', () => {
       expect(useTabsStore.getState().activeTabId).toBe(settingsId ?? null)
     })
 
+    it('openSettingsTab({ section: "shortcuts" }) expands and marks shortcuts for scroll', () => {
+      useTabsStore.getState().openSettingsTab({ section: 'shortcuts' })
+      const tab = useTabsStore.getState().tabs.find(isSettingsTab) as SettingsTab
+      // Expand happens on the SettingsPage paint so the shell can render first.
+      expect(tab.shortcutsExpanded).toBe(false)
+      expect(tab.scrollToSection).toBe('shortcuts')
+
+      useTabsStore.getState().clearSettingsScrollToSection(tab.id)
+      useTabsStore.getState().openSettingsTab({ section: 'shortcuts' })
+      const again = useTabsStore.getState().tabs.find(isSettingsTab) as SettingsTab
+      expect(again.scrollToSection).toBe('shortcuts')
+    })
+
     it('openStaticTab creates static tab', () => {
       useTabsStore.getState().openStaticTab(RELEASE_NOTES_STATIC_ID)
       const { tabs } = useTabsStore.getState()

@@ -2,6 +2,7 @@ import { describe, expect, test } from 'bun:test'
 import {
   buildCatalogIndex,
   getAttribute,
+  getAttributes,
   getDataClass,
   getRelatedDataclassName,
 } from '../schema/catalog-index.ts'
@@ -35,6 +36,27 @@ describe('buildCatalogIndex', () => {
 
   test('returns undefined for unknown dataclass', () => {
     expect(getDataClass('Nonexistent', index)).toBeUndefined()
+  })
+
+  test('getAttributes collapses duplicate attribute names', () => {
+    const dupCatalog = {
+      dataClasses: [
+        {
+          name: 'City',
+          collectionName: 'City',
+          dataURI: '/rest/City',
+          attributes: [
+            { name: 'City', kind: 'storage' as const, type: 'string' },
+            { name: 'City', kind: 'storage' as const, type: 'string' },
+            { name: 'ID', kind: 'storage' as const, type: 'long' },
+            { name: 'id', kind: 'storage' as const, type: 'long' },
+          ],
+        },
+      ],
+    }
+    const dupIndex = buildCatalogIndex(dupCatalog)
+    const attrs = getAttributes('City', dupIndex)
+    expect(attrs.map((a) => a.name)).toEqual(['City', 'ID'])
   })
 })
 

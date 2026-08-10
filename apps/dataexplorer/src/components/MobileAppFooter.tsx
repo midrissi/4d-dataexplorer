@@ -136,7 +136,7 @@ export function MobileAppFooter() {
               {t('tabs.restExport')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className={mobileMenuItemClass()} onClick={openSettingsTab}>
+            <DropdownMenuItem className={mobileMenuItemClass()} onClick={() => openSettingsTab()}>
               <Settings className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
               {t('layout.settings')}
             </DropdownMenuItem>
