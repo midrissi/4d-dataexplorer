@@ -19,7 +19,6 @@ import {
   httpSeedToPostmanItem,
   type PostmanExportItemInput,
 } from '~/lib/postman'
-import type { HttpClientSeed } from '~/store/http-client-types'
 import type { HttpRequestFavourite } from '~/store/http-request-favourites'
 import { useUsedTagsStore } from '~/store/used-tags'
 import { httpMethodTone, httpRequestLabel } from './http-request-display'
@@ -53,6 +52,7 @@ function FavouriteRequestRow({
   onOpen,
   onRemove,
   onEdit,
+  onDuplicate,
   onSaveMeta,
   onCancelEdit,
   activeTag,
@@ -63,6 +63,7 @@ function FavouriteRequestRow({
   onOpen: () => void
   onRemove: () => void
   onEdit: () => void
+  onDuplicate: () => void
   onSaveMeta: (meta: { name?: string; tags?: string[] }) => void
   onCancelEdit: () => void
   activeTag: string | null
@@ -117,6 +118,8 @@ function FavouriteRequestRow({
       }
       onEdit={onEdit}
       editLabel={t('favouriteMeta.edit')}
+      onDuplicate={onDuplicate}
+      duplicateLabel={t('favouriteMeta.duplicate')}
       onRemove={onRemove}
       removeLabel={t('httpClient.removeFavourite')}
       removeMode="star"
@@ -131,13 +134,15 @@ export function HttpRequestFavourites({
   onRemoveFavourite,
   onClearFavourites,
   onUpdateFavouriteMeta,
+  onDuplicateFavourite,
   onClose,
 }: {
   favourites: HttpRequestFavourite[]
-  onOpenFavourite: (seed: HttpClientSeed) => void
+  onOpenFavourite: (favourite: HttpRequestFavourite) => void
   onRemoveFavourite: (id: string) => void
   onClearFavourites: () => void
   onUpdateFavouriteMeta: (id: string, meta: { name?: string; tags?: string[] }) => void
+  onDuplicateFavourite: (id: string) => string | null
   onClose: () => void
 }) {
   const { t } = useTranslation()
@@ -230,11 +235,15 @@ export function HttpRequestFavourites({
               key={favourite.id}
               favourite={favourite}
               editing={editingId === favourite.id}
-              onOpen={() => onOpenFavourite(favourite.seed)}
+              onOpen={() => onOpenFavourite(favourite)}
               onRemove={() => {
                 void confirmRemove(favourite)
               }}
               onEdit={() => setEditingId(favourite.id)}
+              onDuplicate={() => {
+                const id = onDuplicateFavourite(favourite.id)
+                if (id) setEditingId(id)
+              }}
               onSaveMeta={(meta) => {
                 onUpdateFavouriteMeta(favourite.id, meta)
                 setEditingId(null)

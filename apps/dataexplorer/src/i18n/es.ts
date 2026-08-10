@@ -652,6 +652,7 @@ export const es = {
     history: 'Historial',
     favourites: 'Favoritos',
     addFavourite: 'Añadir a favoritos',
+    updateFavourite: 'Actualizar favorito',
     removeFavourite: 'Quitar de favoritos',
     clearFavouritesTitle: '¿Borrar favoritos?',
     clearFavouritesDescription: 'Se eliminarán todas las peticiones favoritas de este navegador.',
@@ -959,6 +960,7 @@ export const es = {
     history: 'Historial',
     favourites: 'Favoritos',
     addFavourite: 'Añadir a favoritos',
+    updateFavourite: 'Actualizar favorito',
     removeFavourite: 'Quitar de favoritos',
     clearFavouritesTitle: '¿Borrar favoritos?',
     clearFavouritesDescription:
@@ -1852,6 +1854,7 @@ export const es = {
     tagsPlaceholder: 'api, smoke, prod',
     tagsHint: 'Separe las etiquetas con comas.',
     edit: 'Editar nombre y etiquetas',
+    duplicate: 'Duplicar favorito',
     viewSignature: 'Ver firma de llamada',
     viewPath: 'Ver URL de la petición',
     removeConfirmTitle: '¿Quitar de favoritos?',

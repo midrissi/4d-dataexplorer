@@ -1,5 +1,5 @@
 import { Button, cn } from '@4d/ui'
-import { Pencil, Star, Trash2 } from 'lucide-react'
+import { Copy, Pencil, Star, Trash2 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { isMobileShell } from '~/lib/platform'
 
@@ -17,6 +17,8 @@ export function SavedListRow({
   favourite,
   onEdit,
   editLabel,
+  onDuplicate,
+  duplicateLabel,
   onRemove,
   removeLabel,
   removeMode = 'trash',
@@ -36,6 +38,8 @@ export function SavedListRow({
   }
   onEdit?: () => void
   editLabel?: string
+  onDuplicate?: () => void
+  duplicateLabel?: string
   onRemove?: () => void
   removeLabel?: string
   /** Favourites lists use a filled star; history uses trash. */
@@ -43,7 +47,7 @@ export function SavedListRow({
   onOpen: () => void
 }) {
   const mobile = isMobileShell()
-  const hasActions = Boolean(onEdit || favourite || onRemove)
+  const hasActions = Boolean(onEdit || onDuplicate || favourite || onRemove)
 
   const actionBtn = mobile ? 'h-9 w-9' : 'h-5 w-5'
   const actionIcon = mobile ? 'h-3.5 w-3.5' : 'h-3 w-3'
@@ -63,6 +67,22 @@ export function SavedListRow({
           title={editLabel}
         >
           <Pencil className={actionIcon} />
+        </Button>
+      ) : null}
+
+      {onDuplicate ? (
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn('text-muted-foreground hover:text-foreground', actionBtn)}
+          onClick={(event) => {
+            event.stopPropagation()
+            onDuplicate()
+          }}
+          aria-label={duplicateLabel}
+          title={duplicateLabel}
+        >
+          <Copy className={actionIcon} />
         </Button>
       ) : null}
 

@@ -58,13 +58,14 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
     loading: catalogLoading,
     error: catalogError,
   } = useMethodCatalog()
-  const openMethodExecutorTab = useTabsStore((state) => state.openMethodExecutorTab)
   const runs = useMethodRunHistoryStore((state) => state.runs)
   const addRun = useMethodRunHistoryStore((state) => state.addRun)
   const removeRun = useMethodRunHistoryStore((state) => state.removeRun)
   const clearRuns = useMethodRunHistoryStore((state) => state.clearRuns)
   const favourites = useMethodFavouritesStore((state) => state.favourites)
-  const toggleFavourite = useMethodFavouritesStore((state) => state.toggleFavourite)
+  const addFavourite = useMethodFavouritesStore((state) => state.addFavourite)
+  const updateFavourite = useMethodFavouritesStore((state) => state.updateFavourite)
+  const duplicateFavourite = useMethodFavouritesStore((state) => state.duplicateFavourite)
   const removeFavourite = useMethodFavouritesStore((state) => state.removeFavourite)
   const clearFavourites = useMethodFavouritesStore((state) => state.clearFavourites)
   const updateFavouriteMeta = useMethodFavouritesStore((state) => state.updateFavouriteMeta)
@@ -98,6 +99,15 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
   const [executing, setExecuting] = useState(false)
   const [sidePanel, setSidePanel] = useState<SidePanel>('none')
   const [exportOpen, setExportOpen] = useState(false)
+  /** Favourite opened or last saved from this editor — enables update when the request changes. */
+  const [linkedFavouriteId, setLinkedFavouriteId] = useState<string | null>(() => {
+    if (!seed) return null
+    return (
+      useMethodFavouritesStore
+        .getState()
+        .favourites.find((item) => sameMethodConfig(item.config, seed))?.id ?? null
+    )
+  })
   // Mobile presents a wizard (pick method -> args -> result) instead of the
   // desktop request/response split; unused on desktop.
   const [mobileStep, setMobileStep] = useState<'method' | 'args' | 'result'>('method')
@@ -106,6 +116,28 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
   const executeRef = useRef<() => void>(() => {})
   const tabIdRef = useRef(tabId)
   tabIdRef.current = tabId
+
+  const applyConfig = (config: MethodExecutorSeed, favouriteId: string | null = null) => {
+    setScope(config.scope)
+    setMethodName(config.methodName)
+    setDataClass(config.dataClass ?? '')
+    setSingletonName(config.singletonName ?? '')
+    setKey(config.key === undefined ? '' : String(config.key))
+    setEntitySetId(config.entitySetId ?? '')
+    setFilter(config.filter ?? '')
+    setOrderby(config.orderby ?? '')
+    setAllowedOnHTTPGET(config.allowedOnHTTPGET ?? false)
+    setUseGet(config.useGet ?? false)
+    setWrapperEnabled(config.wrapperEnabled ?? Boolean(config.wrapperText?.trim()))
+    setWrapperText(config.wrapperText ?? DEFAULT_METHOD_WRAPPER_TEXT)
+    setArgumentsList(initialArguments(config))
+    setResult(null)
+    setRawBody(undefined)
+    setResponseMeta(null)
+    setError(null)
+    setLinkedFavouriteId(favouriteId)
+    if (mobile) setMobileStep(config.methodName ? 'args' : 'method')
+  }
 
   const chooseMethod = (item: MethodCatalogItem) => {
     const sameTarget =
@@ -133,6 +165,7 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
     setRawBody(undefined)
     setResponseMeta(null)
     setError(null)
+    setLinkedFavouriteId(null)
     if (mobile) setMobileStep('args')
   }
 
@@ -149,6 +182,7 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
     setRawBody(undefined)
     setResponseMeta(null)
     setError(null)
+    setLinkedFavouriteId(null)
   }
 
   const methodExists =
@@ -190,8 +224,20 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
   })
 
   const builderSeed = currentConfig()
+  const linkedFavourite = linkedFavouriteId
+    ? favourites.find((item) => item.id === linkedFavouriteId)
+    : undefined
   const isCurrentFavourite =
     Boolean(methodName) && favourites.some((item) => sameMethodConfig(item.config, builderSeed))
+  const canUpdateFavourite =
+    Boolean(methodName) &&
+    linkedFavourite != null &&
+    !sameMethodConfig(linkedFavourite.config, builderSeed)
+  const favouriteButtonLabel = isCurrentFavourite
+    ? t('methodExecutor.removeFavourite')
+    : canUpdateFavourite
+      ? t('methodExecutor.updateFavourite')
+      : t('methodExecutor.addFavourite')
   const currentExportLabel = methodName ? methodSeedExportLabel(builderSeed) : ''
   const currentExportItems: PostmanExportItemInput[] = methodName
     ? [
@@ -218,8 +264,29 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
 
   const toggleCurrentFavourite = () => {
     if (!methodName) return
-    toggleFavourite(currentConfig())
+    const config = currentConfig()
+    if (isCurrentFavourite) {
+      const existing = favourites.find((item) => sameMethodConfig(item.config, config))
+      if (existing) {
+        removeFavourite(existing.id)
+        if (linkedFavouriteId === existing.id) setLinkedFavouriteId(null)
+      }
+      return
+    }
+    if (linkedFavourite && canUpdateFavourite) {
+      updateFavourite(linkedFavourite.id, config)
+      return
+    }
+    const id = addFavourite(config)
+    if (id) setLinkedFavouriteId(id)
   }
+
+  // Drop the link if the favourite was removed elsewhere (clear all / other tab).
+  useEffect(() => {
+    if (linkedFavouriteId && !favourites.some((item) => item.id === linkedFavouriteId)) {
+      setLinkedFavouriteId(null)
+    }
+  }, [favourites, linkedFavouriteId])
 
   const execute = async () => {
     flushPendingArgumentValues()
@@ -518,20 +585,16 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
                   className="h-11 w-11"
                   disabled={!canExecute}
                   onClick={toggleCurrentFavourite}
-                  aria-label={
-                    isCurrentFavourite
-                      ? t('methodExecutor.removeFavourite')
-                      : t('methodExecutor.addFavourite')
-                  }
-                  title={
-                    isCurrentFavourite
-                      ? t('methodExecutor.removeFavourite')
-                      : t('methodExecutor.addFavourite')
-                  }
+                  aria-label={favouriteButtonLabel}
+                  title={favouriteButtonLabel}
                   aria-pressed={isCurrentFavourite}
                 >
                   <Star
-                    className={cn('h-4 w-4', isCurrentFavourite && 'fill-current text-amber-500')}
+                    className={cn(
+                      'h-4 w-4',
+                      isCurrentFavourite && 'fill-current text-amber-500',
+                      canUpdateFavourite && !isCurrentFavourite && 'text-amber-500'
+                    )}
                   />
                 </Button>
                 <Button
@@ -578,7 +641,8 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
             <MethodRunHistory
               runs={runs}
               onOpenRun={(config) => {
-                openMethodExecutorTab(config)
+                const match = favourites.find((item) => sameMethodConfig(item.config, config))
+                applyConfig(config, match?.id ?? null)
                 setSidePanel('none')
               }}
               onRemoveRun={removeRun}
@@ -592,13 +656,14 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
           <MobileFullscreenSheet open labelledBy="method-favourites-title">
             <MethodFavourites
               favourites={favourites}
-              onOpenFavourite={(config) => {
-                openMethodExecutorTab(config)
+              onOpenFavourite={(favourite) => {
+                applyConfig(favourite.config, favourite.id)
                 setSidePanel('none')
               }}
               onRemoveFavourite={removeFavourite}
               onClearFavourites={clearFavourites}
               onUpdateFavouriteMeta={updateFavouriteMeta}
+              onDuplicateFavourite={duplicateFavourite}
               onClose={() => setSidePanel('none')}
             />
           </MobileFullscreenSheet>
@@ -649,10 +714,14 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
             {sidePanel === 'favourites' ? (
               <MethodFavourites
                 favourites={favourites}
-                onOpenFavourite={openMethodExecutorTab}
+                onOpenFavourite={(favourite) => {
+                  applyConfig(favourite.config, favourite.id)
+                  setSidePanel('none')
+                }}
                 onRemoveFavourite={removeFavourite}
                 onClearFavourites={clearFavourites}
                 onUpdateFavouriteMeta={updateFavouriteMeta}
+                onDuplicateFavourite={duplicateFavourite}
                 onClose={() => setSidePanel('none')}
               />
             ) : null}
@@ -660,7 +729,11 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
             {sidePanel === 'history' ? (
               <MethodRunHistory
                 runs={runs}
-                onOpenRun={openMethodExecutorTab}
+                onOpenRun={(config) => {
+                  const match = favourites.find((item) => sameMethodConfig(item.config, config))
+                  applyConfig(config, match?.id ?? null)
+                  setSidePanel('none')
+                }}
                 onRemoveRun={removeRun}
                 onClearRuns={clearRuns}
                 onClose={() => setSidePanel('none')}
@@ -748,22 +821,15 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
                     className={cn(mobile ? 'h-11 w-11' : 'h-8 w-8')}
                     disabled={!canExecute}
                     onClick={toggleCurrentFavourite}
-                    aria-label={
-                      isCurrentFavourite
-                        ? t('methodExecutor.removeFavourite')
-                        : t('methodExecutor.addFavourite')
-                    }
-                    title={
-                      isCurrentFavourite
-                        ? t('methodExecutor.removeFavourite')
-                        : t('methodExecutor.addFavourite')
-                    }
+                    aria-label={favouriteButtonLabel}
+                    title={favouriteButtonLabel}
                     aria-pressed={isCurrentFavourite}
                   >
                     <Star
                       className={cn(
                         'h-3.5 w-3.5',
-                        isCurrentFavourite && 'fill-current text-amber-500'
+                        isCurrentFavourite && 'fill-current text-amber-500',
+                        canUpdateFavourite && !isCurrentFavourite && 'text-amber-500'
                       )}
                     />
                   </Button>

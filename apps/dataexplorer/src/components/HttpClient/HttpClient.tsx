@@ -239,6 +239,15 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
   const [exportOpen, setExportOpen] = useState(false)
   const [mobilePane, setMobilePane] = useState<'request' | 'response'>('request')
   const [seedWarnings] = useState(() => seed?.warnings ?? [])
+  /** Favourite opened or last saved from this editor — enables update when the request changes. */
+  const [linkedFavouriteId, setLinkedFavouriteId] = useState<string | null>(() => {
+    if (!seed) return null
+    return (
+      useHttpRequestFavouritesStore
+        .getState()
+        .favourites.find((item) => sameHttpSeed(item.seed, seed))?.id ?? null
+    )
+  })
   const abortRef = useRef<AbortController | null>(null)
   const fileMapRef = useRef<Map<string, File>>(new Map())
   const binaryFileRef = useRef<File | null>(null)
@@ -258,11 +267,26 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
   const clearHistoryRequests = useHttpRequestHistoryStore((state) => state.clearRequests)
   const setHistoryMaxCount = useHttpRequestHistoryStore((state) => state.setMaxCount)
   const favourites = useHttpRequestFavouritesStore((state) => state.favourites)
-  const toggleFavourite = useHttpRequestFavouritesStore((state) => state.toggleFavourite)
+  const addFavourite = useHttpRequestFavouritesStore((state) => state.addFavourite)
+  const updateFavourite = useHttpRequestFavouritesStore((state) => state.updateFavourite)
+  const duplicateFavourite = useHttpRequestFavouritesStore((state) => state.duplicateFavourite)
   const removeFavourite = useHttpRequestFavouritesStore((state) => state.removeFavourite)
   const clearFavourites = useHttpRequestFavouritesStore((state) => state.clearFavourites)
   const updateFavouriteMeta = useHttpRequestFavouritesStore((state) => state.updateFavouriteMeta)
-  const openHttpClientTab = useTabsStore((state) => state.openHttpClientTab)
+
+  const applySeed = (nextSeed: HttpClientSeed, favouriteId: string | null = null) => {
+    abortRef.current?.abort()
+    abortRef.current = null
+    setSending(false)
+    fileMapRef.current = new Map()
+    binaryFileRef.current = null
+    setBinaryFileSize(undefined)
+    contentTypeTouchedRef.current = false
+    setDraft(createEmptyHttpDraft(nextSeed))
+    setResponse(null)
+    setLinkedFavouriteId(favouriteId)
+    if (mobile) setMobilePane('request')
+  }
 
   const currentOrigin = getBaseUrl().replace(/\/$/, '') || window.location.origin
   const dataclassNamesKey = useDataExplorerStore((state) =>
@@ -425,7 +449,42 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
   }, [draft])
 
   const builderSeed = useMemo(() => draftToHttpSeed(draft), [draft])
+  const linkedFavourite = linkedFavouriteId
+    ? favourites.find((item) => item.id === linkedFavouriteId)
+    : undefined
   const isCurrentFavourite = favourites.some((item) => sameHttpSeed(item.seed, builderSeed))
+  const canUpdateFavourite =
+    linkedFavourite != null && !sameHttpSeed(linkedFavourite.seed, builderSeed)
+  const favouriteButtonLabel = isCurrentFavourite
+    ? t('httpClient.removeFavourite')
+    : canUpdateFavourite
+      ? t('httpClient.updateFavourite')
+      : t('httpClient.addFavourite')
+
+  const toggleCurrentFavourite = () => {
+    if (!canSend) return
+    if (isCurrentFavourite) {
+      const existing = favourites.find((item) => sameHttpSeed(item.seed, builderSeed))
+      if (existing) {
+        removeFavourite(existing.id)
+        if (linkedFavouriteId === existing.id) setLinkedFavouriteId(null)
+      }
+      return
+    }
+    if (linkedFavourite && canUpdateFavourite) {
+      updateFavourite(linkedFavourite.id, builderSeed)
+      return
+    }
+    const id = addFavourite(builderSeed)
+    if (id) setLinkedFavouriteId(id)
+  }
+
+  useEffect(() => {
+    if (linkedFavouriteId && !favourites.some((item) => item.id === linkedFavouriteId)) {
+      setLinkedFavouriteId(null)
+    }
+  }, [favourites, linkedFavouriteId])
+
   const currentExportItems = useMemo((): PostmanExportItemInput[] => {
     const { method, path, fullUrl, isCustomOrigin } = httpRequestLabel(builderSeed)
     const methodStyles = httpMethodTone(method)
@@ -600,13 +659,14 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
             {sidePanel === 'favourites' && !mobile ? (
               <HttpRequestFavourites
                 favourites={favourites}
-                onOpenFavourite={(nextSeed) => {
-                  openHttpClientTab(nextSeed)
+                onOpenFavourite={(favourite) => {
+                  applySeed(favourite.seed, favourite.id)
                   setSidePanel('none')
                 }}
                 onRemoveFavourite={removeFavourite}
                 onClearFavourites={clearFavourites}
                 onUpdateFavouriteMeta={updateFavouriteMeta}
+                onDuplicateFavourite={duplicateFavourite}
                 onClose={() => setSidePanel('none')}
               />
             ) : null}
@@ -616,7 +676,8 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
                 requests={historyRequests}
                 maxCount={historyMaxCount}
                 onOpenRequest={(nextSeed) => {
-                  openHttpClientTab(nextSeed)
+                  const match = favourites.find((item) => sameHttpSeed(item.seed, nextSeed))
+                  applySeed(nextSeed, match?.id ?? null)
                   setSidePanel('none')
                 }}
                 onRemoveRequest={removeHistoryRequest}
@@ -630,13 +691,14 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
               <MobileFullscreenSheet open labelledBy="http-request-favourites-title">
                 <HttpRequestFavourites
                   favourites={favourites}
-                  onOpenFavourite={(nextSeed) => {
-                    openHttpClientTab(nextSeed)
+                  onOpenFavourite={(favourite) => {
+                    applySeed(favourite.seed, favourite.id)
                     setSidePanel('none')
                   }}
                   onRemoveFavourite={removeFavourite}
                   onClearFavourites={clearFavourites}
                   onUpdateFavouriteMeta={updateFavouriteMeta}
+                  onDuplicateFavourite={duplicateFavourite}
                   onClose={() => setSidePanel('none')}
                 />
               </MobileFullscreenSheet>
@@ -648,7 +710,8 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
                   requests={historyRequests}
                   maxCount={historyMaxCount}
                   onOpenRequest={(nextSeed) => {
-                    openHttpClientTab(nextSeed)
+                    const match = favourites.find((item) => sameHttpSeed(item.seed, nextSeed))
+                    applySeed(nextSeed, match?.id ?? null)
                     setSidePanel('none')
                   }}
                   onRemoveRequest={removeHistoryRequest}
@@ -748,23 +811,22 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
                       className={cn(
                         'shrink-0 rounded-sm',
                         mobile ? 'h-8 w-8' : 'h-5 w-5',
-                        isCurrentFavourite && 'text-amber-500 hover:text-amber-600'
+                        (isCurrentFavourite || canUpdateFavourite) &&
+                          'text-amber-500 hover:text-amber-600'
                       )}
                       disabled={!canSend}
-                      onClick={() => toggleFavourite(builderSeed)}
-                      aria-label={
-                        isCurrentFavourite
-                          ? t('httpClient.removeFavourite')
-                          : t('httpClient.addFavourite')
-                      }
-                      title={
-                        isCurrentFavourite
-                          ? t('httpClient.removeFavourite')
-                          : t('httpClient.addFavourite')
-                      }
+                      onClick={toggleCurrentFavourite}
+                      aria-label={favouriteButtonLabel}
+                      title={favouriteButtonLabel}
                       aria-pressed={isCurrentFavourite}
                     >
-                      <Star className={cn('h-3 w-3', isCurrentFavourite && 'fill-current')} />
+                      <Star
+                        className={cn(
+                          'h-3 w-3',
+                          isCurrentFavourite && 'fill-current',
+                          canUpdateFavourite && !isCurrentFavourite && 'text-amber-500'
+                        )}
+                      />
                     </Button>
                     <Button
                       type="button"

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'bun:test'
 import {
   applyFavouriteMeta,
   formatFavouriteTagsInput,
+  nextFavouriteCopyName,
   normalizeFavouriteName,
   normalizeFavouriteTags,
   parseFavouriteTagsInput,
@@ -38,5 +39,12 @@ describe('favourite-meta', () => {
       { name: '  New  ', tags: ['a', 'a', ''] }
     )
     expect(next).toEqual({ id: '1', name: 'New', tags: ['a'] })
+  })
+
+  it('builds unique copy names', () => {
+    expect(nextFavouriteCopyName(undefined, [])).toBeUndefined()
+    expect(nextFavouriteCopyName('Cars', [])).toBe('Cars (copy)')
+    expect(nextFavouriteCopyName('Cars', ['Cars (copy)'])).toBe('Cars (copy 2)')
+    expect(nextFavouriteCopyName('Cars', ['Cars (copy)', 'Cars (copy 2)'])).toBe('Cars (copy 3)')
   })
 })

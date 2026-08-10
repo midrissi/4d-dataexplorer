@@ -653,6 +653,7 @@ export const fr = {
     history: 'Historique',
     favourites: 'Favoris',
     addFavourite: 'Ajouter aux favoris',
+    updateFavourite: 'Mettre à jour le favori',
     removeFavourite: 'Retirer des favoris',
     clearFavouritesTitle: 'Effacer les favoris ?',
     clearFavouritesDescription: 'Cela supprime toutes les requêtes favorites de ce navigateur.',
@@ -961,6 +962,7 @@ export const fr = {
     history: 'Historique',
     favourites: 'Favoris',
     addFavourite: 'Ajouter aux favoris',
+    updateFavourite: 'Mettre à jour le favori',
     removeFavourite: 'Retirer des favoris',
     clearFavouritesTitle: 'Effacer les favoris ?',
     clearFavouritesDescription:
@@ -1861,6 +1863,7 @@ export const fr = {
     tagsPlaceholder: 'api, smoke, prod',
     tagsHint: 'Séparez les tags par des virgules.',
     edit: 'Modifier le nom et les tags',
+    duplicate: 'Dupliquer le favori',
     viewSignature: 'Voir la signature d’appel',
     viewPath: 'Voir l’URL de la requête',
     removeConfirmTitle: 'Retirer des favoris ?',

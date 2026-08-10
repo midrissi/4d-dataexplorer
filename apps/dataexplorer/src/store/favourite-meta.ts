@@ -48,3 +48,34 @@ export function applyFavouriteMeta<T extends FavouriteMeta>(item: T, meta: Favou
     tags: tags.length > 0 ? tags : undefined,
   }
 }
+
+/**
+ * Label for a duplicated favourite: `"Name (copy)"`, then `"Name (copy 2)"`, …
+ * Returns undefined when the source has no name.
+ */
+export function nextFavouriteCopyName(
+  name: string | undefined | null,
+  existingNames: readonly (string | undefined | null)[]
+): string | undefined {
+  const base = normalizeFavouriteName(name)
+  if (!base) return undefined
+  const used = new Set(
+    existingNames
+      .map((entry) => normalizeFavouriteName(entry)?.toLowerCase())
+      .filter((entry): entry is string => Boolean(entry))
+  )
+  const first = `${base} (copy)`.slice(0, MAX_FAVOURITE_NAME_LENGTH)
+  if (!used.has(first.toLowerCase())) return first
+  for (let n = 2; n < 1000; n++) {
+    const suffix = ` (copy ${n})`
+    const truncated = base.slice(0, Math.max(1, MAX_FAVOURITE_NAME_LENGTH - suffix.length))
+    const candidate = `${truncated}${suffix}`
+    if (!used.has(candidate.toLowerCase())) return candidate
+  }
+  return first
+}
+
+/** Deep-clone a JSON-serializable favourite payload. */
+export function cloneFavouritePayload<T>(value: T): T {
+  return JSON.parse(JSON.stringify(value)) as T
+}

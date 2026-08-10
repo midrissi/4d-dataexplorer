@@ -1,0 +1,34 @@
+---
+description: Prefer reusable @4d/ui controls over native HTML inputs
+alwaysApply: true
+---
+
+# Prefer reusable UI controls
+
+Before using a native HTML control (`<input type="date|time|color|file|range">`, raw `<select>`, custom checkbox/radio markup, etc.), **search `@4d/ui` first** for an existing component.
+
+## Checklist
+
+1. Check `packages/ui/src/index.ts` exports and existing usages in `apps/web`.
+2. Prefer kit components such as `DatePicker`, `Select`, `Checkbox`, `Switch`, `RadioGroup`, `Input`, `Button`, `Dialog`.
+3. Only fall back to a native control when no suitable kit component exists — and note why in the PR/commit body.
+
+## Examples
+
+```tsx
+// ❌ BAD — native date input
+<Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+
+// ✅ GOOD — shared DatePicker (locale-aware calendar)
+<DatePicker value={date} onChange={setDate} locale={language} />
+```
+
+```tsx
+// ❌ BAD — native select
+<select value={v} onChange={...}>...</select>
+
+// ✅ GOOD
+<Select value={v} onValueChange={...}>...</Select>
+```
+
+Forms / a11y guidance: `.agents/skills/web-app-forms-a11y`.
