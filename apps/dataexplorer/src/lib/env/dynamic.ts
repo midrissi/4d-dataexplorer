@@ -472,6 +472,10 @@ export const DYNAMIC_ENV_VARS: readonly DynamicEnvVarDef[] = [
   def('$randomCompanySuffix', 'A random company suffix', () => pick(COMPANY_SUFFIXES)),
 
   // Dates
+  def('$randomDate', 'A random date (YYYY-MM-DD)', () => {
+    const daysAgo = randomIntInclusive(0, 365 * 40)
+    return new Date(Date.now() - daysAgo * 86_400_000).toISOString().slice(0, 10)
+  }),
   def('$randomDateFuture', 'A random future datetime', () =>
     new Date(Date.now() + randomIntInclusive(1, 365) * 86_400_000).toString()
   ),

@@ -1,4 +1,4 @@
-import { Button, Checkbox, cn, Input, Label, ScrollArea } from '@4d/ui'
+import { Button, Checkbox, cn, Input, Label, ScrollArea, TemplatedTextInput } from '@4d/ui'
 import { CodeEditor } from '@4d/ui/code-editor'
 import { Loader2, Upload, X } from 'lucide-react'
 import {
@@ -15,6 +15,8 @@ import {
   isPrivateBinaryObject,
   PRIVATE_BINARY_OBJECT_KEY,
 } from '~/components/BinaryObjectViewer'
+import { EntityFormValueOrTemplateField } from '~/components/EntityFormValueOrTemplateField'
+import { useTemplatedEnvFieldProps } from '~/components/Environments/use-templated-env-field-props'
 import { useEditorLabels, useTranslation } from '~/i18n'
 import { useCodeEditorPrefs, useUpdateCodeEditorPrefs } from '~/store/settings'
 
@@ -183,10 +185,10 @@ function EntityFormDurationField({
   )
 }
 
-import { dateValueToInputValue } from '@4d/rest'
 import { ErrorList } from '~/components/ErrorList'
 import { api } from '~/lib/api'
 import { durationValueToInputValue, parseDurationInput } from '~/lib/duration'
+import { isNumberAttrType, prepareEntityFormData } from '~/lib/env/coerce-entity-data'
 
 export type EntityFormMode = 'create' | 'edit'
 
@@ -455,6 +457,7 @@ export const EntityForm = forwardRef<EntityFormHandle, EntityFormProps>(function
   ref
 ) {
   const { t } = useTranslation()
+  const envField = useTemplatedEnvFieldProps()
   const [formData, setFormData] = useState<Record<string, unknown>>(initialData)
   const [schema, setSchema] = useState<Awaited<ReturnType<typeof api.getDataclassSchema>> | null>(
     null
@@ -465,9 +468,11 @@ export const EntityForm = forwardRef<EntityFormHandle, EntityFormProps>(function
   const hasAutoFocusedRef = useRef(false)
 
   // Sync from initialData when it changes (e.g. dialog opened with new data)
+  const [dataVersion, setDataVersion] = useState(0)
   useEffect(() => {
     setFormData(initialData)
     setError(null)
+    setDataVersion((version) => version + 1)
   }, [initialData])
 
   useEffect(() => {
@@ -506,7 +511,8 @@ export const EntityForm = forwardRef<EntityFormHandle, EntityFormProps>(function
     setError(null)
     onSubmittingChange?.(true)
     try {
-      await onSubmit(formData)
+      const prepared = prepareEntityFormData(formData, displayableAttributes)
+      await onSubmit(prepared)
     } catch (err) {
       setError(
         err instanceof Error
@@ -518,9 +524,12 @@ export const EntityForm = forwardRef<EntityFormHandle, EntityFormProps>(function
     } finally {
       onSubmittingChange?.(false)
     }
-  }, [formData, onSubmit, mode, onSubmittingChange, t])
+  }, [displayableAttributes, formData, onSubmit, mode, onSubmittingChange, t])
 
-  const getFormData = useCallback(() => formData, [formData])
+  const getFormData = useCallback(
+    () => prepareEntityFormData(formData, displayableAttributes),
+    [displayableAttributes, formData]
+  )
 
   const focusFirstField = useCallback(() => {
     const form = formRef.current
@@ -595,41 +604,17 @@ export const EntityForm = forwardRef<EntityFormHandle, EntityFormProps>(function
       )
     }
 
-    if (
-      ['number', 'long', 'long64', 'word', 'byte'].includes(attr.type) ||
-      (typeof attr.type === 'string' && attr.type.startsWith('number'))
-    ) {
+    if (isNumberAttrType(attr.type) || attr.type === 'date') {
       return (
-        <div key={attr.name} className="space-y-1.5">
-          <Label htmlFor={fieldId} className="text-sm">
-            {attr.name}
-          </Label>
-          <Input
-            id={fieldId}
-            type="number"
-            value={fieldValue != null ? String(fieldValue) : ''}
-            onChange={(e) => {
-              const numValue = e.target.value === '' ? null : Number(e.target.value)
-              handleFormFieldChange(attr.name, numValue)
-            }}
-          />
-        </div>
-      )
-    }
-
-    if (attr.type === 'date') {
-      return (
-        <div key={attr.name} className="space-y-1.5">
-          <Label htmlFor={fieldId} className="text-sm">
-            {attr.name}
-          </Label>
-          <Input
-            id={fieldId}
-            type="date"
-            value={dateValueToInputValue(fieldValue)}
-            onChange={(e) => handleFormFieldChange(attr.name, e.target.value || null)}
-          />
-        </div>
+        <EntityFormValueOrTemplateField
+          key={`${attr.name}-${dataVersion}`}
+          attrName={attr.name}
+          attrType={attr.type}
+          fieldId={fieldId}
+          fieldValue={fieldValue}
+          onFieldChange={handleFormFieldChange}
+          envField={envField}
+        />
       )
     }
 
@@ -663,11 +648,11 @@ export const EntityForm = forwardRef<EntityFormHandle, EntityFormProps>(function
           <Label htmlFor={fieldId} className="text-sm">
             {attr.name}
           </Label>
-          <Input
+          <TemplatedTextInput
             id={fieldId}
-            type="text"
             value={fieldValue != null ? String(fieldValue) : ''}
-            onChange={(e) => handleFormFieldChange(attr.name, e.target.value || null)}
+            onChange={(value) => handleFormFieldChange(attr.name, value || null)}
+            {...envField}
           />
         </div>
       )
@@ -678,11 +663,11 @@ export const EntityForm = forwardRef<EntityFormHandle, EntityFormProps>(function
         <Label htmlFor={fieldId} className="text-sm">
           {attr.name}
         </Label>
-        <Input
+        <TemplatedTextInput
           id={fieldId}
-          type="text"
           value={fieldValue != null ? String(fieldValue) : ''}
-          onChange={(e) => handleFormFieldChange(attr.name, e.target.value || null)}
+          onChange={(value) => handleFormFieldChange(attr.name, value || null)}
+          {...envField}
         />
       </div>
     )

@@ -17,6 +17,7 @@ import type { MethodToolInvokeInput } from '@4djs/assistant/tools'
 import { consoleService } from '~/lib/console'
 import { COUNT_FETCH_CONCURRENCY, mapWithConcurrency } from '~/lib/dataclass-counts'
 import { resolveEnvTemplates } from '~/lib/env'
+import { coerceEntityDataBySchema } from '~/lib/env/coerce-entity-data'
 import { getActiveEnvMap, resolveEnvDeep } from '~/lib/env/runtime'
 import { getBaseUrl, getCustomHeaders, getLoggingFetch, getTimeout } from '~/lib/platform'
 import { getCurrentBaseId, getDataclassCustomizations, setCurrentBaseId } from '~/lib/storage'
@@ -826,7 +827,12 @@ export const api = {
     if (resolved.unresolved.length > 0) {
       consoleService.warn(`Unresolved environment variables: ${resolved.unresolved.join(', ')}`)
     }
-    const result = await client.dataclass(dataclassName).create(resolved.value)
+    const schema = await api.getDataclassSchema(dataclassName)
+    const value = coerceEntityDataBySchema(
+      resolved.value as Record<string, unknown>,
+      schema.attributes
+    )
+    const result = await client.dataclass(dataclassName).create(value)
     return {
       dataclass: dataclassName,
       entity: { ...result, id: result.__KEY },
@@ -847,7 +853,12 @@ export const api = {
     if (unresolved.length > 0) {
       consoleService.warn(`Unresolved environment variables: ${unresolved.join(', ')}`)
     }
-    const result = await client.dataclass(dataclassName).update(keyResolved.text, resolved.value)
+    const schema = await api.getDataclassSchema(dataclassName)
+    const value = coerceEntityDataBySchema(
+      resolved.value as Record<string, unknown>,
+      schema.attributes
+    )
+    const result = await client.dataclass(dataclassName).update(keyResolved.text, value)
     return {
       dataclass: dataclassName,
       entity: { ...result, id: result.__KEY },

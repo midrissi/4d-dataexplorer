@@ -22,6 +22,7 @@ describe('dynamic env vars', () => {
     expect(keys).toContain('$isoTimestamp')
     expect(keys).toContain('$guid')
     expect(keys).toContain('$randomInt')
+    expect(keys).toContain('$randomDate')
     expect(keys.every((key) => key.startsWith('$'))).toBe(true)
     expect(DYNAMIC_ENV_VARS.length).toBe(keys.length)
   })
@@ -41,6 +42,9 @@ describe('dynamic env vars', () => {
     const n = Number(resolveDynamicEnvVar('$randomInt'))
     expect(n).toBeGreaterThanOrEqual(0)
     expect(n).toBeLessThanOrEqual(1000)
+
+    const date = resolveDynamicEnvVar('$randomDate')
+    expect(date).toMatch(/^\d{4}-\d{2}-\d{2}$/)
   })
 
   it('returns undefined for unknown dynamic keys', () => {

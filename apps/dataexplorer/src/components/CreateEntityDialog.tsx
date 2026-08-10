@@ -1,6 +1,5 @@
 import {
   Button,
-  Checkbox,
   cn,
   Dialog,
   DialogContent,
@@ -8,7 +7,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  Input,
   Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  useToast,
 } from '@4d/ui'
 import { CodeEditor } from '@4d/ui/code-editor'
 import {
@@ -29,6 +35,9 @@ import type { EditMode } from '~/store/settings'
 import { useCodeEditorPrefs, useDefaultEditMode, useUpdateCodeEditorPrefs } from '~/store/settings'
 
 const VALID_JSON_EXAMPLE = '{\n  "key": "value"\n}'
+const MAX_CREATE_COUNT = 100
+
+type AfterCreateMode = 'close' | 'clear' | 'keep'
 
 /** Convert character offset to 0-based row and column for Ace annotations */
 function charOffsetToRowColumn(text: string, position: number): { row: number; column: number } {
@@ -44,13 +53,20 @@ function charOffsetToRowColumn(text: string, position: number): { row: number; c
   return { row: lines.length - 1, column: lines[lines.length - 1]?.length ?? 0 }
 }
 
+function clampCreateCount(value: number): number {
+  if (!Number.isFinite(value)) return 1
+  return Math.min(MAX_CREATE_COUNT, Math.max(1, Math.trunc(value)))
+}
+
 interface CreateEntityDialogProps {
   open: boolean
   onClose: () => void
   dataclassName: string
   initialData?: Record<string, unknown>
   isDuplicate?: boolean
-  onSubmit: (data: Record<string, unknown>) => Promise<void>
+  onSubmit: (data: Record<string, unknown>, options?: { refresh?: boolean }) => Promise<void>
+  /** Refresh list/count after a create batch (or partial batch on error). */
+  onRefresh?: () => Promise<void>
 }
 
 export function CreateEntityDialog({
@@ -60,8 +76,10 @@ export function CreateEntityDialog({
   initialData,
   isDuplicate,
   onSubmit,
+  onRefresh,
 }: CreateEntityDialogProps) {
   const { t } = useTranslation()
+  const toast = useToast()
   const mobile = isMobileShell()
   const editorLabels = useEditorLabels()
   const codeEditorPrefs = useCodeEditorPrefs()
@@ -70,7 +88,9 @@ export function CreateEntityDialog({
   const formRef = useRef<EntityFormHandle>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [canSubmit, setCanSubmit] = useState(true)
-  const [saveAndCreateNew, setSaveAndCreateNew] = useState(false)
+  const [afterCreate, setAfterCreate] = useState<AfterCreateMode>('close')
+  const [createCount, setCreateCount] = useState(1)
+  const [createCountInput, setCreateCountInput] = useState('1')
   const [formInitialData, setFormInitialData] = useState<Record<string, unknown>>({})
   const [editMode, setEditMode] = useState<EditMode>(defaultEditMode)
   const [jsonValue, setJsonValue] = useState('{\n  \n}')
@@ -78,6 +98,7 @@ export function CreateEntityDialog({
   const [switchToFormError, setSwitchToFormError] = useState<boolean>(false)
   const [switchToFormErrorDetail, setSwitchToFormErrorDetail] = useState<string | null>(null)
   const [createSuccessShownAt, setCreateSuccessShownAt] = useState<number | null>(null)
+  const [lastCreatedCount, setLastCreatedCount] = useState(1)
 
   useEffect(() => {
     if (open) {
@@ -90,6 +111,7 @@ export function CreateEntityDialog({
       setSwitchToFormError(false)
       setSwitchToFormErrorDetail(null)
       setCreateSuccessShownAt(null)
+      setLastCreatedCount(1)
     }
   }, [open, initialData, defaultEditMode, mobile])
 
@@ -105,18 +127,44 @@ export function CreateEntityDialog({
 
   const handleSubmit = useCallback(
     async (data: Record<string, unknown>) => {
-      await onSubmit(data)
-      if (saveAndCreateNew) {
+      const times = clampCreateCount(createCount)
+      let created = 0
+      try {
+        // Each create resolves {{templates}} fresh in the API layer.
+        // Defer list refresh until the whole batch finishes.
+        for (let i = 0; i < times; i++) {
+          await onSubmit(data, { refresh: false })
+          created++
+        }
+      } finally {
+        if (created > 0) {
+          await onRefresh?.()
+        }
+      }
+      setLastCreatedCount(created)
+
+      if (afterCreate === 'clear') {
         setFormInitialData({})
         setJsonValue('{\n  \n}')
         setCreateSuccessShownAt(Date.now())
-        // Focus first field after form re-renders with empty data
         setTimeout(() => formRef.current?.focusFirstField(), 0)
-      } else {
-        onClose()
+        return
       }
+
+      if (afterCreate === 'keep') {
+        setCreateSuccessShownAt(Date.now())
+        setTimeout(() => formRef.current?.focusFirstField(), 0)
+        return
+      }
+
+      toast.success(
+        created > 1
+          ? t('createEntity.entitiesCreated', { count: created })
+          : t('createEntity.entityCreated')
+      )
+      onClose()
     },
-    [onSubmit, onClose, saveAndCreateNew]
+    [afterCreate, createCount, onClose, onRefresh, onSubmit, t, toast]
   )
 
   const switchToForm = useCallback(() => {
@@ -233,6 +281,11 @@ export function CreateEntityDialog({
     [editMode]
   )
 
+  const successMessage =
+    lastCreatedCount > 1
+      ? t('createEntity.entitiesCreated', { count: lastCreatedCount })
+      : t('createEntity.entityCreated')
+
   const headerContent = (
     <DialogHeader>
       <DialogTitle>
@@ -276,7 +329,7 @@ export function CreateEntityDialog({
           aria-live="polite"
         >
           <Check className="h-4 w-4 shrink-0" />
-          <span className="font-medium text-sm">{t('createEntity.entityCreated')}</span>
+          <span className="font-medium text-sm">{successMessage}</span>
         </output>
       )}
 
@@ -408,21 +461,61 @@ export function CreateEntityDialog({
   )
 
   const footerContent = (
-    <DialogFooter className="flex-col items-stretch gap-4 sm:flex-row sm:items-center">
-      <div className="flex flex-1 flex-col gap-1">
-        <div className="flex items-center gap-2">
-          <Checkbox
-            id="create-entity-save-and-new"
-            checked={saveAndCreateNew}
-            onCheckedChange={(checked) => setSaveAndCreateNew(checked === true)}
-          />
-          <Label
-            htmlFor="create-entity-save-and-new"
-            className="cursor-pointer font-normal text-sm"
-          >
-            {t('createEntity.saveAndCreateNew')}
-          </Label>
+    <DialogFooter className="flex-col items-stretch gap-3 sm:flex-row sm:items-end">
+      <div className="flex min-w-0 flex-1 flex-col gap-2.5">
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="space-y-1">
+            <Label htmlFor="create-entity-count" className="text-muted-foreground text-xs">
+              {t('createEntity.createCount')}
+            </Label>
+            <Input
+              id="create-entity-count"
+              type="number"
+              min={1}
+              max={MAX_CREATE_COUNT}
+              inputMode="numeric"
+              value={createCountInput}
+              disabled={isSubmitting}
+              onChange={(e) => {
+                const raw = e.target.value
+                setCreateCountInput(raw)
+                const parsed = Number.parseInt(raw, 10)
+                if (!Number.isNaN(parsed)) setCreateCount(clampCreateCount(parsed))
+              }}
+              onBlur={() => {
+                const next = clampCreateCount(Number.parseInt(createCountInput, 10) || 1)
+                setCreateCount(next)
+                setCreateCountInput(String(next))
+              }}
+              className="h-8 w-20"
+              aria-describedby="create-entity-count-hint"
+            />
+          </div>
+          <div className="min-w-[12rem] flex-1 space-y-1">
+            <Label htmlFor="create-entity-after" className="text-muted-foreground text-xs">
+              {t('createEntity.afterCreate')}
+            </Label>
+            <Select
+              value={afterCreate}
+              onValueChange={(value) => setAfterCreate(value as AfterCreateMode)}
+              disabled={isSubmitting}
+            >
+              <SelectTrigger id="create-entity-after" className="h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="close">{t('createEntity.afterCreateClose')}</SelectItem>
+                <SelectItem value="clear">{t('createEntity.afterCreateClear')}</SelectItem>
+                <SelectItem value="keep">{t('createEntity.afterCreateKeep')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
+        <p id="create-entity-count-hint" className="text-muted-foreground text-xs">
+          {createCount > 1
+            ? t('createEntity.createCountHintTemplates', { count: createCount })
+            : t('createEntity.createCountHint')}
+        </p>
         {editMode === 'json' && (jsonError || switchToFormError) && (
           <p className="text-muted-foreground text-xs">{t('createEntity.fixJsonAbove')}</p>
         )}
@@ -455,6 +548,8 @@ export function CreateEntityDialog({
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               {t('createEntity.creating')}
             </>
+          ) : createCount > 1 ? (
+            t('createEntity.createN', { count: createCount })
           ) : (
             t('createEntity.create')
           )}

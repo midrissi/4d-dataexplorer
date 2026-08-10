@@ -52,14 +52,25 @@ describe('applyEnvTemplateCompletion', () => {
 describe('filterEnvTemplateSuggestions', () => {
   const items = [
     { key: 'baseUrl', group: 'environment' },
+    { key: 'lastname', group: 'environment' },
+    { key: 'user_lastname', group: 'environment' },
+    { key: '$randomLastName', group: 'dynamic' },
     { key: '$timestamp', group: 'dynamic' },
     { key: '$isoTimestamp', group: 'dynamic' },
   ]
 
-  it('filters by prefix', () => {
+  it('filters by prefix first, then substring contains', () => {
     expect(filterEnvTemplateSuggestions(items, '$iso').map((i) => i.key)).toEqual(['$isoTimestamp'])
+    expect(filterEnvTemplateSuggestions(items, 'lastname').map((i) => i.key)).toEqual([
+      'lastname',
+      'user_lastname',
+      '$randomLastName',
+    ])
     expect(filterEnvTemplateSuggestions(items, '').map((i) => i.key)).toEqual([
       'baseUrl',
+      'lastname',
+      'user_lastname',
+      '$randomLastName',
       '$timestamp',
       '$isoTimestamp',
     ])

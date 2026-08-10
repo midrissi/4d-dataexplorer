@@ -1471,9 +1471,13 @@ export function EntityList({ tabId }: { tabId: string }) {
           dataclassName={selectedDataclass}
           initialData={duplicateData}
           isDuplicate={!!duplicateData}
-          onSubmit={async (data) => {
-            await createEntity(data)
-            toast.success(t('entity.entityCreated'))
+          onSubmit={async (data, options) => {
+            await createEntity(data, options)
+          }}
+          onRefresh={async () => {
+            if (!selectedDataclass) return
+            await fetchDataclassCount(selectedDataclass)
+            await fetchEntities()
           }}
         />
         <ConfirmDialog />

@@ -1,6 +1,7 @@
 import { dateValueToInputValue } from '@4d/rest'
 import {
   Checkbox,
+  DatePicker,
   Input,
   Label,
   ScrollArea,
@@ -19,7 +20,7 @@ import {
 } from '~/components/BinaryObjectViewer'
 import { ErrorList } from '~/components/ErrorList'
 import { PullToRefresh } from '~/components/PullToRefresh'
-import { useEditorLabels, useTranslation } from '~/i18n'
+import { getIntlLocale, useEditorLabels, useTranslation } from '~/i18n'
 import { api } from '~/lib/api'
 import { isRelationAttribute } from '~/lib/entity-viewer/attributes'
 import { getDeferredRelation } from '~/lib/entity-viewer/deferred'
@@ -49,7 +50,7 @@ export function FormView({
   entityId: string | null
   onRefresh?: () => void | Promise<void>
 }) {
-  const { t } = useTranslation()
+  const { t, language } = useTranslation()
   const mobile = isMobileShell()
   const editorLabels = useEditorLabels()
   const codeEditorPrefs = useCodeEditorPrefs()
@@ -262,13 +263,23 @@ export function FormView({
           <FieldLabel htmlFor={fieldId} attr={attr}>
             {attr.name}
           </FieldLabel>
-          <Input
+          <DatePicker
             id={fieldId}
-            type="date"
-            value={dateValueToInputValue(value)}
-            onChange={(e) => onFieldChange(attr.name, e.target.value || null)}
-            readOnly={isReadonly}
+            value={dateValueToInputValue(value) || null}
+            onChange={(next) => onFieldChange(attr.name, next)}
+            locale={getIntlLocale(language)}
             disabled={isReadonly}
+            labels={{
+              placeholder: t('entity.datePickerPlaceholder'),
+              clear: t('entity.datePickerClear'),
+              today: t('entity.datePickerToday'),
+              previousMonth: t('entity.datePickerPreviousMonth'),
+              nextMonth: t('entity.datePickerNextMonth'),
+              month: t('entity.datePickerMonth'),
+              year: t('entity.datePickerYear'),
+              openCalendar: t('entity.datePickerOpen', { field: attr.name }),
+            }}
+            aria-label={attr.name}
           />
         </div>
       )

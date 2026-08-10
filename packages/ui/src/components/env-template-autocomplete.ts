@@ -33,14 +33,22 @@ export function getEnvTemplateMatch(text: string, cursor: number): EnvTemplateMa
   }
 }
 
-/** Filter suggestions by the in-progress `{{prefix`. */
+/** Filter suggestions by the in-progress `{{query` (substring match, prefix-first). */
 export function filterEnvTemplateSuggestions(
   suggestions: readonly EnvTemplateSuggestion[],
   prefix: string
 ): EnvTemplateSuggestion[] {
   const q = prefix.trim().toLowerCase()
   if (!q) return [...suggestions]
-  return suggestions.filter((item) => item.key.toLowerCase().startsWith(q))
+
+  const starts: EnvTemplateSuggestion[] = []
+  const contains: EnvTemplateSuggestion[] = []
+  for (const item of suggestions) {
+    const key = item.key.toLowerCase()
+    if (key.startsWith(q)) starts.push(item)
+    else if (key.includes(q)) contains.push(item)
+  }
+  return [...starts, ...contains]
 }
 
 /**

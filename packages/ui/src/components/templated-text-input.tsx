@@ -50,6 +50,11 @@ export type TemplatedValueDisplayProps = {
   onStartEdit: () => void
   className?: string
   'aria-label'?: string
+  /**
+   * Decorative overlay on top of a real input (not in the a11y/tab tree).
+   * Use for chip preview while the underlying control stays the tab stop.
+   */
+  overlay?: boolean
 }
 
 /** Read-only chip/highlight view for strings that contain `{{var}}` segments. */
@@ -66,8 +71,61 @@ export function TemplatedValueDisplay({
   onStartEdit,
   className,
   'aria-label': ariaLabel,
+  overlay = false,
 }: TemplatedValueDisplayProps) {
   const segments = React.useMemo(() => parseEnvTemplateSegments(value), [value])
+
+  const chipContent = segments.map((segment) => {
+    if (segment.kind === 'text') {
+      return (
+        <span
+          key={`t-${segment.offset}`}
+          className="inline-flex items-center whitespace-pre leading-none"
+        >
+          {segment.text}
+        </span>
+      )
+    }
+    return (
+      <EnvVariableChip
+        key={`v-${segment.offset}-${segment.key}`}
+        raw={segment.raw}
+        variableKey={segment.key}
+        lookup={resolveVariable(segment.key)}
+        onVariableChange={onVariableChange}
+        onManageVariables={onManageVariables}
+        manageVariablesLabel={manageVariablesLabel}
+        writeTargets={writeTargets}
+        addToLabel={addToLabel}
+        unresolvedLabel={unresolvedLabel}
+        valuePlaceholder={valuePlaceholder}
+      />
+    )
+  })
+
+  const surfaceClassName = cn(
+    'flex min-h-7 w-full min-w-0 cursor-text flex-wrap items-center gap-y-0 overflow-x-auto rounded-sm border border-input bg-background px-2.5 py-0 font-mono text-foreground text-sm leading-none',
+    !overlay &&
+      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+    className
+  )
+
+  if (overlay) {
+    return (
+      <div
+        aria-hidden
+        className={surfaceClassName}
+        onMouseDown={(e) => {
+          if ((e.target as HTMLElement).closest('.env-var-chip')) return
+          // Keep focus on the real input; don't let the overlay steal it.
+          e.preventDefault()
+          onStartEdit()
+        }}
+      >
+        {chipContent}
+      </div>
+    )
+  }
 
   return (
     // biome-ignore lint/a11y/useSemanticElements: chip preview surface; focuses a real <input> on edit
@@ -75,11 +133,7 @@ export function TemplatedValueDisplay({
       role="textbox"
       tabIndex={0}
       aria-label={ariaLabel}
-      className={cn(
-        'flex min-h-7 w-full min-w-0 cursor-text flex-wrap items-center gap-y-0 overflow-x-auto rounded-sm border border-input bg-background px-2.5 py-0 font-mono text-foreground text-sm leading-none',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
-        className
-      )}
+      className={surfaceClassName}
       onClick={(e) => {
         if ((e.target as HTMLElement).closest('.env-var-chip')) return
         onStartEdit()
@@ -91,33 +145,7 @@ export function TemplatedValueDisplay({
         }
       }}
     >
-      {segments.map((segment) => {
-        if (segment.kind === 'text') {
-          return (
-            <span
-              key={`t-${segment.offset}`}
-              className="inline-flex items-center whitespace-pre leading-none"
-            >
-              {segment.text}
-            </span>
-          )
-        }
-        return (
-          <EnvVariableChip
-            key={`v-${segment.offset}-${segment.key}`}
-            raw={segment.raw}
-            variableKey={segment.key}
-            lookup={resolveVariable(segment.key)}
-            onVariableChange={onVariableChange}
-            onManageVariables={onManageVariables}
-            manageVariablesLabel={manageVariablesLabel}
-            writeTargets={writeTargets}
-            addToLabel={addToLabel}
-            unresolvedLabel={unresolvedLabel}
-            valuePlaceholder={valuePlaceholder}
-          />
-        )
-      })}
+      {chipContent}
     </div>
   )
 }
@@ -151,7 +179,7 @@ export const TemplatedTextInput = React.forwardRef<HTMLInputElement, TemplatedTe
     },
     ref
   ) => {
-    const [editing, setEditing] = React.useState(false)
+    const [focused, setFocused] = React.useState(false)
     const [draft, setDraft] = React.useState(value)
     const inputRef = React.useRef<HTMLInputElement>(null)
     const valueRef = React.useRef(value)
@@ -160,7 +188,8 @@ export const TemplatedTextInput = React.forwardRef<HTMLInputElement, TemplatedTe
     draftRef.current = draft
     React.useImperativeHandle(ref, () => inputRef.current as HTMLInputElement)
 
-    const showHighlight = !editing && !disabled && hasEnvTemplate(value)
+    // Keep the real <input> mounted so Tab can leave the field. Chips are a visual overlay only.
+    const showHighlight = !focused && !disabled && hasEnvTemplate(draft)
     const autocomplete = useEnvTemplateAutocomplete({
       value: draft,
       onChange: (next) => {
@@ -174,48 +203,47 @@ export const TemplatedTextInput = React.forwardRef<HTMLInputElement, TemplatedTe
     })
 
     React.useEffect(() => {
-      if (!editing) setDraft(value)
-    }, [value, editing])
-
-    React.useEffect(() => {
-      if (editing) inputRef.current?.focus()
-    }, [editing])
+      if (!focused) setDraft(value)
+    }, [value, focused])
 
     const commitDraft = React.useCallback(() => {
       const next = draftRef.current
       if (next !== valueRef.current) onChange(next)
     }, [onChange])
 
-    if (showHighlight) {
-      return (
-        <TemplatedValueDisplay
-          value={value}
-          resolveVariable={resolveVariable}
-          onVariableChange={onVariableChange}
-          onManageVariables={onManageVariables}
-          manageVariablesLabel={manageVariablesLabel}
-          writeTargets={writeTargets}
-          addToLabel={addToLabel}
-          unresolvedLabel={unresolvedLabel}
-          valuePlaceholder={valuePlaceholder}
-          onStartEdit={() => {
-            setDraft(value)
-            setEditing(true)
-          }}
-          className={className}
-          aria-label={props['aria-label']}
-        />
-      )
-    }
+    const startEdit = React.useCallback(() => {
+      inputRef.current?.focus()
+    }, [])
 
     return (
-      <>
+      <div className="relative w-full min-w-0">
+        {showHighlight ? (
+          <TemplatedValueDisplay
+            value={draft}
+            resolveVariable={resolveVariable}
+            onVariableChange={onVariableChange}
+            onManageVariables={onManageVariables}
+            manageVariablesLabel={manageVariablesLabel}
+            writeTargets={writeTargets}
+            addToLabel={addToLabel}
+            unresolvedLabel={unresolvedLabel}
+            valuePlaceholder={valuePlaceholder}
+            onStartEdit={startEdit}
+            overlay
+            className="absolute inset-0 z-10"
+            aria-label={props['aria-label']}
+          />
+        ) : null}
         <Input
           {...props}
           ref={inputRef}
           value={draft}
           disabled={disabled}
-          className={cn('font-mono', className)}
+          className={cn(
+            'font-mono',
+            className,
+            showHighlight && 'text-transparent caret-transparent selection:bg-transparent'
+          )}
           onChange={(e) => {
             const next = e.target.value
             const cursor = e.target.selectionStart ?? next.length
@@ -234,21 +262,21 @@ export const TemplatedTextInput = React.forwardRef<HTMLInputElement, TemplatedTe
             if (!e.defaultPrevented) onKeyDown?.(e)
           }}
           onFocus={(e) => {
-            setEditing(true)
+            setFocused(true)
             autocomplete.syncCursor()
             onFocus?.(e)
           }}
           onBlur={(e) => {
             autocomplete.onBlur()
             commitDraft()
-            setEditing(false)
+            setFocused(false)
             onBlur?.(e)
           }}
           autoComplete="off"
           spellCheck={false}
         />
         {autocomplete.listProps ? <EnvTemplateSuggestList {...autocomplete.listProps} /> : null}
-      </>
+      </div>
     )
   }
 )
@@ -283,7 +311,7 @@ export const TemplatedTextarea = React.forwardRef<HTMLTextAreaElement, Templated
     },
     ref
   ) => {
-    const [editing, setEditing] = React.useState(false)
+    const [focused, setFocused] = React.useState(false)
     const [draft, setDraft] = React.useState(value)
     const areaRef = React.useRef<HTMLTextAreaElement>(null)
     const valueRef = React.useRef(value)
@@ -292,7 +320,7 @@ export const TemplatedTextarea = React.forwardRef<HTMLTextAreaElement, Templated
     draftRef.current = draft
     React.useImperativeHandle(ref, () => areaRef.current as HTMLTextAreaElement)
 
-    const showHighlight = !editing && !disabled && hasEnvTemplate(value)
+    const showHighlight = !focused && !disabled && hasEnvTemplate(draft)
     const autocomplete = useEnvTemplateAutocomplete({
       value: draft,
       onChange: (next) => {
@@ -306,23 +334,23 @@ export const TemplatedTextarea = React.forwardRef<HTMLTextAreaElement, Templated
     })
 
     React.useEffect(() => {
-      if (!editing) setDraft(value)
-    }, [value, editing])
-
-    React.useEffect(() => {
-      if (editing) areaRef.current?.focus()
-    }, [editing])
+      if (!focused) setDraft(value)
+    }, [value, focused])
 
     const commitDraft = React.useCallback(() => {
       const next = draftRef.current
       if (next !== valueRef.current) onChange(next)
     }, [onChange])
 
-    if (showHighlight) {
-      return (
-        <div className={cn('min-h-[4.5rem]', className)}>
+    const startEdit = React.useCallback(() => {
+      areaRef.current?.focus()
+    }, [])
+
+    return (
+      <div className="relative w-full min-w-0">
+        {showHighlight ? (
           <TemplatedValueDisplay
-            value={value}
+            value={draft}
             resolveVariable={resolveVariable}
             onVariableChange={onVariableChange}
             onManageVariables={onManageVariables}
@@ -331,24 +359,22 @@ export const TemplatedTextarea = React.forwardRef<HTMLTextAreaElement, Templated
             addToLabel={addToLabel}
             unresolvedLabel={unresolvedLabel}
             valuePlaceholder={valuePlaceholder}
-            onStartEdit={() => {
-              setDraft(value)
-              setEditing(true)
-            }}
+            onStartEdit={startEdit}
+            overlay
+            className="absolute inset-0 z-10 min-h-[4.5rem] items-start py-2"
             aria-label={props['aria-label']}
           />
-        </div>
-      )
-    }
-
-    return (
-      <>
+        ) : null}
         <Textarea
           {...props}
           ref={areaRef}
           value={draft}
           disabled={disabled}
-          className={cn('font-mono', className)}
+          className={cn(
+            'font-mono',
+            className,
+            showHighlight && 'text-transparent caret-transparent selection:bg-transparent'
+          )}
           onChange={(e) => {
             const next = e.target.value
             const cursor = e.target.selectionStart ?? next.length
@@ -367,20 +393,20 @@ export const TemplatedTextarea = React.forwardRef<HTMLTextAreaElement, Templated
             if (!e.defaultPrevented) onKeyDown?.(e)
           }}
           onFocus={(e) => {
-            setEditing(true)
+            setFocused(true)
             autocomplete.syncCursor()
             onFocus?.(e)
           }}
           onBlur={(e) => {
             autocomplete.onBlur()
             commitDraft()
-            setEditing(false)
+            setFocused(false)
             onBlur?.(e)
           }}
           spellCheck={false}
         />
         {autocomplete.listProps ? <EnvTemplateSuggestList {...autocomplete.listProps} /> : null}
-      </>
+      </div>
     )
   }
 )

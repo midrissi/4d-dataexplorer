@@ -108,13 +108,15 @@ export function useEnvTemplateAutocomplete({
   }, [inputRef])
 
   const commit = React.useCallback(
-    (item: EnvTemplateSuggestion) => {
+    (item: EnvTemplateSuggestion, options?: { keepFocus?: boolean }) => {
       const el = inputRef.current
       const at = el?.selectionStart ?? cursor
       const next = applyEnvTemplateCompletion(value, at, item.key)
       onChange(next.value)
       setOpen(false)
       setActiveIndex(0)
+      setCursor(next.cursor)
+      if (options?.keepFocus === false) return
       requestAnimationFrame(() => {
         const node = inputRef.current
         if (!node) return
@@ -196,11 +198,19 @@ export function useEnvTemplateAutocomplete({
         setOpen(false)
         return
       }
-      if (event.key === 'Enter' || event.key === 'Tab') {
+      if (event.key === 'Enter') {
         const selected = items[safeActiveIndex]
         if (!selected) return
         event.preventDefault()
+        event.stopPropagation()
         commit(selected)
+        return
+      }
+      if (event.key === 'Tab') {
+        const selected = items[safeActiveIndex]
+        if (!selected) return
+        // Apply the suggestion, then let the browser move focus to the next field.
+        commit(selected, { keepFocus: false })
       }
     },
     [commit, items, match, open, safeActiveIndex, syncCursor]
@@ -294,6 +304,7 @@ export function EnvTemplateSuggestList({
                 id={`${id}-option-${index}`}
                 type="button"
                 role="option"
+                tabIndex={-1}
                 aria-selected={selected}
                 onMouseDown={(event) => {
                   event.preventDefault()
@@ -346,6 +357,9 @@ export function EnvTemplateSuggestList({
         </kbd>
         <kbd className="rounded-sm border border-border/80 bg-background px-1 py-px font-mono text-[9px] text-muted-foreground">
           ↵
+        </kbd>
+        <kbd className="rounded-sm border border-border/80 bg-background px-1 py-px font-mono text-[9px] text-muted-foreground">
+          ⇥
         </kbd>
       </div>
     </div>,

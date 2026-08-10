@@ -192,6 +192,13 @@ describe('store/index', () => {
       expect(mockDataclassCreate).toHaveBeenCalled()
       expect(useDataExplorerStore.getState().entities.length).toBeGreaterThan(0)
     })
+
+    it('skips list refresh when refresh is false', async () => {
+      useDataExplorerStore.setState({ selectedDataclass: 'Employee', entities: [] })
+      await useDataExplorerStore.getState().createEntity({ name: 'New' }, { refresh: false })
+      expect(mockDataclassCreate).toHaveBeenCalled()
+      expect(useDataExplorerStore.getState().entities).toEqual([])
+    })
   })
 
   describe('updateEntity', () => {

@@ -15,6 +15,29 @@ export {
 export { Checkbox } from './components/checkbox'
 export { ClickToCopy, type ClickToCopyAs, type ClickToCopyProps } from './components/click-to-copy'
 export {
+  DatePicker,
+  type DatePickerLabels,
+  type DatePickerProps,
+  DEFAULT_DATE_PICKER_LABELS,
+} from './components/date-picker'
+export {
+  type CalendarCell,
+  clampDay,
+  type DateParts,
+  daysInMonth,
+  formatDateOnly,
+  formatDisplayDate,
+  getMonthDayCells,
+  getMonthDayMatrix,
+  getMonthLabels,
+  getWeekdayLabels,
+  getWeekStartsOn,
+  parseDateOnly,
+  shiftMonth,
+  todayParts,
+  yearRange,
+} from './components/date-picker-utils'
+export {
   Dialog,
   DialogClose,
   DialogContent,

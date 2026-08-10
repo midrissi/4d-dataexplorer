@@ -107,7 +107,7 @@ type DataExplorerState = {
   setSearchQuery: (query: string) => void
   setIsEditing: (editing: boolean) => void
   setEditedEntity: (entity: string | null) => void
-  createEntity: (data: Record<string, unknown>) => Promise<void>
+  createEntity: (data: Record<string, unknown>, options?: { refresh?: boolean }) => Promise<void>
   updateEntity: (id: string, data: Record<string, unknown>) => Promise<void>
   deleteEntity: (id: string) => Promise<void>
   /** Batch delete via REST $method=delete (page keys, entity set, or all records). */
@@ -470,11 +470,12 @@ export const useDataExplorerStore = create<DataExplorerState>()(
           setView({ editedEntity: entity })
         },
 
-        createEntity: async (data) => {
+        createEntity: async (data, options) => {
           const { selectedDataclass } = get()
           if (!selectedDataclass) return
 
           await api.createEntity(selectedDataclass, data)
+          if (options?.refresh === false) return
           await get().fetchDataclassCount(selectedDataclass)
           await get().fetchEntities()
         },

@@ -563,6 +563,30 @@
 			</editor_table_info>
 		</table_extra>
 	</table>
+	<table name="Person" uuid="754BDF2DF7884091ABA4028BCBD10003" id="20">
+		<field name="ID" uuid="1A8CADAFACA546FE85E51994C89DE716" type="4" unique="true" autosequence="true" not_null="true" id="1"/>
+		<field name="firsname" uuid="B410E9DFEAC44020BF6DD5AC7EFEC42B" type="10" limiting_length="255" id="2"/>
+		<field name="lastname" uuid="AD94879B9BBB402794EBD052FE0DFED1" type="10" limiting_length="255" id="3"/>
+		<field name="birthdate" uuid="78C9AAECD2FB42B2BDA3441CE829513B" type="8" id="4">
+			<field_extra multi_line="false"/>
+		</field>
+		<field name="address" uuid="0354B6308D314C2797709B1C3DADF3C5" type="10" limiting_length="255" id="5">
+			<field_extra multi_line="false"/>
+		</field>
+		<field name="city" uuid="7E3C9B68F1724625AB2B807F2E4A8C55" type="10" limiting_length="255" id="6">
+			<field_extra multi_line="false"/>
+		</field>
+		<field name="country" uuid="39CB5CFF09EE44C0B9DF20C10FB093F5" type="10" limiting_length="255" id="7">
+			<field_extra multi_line="false"/>
+		</field>
+		<primary_key field_name="ID" field_uuid="1A8CADAFACA546FE85E51994C89DE716"/>
+		<table_extra>
+			<editor_table_info displayable_fields_count="9">
+				<color red="255" green="255" blue="255" alpha="0"/>
+				<coordinates left="1248.13671875" top="824.41015625" width="120" height="247.56640625"/>
+			</editor_table_info>
+		</table_extra>
+	</table>
 	<table name="Department" uuid="77483DFEE39540608A3543C004F0C3D0" id="21">
 		<field name="ID" uuid="D9C39FB16E76461E9C689C64F1F1EE39" type="4" unique="true" autosequence="true" not_null="true" id="1">
 			<field_extra multi_line="false" position="1"/>
@@ -1176,6 +1200,11 @@
 			</editor_relation_info>
 		</relation_extra>
 	</relation>
+	<index kind="regular" unique_keys="true" uuid="065D11E75227408DB90EAF150485824E" type="7">
+		<field_ref uuid="1A8CADAFACA546FE85E51994C89DE716" name="ID">
+			<table_ref uuid="754BDF2DF7884091ABA4028BCBD10003" name="Person"/>
+		</field_ref>
+	</index>
 	<index kind="regular" unique_keys="true" uuid="0BAF9FF2B4494AD7A9CA005DCE33D45B" type="3">
 		<field_ref uuid="2152ECE0F6F342BFB98409B619C44883" name="ID">
 			<table_ref uuid="63817B86C5EC4F92AD4AC19B3E8222C0" name="Agency"/>

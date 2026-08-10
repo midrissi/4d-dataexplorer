@@ -128,6 +128,7 @@ export function EnvVariableChip({
       <PopoverTrigger asChild>
         <button
           type="button"
+          tabIndex={-1}
           className={cn(
             // Hug text metrics; self-center so flex rows align chip with plain text.
             'env-var-chip inline-flex max-w-full items-center self-center truncate rounded-xs px-0.5 py-px font-mono text-[1em] leading-none',
