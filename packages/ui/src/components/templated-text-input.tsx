@@ -1,6 +1,8 @@
 import * as React from 'react'
 import { cn } from '../lib/utils'
 import { type EnvVarLookup, parseEnvTemplateSegments } from './env-template'
+import type { EnvTemplateSuggestion } from './env-template-autocomplete'
+import { EnvTemplateSuggestList, useEnvTemplateAutocomplete } from './env-template-autocomplete-ui'
 import {
   type EnvVariableChangeHandler,
   EnvVariableChip,
@@ -20,6 +22,9 @@ export type TemplatedFieldSharedProps = {
   addToLabel?: string
   unresolvedLabel?: string
   valuePlaceholder?: string
+  /** Keys offered while typing `{{` (env + dynamic). */
+  variableSuggestions?: readonly EnvTemplateSuggestion[]
+  variableGroupLabels?: Readonly<Record<string, string>>
   className?: string
   disabled?: boolean
   placeholder?: string
@@ -133,10 +138,15 @@ export const TemplatedTextInput = React.forwardRef<HTMLInputElement, TemplatedTe
       addToLabel,
       unresolvedLabel,
       valuePlaceholder,
+      variableSuggestions = [],
+      variableGroupLabels,
       className,
       disabled,
       onBlur,
       onFocus,
+      onKeyDown,
+      onSelect,
+      onClick,
       ...props
     },
     ref
@@ -151,6 +161,17 @@ export const TemplatedTextInput = React.forwardRef<HTMLInputElement, TemplatedTe
     React.useImperativeHandle(ref, () => inputRef.current as HTMLInputElement)
 
     const showHighlight = !editing && !disabled && hasEnvTemplate(value)
+    const autocomplete = useEnvTemplateAutocomplete({
+      value: draft,
+      onChange: (next) => {
+        setDraft(next)
+        draftRef.current = next
+      },
+      suggestions: variableSuggestions,
+      groupLabels: variableGroupLabels,
+      enabled: !disabled && variableSuggestions.length > 0,
+      inputRef,
+    })
 
     React.useEffect(() => {
       if (!editing) setDraft(value)
@@ -188,23 +209,46 @@ export const TemplatedTextInput = React.forwardRef<HTMLInputElement, TemplatedTe
     }
 
     return (
-      <Input
-        ref={inputRef}
-        value={draft}
-        disabled={disabled}
-        className={cn('font-mono', className)}
-        onChange={(e) => setDraft(e.target.value)}
-        onFocus={(e) => {
-          setEditing(true)
-          onFocus?.(e)
-        }}
-        onBlur={(e) => {
-          commitDraft()
-          setEditing(false)
-          onBlur?.(e)
-        }}
-        {...props}
-      />
+      <>
+        <Input
+          {...props}
+          ref={inputRef}
+          value={draft}
+          disabled={disabled}
+          className={cn('font-mono', className)}
+          onChange={(e) => {
+            const next = e.target.value
+            const cursor = e.target.selectionStart ?? next.length
+            autocomplete.onValueChange(next, cursor)
+          }}
+          onClick={(e) => {
+            autocomplete.syncCursor()
+            onClick?.(e)
+          }}
+          onSelect={(e) => {
+            autocomplete.syncCursor()
+            onSelect?.(e)
+          }}
+          onKeyDown={(e) => {
+            autocomplete.onKeyDown(e)
+            if (!e.defaultPrevented) onKeyDown?.(e)
+          }}
+          onFocus={(e) => {
+            setEditing(true)
+            autocomplete.syncCursor()
+            onFocus?.(e)
+          }}
+          onBlur={(e) => {
+            autocomplete.onBlur()
+            commitDraft()
+            setEditing(false)
+            onBlur?.(e)
+          }}
+          autoComplete="off"
+          spellCheck={false}
+        />
+        {autocomplete.listProps ? <EnvTemplateSuggestList {...autocomplete.listProps} /> : null}
+      </>
     )
   }
 )
@@ -226,10 +270,15 @@ export const TemplatedTextarea = React.forwardRef<HTMLTextAreaElement, Templated
       addToLabel,
       unresolvedLabel,
       valuePlaceholder,
+      variableSuggestions = [],
+      variableGroupLabels,
       className,
       disabled,
       onBlur,
       onFocus,
+      onKeyDown,
+      onSelect,
+      onClick,
       ...props
     },
     ref
@@ -244,6 +293,17 @@ export const TemplatedTextarea = React.forwardRef<HTMLTextAreaElement, Templated
     React.useImperativeHandle(ref, () => areaRef.current as HTMLTextAreaElement)
 
     const showHighlight = !editing && !disabled && hasEnvTemplate(value)
+    const autocomplete = useEnvTemplateAutocomplete({
+      value: draft,
+      onChange: (next) => {
+        setDraft(next)
+        draftRef.current = next
+      },
+      suggestions: variableSuggestions,
+      groupLabels: variableGroupLabels,
+      enabled: !disabled && variableSuggestions.length > 0,
+      inputRef: areaRef,
+    })
 
     React.useEffect(() => {
       if (!editing) setDraft(value)
@@ -282,23 +342,45 @@ export const TemplatedTextarea = React.forwardRef<HTMLTextAreaElement, Templated
     }
 
     return (
-      <Textarea
-        ref={areaRef}
-        value={draft}
-        disabled={disabled}
-        className={cn('font-mono', className)}
-        onChange={(e) => setDraft(e.target.value)}
-        onFocus={(e) => {
-          setEditing(true)
-          onFocus?.(e)
-        }}
-        onBlur={(e) => {
-          commitDraft()
-          setEditing(false)
-          onBlur?.(e)
-        }}
-        {...props}
-      />
+      <>
+        <Textarea
+          {...props}
+          ref={areaRef}
+          value={draft}
+          disabled={disabled}
+          className={cn('font-mono', className)}
+          onChange={(e) => {
+            const next = e.target.value
+            const cursor = e.target.selectionStart ?? next.length
+            autocomplete.onValueChange(next, cursor)
+          }}
+          onClick={(e) => {
+            autocomplete.syncCursor()
+            onClick?.(e)
+          }}
+          onSelect={(e) => {
+            autocomplete.syncCursor()
+            onSelect?.(e)
+          }}
+          onKeyDown={(e) => {
+            autocomplete.onKeyDown(e)
+            if (!e.defaultPrevented) onKeyDown?.(e)
+          }}
+          onFocus={(e) => {
+            setEditing(true)
+            autocomplete.syncCursor()
+            onFocus?.(e)
+          }}
+          onBlur={(e) => {
+            autocomplete.onBlur()
+            commitDraft()
+            setEditing(false)
+            onBlur?.(e)
+          }}
+          spellCheck={false}
+        />
+        {autocomplete.listProps ? <EnvTemplateSuggestList {...autocomplete.listProps} /> : null}
+      </>
     )
   }
 )

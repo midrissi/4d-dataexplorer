@@ -63,8 +63,19 @@ export {
   parseEnvTemplateSegments,
 } from './components/env-template'
 export {
-  EnvVariableChip,
+  applyEnvTemplateCompletion,
+  type EnvTemplateMatch,
+  type EnvTemplateSuggestion,
+  filterEnvTemplateSuggestions,
+  getEnvTemplateMatch,
+} from './components/env-template-autocomplete'
+export {
+  EnvTemplateSuggestList,
+  useEnvTemplateAutocomplete,
+} from './components/env-template-autocomplete-ui'
+export {
   type EnvVariableChangeHandler,
+  EnvVariableChip,
   type EnvVariableChipProps,
   type EnvWriteTarget,
 } from './components/env-variable-chip'

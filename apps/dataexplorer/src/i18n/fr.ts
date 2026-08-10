@@ -1038,6 +1038,8 @@ export const fr = {
     scopeProfile: 'Profil',
     scopeBase: 'Base',
     scopeDynamic: 'Dynamique',
+    suggestGroupEnvironment: 'Environnement',
+    suggestGroupDynamic: 'Dynamique',
     noEnvironment: 'Aucun environnement',
     switcherLabel: 'Environnement',
     switcherEmptyVars: 'Aucune variable disponible',

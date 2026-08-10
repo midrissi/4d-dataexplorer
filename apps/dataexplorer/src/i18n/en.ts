@@ -1016,6 +1016,8 @@ export const en = {
     scopeProfile: 'Profile',
     scopeBase: 'Database',
     scopeDynamic: 'Dynamic',
+    suggestGroupEnvironment: 'Environment',
+    suggestGroupDynamic: 'Dynamic',
     noEnvironment: 'No environment',
     switcherLabel: 'Environment',
     switcherEmptyVars: 'No variables available',

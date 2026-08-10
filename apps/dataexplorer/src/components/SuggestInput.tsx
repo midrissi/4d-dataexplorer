@@ -1,4 +1,14 @@
-import { cn, type EnvVarLookup, type EnvWriteTarget, Input, TemplatedValueDisplay } from '@4d/ui'
+import {
+  cn,
+  type EnvTemplateSuggestion,
+  EnvTemplateSuggestList,
+  type EnvVarLookup,
+  type EnvWriteTarget,
+  getEnvTemplateMatch,
+  Input,
+  TemplatedValueDisplay,
+  useEnvTemplateAutocomplete,
+} from '@4d/ui'
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { measureSuggestionPlacement } from '~/components/QueryBuilder/AttributePathInput'
@@ -60,6 +70,8 @@ export function SuggestInput({
   unresolvedLabel,
   valuePlaceholder,
   highlightClassName,
+  variableSuggestions = [],
+  variableGroupLabels,
 }: {
   value: string
   onChange: (value: string) => void
@@ -87,6 +99,9 @@ export function SuggestInput({
   valuePlaceholder?: string
   /** Classes for the chip highlight surface (defaults to `inputClassName`). */
   highlightClassName?: string
+  /** Env / dynamic keys suggested while typing `{{`. */
+  variableSuggestions?: readonly EnvTemplateSuggestion[]
+  variableGroupLabels?: Readonly<Record<string, string>>
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const listboxId = useId()
@@ -94,29 +109,42 @@ export function SuggestInput({
   const [editing, setEditing] = useState(false)
   const [activeIndex, setActiveIndex] = useState(0)
   const [placement, setPlacement] = useState<SuggestionPlacement | null>(null)
+  const [cursor, setCursor] = useState(value.length)
 
   const templatingEnabled = Boolean(resolveVariable && onVariableChange)
   const showHighlight = templatingEnabled && !editing && !disabled && hasEnvTemplate(value)
-  // Don't offer path/catalog picks over in-progress or completed {{templates}}.
-  const suppressSuggestions = hasEnvTemplate(value)
+
+  const envMatch = getEnvTemplateMatch(value, cursor)
+  const envAutocomplete = useEnvTemplateAutocomplete({
+    value,
+    onChange,
+    suggestions: variableSuggestions,
+    groupLabels: variableGroupLabels,
+    enabled: templatingEnabled && !disabled && variableSuggestions.length > 0,
+    inputRef,
+  })
+
+  // Prefer env `{{` completion over path/catalog picks while a template is open.
+  const suppressPathSuggestions = Boolean(envMatch) || hasEnvTemplate(value)
 
   const normalized = useMemo(() => normalizeSuggestions(suggestions), [suggestions])
 
   const filtered = useMemo(
-    () => (suppressSuggestions ? [] : filterSuggestions(normalized, value, filter)),
-    [filter, normalized, suppressSuggestions, value]
+    () => (suppressPathSuggestions ? [] : filterSuggestions(normalized, value, filter)),
+    [filter, normalized, suppressPathSuggestions, value]
   )
 
-  const showSuggestions = open && !showHighlight && filtered.length > 0
+  const showPathSuggestions =
+    open && !showHighlight && !envAutocomplete.active && filtered.length > 0
   const safeActiveIndex = filtered.length === 0 ? 0 : Math.min(activeIndex, filtered.length - 1)
-  const activeOptionId = showSuggestions ? `${listboxId}-option-${safeActiveIndex}` : undefined
+  const activeOptionId = showPathSuggestions ? `${listboxId}-option-${safeActiveIndex}` : undefined
 
   useEffect(() => {
     if (editing && !showHighlight) inputRef.current?.focus()
   }, [editing, showHighlight])
 
   useLayoutEffect(() => {
-    if (!showSuggestions) {
+    if (!showPathSuggestions) {
       setPlacement(null)
       return
     }
@@ -134,14 +162,14 @@ export function SuggestInput({
       window.removeEventListener('resize', updatePlacement)
       window.removeEventListener('scroll', updatePlacement, true)
     }
-  }, [showSuggestions])
+  }, [showPathSuggestions])
 
   useEffect(() => {
-    if (!showSuggestions) return
+    if (!showPathSuggestions) return
     document
       .getElementById(`${listboxId}-option-${safeActiveIndex}`)
       ?.scrollIntoView({ block: 'nearest' })
-  }, [safeActiveIndex, listboxId, showSuggestions])
+  }, [safeActiveIndex, listboxId, showPathSuggestions])
 
   const commitSuggestion = (item: string) => {
     onChange(item)
@@ -152,8 +180,19 @@ export function SuggestInput({
     })
   }
 
+  const syncCursor = () => {
+    const input = inputRef.current
+    if (!input) return
+    const next = input.selectionStart ?? input.value.length
+    setCursor(next)
+    envAutocomplete.syncCursor()
+  }
+
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!showSuggestions) {
+    envAutocomplete.onKeyDown(event)
+    if (event.defaultPrevented || envAutocomplete.active) return
+
+    if (!showPathSuggestions) {
       if (event.key === 'ArrowDown' && filtered.length > 0) {
         event.preventDefault()
         setOpen(true)
@@ -224,16 +263,28 @@ export function SuggestInput({
         value={value}
         disabled={disabled}
         onChange={(event) => {
-          onChange(event.target.value)
+          const next = event.target.value
+          const nextCursor = event.target.selectionStart ?? next.length
+          setCursor(nextCursor)
           setActiveIndex(0)
-          setOpen(true)
           setEditing(true)
+          if (getEnvTemplateMatch(next, nextCursor)) {
+            envAutocomplete.onValueChange(next, nextCursor)
+            setOpen(false)
+          } else {
+            onChange(next)
+            setOpen(true)
+          }
         }}
+        onClick={syncCursor}
+        onSelect={syncCursor}
         onFocus={() => {
           setEditing(true)
           setOpen(true)
+          syncCursor()
         }}
         onBlur={() => {
+          envAutocomplete.onBlur()
           // Delay so option mousedown can commit before the list unmounts.
           window.setTimeout(() => {
             setOpen(false)
@@ -245,14 +296,15 @@ export function SuggestInput({
         autoComplete="off"
         spellCheck={false}
         role="combobox"
-        aria-expanded={showSuggestions}
+        aria-expanded={showPathSuggestions || envAutocomplete.active}
         aria-autocomplete="list"
-        aria-controls={listboxId}
+        aria-controls={envAutocomplete.listProps?.id ?? listboxId}
         aria-activedescendant={activeOptionId}
         aria-label={ariaLabel}
         className={inputClassName}
       />
-      {showSuggestions && placement
+      {envAutocomplete.listProps ? <EnvTemplateSuggestList {...envAutocomplete.listProps} /> : null}
+      {showPathSuggestions && placement
         ? createPortal(
             <div
               id={listboxId}

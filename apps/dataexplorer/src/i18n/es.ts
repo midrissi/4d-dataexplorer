@@ -1035,6 +1035,8 @@ export const es = {
     scopeProfile: 'Perfil',
     scopeBase: 'Base',
     scopeDynamic: 'Dinámico',
+    suggestGroupEnvironment: 'Entorno',
+    suggestGroupDynamic: 'Dinámico',
     noEnvironment: 'Sin entorno',
     switcherLabel: 'Entorno',
     switcherEmptyVars: 'No hay variables disponibles',

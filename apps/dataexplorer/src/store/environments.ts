@@ -51,7 +51,10 @@ type EnvironmentsState = {
 
   getLayers: () => ActiveEnvLayers
   getActiveMap: () => Map<string, string>
-  lookup: (key: string, labels?: { global: string; profile: string; base: string; dynamic?: string }) => EnvVarLookup
+  lookup: (
+    key: string,
+    labels?: { global: string; profile: string; base: string; dynamic?: string }
+  ) => EnvVarLookup
 
   /**
    * Set / remove / clear variables on the active environment for a scope.

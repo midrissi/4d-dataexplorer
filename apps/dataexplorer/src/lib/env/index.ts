@@ -1,6 +1,6 @@
 export {
-  type DynamicEnvVarDef,
   DYNAMIC_ENV_VARS,
+  type DynamicEnvVarDef,
   getDynamicEnvVarDescription,
   isDynamicEnvVar,
   listDynamicEnvVarKeys,

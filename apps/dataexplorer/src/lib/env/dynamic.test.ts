@@ -36,9 +36,7 @@ describe('dynamic env vars', () => {
     expect(iso).toMatch(/^\d{4}-\d{2}-\d{2}T/)
 
     const guid = resolveDynamicEnvVar('$guid')
-    expect(guid).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-    )
+    expect(guid).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)
 
     const n = Number(resolveDynamicEnvVar('$randomInt'))
     expect(n).toBeGreaterThanOrEqual(0)

@@ -829,6 +829,8 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
                     addToLabel={envField.addToLabel}
                     unresolvedLabel={envField.unresolvedLabel}
                     valuePlaceholder={envField.valuePlaceholder}
+                    variableSuggestions={envField.variableSuggestions}
+                    variableGroupLabels={envField.variableGroupLabels}
                   />
 
                   <div className="flex shrink-0 items-center gap-0.5 border-border/80 border-l bg-background/40 p-0.5">

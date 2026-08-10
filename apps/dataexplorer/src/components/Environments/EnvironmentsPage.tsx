@@ -48,11 +48,7 @@ import {
 } from '~/lib/env'
 import { getCurrentBaseId } from '~/lib/storage'
 import { useEnvironmentsStore } from '~/store/environments'
-import {
-  type EnvironmentsScope,
-  useActiveEnvironmentsTab,
-  useTabsStore,
-} from '~/store/tabs'
+import { type EnvironmentsScope, useActiveEnvironmentsTab, useTabsStore } from '~/store/tabs'
 
 type ScopeTab = EnvironmentsScope
 
