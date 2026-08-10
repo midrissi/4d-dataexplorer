@@ -1,7 +1,7 @@
 import type { EnvTemplateSuggestion, EnvWriteTarget } from '@4d/ui'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from '~/i18n'
-import { DYNAMIC_ENV_VARS } from '~/lib/env/dynamic'
+import { listAllDynamicEnvVarDefs } from '~/lib/env/dynamic'
 import type { EnvScope } from '~/lib/env/types'
 import { getCurrentBaseId } from '~/lib/storage'
 import { setEnvVarCurrentValue, useEnvironmentsStore } from '~/store/environments'
@@ -73,7 +73,7 @@ export function useTemplatedEnvFieldProps() {
     }
     envItems.sort((a, b) => a.key.localeCompare(b.key))
     const dynamicItems: EnvTemplateSuggestion[] = []
-    for (const item of DYNAMIC_ENV_VARS) {
+    for (const item of listAllDynamicEnvVarDefs()) {
       if (seen.has(item.key)) continue
       dynamicItems.push({
         key: item.key,

@@ -158,7 +158,7 @@ const gallery: GalleryItem[] = [
   {
     num: '09',
     title: 'Environment editor',
-    desc: 'Manage globals and named environments, insert {{variables}} and $dynamics with filters, and switch active profile or database scopes from the footer.',
+    desc: 'Manage globals and named environments, insert {{variables}} and $faker paths with filters, and switch active profile or database scopes from the footer.',
     link: '/guide/environments',
     src: '/screenshots/40-environments-editor.png',
     alt: 'Environment editor with globals and variables',

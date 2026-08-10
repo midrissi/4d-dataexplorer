@@ -94,6 +94,23 @@ return app.environment.globals.get("token")`,
     expect(tpl.value).toBe('hello-world')
   })
 
+  it('exposes faker for direct JS calls', async () => {
+    const result = await executeSnippet(
+      `const name = faker.person.firstName()
+return { name, uuid: faker.string.uuid(), typed: typeof faker.person.firstName }`,
+      {},
+      { mirrorToAppConsole: false }
+    )
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.value).toMatchObject({
+      typed: 'function',
+    })
+    const value = result.value as { name: string; uuid: string }
+    expect(value.name.length).toBeGreaterThan(0)
+    expect(value.uuid).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
+  })
+
   it('sets variables on the active profile environment', async () => {
     const { useEnvironmentsStore } = await import('~/store/environments')
     useEnvironmentsStore.getState().setProfileBlock({

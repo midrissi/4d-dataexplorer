@@ -55,16 +55,32 @@ app.environment.base.set("baseUrl", "https://…")
 
 You can also embed `{{variable}}` in snippet source — values are substituted from the active environment map before the snippet runs.
 
-**Dynamic variables** (keys that start with `$`) work the same way and generate a fresh value each time, for example `{{$timestamp}}`, `{{$isoTimestamp}}`, `{{$guid}}`, `{{$randomInt}}`, `{{$randomEmail}}`.
+**Dynamic variables** (keys that start with `$`) work the same way and generate a fresh value each time. Use Faker paths such as `{{$faker.person.fullName}}`, `{{$faker.string.uuid}}`, `{{$faker.number.int | between:1,100}}`, or clock aliases `{{$timestamp}}` / `{{$isoTimestamp}}`.
 
 **Pipe filters** (Liquid-style) apply to env vars and dynamics:
 
 - `{{name | upper}}` (also `lower`, `snake`, `camel`, `pascal`, `kebab`, `trim`) — transform the resolved string
-- `{{$randomFirstName | female}}` / `{{$randomFirstName | male}}` — gendered names (also `$randomFullName`, `$randomEmail`, …)
-- `{{$randomInt | between:10,100}}` or `{{$randomInt | min:10 | max:100}}` — integer in range
-- `{{$randomDate | after:2020-01-01 | before:2025-12-31}}` — date bounds (`YYYY-MM-DD`)
+- `{{$faker.person.firstName | female}}` / `{{$faker.person.firstName | male}}` — gendered names (also `$faker.internet.email`, …)
+- `{{$faker.number.int | between:10,100}}` or `{{$faker.number.int | min:10 | max:100}}` — integer in range
+- `{{$faker.date.between | after:2020-01-01 | before:2025-12-31}}` — date bounds (`YYYY-MM-DD`)
 
 Unknown filters leave the `{{…}}` token unresolved so typos are visible.
+
+## `faker`
+
+The same [@faker-js/faker](https://fakerjs.dev/api/) instance used by `{{$faker…}}` templates is injected as `faker`:
+
+```js
+faker.person.firstName()
+faker.person.fullName({ sex: 'female' })
+faker.internet.email()
+faker.string.uuid()
+faker.number.int({ min: 1, max: 100 })
+faker.location.city()
+```
+
+Type `faker.` for modules, then `faker.person.` for methods (autocomplete inserts `()`).
+
 ## `ds` surface
 
 ```js

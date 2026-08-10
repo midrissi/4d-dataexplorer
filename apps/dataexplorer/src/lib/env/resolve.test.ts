@@ -85,7 +85,7 @@ describe('resolveEnvTemplates', () => {
   })
 
   it('resolves dynamic filters', () => {
-    expect(resolveEnvTemplates('{{$randomInt | between:7,7}}', {}).text).toBe('7')
+    expect(resolveEnvTemplates('{{$faker.number.int | between:7,7}}', {}).text).toBe('7')
   })
 })
 
@@ -95,10 +95,9 @@ describe('collectEnvTemplateKeys / collectUnresolved', () => {
   })
 
   it('collects base keys when filters are present', () => {
-    expect(collectEnvTemplateKeys('{{ $randomInt | between:1,5 }} {{name | upper}}')).toEqual([
-      '$randomInt',
-      'name',
-    ])
+    expect(
+      collectEnvTemplateKeys('{{ $faker.number.int | between:1,5 }} {{name | upper}}')
+    ).toEqual(['$faker.number.int', 'name'])
   })
 
   it('lists unresolved only', () => {

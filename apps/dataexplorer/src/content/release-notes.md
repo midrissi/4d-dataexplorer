@@ -6,9 +6,20 @@
 
 ### Overview
 
-Version `1.4.x` adds the **ORDA Terminal** (REPL and Code modes with snippet files) in a shared bottom dock with the Console; adds **REST Export** (Collection v2.1 and OpenAPI 3.1 from the catalog, HTTP Client, and Method Executor); ships **iOS and Android** mobile apps; improves console network previews and image share/save; and polishes mobile HTTP Client and dock UX.
+Version `1.4.x` adds **environment variables** (globals, profile, and database layers with `{{templates}}`, pipe filters, and Faker-powered dynamics); adds the **ORDA Terminal** (REPL and Code modes with snippet files) in a shared bottom dock with the Console; adds **REST Export** (Collection v2.1 and OpenAPI 3.1 from the catalog, HTTP Client, and Method Executor); adds **favourites** for HTTP Client and Method Executor; ships **iOS and Android** mobile apps; improves console network previews and image share/save; and polishes mobile HTTP Client and dock UX.
 
 ### Features
+
+#### Environment variables
+
+- **Environments editor** — Manage **Globals**, **Profile**, and **This database** scopes from Tools, the command palette (**Environments**), or the footer **Environment** switcher → **Manage…**.
+- **Active environments** — One profile and one database environment active at a time; footer switcher selects them and previews the merged variable list (secrets stay masked until revealed).
+- **Templates** — Insert `{{name}}` in HTTP Client, Method Executor, Query Builder, Create Entity, ORDA Terminal snippets, and other templated fields; values resolve at send/run time.
+- **Pipe filters** — Liquid-style transforms (`upper`, `lower`, `snake`, …) plus generator options (`female` / `male`, `min` / `max` / `between`, `after` / `before`).
+- **Dynamic variables** — Full Faker surface via `{{$faker.module.method}}` (e.g. `{{$faker.person.fullName}}`, `{{$faker.string.uuid}}`), plus clock aliases `{{$timestamp}}` / `{{$isoTimestamp}}`.
+- **Chips & autocomplete** — Known variables highlight as chips; completions cover environment keys, aliases, and `$faker.*` paths; unresolved keys stay visible as `{{…}}`.
+- **Export / Import** — Share environments as JSON from the editor toolbar.
+- **Terminal API** — `app.environment` helpers plus `.env` / `.envs` dot commands.
 
 #### ORDA Terminal
 
@@ -37,15 +48,24 @@ Version `1.4.x` adds the **ORDA Terminal** (REPL and Code modes with snippet fil
 - **Network image preview** — Inline preview for image responses in the console network log.
 - **Share / save** — Share or download binary objects and images via platform-native paths (fixes iOS WKWebView download failures).
 
+#### Favourites & create flows
+
+- **HTTP Client favourites** — Save, reopen, and export favourites (including collection / OpenAPI export).
+- **Method Executor favourites** — Same favourites workflow for method calls.
+- **Batch create entity** — Create multiple entities with templated field values resolved from the active environment map.
+
 #### UX
 
 - **About dialog** — App about information from mobile/desktop chrome.
 - **Panel heights** — Entity list and request panes remember height; console height clamps safely when the viewport size is unknown.
 - **HTTP Client (mobile)** — Responsive request/response summary for narrow screens.
+- **Console URL decoding** — Optional toggle to decode percent-encoded URLs in the network log for easier reading.
+- **Environment switcher** — Footer control refined for clearer active profile / database selection and Manage access.
 
 ### Docs
 
-- Guide pages for [Console](https://midrissi.github.io/4d-dataexplorer/guide/console.html), [ORDA Terminal](https://midrissi.github.io/4d-dataexplorer/guide/terminal.html), [REST Export](https://midrissi.github.io/4d-dataexplorer/guide/rest-export.html), and [Mobile apps](https://midrissi.github.io/4d-dataexplorer/guide/mobile.html).
+- Guide pages for [Console](https://midrissi.github.io/4d-dataexplorer/guide/console.html), [ORDA Terminal](https://midrissi.github.io/4d-dataexplorer/guide/terminal.html), [REST Export](https://midrissi.github.io/4d-dataexplorer/guide/rest-export.html), [Environment variables](https://midrissi.github.io/4d-dataexplorer/guide/environments.html), and [Mobile apps](https://midrissi.github.io/4d-dataexplorer/guide/mobile.html).
+- Home gallery includes the Environment editor and updated screenshots (including light / dark captures).
 
 ### Fixes
 
@@ -55,6 +75,8 @@ Version `1.4.x` adds the **ORDA Terminal** (REPL and Code modes with snippet fil
 - **Empty query params** — Collection export disables empty `$filter` / `$orderby` / `$attributes` by default so they are not sent until filled in.
 - **OpenAPI responses** — Exported specs list known 4D REST statuses (200, 401, 402, 404, 500).
 - **Request Docs tab** — Request documentation includes the official 4D REST page markdown, not only a short summary.
+- **Dynamic name / range filters** — Gender and numeric / date bounds on `$faker.*` templates resolve through Faker options.
+- **Docs templates** — Environment guide and home copy render `{{…}}` examples without breaking the VitePress Vue compiler.
 
 ## 1.3.x
 

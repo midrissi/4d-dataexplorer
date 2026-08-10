@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'bun:test'
 import {
+  __FAKER_MODULES_FOR_TEST,
   DYNAMIC_ENV_VARS,
   isDynamicEnvVar,
+  isFakerPathKey,
+  listAllDynamicEnvVarDefs,
   listDynamicEnvVarKeys,
-  lookupEnvVariable,
   resolveDynamicEnvVar,
-  resolveEnvTemplates,
-} from './index'
+} from './dynamic'
+import { lookupEnvVariable, resolveEnvTemplates } from './index'
 
 const labels = {
   global: 'Global',
@@ -16,18 +18,29 @@ const labels = {
 }
 
 describe('dynamic env vars', () => {
-  it('lists Postman-style keys with leading $', () => {
-    const keys = listDynamicEnvVarKeys()
-    expect(keys).toContain('$timestamp')
-    expect(keys).toContain('$isoTimestamp')
-    expect(keys).toContain('$guid')
-    expect(keys).toContain('$randomInt')
-    expect(keys).toContain('$randomDate')
-    expect(keys.every((key) => key.startsWith('$'))).toBe(true)
-    expect(DYNAMIC_ENV_VARS.length).toBe(keys.length)
+  it('lists only clock aliases (Faker covers the rest)', () => {
+    const aliasKeys = DYNAMIC_ENV_VARS.map((item) => item.key)
+    expect(aliasKeys).toEqual(['$timestamp', '$isoTimestamp'])
+    expect(aliasKeys.every((key) => key.startsWith('$'))).toBe(true)
+    expect(isDynamicEnvVar('$guid')).toBe(false)
+    expect(isDynamicEnvVar('$randomFirstName')).toBe(false)
+    expect(isDynamicEnvVar('$randomInt')).toBe(false)
   })
 
-  it('resolves common dynamic values', () => {
+  it('lists faker path keys for every module', () => {
+    const keys = listDynamicEnvVarKeys()
+    expect(keys.length).toBe(listAllDynamicEnvVarDefs().length)
+    expect(keys).toContain('$timestamp')
+    expect(keys).toContain('$faker.person.fullName')
+    expect(keys).toContain('$faker.string.uuid')
+    expect(keys).toContain('$faker.airline.airline')
+    expect(keys).toContain('$faker.food.dish')
+    for (const moduleName of __FAKER_MODULES_FOR_TEST) {
+      expect(keys.some((key) => key.startsWith(`$faker.${moduleName}.`))).toBe(true)
+    }
+  })
+
+  it('resolves clock aliases', () => {
     expect(isDynamicEnvVar('$timestamp')).toBe(true)
     const ts = resolveDynamicEnvVar('$timestamp')
     expect(ts).toMatch(/^\d+$/)
@@ -35,21 +48,33 @@ describe('dynamic env vars', () => {
 
     const iso = resolveDynamicEnvVar('$isoTimestamp')
     expect(iso).toMatch(/^\d{4}-\d{2}-\d{2}T/)
+  })
 
-    const guid = resolveDynamicEnvVar('$guid')
+  it('resolves $faker.module.method paths', () => {
+    expect(isFakerPathKey('$faker.person.fullName')).toBe(true)
+    expect(isDynamicEnvVar('$faker.person.fullName')).toBe(true)
+
+    const guid = resolveDynamicEnvVar('$faker.string.uuid')
     expect(guid).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i)
 
-    const n = Number(resolveDynamicEnvVar('$randomInt'))
-    expect(n).toBeGreaterThanOrEqual(0)
-    expect(n).toBeLessThanOrEqual(1000)
+    const name = resolveDynamicEnvVar('$faker.person.fullName')
+    expect(name).toBeDefined()
+    expect(name?.length).toBeGreaterThan(0)
 
-    const date = resolveDynamicEnvVar('$randomDate')
-    expect(date).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+    const dish = resolveDynamicEnvVar('$faker.food.dish')
+    expect(dish).toBeDefined()
+    expect(dish?.length).toBeGreaterThan(0)
+
+    const airline = resolveDynamicEnvVar('$faker.airline.airline')
+    expect(airline).toBeDefined()
+    expect(airline?.startsWith('{') || (airline?.length ?? 0) > 0).toBe(true)
   })
 
   it('returns undefined for unknown dynamic keys', () => {
     expect(resolveDynamicEnvVar('$notARealDynamicVar')).toBeUndefined()
     expect(isDynamicEnvVar('timestamp')).toBe(false)
+    expect(isFakerPathKey('$faker.nope.method')).toBe(false)
+    expect(resolveDynamicEnvVar('$faker.nope.method')).toBeUndefined()
   })
 
   it('resolves templates without treating them as unresolved', () => {
@@ -58,73 +83,54 @@ describe('dynamic env vars', () => {
     expect(result.text).toMatch(/^ts=\d+ missing=\{\{gone\}\}$/)
   })
 
+  it('resolves faker paths inside templates', () => {
+    const result = resolveEnvTemplates('{{$faker.lorem.word}}', {})
+    expect(result.unresolved).toEqual([])
+    expect(result.text.length).toBeGreaterThan(0)
+    expect(result.text.includes('{{')).toBe(false)
+  })
+
   it('lets user-defined map values override dynamic keys', () => {
     const result = resolveEnvTemplates('{{$timestamp}}', { $timestamp: 'fixed' })
     expect(result.text).toBe('fixed')
     expect(result.unresolved).toEqual([])
   })
 
-  it('honors gender options for first names', () => {
-    const female = new Set([
-      'Emma',
-      'Olivia',
-      'Ava',
-      'Sophia',
-      'Isabella',
-      'Mia',
-      'Charlotte',
-      'Amelia',
-      'Harper',
-      'Evelyn',
-      'Abigail',
-      'Emily',
-    ])
-    const male = new Set([
-      'Liam',
-      'Noah',
-      'Ethan',
-      'Mason',
-      'Logan',
-      'Lucas',
-      'James',
-      'Benjamin',
-      'Henry',
-      'Alexander',
-      'Michael',
-      'Daniel',
-    ])
+  it('honors gender options for faker person names', () => {
     for (let i = 0; i < 20; i++) {
-      const femaleName = resolveDynamicEnvVar('$randomFirstName', { gender: 'female' })
-      const maleName = resolveDynamicEnvVar('$randomFirstName', { gender: 'male' })
-      expect(femaleName).toBeDefined()
-      expect(maleName).toBeDefined()
-      expect(female.has(femaleName ?? '')).toBe(true)
-      expect(male.has(maleName ?? '')).toBe(true)
+      const fakerFemale = resolveDynamicEnvVar('$faker.person.firstName', { gender: 'female' })
+      const fakerMale = resolveDynamicEnvVar('$faker.person.firstName', { gender: 'male' })
+      expect(fakerFemale).toBeDefined()
+      expect(fakerMale).toBeDefined()
+      expect(fakerFemale?.length).toBeGreaterThan(0)
+      expect(fakerMale?.length).toBeGreaterThan(0)
     }
   })
 
-  it('honors int between options', () => {
+  it('honors int between options on faker.number.int', () => {
     for (let i = 0; i < 30; i++) {
-      const n = Number(resolveDynamicEnvVar('$randomInt', { min: 10, max: 20 }))
-      expect(n).toBeGreaterThanOrEqual(10)
-      expect(n).toBeLessThanOrEqual(20)
+      const fakerN = Number(resolveDynamicEnvVar('$faker.number.int', { min: 10, max: 20 }))
+      expect(fakerN).toBeGreaterThanOrEqual(10)
+      expect(fakerN).toBeLessThanOrEqual(20)
     }
   })
 
-  it('honors date after/before options', () => {
+  it('honors date after/before options on faker.date.between', () => {
     for (let i = 0; i < 20; i++) {
-      const date = resolveDynamicEnvVar('$randomDate', {
+      const between = resolveDynamicEnvVar('$faker.date.between', {
         after: '2020-01-01',
         before: '2020-01-31',
       })
-      expect(date).toBeDefined()
-      expect((date ?? '') >= '2020-01-01').toBe(true)
-      expect((date ?? '') <= '2020-01-31').toBe(true)
+      expect(between).toBeDefined()
+      expect(between ?? '').toMatch(/^\d{4}-\d{2}-\d{2}T/)
+      const day = between?.slice(0, 10) ?? ''
+      expect(day >= '2020-01-01').toBe(true)
+      expect(day <= '2020-01-31').toBe(true)
     }
   })
 
-  it('resolves pipe filters on dynamics', () => {
-    const result = resolveEnvTemplates('{{$randomInt | between:5,5}}', {})
+  it('resolves pipe filters on faker dynamics', () => {
+    const result = resolveEnvTemplates('{{$faker.number.int | between:5,5}}', {})
     expect(result.unresolved).toEqual([])
     expect(result.text).toBe('5')
   })
@@ -140,5 +146,14 @@ describe('dynamic env vars', () => {
     expect(hit.scope).toBe('dynamic')
     expect(hit.scopeLabel).toBe('Dynamic')
     expect(hit.value).toMatch(/^\d{4}-\d{2}-\d{2}T/)
+
+    const fakerHit = lookupEnvVariable(
+      '$faker.internet.email',
+      { globals: [], profileEnv: null, baseEnv: null },
+      labels
+    )
+    expect(fakerHit.unresolved).toBe(false)
+    expect(fakerHit.dynamic).toBe(true)
+    expect(fakerHit.value).toContain('@')
   })
 })

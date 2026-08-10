@@ -3,8 +3,14 @@ export {
   type DynamicEnvVarDef,
   type DynamicGenerateOptions,
   getDynamicEnvVarDescription,
+  getEnvFaker,
+  invokeFakerPath,
   isDynamicEnvVar,
+  isFakerPathKey,
+  listAllDynamicEnvVarDefs,
   listDynamicEnvVarKeys,
+  listFakerModuleMethods,
+  listFakerModules,
   resolveDynamicEnvVar,
 } from './dynamic'
 export {

@@ -16,7 +16,7 @@ export type EnvTemplateExpression = {
  *
  * Examples:
  * - `baseUrl` → `{ key: 'baseUrl', filters: [] }`
- * - `$randomInt | between:1,10` → `{ key: '$randomInt', filters: [{ name: 'between', args: ['1','10'] }] }`
+ * - `$faker.number.int | between:1,10` → `{ key: '$faker.number.int', filters: [{ name: 'between', args: ['1','10'] }] }`
  * - ` name | upper ` → `{ key: 'name', filters: [{ name: 'upper', args: [] }] }`
  */
 export function parseTemplateExpression(inner: string): EnvTemplateExpression | null {

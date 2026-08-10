@@ -15,11 +15,11 @@ describe('parseEnvTemplateSegments', () => {
   })
 
   it('uses base key when filters are present', () => {
-    expect(parseEnvTemplateSegments('{{ $randomFirstName | female }}')).toEqual([
+    expect(parseEnvTemplateSegments('{{ $faker.person.firstName | female }}')).toEqual([
       {
         kind: 'variable',
-        key: '$randomFirstName',
-        raw: '{{ $randomFirstName | female }}',
+        key: '$faker.person.firstName',
+        raw: '{{ $faker.person.firstName | female }}',
         offset: 0,
       },
     ])

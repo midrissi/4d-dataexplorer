@@ -19,7 +19,6 @@ import {
   Wrench,
   X,
 } from 'lucide-react'
-import type { ReactNode } from 'react'
 import { useMemo, useState } from 'react'
 import { EmptyPanel, EmptyPanelAction } from '~/components/EmptyPanel'
 import { useTranslation } from '~/i18n'
@@ -31,6 +30,7 @@ import {
   type ReleaseNoteVersion,
   releaseNotesMatchQuery,
 } from '~/lib/parse-release-notes'
+import { renderInlineMarkdown } from '~/lib/render-inline-markdown'
 
 const SECTION_META: Record<
   ReleaseNoteSectionKind,
@@ -362,7 +362,7 @@ function SectionBlock({ section }: { section: ReleaseNoteSection }) {
           chipClass={meta.chip}
         />
         <p className="rounded-lg border border-dashed bg-muted/30 px-4 py-3 text-muted-foreground text-sm leading-relaxed">
-          {renderInlineCode(section.overviewText)}
+          {renderInlineMarkdown(section.overviewText)}
         </p>
       </section>
     )
@@ -412,7 +412,7 @@ function SectionBlock({ section }: { section: ReleaseNoteSection }) {
                     <div className="min-w-0">
                       <p className="font-medium text-foreground text-sm">{item.title}</p>
                       <p className="mt-0.5 text-muted-foreground text-xs leading-relaxed">
-                        {renderInlineCode(item.description)}
+                        {renderInlineMarkdown(item.description)}
                       </p>
                     </div>
                   </li>
@@ -445,25 +445,4 @@ function SectionHeader({
       <h3 className="font-semibold text-base text-foreground">{title}</h3>
     </div>
   )
-}
-
-/** Render `backtick` segments as inline code chips. */
-function renderInlineCode(text: string): ReactNode {
-  const parts = text.split(/(`[^`]+`)/g)
-  let offset = 0
-  return parts.map((part) => {
-    const key = `${offset}-${part.length}`
-    offset += part.length
-    if (part.startsWith('`') && part.endsWith('`')) {
-      return (
-        <code
-          key={key}
-          className="rounded bg-muted px-1 py-0.5 font-mono text-[11px] text-foreground"
-        >
-          {part.slice(1, -1)}
-        </code>
-      )
-    }
-    return part
-  })
 }

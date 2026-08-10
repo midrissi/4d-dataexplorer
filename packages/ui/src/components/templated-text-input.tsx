@@ -55,6 +55,11 @@ export type TemplatedValueDisplayProps = {
    * Use for chip preview while the underlying control stays the tab stop.
    */
   overlay?: boolean
+  /**
+   * Word-wrap chips with surrounding text (textarea). Single-line inputs keep
+   * a horizontal flex strip that scrolls instead of wrapping.
+   */
+  multiline?: boolean
 }
 
 /** Read-only chip/highlight view for strings that contain `{{var}}` segments. */
@@ -72,6 +77,7 @@ export function TemplatedValueDisplay({
   className,
   'aria-label': ariaLabel,
   overlay = false,
+  multiline = false,
 }: TemplatedValueDisplayProps) {
   const segments = React.useMemo(() => parseEnvTemplateSegments(value), [value])
 
@@ -80,7 +86,11 @@ export function TemplatedValueDisplay({
       return (
         <span
           key={`t-${segment.offset}`}
-          className="inline-flex items-center whitespace-pre leading-none"
+          className={cn(
+            multiline
+              ? 'max-w-full whitespace-pre-wrap break-words'
+              : 'inline-flex items-center whitespace-pre leading-none'
+          )}
         >
           {segment.text}
         </span>
@@ -99,12 +109,17 @@ export function TemplatedValueDisplay({
         addToLabel={addToLabel}
         unresolvedLabel={unresolvedLabel}
         valuePlaceholder={valuePlaceholder}
+        className={multiline ? 'max-w-full shrink align-baseline' : undefined}
       />
     )
   })
 
   const surfaceClassName = cn(
-    'flex w-full min-w-0 cursor-text flex-nowrap items-center gap-y-0 overflow-x-auto overflow-y-hidden rounded-sm border border-input bg-background px-2.5 py-0 font-mono text-foreground text-sm leading-none',
+    'w-full min-w-0 cursor-text rounded-sm border border-input bg-background px-2.5 font-mono text-foreground text-sm',
+    multiline
+      ? // Inline-friendly wrap: chips stay in the text flow ("Hello {{var}}!").
+        'flex flex-wrap content-start items-baseline gap-x-0 gap-y-0.5 overflow-auto py-1.5 leading-normal'
+      : 'flex flex-nowrap items-center gap-y-0 overflow-x-auto overflow-y-hidden py-0 leading-none',
     // Overlay must fill the real control without growing past it (e.g. h-6 arg rows).
     overlay ? 'h-full max-h-full min-h-0' : 'min-h-7',
     !overlay &&
@@ -363,7 +378,8 @@ export const TemplatedTextarea = React.forwardRef<HTMLTextAreaElement, Templated
             valuePlaceholder={valuePlaceholder}
             onStartEdit={startEdit}
             overlay
-            className="absolute inset-0 z-10 min-h-[4.5rem] items-start py-2"
+            multiline
+            className="absolute inset-0 z-10"
             aria-label={props['aria-label']}
           />
         ) : null}

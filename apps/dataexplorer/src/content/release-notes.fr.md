@@ -6,9 +6,20 @@
 
 ### Aperçu
 
-La version `1.4.x` ajoute le **terminal ORDA** (modes REPL et Code avec fichiers snippets) dans un dock bas partagé avec la Console ; ajoute **l’export REST** (collection v2.1 et OpenAPI 3.1 depuis le catalogue, le Client HTTP et l’Exécuteur de méthodes) ; publie les applications **iOS et Android** ; améliore les aperçus réseau de la console et le partage/enregistrement d'images ; et peaufine l'expérience mobile (Client HTTP et dock).
+La version `1.4.x` ajoute les **variables d'environnement** (couches globales, profil et base avec `{{templates}}`, filtres pipe et dynamiques Faker) ; ajoute le **terminal ORDA** (modes REPL et Code avec fichiers snippets) dans un dock bas partagé avec la Console ; ajoute **l’export REST** (collection v2.1 et OpenAPI 3.1 depuis le catalogue, le Client HTTP et l’Exécuteur de méthodes) ; ajoute les **favoris** pour le Client HTTP et l’Exécuteur de méthodes ; publie les applications **iOS et Android** ; améliore les aperçus réseau de la console et le partage/enregistrement d'images ; et peaufine l'expérience mobile (Client HTTP et dock).
 
 ### Fonctionnalités
+
+#### Variables d'environnement
+
+- **Éditeur d'environnements** — Gérez les portées **Globals**, **Profil** et **Cette base** depuis Outils, la palette de commandes (**Environnements**), ou le sélecteur **Environment** du pied de page → **Gérer…**.
+- **Environnements actifs** — Un environnement profil et un environnement base actifs à la fois ; le sélecteur du pied de page les choisit et prévisualise la liste fusionnée (les secrets restent masqués jusqu'à révélation).
+- **Templates** — Insérez `{{name}}` dans le Client HTTP, l'Exécuteur de méthodes, le Query Builder, Créer une entité, les snippets du terminal ORDA et d'autres champs templated ; résolution à l'envoi / l'exécution.
+- **Filtres pipe** — Transformations style Liquid (`upper`, `lower`, `snake`, …) et options de génération (`female` / `male`, `min` / `max` / `between`, `after` / `before`).
+- **Variables dynamiques** — Surface Faker complète via `{{$faker.module.method}}` (ex. `{{$faker.person.fullName}}`, `{{$faker.string.uuid}}`), plus alias horloge `{{$timestamp}}` / `{{$isoTimestamp}}`.
+- **Chips et autocomplétion** — Les variables connues s'affichent en chips ; suggestions pour clés d'environnement, alias et chemins `$faker.*` ; les clés non résolues restent visibles en `{{…}}`.
+- **Export / Import** — Partagez les environnements en JSON depuis la barre d'outils de l'éditeur.
+- **API Terminal** — Helpers `app.environment` et commandes `.env` / `.envs`.
 
 #### Terminal ORDA
 
@@ -37,15 +48,24 @@ La version `1.4.x` ajoute le **terminal ORDA** (modes REPL et Code avec fichiers
 - **Aperçu d'image réseau** — Prévisualisation inline des réponses image dans le journal réseau.
 - **Partage / enregistrement** — Partage ou téléchargement des objets binaires et images via les chemins natifs (corrige les échecs de téléchargement WKWebView iOS).
 
+#### Favoris et création
+
+- **Favoris Client HTTP** — Enregistrez, rouvrez et exportez des favoris (y compris export collection / OpenAPI).
+- **Favoris Exécuteur de méthodes** — Même flux de favoris pour les appels de méthodes.
+- **Création d'entités par lot** — Créez plusieurs entités avec des champs templated résolus depuis la carte d'environnement active.
+
 #### UX
 
 - **À propos** — Dialogue d'informations depuis le chrome mobile/desktop.
 - **Hauteurs de panneaux** — Liste d'entités et volets de requête mémorisent la hauteur ; hauteur console bornée si le viewport est inconnu.
 - **Client HTTP (mobile)** — Résumé requête/réponse adapté aux écrans étroits.
+- **Décodage d'URL console** — Option pour décoder les URL percent-encoded dans le journal réseau.
+- **Sélecteur d'environnement** — Contrôle du pied de page affiné pour le profil / la base actifs et l'accès à Gérer.
 
 ### Documentation
 
-- Pages guide [Console](https://midrissi.github.io/4d-dataexplorer/guide/console.html), [Terminal ORDA](https://midrissi.github.io/4d-dataexplorer/guide/terminal.html), [Export REST](https://midrissi.github.io/4d-dataexplorer/guide/rest-export.html) et [Applications mobiles](https://midrissi.github.io/4d-dataexplorer/guide/mobile.html).
+- Pages guide [Console](https://midrissi.github.io/4d-dataexplorer/guide/console.html), [Terminal ORDA](https://midrissi.github.io/4d-dataexplorer/guide/terminal.html), [Export REST](https://midrissi.github.io/4d-dataexplorer/guide/rest-export.html), [Variables d'environnement](https://midrissi.github.io/4d-dataexplorer/guide/environments.html) et [Applications mobiles](https://midrissi.github.io/4d-dataexplorer/guide/mobile.html).
+- La galerie d'accueil inclut l'éditeur d'environnements et des captures mises à jour (clair / sombre).
 
 ### Corrections
 
@@ -55,6 +75,8 @@ La version `1.4.x` ajoute le **terminal ORDA** (modes REPL et Code avec fichiers
 - **Paramètres de requête vides** — L’export collection désactive par défaut les `$filter` / `$orderby` / `$attributes` vides pour qu’ils ne soient pas envoyés tant qu’ils ne sont pas renseignés.
 - **Réponses OpenAPI** — Les specs exportées listent les statuts REST 4D connus (200, 401, 402, 404, 500).
 - **Onglet Docs de la collection** — La documentation de chaque requête reprend le markdown officiel 4D REST, pas seulement un résumé.
+- **Filtres dynamiques** — Genre et bornes numériques / dates sur `$faker.*` passent par les options Faker.
+- **Templates docs** — Le guide Environnements et l'accueil affichent les exemples `{{…}}` sans casser le compilateur Vue de VitePress.
 
 ## 1.3.x
 

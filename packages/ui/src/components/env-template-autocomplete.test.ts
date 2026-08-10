@@ -49,9 +49,9 @@ describe('applyEnvTemplateCompletion', () => {
   })
 
   it('completes a filter after |', () => {
-    expect(applyEnvTemplateCompletion('{{$randomFirstName|lowe', 23, 'lower')).toEqual({
-      value: '{{$randomFirstName|lower}}',
-      cursor: 26,
+    expect(applyEnvTemplateCompletion('{{$faker.person.firstName|lowe', 30, 'lower')).toEqual({
+      value: '{{$faker.person.firstName|lower}}',
+      cursor: 33,
     })
   })
 
@@ -68,7 +68,7 @@ describe('filterEnvTemplateSuggestions', () => {
     { key: 'baseUrl', group: 'environment' },
     { key: 'lastname', group: 'environment' },
     { key: 'user_lastname', group: 'environment' },
-    { key: '$randomLastName', group: 'dynamic' },
+    { key: '$faker.person.lastName', group: 'dynamic' },
     { key: '$timestamp', group: 'dynamic' },
     { key: '$isoTimestamp', group: 'dynamic' },
   ]
@@ -78,27 +78,27 @@ describe('filterEnvTemplateSuggestions', () => {
     expect(filterEnvTemplateSuggestions(items, 'lastname').map((i) => i.key)).toEqual([
       'lastname',
       'user_lastname',
-      '$randomLastName',
+      '$faker.person.lastName',
     ])
     expect(filterEnvTemplateSuggestions(items, '').map((i) => i.key)).toEqual([
       'baseUrl',
       'lastname',
       'user_lastname',
-      '$randomLastName',
+      '$faker.person.lastName',
       '$timestamp',
       '$isoTimestamp',
     ])
   })
 
   it('suggests filters after |', () => {
-    expect(filterEnvTemplateSuggestions(items, '$randomFirstName|lowe').map((i) => i.key)).toEqual([
-      'lower',
-    ])
+    expect(
+      filterEnvTemplateSuggestions(items, '$faker.person.firstName|lowe').map((i) => i.key)
+    ).toEqual(['lower'])
     expect(filterEnvTemplateSuggestions(items, 'name|').map((i) => i.key)).toContain('upper')
     expect(filterEnvTemplateSuggestions(items, 'name|').map((i) => i.key)).toContain('female')
   })
 
   it('hides filter suggestions while typing args', () => {
-    expect(filterEnvTemplateSuggestions(items, '$randomInt|between:1')).toEqual([])
+    expect(filterEnvTemplateSuggestions(items, '$faker.number.int|between:1')).toEqual([])
   })
 })

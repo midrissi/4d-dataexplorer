@@ -14,6 +14,7 @@ import {
   Database,
   Eye,
   EyeOff,
+  FlaskConical,
   Lock,
   RotateCcw,
   Settings2,
@@ -21,6 +22,7 @@ import {
   Variable,
 } from 'lucide-react'
 import { type ReactNode, useMemo, useState } from 'react'
+import { EnvTemplatePlaygroundDialog } from '~/components/Environments/EnvTemplatePlaygroundDialog'
 import { useTranslation } from '~/i18n'
 import { effectiveEnvValue } from '~/lib/env/merge-active'
 import type { EnvVariable } from '~/lib/env/types'
@@ -400,6 +402,7 @@ export function EnvSwitcher({
 }) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
+  const [playgroundOpen, setPlaygroundOpen] = useState(false)
   const [revealSecrets, setRevealSecrets] = useState(false)
   const revision = useEnvironmentsStore((s) => s.revision)
   const globals = useEnvironmentsStore((s) => s.globals)
@@ -471,6 +474,11 @@ export function EnvSwitcher({
     openEnvironmentsTab()
   }
 
+  const openPlayground = () => {
+    setOpen(false)
+    setPlaygroundOpen(true)
+  }
+
   const emptySection = (
     <div className="px-2.5 py-3 text-center">
       <p className="text-[11px] text-muted-foreground">{t('environments.switcherEmptySection')}</p>
@@ -487,160 +495,174 @@ export function EnvSwitcher({
   )
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <TooltipProvider delayDuration={250}>
-        <Tooltip
-          onOpenChange={(tooltipOpen) => {
-            if (!tooltipOpen) setRevealSecrets(false)
-          }}
-        >
-          <TooltipTrigger asChild>
-            <PopoverTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size={size === 'sm' ? 'sm' : 'default'}
-                className={cn(
-                  'h-6 max-w-[18rem] gap-1 px-1 text-[11px] transition-colors duration-150',
-                  hasActiveEnv
-                    ? 'text-foreground hover:bg-muted'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                  open && 'bg-muted text-foreground'
-                )}
-                aria-label={`${t('environments.switcherLabel')}: ${label}`}
-              >
-                <span className="hidden min-w-0 sm:inline-flex">{activeSummary}</span>
-                <span className="inline-flex items-center gap-1 sm:hidden">
-                  {profile ? <EnvColorDot color={profile.color} /> : null}
-                  {base ? <EnvColorDot color={base.color} /> : null}
-                  {!hasActiveEnv ? <EnvColorDot empty /> : null}
-                </span>
-              </Button>
-            </PopoverTrigger>
-          </TooltipTrigger>
-          {!open ? (
-            <TooltipContent side={side} className="max-w-80 overflow-hidden p-0">
-              <EnvVarsPreview
-                vars={previewVars}
-                revealSecrets={revealSecrets}
-                onToggleSecrets={() => setRevealSecrets((value) => !value)}
-                hasSecrets={hasSecrets}
-                title={t('environments.switcherLabel')}
-                activeSummary={
-                  hasActiveEnv ? (
-                    activeSummary
-                  ) : (
-                    <span className="text-[10px] text-muted-foreground">
-                      {t('environments.noEnvironment')}
-                    </span>
-                  )
-                }
-                emptyLabel={t('environments.switcherEmptyVars')}
-                showSecretsLabel={t('environments.showSecrets')}
-                hideSecretsLabel={t('environments.hideSecrets')}
-              />
-            </TooltipContent>
-          ) : null}
-        </Tooltip>
-      </TooltipProvider>
+    <>
+      <Popover open={open} onOpenChange={setOpen}>
+        <TooltipProvider delayDuration={250}>
+          <Tooltip
+            onOpenChange={(tooltipOpen) => {
+              if (!tooltipOpen) setRevealSecrets(false)
+            }}
+          >
+            <TooltipTrigger asChild>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size={size === 'sm' ? 'sm' : 'default'}
+                  className={cn(
+                    'h-6 max-w-[18rem] gap-1 px-1 text-[11px] transition-colors duration-150',
+                    hasActiveEnv
+                      ? 'text-foreground hover:bg-muted'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                    open && 'bg-muted text-foreground'
+                  )}
+                  aria-label={`${t('environments.switcherLabel')}: ${label}`}
+                >
+                  <span className="hidden min-w-0 sm:inline-flex">{activeSummary}</span>
+                  <span className="inline-flex items-center gap-1 sm:hidden">
+                    {profile ? <EnvColorDot color={profile.color} /> : null}
+                    {base ? <EnvColorDot color={base.color} /> : null}
+                    {!hasActiveEnv ? <EnvColorDot empty /> : null}
+                  </span>
+                </Button>
+              </PopoverTrigger>
+            </TooltipTrigger>
+            {!open ? (
+              <TooltipContent side={side} className="max-w-80 overflow-hidden p-0">
+                <EnvVarsPreview
+                  vars={previewVars}
+                  revealSecrets={revealSecrets}
+                  onToggleSecrets={() => setRevealSecrets((value) => !value)}
+                  hasSecrets={hasSecrets}
+                  title={t('environments.switcherLabel')}
+                  activeSummary={
+                    hasActiveEnv ? (
+                      activeSummary
+                    ) : (
+                      <span className="text-[10px] text-muted-foreground">
+                        {t('environments.noEnvironment')}
+                      </span>
+                    )
+                  }
+                  emptyLabel={t('environments.switcherEmptyVars')}
+                  showSecretsLabel={t('environments.showSecrets')}
+                  hideSecretsLabel={t('environments.hideSecrets')}
+                />
+              </TooltipContent>
+            ) : null}
+          </Tooltip>
+        </TooltipProvider>
 
-      <PopoverContent
-        side={side}
-        align={align}
-        className="z-100 w-72 overflow-hidden border-border bg-background p-0 text-foreground opacity-100 shadow-md"
-        style={{ backgroundColor: 'var(--background)' }}
-      >
-        <div className="border-border border-b bg-muted/70 px-2 py-1.5">
-          <div className="flex items-center gap-2">
-            <span
-              className="flex size-5 shrink-0 items-center justify-center rounded-md border border-border/70 bg-background text-muted-foreground shadow-xs"
-              aria-hidden
-            >
-              <Variable className="size-3" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="font-medium text-[11px] text-foreground leading-none">
-                {t('environments.switcherLabel')}
-              </p>
-              <div className="mt-1 min-w-0">{activeSummary}</div>
+        <PopoverContent
+          side={side}
+          align={align}
+          className="z-100 w-72 overflow-hidden border-border bg-background p-0 text-foreground opacity-100 shadow-md"
+          style={{ backgroundColor: 'var(--background)' }}
+        >
+          <div className="border-border border-b bg-muted/70 px-2 py-1.5">
+            <div className="flex items-center gap-2">
+              <span
+                className="flex size-5 shrink-0 items-center justify-center rounded-md border border-border/70 bg-background text-muted-foreground shadow-xs"
+                aria-hidden
+              >
+                <Variable className="size-3" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-[11px] text-foreground leading-none">
+                  {t('environments.switcherLabel')}
+                </p>
+                <div className="mt-1 min-w-0">{activeSummary}</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="divide-y divide-border/60 bg-background">
-          <EnvSection
-            icon={<UserRound className="size-3" aria-hidden />}
-            title={t('environments.profileSection')}
-            count={profileCount}
-            empty={emptySection}
-          >
-            <EnvOptionButton selected={!profile} onSelect={() => selectProfileEnvironment(null)}>
-              <EnvChip name={null} emptyLabel={t('environments.noEnvironment')} />
-            </EnvOptionButton>
-            {profileBlock.environments.map((env) => (
-              <EnvOptionButton
-                key={env.id}
-                selected={profile?.id === env.id}
-                onSelect={() => selectProfileEnvironment(env.id)}
-              >
-                <EnvChip name={env.name} color={env.color} emptyLabel={env.name} />
-              </EnvOptionButton>
-            ))}
-          </EnvSection>
-
-          {hasBase ? (
+          <div className="divide-y divide-border/60 bg-background">
             <EnvSection
-              icon={<Database className="size-3" aria-hidden />}
-              title={t('environments.baseSection')}
-              count={baseCount}
+              icon={<UserRound className="size-3" aria-hidden />}
+              title={t('environments.profileSection')}
+              count={profileCount}
               empty={emptySection}
             >
-              <EnvOptionButton selected={!base} onSelect={() => selectBaseEnvironment(null)}>
+              <EnvOptionButton selected={!profile} onSelect={() => selectProfileEnvironment(null)}>
                 <EnvChip name={null} emptyLabel={t('environments.noEnvironment')} />
               </EnvOptionButton>
-              {baseBlock.environments.map((env) => (
+              {profileBlock.environments.map((env) => (
                 <EnvOptionButton
                   key={env.id}
-                  selected={base?.id === env.id}
-                  onSelect={() => selectBaseEnvironment(env.id)}
+                  selected={profile?.id === env.id}
+                  onSelect={() => selectProfileEnvironment(env.id)}
                 >
                   <EnvChip name={env.name} color={env.color} emptyLabel={env.name} />
                 </EnvOptionButton>
               ))}
             </EnvSection>
-          ) : null}
-        </div>
 
-        <div className="flex items-center gap-1 border-border border-t bg-muted/70 px-1.5 py-1">
-          {profile || base ? (
+            {hasBase ? (
+              <EnvSection
+                icon={<Database className="size-3" aria-hidden />}
+                title={t('environments.baseSection')}
+                count={baseCount}
+                empty={emptySection}
+              >
+                <EnvOptionButton selected={!base} onSelect={() => selectBaseEnvironment(null)}>
+                  <EnvChip name={null} emptyLabel={t('environments.noEnvironment')} />
+                </EnvOptionButton>
+                {baseBlock.environments.map((env) => (
+                  <EnvOptionButton
+                    key={env.id}
+                    selected={base?.id === env.id}
+                    onSelect={() => selectBaseEnvironment(env.id)}
+                  >
+                    <EnvChip name={env.name} color={env.color} emptyLabel={env.name} />
+                  </EnvOptionButton>
+                ))}
+              </EnvSection>
+            ) : null}
+          </div>
+
+          <div className="flex items-center gap-1 border-border border-t bg-muted/70 px-1.5 py-1">
+            {profile || base ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                className="h-6 min-w-0 flex-1 justify-start gap-1 px-1.5 text-[11px] text-muted-foreground hover:text-foreground"
+                onClick={() => {
+                  if (base) resetActiveEnvironmentToInitial('base')
+                  if (profile) resetActiveEnvironmentToInitial('profile')
+                }}
+              >
+                <RotateCcw className="size-3 shrink-0" aria-hidden />
+                <span className="truncate">{t('environments.resetActive')}</span>
+              </Button>
+            ) : (
+              <span className="min-w-0 flex-1" />
+            )}
             <Button
               type="button"
               size="sm"
               variant="ghost"
-              className="h-6 min-w-0 flex-1 justify-start gap-1 px-1.5 text-[11px] text-muted-foreground hover:text-foreground"
-              onClick={() => {
-                if (base) resetActiveEnvironmentToInitial('base')
-                if (profile) resetActiveEnvironmentToInitial('profile')
-              }}
+              className="h-6 shrink-0 gap-1 px-1.5 text-[11px] text-muted-foreground hover:text-foreground"
+              onClick={openPlayground}
             >
-              <RotateCcw className="size-3 shrink-0" aria-hidden />
-              <span className="truncate">{t('environments.resetActive')}</span>
+              <FlaskConical className="size-3 shrink-0" aria-hidden />
+              {t('environments.testTemplates')}
             </Button>
-          ) : (
-            <span className="min-w-0 flex-1" />
-          )}
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            className="h-6 shrink-0 gap-1 px-2 text-[11px] text-muted-foreground hover:text-foreground"
-            onClick={openManage}
-          >
-            <Settings2 className="size-3 shrink-0" aria-hidden />
-            {t('environments.manage')}
-          </Button>
-        </div>
-      </PopoverContent>
-    </Popover>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="h-6 shrink-0 gap-1 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+              onClick={openManage}
+            >
+              <Settings2 className="size-3 shrink-0" aria-hidden />
+              {t('environments.manage')}
+            </Button>
+          </div>
+        </PopoverContent>
+      </Popover>
+
+      <EnvTemplatePlaygroundDialog open={playgroundOpen} onOpenChange={setPlaygroundOpen} />
+    </>
   )
 }

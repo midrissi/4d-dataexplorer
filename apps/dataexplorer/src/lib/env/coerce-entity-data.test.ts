@@ -31,8 +31,11 @@ describe('coerceEntityDataBySchema', () => {
 
   it('leaves unresolved templates alone', () => {
     expect(
-      coerceEntityDataBySchema({ age: '{{$randomInt}}', birthdate: '{{$randomDate}}' }, attrs)
-    ).toEqual({ age: '{{$randomInt}}', birthdate: '{{$randomDate}}' })
+      coerceEntityDataBySchema(
+        { age: '{{$faker.number.int}}', birthdate: '{{$faker.date.anytime}}' },
+        attrs
+      )
+    ).toEqual({ age: '{{$faker.number.int}}', birthdate: '{{$faker.date.anytime}}' })
   })
 
   it('prepareEntityFormData matches coerce for plain values', () => {
@@ -48,7 +51,7 @@ describe('helpers', () => {
   })
 
   it('detects template markers', () => {
-    expect(stringHasEnvTemplate('{{$randomInt}}')).toBe(true)
+    expect(stringHasEnvTemplate('{{$faker.number.int}}')).toBe(true)
     expect(stringHasEnvTemplate('42')).toBe(false)
   })
 

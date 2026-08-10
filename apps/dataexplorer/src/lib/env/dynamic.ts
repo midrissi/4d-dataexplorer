@@ -1,10 +1,12 @@
 /**
- * Postman-compatible dynamic variables (`{{$timestamp}}`, `{{$guid}}`, …).
- * @see https://learning.postman.com/docs/tests-and-scripts/write-scripts/variables-list/
+ * Dynamic template variables (`{{$timestamp}}`, `{{$faker.person.fullName}}`, …).
  *
- * Values are generated at resolve time. User-defined env vars with the same key win.
- * Optional Liquid-style filters can pass {@link DynamicGenerateOptions} (gender, ranges, …).
+ * Powered by `@faker-js/faker` (English locale). Values are generated at resolve time.
+ * User-defined env vars with the same key win.
+ * Optional Liquid-style filters pass {@link DynamicGenerateOptions} (gender, ranges, …).
  */
+
+import { fakerEN as faker } from '@faker-js/faker'
 
 export type DynamicGenerateOptions = {
   gender?: 'female' | 'male'
@@ -24,89 +26,47 @@ export type DynamicEnvVarDef = {
   generate: (options?: DynamicGenerateOptions) => string
 }
 
-function randomBytes(length: number): Uint8Array {
-  const bytes = new Uint8Array(length)
-  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
-    crypto.getRandomValues(bytes)
-    return bytes
-  }
-  for (let i = 0; i < length; i++) bytes[i] = Math.floor(Math.random() * 256)
-  return bytes
-}
+const FAKER_PATH_RE = /^\$faker\.([a-zA-Z]\w*)\.([a-zA-Z]\w*)$/
 
-function randomIntInclusive(min: number, max: number): number {
-  return Math.floor(Math.random() * (max - min + 1)) + min
-}
-
-function pick<T>(items: readonly T[]): T {
-  return items[randomIntInclusive(0, items.length - 1)] as T
-}
-
-function uuidV4(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID()
-  }
-  const bytes = randomBytes(16)
-  bytes[6] = ((bytes[6] ?? 0) & 0x0f) | 0x40
-  bytes[8] = ((bytes[8] ?? 0) & 0x3f) | 0x80
-  const hex = [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('')
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`
-}
-
-function randomHex(length: number): string {
-  return [...randomBytes(Math.ceil(length / 2))]
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('')
-    .slice(0, length)
-}
-
-function randomAlphaNumeric(length: number): string {
-  const alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-  let out = ''
-  const bytes = randomBytes(length)
-  for (let i = 0; i < length; i++) {
-    const index = (bytes[i] ?? 0) % alphabet.length
-    out += alphabet[index] ?? '0'
-  }
-  return out
-}
-
-const FEMALE_FIRST_NAMES = [
-  'Emma',
-  'Olivia',
-  'Ava',
-  'Sophia',
-  'Isabella',
-  'Mia',
-  'Charlotte',
-  'Amelia',
-  'Harper',
-  'Evelyn',
-  'Abigail',
-  'Emily',
+/** Faker modules exposed via `{{$faker.module.method}}`. */
+const FAKER_MODULES = [
+  'airline',
+  'animal',
+  'book',
+  'color',
+  'commerce',
+  'company',
+  'database',
+  'datatype',
+  'date',
+  'finance',
+  'food',
+  'git',
+  'hacker',
+  'helpers',
+  'image',
+  'internet',
+  'location',
+  'lorem',
+  'music',
+  'number',
+  'person',
+  'phone',
+  'science',
+  'string',
+  'system',
+  'vehicle',
+  'word',
 ] as const
 
-const MALE_FIRST_NAMES = [
-  'Liam',
-  'Noah',
-  'Ethan',
-  'Mason',
-  'Logan',
-  'Lucas',
-  'James',
-  'Benjamin',
-  'Henry',
-  'Alexander',
-  'Michael',
-  'Daniel',
-] as const
+type FakerModuleName = (typeof FAKER_MODULES)[number]
 
-const FIRST_NAMES = [...FEMALE_FIRST_NAMES, ...MALE_FIRST_NAMES] as const
-
-function pickFirstName(options?: DynamicGenerateOptions): string {
-  if (options?.gender === 'female') return pick(FEMALE_FIRST_NAMES)
-  if (options?.gender === 'male') return pick(MALE_FIRST_NAMES)
-  return pick(FIRST_NAMES)
+function def(
+  key: string,
+  description: string,
+  generate: (options?: DynamicGenerateOptions) => string
+): DynamicEnvVarDef {
+  return { key, description, generate }
 }
 
 function resolveIntRange(
@@ -130,526 +90,202 @@ function parseDateOnly(value: string): Date | null {
   return Number.isNaN(date.getTime()) ? null : date
 }
 
-function randomDateOnly(options?: DynamicGenerateOptions): string {
-  const defaultAfter = new Date(Date.now() - 365 * 40 * 86_400_000)
-  const defaultBefore = new Date()
-  const after = options?.after ? (parseDateOnly(options.after) ?? defaultAfter) : defaultAfter
-  const before = options?.before ? (parseDateOnly(options.before) ?? defaultBefore) : defaultBefore
-  let start = after.getTime()
-  let end = before.getTime()
-  if (start > end) {
-    const tmp = start
-    start = end
-    end = tmp
+function dateBounds(options?: DynamicGenerateOptions): { from: Date; to: Date } {
+  const defaultFrom = new Date(Date.now() - 365 * 40 * 86_400_000)
+  const defaultTo = new Date()
+  let from = options?.after ? (parseDateOnly(options.after) ?? defaultFrom) : defaultFrom
+  let to = options?.before ? (parseDateOnly(options.before) ?? defaultTo) : defaultTo
+  if (from.getTime() > to.getTime()) {
+    const tmp = from
+    from = to
+    to = tmp
   }
-  const t = start + Math.floor(Math.random() * (end - start + 1))
-  return new Date(t).toISOString().slice(0, 10)
+  return { from, to }
 }
 
-function randomDateTimeInRange(
-  options: DynamicGenerateOptions | undefined,
-  defaultRangeMs: { min: number; max: number }
-): string {
-  if (options?.after || options?.before) {
-    const day = randomDateOnly(options)
-    return new Date(
-      `${day}T${String(randomIntInclusive(0, 23)).padStart(2, '0')}:${String(randomIntInclusive(0, 59)).padStart(2, '0')}:00`
-    ).toString()
+function sexOf(options?: DynamicGenerateOptions): 'female' | 'male' | undefined {
+  return options?.gender
+}
+
+function stringifyFakerResult(value: unknown): string | undefined {
+  if (value == null) return undefined
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return String(value)
   }
-  const offset = randomIntInclusive(defaultRangeMs.min, defaultRangeMs.max)
-  return new Date(Date.now() + offset).toString()
+  if (typeof value === 'bigint') return value.toString()
+  if (value instanceof Date) return value.toISOString()
+  try {
+    return JSON.stringify(value)
+  } catch {
+    return undefined
+  }
 }
 
-const LAST_NAMES = [
-  'Smith',
-  'Johnson',
-  'Williams',
-  'Brown',
-  'Jones',
-  'Garcia',
-  'Miller',
-  'Davis',
-  'Rodriguez',
-  'Martinez',
-  'Hernandez',
-  'Lopez',
-  'Wilson',
-  'Anderson',
-  'Thomas',
-  'Taylor',
-] as const
-
-const COLORS = [
-  'red',
-  'green',
-  'blue',
-  'yellow',
-  'purple',
-  'orange',
-  'pink',
-  'cyan',
-  'magenta',
-  'lime',
-  'teal',
-  'indigo',
-  'violet',
-  'fuchsia',
-  'grey',
-  'black',
-  'white',
-] as const
-
-const ABBREVIATIONS = [
-  'SQL',
-  'PCI',
-  'JSON',
-  'HTTP',
-  'API',
-  'REST',
-  'XML',
-  'HTML',
-  'CSS',
-  'JWT',
-] as const
-
-const PROTOCOLS = ['http', 'https'] as const
-
-const LOCALES = ['en', 'fr', 'es', 'de', 'it', 'pt', 'nl', 'ja', 'zh', 'ko', 'ar', 'ru'] as const
-
-const JOB_TYPES = [
-  'Supervisor',
-  'Manager',
-  'Coordinator',
-  'Specialist',
-  'Associate',
-  'Director',
-] as const
-
-const JOB_AREAS = [
-  'Mobility',
-  'Intranet',
-  'Configuration',
-  'Accounts',
-  'Branding',
-  'Interactions',
-] as const
-
-const JOB_DESCRIPTORS = ['Forward', 'Corporate', 'Senior', 'Regional', 'Dynamic', 'Lead'] as const
-
-const CITIES = [
-  'Springfield',
-  'Riverton',
-  'Fairview',
-  'Madison',
-  'Georgetown',
-  'Clinton',
-  'Franklin',
-  'Greenville',
-] as const
-
-const STREETS = [
-  'Main',
-  'Oak',
-  'Pine',
-  'Maple',
-  'Cedar',
-  'Elm',
-  'Washington',
-  'Lake',
-  'Hill',
-  'Park',
-] as const
-
-const STREET_SUFFIXES = ['Street', 'Avenue', 'Road', 'Drive', 'Lane', 'Court', 'Way'] as const
-
-const COUNTRIES = [
-  'United States',
-  'Canada',
-  'France',
-  'Germany',
-  'Spain',
-  'Italy',
-  'Japan',
-  'Australia',
-  'Brazil',
-  'India',
-] as const
-
-const COUNTRY_CODES = ['US', 'CA', 'FR', 'DE', 'ES', 'IT', 'JP', 'AU', 'BR', 'IN'] as const
-
-const DOMAINS = ['example.com', 'example.org', 'example.net', 'mail.test', 'sample.dev'] as const
-
-const COMPANY_SUFFIXES = ['Inc', 'LLC', 'Group', 'Ltd', 'Corp'] as const
-
-const PRODUCTS = [
-  'Towels',
-  'Pizza',
-  'Pants',
-  'Keyboard',
-  'Chair',
-  'Lamp',
-  'Bottle',
-  'Gloves',
-] as const
-
-const PRODUCT_ADJECTIVES = [
-  'Unbranded',
-  'Incredible',
-  'Tasty',
-  'Handmade',
-  'Refined',
-  'Practical',
-] as const
-
-const PRODUCT_MATERIALS = ['Steel', 'Plastic', 'Frozen', 'Cotton', 'Wooden', 'Rubber'] as const
-
-const DEPARTMENTS = ['Tools', 'Movies', 'Electronics', 'Garden', 'Books', 'Toys', 'Sports'] as const
-
-const NOUNS = ['matrix', 'bus', 'bandwidth', 'protocol', 'system', 'network', 'interface'] as const
-
-const VERBS = [
-  'parse',
-  'quantify',
-  'navigate',
-  'generate',
-  'index',
-  'transmit',
-  'compress',
-] as const
-
-const ADJECTIVES = [
-  'auxiliary',
-  'multi-byte',
-  'back-end',
-  'open-source',
-  'real-time',
-  'secure',
-] as const
-
-const WEEKDAYS = [
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
-  'Sunday',
-] as const
-
-const MONTHS = [
-  'January',
-  'February',
-  'March',
-  'April',
-  'May',
-  'June',
-  'July',
-  'August',
-  'September',
-  'October',
-  'November',
-  'December',
-] as const
-
-const CURRENCY_CODES = ['USD', 'EUR', 'GBP', 'JPY', 'CAD', 'AUD', 'CHF', 'CNY'] as const
-
-const CURRENCY_NAMES = [
-  'US Dollar',
-  'Euro',
-  'Pound Sterling',
-  'Yen',
-  'Canadian Dollar',
-  'Australian Dollar',
-] as const
-
-const CURRENCY_SYMBOLS = ['$', '€', '£', '¥'] as const
-
-const TRANSACTION_TYPES = ['invoice', 'payment', 'deposit', 'withdrawal', 'transfer'] as const
-
-const FILE_EXTS = ['png', 'jpg', 'pdf', 'txt', 'json', 'csv', 'xml', 'zip', 'mp4', 'wav'] as const
-
-const MIME_TYPES = [
-  'application/json',
-  'text/plain',
-  'image/png',
-  'application/pdf',
-  'multipart/form-data',
-  'text/html',
-] as const
-
-const USER_AGENTS = [
-  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-  'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
-  'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
-] as const
-
-function randomIPv4(): string {
-  return Array.from({ length: 4 }, () => randomIntInclusive(0, 255)).join('.')
+function listModuleMethods(moduleValue: object): string[] {
+  const names = new Set<string>()
+  for (const name of Object.keys(moduleValue)) {
+    if (name.startsWith('_')) continue
+    if (typeof (moduleValue as Record<string, unknown>)[name] === 'function') names.add(name)
+  }
+  let proto: object | null = Object.getPrototypeOf(moduleValue)
+  while (proto && proto !== Object.prototype) {
+    for (const name of Object.getOwnPropertyNames(proto)) {
+      if (name === 'constructor' || name.startsWith('_')) continue
+      if (typeof (moduleValue as Record<string, unknown>)[name] === 'function') names.add(name)
+    }
+    proto = Object.getPrototypeOf(proto)
+  }
+  return [...names].sort((a, b) => a.localeCompare(b))
 }
 
-function randomIPv6(): string {
-  return Array.from({ length: 8 }, () => randomHex(4)).join(':')
+function getFakerModule(moduleName: string): object | undefined {
+  if (!(FAKER_MODULES as readonly string[]).includes(moduleName)) return undefined
+  const value = (faker as unknown as Record<string, unknown>)[moduleName]
+  return value && typeof value === 'object' ? (value as object) : undefined
 }
 
-function randomMac(): string {
-  return Array.from({ length: 6 }, () => randomHex(2)).join(':')
+function getFakerMethod(
+  moduleName: string,
+  methodName: string
+): ((...args: unknown[]) => unknown) | undefined {
+  const mod = getFakerModule(moduleName)
+  if (!mod) return undefined
+  const fn = (mod as Record<string, unknown>)[methodName]
+  return typeof fn === 'function' ? (fn as (...args: unknown[]) => unknown).bind(mod) : undefined
 }
 
-function randomPhone(): string {
-  const a = String(randomIntInclusive(200, 999))
-  const b = String(randomIntInclusive(200, 999))
-  const c = String(randomIntInclusive(1000, 9999))
-  return `${a}-${b}-${c}`
+function buildFakerCallArgs(
+  moduleName: string,
+  methodName: string,
+  options?: DynamicGenerateOptions
+): unknown[] {
+  if (!options) return []
+
+  const sex = sexOf(options)
+  if (sex) {
+    if (moduleName === 'person') {
+      if (methodName === 'firstName' || methodName === 'middleName' || methodName === 'prefix') {
+        return [sex]
+      }
+      if (methodName === 'fullName') return [{ sex }]
+    }
+    if (moduleName === 'internet') {
+      if (
+        methodName === 'email' ||
+        methodName === 'exampleEmail' ||
+        methodName === 'username' ||
+        methodName === 'displayName'
+      ) {
+        const firstName = faker.person.firstName(sex)
+        return [{ firstName }]
+      }
+    }
+  }
+
+  if (options.min != null || options.max != null) {
+    const { min, max } = resolveIntRange(options, 0, 1000)
+    if (
+      moduleName === 'number' ||
+      methodName === 'int' ||
+      methodName === 'float' ||
+      methodName === 'bigInt' ||
+      methodName === 'price' ||
+      methodName === 'amount'
+    ) {
+      return [{ min, max }]
+    }
+  }
+
+  if (options.after != null || options.before != null) {
+    if (moduleName === 'date' && (methodName === 'between' || methodName === 'betweens')) {
+      const { from, to } = dateBounds(options)
+      return [{ from, to }]
+    }
+  }
+
+  return []
 }
 
-function def(
-  key: string,
-  description: string,
-  generate: (options?: DynamicGenerateOptions) => string
-): DynamicEnvVarDef {
-  return { key, description, generate }
+function callFakerMethod(
+  fn: (...args: unknown[]) => unknown,
+  args: unknown[]
+): unknown | undefined {
+  try {
+    return fn(...args)
+  } catch {
+    if (args.length === 0) return undefined
+    try {
+      return fn()
+    } catch {
+      return undefined
+    }
+  }
 }
 
-/** Built-in Postman-style dynamic variable definitions. */
+/** Invoke `{{$faker.module.method}}` with optional generator filters. */
+export function invokeFakerPath(key: string, options?: DynamicGenerateOptions): string | undefined {
+  const match = FAKER_PATH_RE.exec(key.trim())
+  if (!match) return undefined
+  const moduleName = match[1] ?? ''
+  const methodName = match[2] ?? ''
+  const fn = getFakerMethod(moduleName, methodName)
+  if (!fn) return undefined
+  const args = buildFakerCallArgs(moduleName, methodName, options)
+  return stringifyFakerResult(callFakerMethod(fn, args))
+}
+
+export function isFakerPathKey(key: string): boolean {
+  const match = FAKER_PATH_RE.exec(key.trim())
+  if (!match) return false
+  return Boolean(getFakerMethod(match[1] ?? '', match[2] ?? ''))
+}
+
+function enumerateFakerPathDefs(): DynamicEnvVarDef[] {
+  const defs: DynamicEnvVarDef[] = []
+  for (const moduleName of FAKER_MODULES) {
+    const mod = getFakerModule(moduleName)
+    if (!mod) continue
+    for (const methodName of listModuleMethods(mod)) {
+      const key = `$faker.${moduleName}.${methodName}`
+      defs.push(
+        def(key, `Faker ${moduleName}.${methodName}`, (options) => {
+          return invokeFakerPath(key, options) ?? ''
+        })
+      )
+    }
+  }
+  return defs
+}
+
+let fakerPathDefsCache: readonly DynamicEnvVarDef[] | undefined
+
+function getFakerPathDefs(): readonly DynamicEnvVarDef[] {
+  if (!fakerPathDefsCache) fakerPathDefsCache = enumerateFakerPathDefs()
+  return fakerPathDefsCache
+}
+
+/**
+ * Built-in aliases that are not Faker methods (wall-clock values).
+ * Prefer `{{$faker.module.method}}` for generated data (e.g. `$faker.person.firstName`).
+ */
 export const DYNAMIC_ENV_VARS: readonly DynamicEnvVarDef[] = [
-  // Common
-  def('$guid', 'A uuid-v4 style guid', uuidV4),
   def('$timestamp', 'Current UNIX timestamp in seconds', () =>
     String(Math.floor(Date.now() / 1000))
   ),
   def('$isoTimestamp', 'Current ISO timestamp at zero UTC', () => new Date().toISOString()),
-  def('$randomUUID', 'A random 36-character UUID', uuidV4),
-
-  // Text, numbers, colors
-  def('$randomAlphaNumeric', 'A random alpha-numeric character', () => randomAlphaNumeric(1)),
-  def('$randomBoolean', 'A random boolean value', () => (Math.random() < 0.5 ? 'true' : 'false')),
-  def(
-    '$randomInt',
-    'A random integer between 0 and 1000 (supports | between:min,max)',
-    (options) => {
-      const { min, max } = resolveIntRange(options, 0, 1000)
-      return String(randomIntInclusive(Math.trunc(min), Math.trunc(max)))
-    }
-  ),
-  def('$randomColor', 'A random color', () => pick(COLORS)),
-  def('$randomHexColor', 'A random hex color', () => `#${randomHex(6)}`),
-  def('$randomAbbreviation', 'A random abbreviation', () => pick(ABBREVIATIONS)),
-
-  // Internet
-  def('$randomIP', 'A random IPv4 address', randomIPv4),
-  def('$randomIPV6', 'A random IPv6 address', randomIPv6),
-  def('$randomMACAddress', 'A random MAC address', randomMac),
-  def('$randomPassword', 'A random 15-character alpha-numeric password', () =>
-    randomAlphaNumeric(15)
-  ),
-  def('$randomLocale', 'A random two-letter language code', () => pick(LOCALES)),
-  def('$randomUserAgent', 'A random user agent', () => pick(USER_AGENTS)),
-  def('$randomProtocol', 'A random internet protocol', () => pick(PROTOCOLS)),
-  def(
-    '$randomSemver',
-    'A random semantic version number',
-    () => `${randomIntInclusive(0, 9)}.${randomIntInclusive(0, 9)}.${randomIntInclusive(0, 9)}`
-  ),
-
-  // Names
-  def('$randomFirstName', 'A random first name (supports | female / | male)', (options) =>
-    pickFirstName(options)
-  ),
-  def('$randomLastName', 'A random last name', () => pick(LAST_NAMES)),
-  def(
-    '$randomFullName',
-    'A random first and last name (supports | female / | male)',
-    (options) => `${pickFirstName(options)} ${pick(LAST_NAMES)}`
-  ),
-  def('$randomNamePrefix', 'A random name prefix', (options) => {
-    if (options?.gender === 'female') return pick(['Ms.', 'Mrs.', 'Dr.'] as const)
-    if (options?.gender === 'male') return pick(['Mr.', 'Dr.'] as const)
-    return pick(['Mr.', 'Ms.', 'Mrs.', 'Dr.'] as const)
-  }),
-  def('$randomNameSuffix', 'A random name suffix', () =>
-    pick(['Jr.', 'Sr.', 'I', 'II', 'III', 'MD'] as const)
-  ),
-
-  // Profession
-  def('$randomJobArea', 'A random job area', () => pick(JOB_AREAS)),
-  def('$randomJobDescriptor', 'A random job descriptor', () => pick(JOB_DESCRIPTORS)),
-  def(
-    '$randomJobTitle',
-    'A random job title',
-    () => `${pick(JOB_DESCRIPTORS)} ${pick(JOB_AREAS)} ${pick(JOB_TYPES)}`
-  ),
-  def('$randomJobType', 'A random job type', () => pick(JOB_TYPES)),
-
-  // Phone / address
-  def('$randomPhoneNumber', 'A random ten-digit phone number', randomPhone),
-  def(
-    '$randomPhoneNumberExt',
-    'A random phone number with extension',
-    () => `${randomIntInclusive(10, 99)}-${randomPhone()}`
-  ),
-  def('$randomCity', 'A random city name', () => pick(CITIES)),
-  def(
-    '$randomStreetName',
-    'A random street name',
-    () => `${pick(STREETS)} ${pick(STREET_SUFFIXES)}`
-  ),
-  def(
-    '$randomStreetAddress',
-    'A random street address',
-    () => `${randomIntInclusive(1, 9999)} ${pick(STREETS)} ${pick(STREET_SUFFIXES)}`
-  ),
-  def('$randomCountry', 'A random country', () => pick(COUNTRIES)),
-  def('$randomCountryCode', 'A random two-letter country code', () => pick(COUNTRY_CODES)),
-  def('$randomLatitude', 'A random latitude coordinate', () =>
-    (Math.random() * 180 - 90).toFixed(4)
-  ),
-  def('$randomLongitude', 'A random longitude coordinate', () =>
-    (Math.random() * 360 - 180).toFixed(4)
-  ),
-
-  // Domains / emails
-  def(
-    '$randomDomainName',
-    'A random domain name',
-    (options) =>
-      `${pickFirstName(options).toLowerCase()}.${pick(['com', 'net', 'org', 'io'] as const)}`
-  ),
-  def('$randomDomainSuffix', 'A random domain suffix', () =>
-    pick(['com', 'net', 'org', 'io'] as const)
-  ),
-  def('$randomDomainWord', 'A random unqualified domain name', (options) =>
-    pickFirstName(options).toLowerCase()
-  ),
-  def('$randomEmail', 'A random email address (supports | female / | male)', (options) => {
-    const user = `${pickFirstName(options).toLowerCase()}${randomIntInclusive(1, 99)}`
-    return `${user}@${pick(['gmail.com', 'hotmail.com', 'yahoo.com', 'outlook.com'] as const)}`
-  }),
-  def('$randomExampleEmail', 'A random email on an example domain', (options) => {
-    const user = `${pickFirstName(options)}${randomIntInclusive(1, 99)}`
-    return `${user}@${pick(DOMAINS)}`
-  }),
-  def('$randomUserName', 'A random username (supports | female / | male)', (options) => {
-    return `${pickFirstName(options)}.${pick(LAST_NAMES)}${randomIntInclusive(1, 99)}`
-  }),
-  def(
-    '$randomUrl',
-    'A random URL',
-    (options) => `https://${pickFirstName(options).toLowerCase()}.example.com`
-  ),
-
-  // Finance / commerce (common)
-  def('$randomBankAccount', 'A random 8-digit bank account number', () =>
-    String(randomIntInclusive(10_000_000, 99_999_999))
-  ),
-  def('$randomCreditCardMask', 'A random masked credit card number', () =>
-    String(randomIntInclusive(1000, 9999))
-  ),
-  def('$randomTransactionType', 'A random transaction type', () => pick(TRANSACTION_TYPES)),
-  def('$randomCurrencyCode', 'A random 3-letter currency code', () => pick(CURRENCY_CODES)),
-  def('$randomCurrencyName', 'A random currency name', () => pick(CURRENCY_NAMES)),
-  def('$randomCurrencySymbol', 'A random currency symbol', () => pick(CURRENCY_SYMBOLS)),
-  def('$randomBitcoin', 'A random bitcoin-like address', () => randomAlphaNumeric(26)),
-  def(
-    '$randomPrice',
-    'A random price between 0.00 and 1000.00 (supports | between:min,max)',
-    (options) => {
-      const { min, max } = resolveIntRange(options, 0, 1000)
-      return (min + Math.random() * (max - min)).toFixed(2)
-    }
-  ),
-  def('$randomProduct', 'A random product', () => pick(PRODUCTS)),
-  def('$randomProductAdjective', 'A random product adjective', () => pick(PRODUCT_ADJECTIVES)),
-  def('$randomProductMaterial', 'A random product material', () => pick(PRODUCT_MATERIALS)),
-  def(
-    '$randomProductName',
-    'A random product name',
-    () => `${pick(PRODUCT_ADJECTIVES)} ${pick(PRODUCT_MATERIALS)} ${pick(PRODUCTS)}`
-  ),
-  def('$randomDepartment', 'A random commerce category', () => pick(DEPARTMENTS)),
-
-  // Business
-  def(
-    '$randomCompanyName',
-    'A random company name',
-    () => `${pick(LAST_NAMES)} ${pick(COMPANY_SUFFIXES)}`
-  ),
-  def('$randomCompanySuffix', 'A random company suffix', () => pick(COMPANY_SUFFIXES)),
-
-  // Dates
-  def(
-    '$randomDate',
-    'A random date YYYY-MM-DD (supports | after / | before / | between)',
-    (options) => randomDateOnly(options)
-  ),
-  def('$randomDateFuture', 'A random future datetime', (options) =>
-    randomDateTimeInRange(options, { min: 86_400_000, max: 365 * 86_400_000 })
-  ),
-  def('$randomDatePast', 'A random past datetime', (options) =>
-    randomDateTimeInRange(options, { min: -365 * 86_400_000, max: -86_400_000 })
-  ),
-  def('$randomDateRecent', 'A random recent datetime', (options) =>
-    randomDateTimeInRange(options, { min: -7 * 86_400_000, max: 0 })
-  ),
-  def('$randomWeekday', 'A random weekday', () => pick(WEEKDAYS)),
-  def('$randomMonth', 'A random month', () => pick(MONTHS)),
-
-  // Files
-  def(
-    '$randomFileName',
-    'A random file name',
-    () => `${pick(NOUNS)}_${randomHex(4)}.${pick(FILE_EXTS)}`
-  ),
-  def('$randomFileExt', 'A random file extension', () => pick(FILE_EXTS)),
-  def(
-    '$randomCommonFileName',
-    'A random common file name',
-    () => `${pick(NOUNS)}.${pick(FILE_EXTS)}`
-  ),
-  def('$randomCommonFileExt', 'A random common file extension', () => pick(FILE_EXTS)),
-  def('$randomFilePath', 'A random file path', () => `/tmp/${pick(NOUNS)}.${pick(FILE_EXTS)}`),
-  def('$randomDirectoryPath', 'A random directory path', () =>
-    pick(['/usr/bin', '/tmp', '/var/log', '/home/user'] as const)
-  ),
-  def('$randomMimeType', 'A random MIME type', () => pick(MIME_TYPES)),
-
-  // Grammar / lorem-ish
-  def('$randomNoun', 'A random noun', () => pick(NOUNS)),
-  def('$randomVerb', 'A random verb', () => pick(VERBS)),
-  def('$randomIngverb', 'A random verb ending in -ing', () => `${pick(VERBS)}ing`),
-  def('$randomAdjective', 'A random adjective', () => pick(ADJECTIVES)),
-  def('$randomWord', 'A random word', () => pick([...NOUNS, ...VERBS, ...ADJECTIVES])),
-  def(
-    '$randomWords',
-    'Some random words',
-    () => `${pick(ADJECTIVES)} ${pick(NOUNS)} ${pick(VERBS)}`
-  ),
-  def(
-    '$randomPhrase',
-    'A random phrase',
-    () =>
-      `You can't ${pick(VERBS)} the ${pick(NOUNS)} without ${pick(VERBS)}ing the ${pick(ADJECTIVES)} ${pick(NOUNS)}!`
-  ),
-  def('$randomLoremWord', 'A random lorem word', () =>
-    pick(['lorem', 'ipsum', 'dolor', 'sit', 'amet'] as const)
-  ),
-  def('$randomLoremWords', 'Some random lorem words', () => 'lorem ipsum dolor sit'),
-  def(
-    '$randomLoremSentence',
-    'A random lorem sentence',
-    () => 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'
-  ),
-  def(
-    '$randomLoremSlug',
-    'A random lorem URL slug',
-    () => `${pick(NOUNS)}-${pick(ADJECTIVES)}-${randomHex(3)}`
-  ),
 ]
 
-const DYNAMIC_BY_KEY = new Map(DYNAMIC_ENV_VARS.map((item) => [item.key, item]))
+const ALIAS_BY_KEY = new Map(DYNAMIC_ENV_VARS.map((item) => [item.key, item]))
 
-/** True when `key` is a known Postman-style dynamic variable (leading `$`). */
+/** Alias defs plus every `$faker.module.method` completion entry. */
+export function listAllDynamicEnvVarDefs(): readonly DynamicEnvVarDef[] {
+  return [...DYNAMIC_ENV_VARS, ...getFakerPathDefs()]
+}
+
+/** True when `key` is a known dynamic variable (alias or Faker path). */
 export function isDynamicEnvVar(key: string): boolean {
-  return DYNAMIC_BY_KEY.has(key.trim())
+  const trimmed = key.trim()
+  return ALIAS_BY_KEY.has(trimmed) || isFakerPathKey(trimmed)
 }
 
 /** Generate a fresh value for a dynamic variable, or `undefined` if unknown. */
@@ -657,15 +293,51 @@ export function resolveDynamicEnvVar(
   key: string,
   options?: DynamicGenerateOptions
 ): string | undefined {
-  const defn = DYNAMIC_BY_KEY.get(key.trim())
-  return defn ? defn.generate(options) : undefined
+  const trimmed = key.trim()
+  const alias = ALIAS_BY_KEY.get(trimmed)
+  if (alias) {
+    try {
+      return alias.generate(options)
+    } catch {
+      return undefined
+    }
+  }
+  return invokeFakerPath(trimmed, options)
 }
 
-/** Keys for completions / help (stable order). */
+/** Keys for completions / help (aliases first, then `$faker.*` paths). */
 export function listDynamicEnvVarKeys(): string[] {
-  return DYNAMIC_ENV_VARS.map((item) => item.key)
+  return listAllDynamicEnvVarDefs().map((item) => item.key)
 }
 
 export function getDynamicEnvVarDescription(key: string): string | undefined {
-  return DYNAMIC_BY_KEY.get(key.trim())?.description
+  const trimmed = key.trim()
+  const alias = ALIAS_BY_KEY.get(trimmed)
+  if (alias) return alias.description
+  const match = FAKER_PATH_RE.exec(trimmed)
+  if (!match) return undefined
+  const moduleName = match[1] ?? ''
+  const methodName = match[2] ?? ''
+  if (!getFakerMethod(moduleName, methodName)) return undefined
+  return `Faker ${moduleName}.${methodName}`
 }
+
+/** Shared Faker instance (English) for template dynamics and the terminal `faker` binding. */
+export function getEnvFaker(): typeof faker {
+  return faker
+}
+
+/** Faker module names available on `faker.*` / `{{$faker.*}}`. */
+export function listFakerModules(): readonly FakerModuleName[] {
+  return FAKER_MODULES
+}
+
+/** Method names on a Faker module (e.g. `person` → `firstName`, `fullName`, …). */
+export function listFakerModuleMethods(moduleName: string): string[] {
+  const mod = getFakerModule(moduleName)
+  if (!mod) return []
+  return listModuleMethods(mod)
+}
+
+/** @internal Exported for tests — Faker module names used by the path API. */
+export const __FAKER_MODULES_FOR_TEST = FAKER_MODULES as readonly FakerModuleName[]

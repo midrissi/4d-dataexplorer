@@ -1,6 +1,6 @@
 import { parseTemplateExpression } from '@4d/ui'
 import type * as Monaco from 'monaco-editor'
-import { DYNAMIC_ENV_VARS, ENV_TEMPLATE_RE, resolveDynamicEnvVar } from '~/lib/env'
+import { ENV_TEMPLATE_RE, listAllDynamicEnvVarDefs, resolveDynamicEnvVar } from '~/lib/env'
 import { getActiveEnvMap } from '~/lib/env/runtime'
 
 const DECORATION_KEY = 'env-template-decorations'
@@ -51,7 +51,7 @@ export function applyEnvTemplateDecorations(
             mapped !== undefined
               ? `**${key}** = \`${mapped}\`${filterHint}`
               : dynamicSample !== undefined
-                ? `**${key}** (dynamic) → \`${dynamicSample}\`${filterHint}\n\nTip: pipe filters e.g. \`{{$randomInt | between:1,100}}\`, \`{{$randomFirstName | female}}\`, \`{{name | upper}}\``
+                ? `**${key}** (dynamic) → \`${dynamicSample}\`${filterHint}\n\nTip: pipe filters e.g. \`{{$faker.number.int | between:1,100}}\`, \`{{$faker.person.firstName | female}}\`, \`{{name | upper}}\``
                 : `Unresolved variable **${key || raw}**`,
         },
       },
@@ -104,7 +104,7 @@ export function registerEnvTemplateCompletionProvider(
           sortText: `0-${key}`,
         })
       }
-      for (const item of DYNAMIC_ENV_VARS) {
+      for (const item of listAllDynamicEnvVarDefs()) {
         if (prefix && !item.key.startsWith(prefix)) continue
         if (seen.has(item.key)) continue
         suggestions.push({

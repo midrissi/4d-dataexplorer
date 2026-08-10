@@ -14,8 +14,8 @@ describe('parseTemplateExpression', () => {
   })
 
   it('parses filters without args', () => {
-    expect(parseTemplateExpression('$randomFirstName | female | upper')).toEqual({
-      key: '$randomFirstName',
+    expect(parseTemplateExpression('$faker.person.firstName | female | upper')).toEqual({
+      key: '$faker.person.firstName',
       filters: [
         { name: 'female', args: [] },
         { name: 'upper', args: [] },
@@ -24,15 +24,17 @@ describe('parseTemplateExpression', () => {
   })
 
   it('parses filters with comma args', () => {
-    expect(parseTemplateExpression('$randomInt | between:10, 100')).toEqual({
-      key: '$randomInt',
+    expect(parseTemplateExpression('$faker.number.int | between:10, 100')).toEqual({
+      key: '$faker.number.int',
       filters: [{ name: 'between', args: ['10', '100'] }],
     })
   })
 
   it('parses date bounds', () => {
-    expect(parseTemplateExpression('$randomDate | after:2020-01-01 | before:2025-12-31')).toEqual({
-      key: '$randomDate',
+    expect(
+      parseTemplateExpression('$faker.date.between | after:2020-01-01 | before:2025-12-31')
+    ).toEqual({
+      key: '$faker.date.between',
       filters: [
         { name: 'after', args: ['2020-01-01'] },
         { name: 'before', args: ['2025-12-31'] },
@@ -55,7 +57,7 @@ describe('parseTemplateExpression', () => {
 
 describe('getEnvTemplateBaseKey', () => {
   it('strips filters', () => {
-    expect(getEnvTemplateBaseKey('$randomInt | between:1,5')).toBe('$randomInt')
+    expect(getEnvTemplateBaseKey('$faker.number.int | between:1,5')).toBe('$faker.number.int')
   })
 
   it('returns trimmed key when no filters', () => {

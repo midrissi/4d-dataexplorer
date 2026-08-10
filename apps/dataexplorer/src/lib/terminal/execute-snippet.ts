@@ -1,6 +1,6 @@
 import { formatThrownError } from '~/lib/api'
 import { consoleService } from '~/lib/console'
-import { resolveEnvTemplates } from '~/lib/env'
+import { getEnvFaker, resolveEnvTemplates } from '~/lib/env'
 import { getActiveEnvMap } from '~/lib/env/runtime'
 import { type AppApi, createAppApi } from './create-app'
 
@@ -82,7 +82,7 @@ export type ExecuteSnippetOptions = {
 }
 
 /**
- * Run a user snippet as an async function with injected `ds`, `console`, and `app`.
+ * Run a user snippet as an async function with injected `ds`, `console`, `app`, and `faker`.
  * Does not expose `window`, `fetch`, or other globals beyond the engine defaults.
  */
 export async function executeSnippet(
@@ -94,6 +94,7 @@ export async function executeSnippet(
   const mirrorToAppConsole = options.mirrorToAppConsole !== false
   const capturedConsole = createCapturedConsole(logs, mirrorToAppConsole)
   const app = options.app ?? createAppApi()
+  const faker = getEnvFaker()
 
   try {
     let source = code
@@ -105,12 +106,12 @@ export async function executeSnippet(
       source = resolved.text
     }
     const body = wrapSource(source)
-    // AsyncFunction is the standard REPL evaluation approach; only ds + console + app are bound.
+    // AsyncFunction is the standard REPL evaluation approach; only ds + console + app + faker are bound.
     const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor as new (
       ...args: string[]
     ) => (...args: unknown[]) => Promise<unknown>
-    const fn = new AsyncFunction('ds', 'console', 'app', `"use strict";\n${body}`)
-    const value = await fn(ds, capturedConsole, app)
+    const fn = new AsyncFunction('ds', 'console', 'app', 'faker', `"use strict";\n${body}`)
+    const value = await fn(ds, capturedConsole, app, faker)
     return { ok: true, logs, value }
   } catch (error) {
     return {

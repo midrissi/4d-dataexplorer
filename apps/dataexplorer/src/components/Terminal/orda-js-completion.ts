@@ -3,6 +3,7 @@ import type { CatalogAllResponse } from '@4d/rest'
 import type * as MonacoEditor from 'monaco-editor'
 import { mapOrdaCompletionKind } from '~/components/QueryBuilder/orda-completion'
 import { isAssistantExposedMethod } from '~/lib/assistant-exposed-method'
+import { listFakerModuleMethods, listFakerModules } from '~/lib/env'
 import type { MethodMeta } from '~/lib/terminal'
 import { filterDotCommandSuggestions, isDotCommandContext } from '~/lib/terminal/dot-commands'
 
@@ -393,6 +394,12 @@ export function registerOrdaJsProviders(
                 kind: 'class' as const,
               },
               {
+                label: 'faker',
+                insertText: 'faker',
+                detail: 'Faker.js — generate fake data',
+                kind: 'class' as const,
+              },
+              {
                 label: 'console',
                 insertText: 'console',
                 detail: 'Terminal console',
@@ -477,6 +484,44 @@ export function registerOrdaJsProviders(
               monaco,
               range
             ),
+          }
+        }
+
+        // faker. / faker.module.
+        if (/(?:^|[^.\w$])faker\s*\.\s*[\w]*$/.test(before)) {
+          return {
+            suggestions: toSuggestions(
+              listFakerModules().map(
+                (name): MethodSuggest => ({
+                  label: name,
+                  insertText: name,
+                  detail: `faker.${name}`,
+                  kind: 'class',
+                })
+              ),
+              monaco,
+              range
+            ),
+          }
+        }
+        const fakerModuleMatch = before.match(
+          /(?:^|[^.\w$])faker\s*\.\s*([a-zA-Z]\w*)\s*\.\s*([\w]*)$/
+        )
+        if (fakerModuleMatch) {
+          const moduleName = fakerModuleMatch[1] ?? ''
+          const methodPrefix = (fakerModuleMatch[2] ?? '').toLowerCase()
+          const methods = listFakerModuleMethods(moduleName)
+            .filter((name) => !methodPrefix || name.toLowerCase().startsWith(methodPrefix))
+            .map(
+              (name): MethodSuggest => ({
+                label: name,
+                insertText: `${name}()`,
+                detail: `faker.${moduleName}.${name}()`,
+                kind: 'function',
+              })
+            )
+          if (methods.length > 0) {
+            return { suggestions: toSuggestions(methods, monaco, range) }
           }
         }
 

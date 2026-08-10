@@ -131,7 +131,7 @@ export function EnvVariableChip({
           tabIndex={-1}
           className={cn(
             // Hug text metrics; self-center so flex rows align chip with plain text.
-            'env-var-chip inline-flex max-w-full items-center self-center truncate rounded-xs px-0.5 py-px font-mono text-[1em] leading-none',
+            'env-var-chip inline-flex w-fit max-w-full items-center self-center truncate rounded-xs px-0.5 py-px font-mono text-[1em] leading-none',
             unresolved
               ? 'bg-destructive/10 text-destructive shadow-[inset_0_0_0_1px] shadow-destructive/60'
               : 'bg-sky-400/10 text-sky-400 shadow-[inset_0_0_0_1px] shadow-sky-400/70',
