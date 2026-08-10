@@ -3,14 +3,25 @@
  * @see https://learning.postman.com/docs/tests-and-scripts/write-scripts/variables-list/
  *
  * Values are generated at resolve time. User-defined env vars with the same key win.
+ * Optional Liquid-style filters can pass {@link DynamicGenerateOptions} (gender, ranges, …).
  */
+
+export type DynamicGenerateOptions = {
+  gender?: 'female' | 'male'
+  min?: number
+  max?: number
+  /** Inclusive lower calendar bound `YYYY-MM-DD`. */
+  after?: string
+  /** Inclusive upper calendar bound `YYYY-MM-DD`. */
+  before?: string
+}
 
 export type DynamicEnvVarDef = {
   /** Key including leading `$` (e.g. `$timestamp`). */
   key: string
   /** Short description for completions / help. */
   description: string
-  generate: () => string
+  generate: (options?: DynamicGenerateOptions) => string
 }
 
 function randomBytes(length: number): Uint8Array {
@@ -60,24 +71,94 @@ function randomAlphaNumeric(length: number): string {
   return out
 }
 
-const FIRST_NAMES = [
+const FEMALE_FIRST_NAMES = [
   'Emma',
-  'Liam',
   'Olivia',
-  'Noah',
   'Ava',
-  'Ethan',
   'Sophia',
-  'Mason',
   'Isabella',
-  'Logan',
   'Mia',
-  'Lucas',
   'Charlotte',
-  'James',
   'Amelia',
-  'Benjamin',
+  'Harper',
+  'Evelyn',
+  'Abigail',
+  'Emily',
 ] as const
+
+const MALE_FIRST_NAMES = [
+  'Liam',
+  'Noah',
+  'Ethan',
+  'Mason',
+  'Logan',
+  'Lucas',
+  'James',
+  'Benjamin',
+  'Henry',
+  'Alexander',
+  'Michael',
+  'Daniel',
+] as const
+
+const FIRST_NAMES = [...FEMALE_FIRST_NAMES, ...MALE_FIRST_NAMES] as const
+
+function pickFirstName(options?: DynamicGenerateOptions): string {
+  if (options?.gender === 'female') return pick(FEMALE_FIRST_NAMES)
+  if (options?.gender === 'male') return pick(MALE_FIRST_NAMES)
+  return pick(FIRST_NAMES)
+}
+
+function resolveIntRange(
+  options: DynamicGenerateOptions | undefined,
+  defaultMin: number,
+  defaultMax: number
+): { min: number; max: number } {
+  let min = options?.min ?? defaultMin
+  let max = options?.max ?? defaultMax
+  if (min > max) {
+    const tmp = min
+    min = max
+    max = tmp
+  }
+  return { min, max }
+}
+
+function parseDateOnly(value: string): Date | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null
+  const date = new Date(`${value}T12:00:00.000Z`)
+  return Number.isNaN(date.getTime()) ? null : date
+}
+
+function randomDateOnly(options?: DynamicGenerateOptions): string {
+  const defaultAfter = new Date(Date.now() - 365 * 40 * 86_400_000)
+  const defaultBefore = new Date()
+  const after = options?.after ? (parseDateOnly(options.after) ?? defaultAfter) : defaultAfter
+  const before = options?.before ? (parseDateOnly(options.before) ?? defaultBefore) : defaultBefore
+  let start = after.getTime()
+  let end = before.getTime()
+  if (start > end) {
+    const tmp = start
+    start = end
+    end = tmp
+  }
+  const t = start + Math.floor(Math.random() * (end - start + 1))
+  return new Date(t).toISOString().slice(0, 10)
+}
+
+function randomDateTimeInRange(
+  options: DynamicGenerateOptions | undefined,
+  defaultRangeMs: { min: number; max: number }
+): string {
+  if (options?.after || options?.before) {
+    const day = randomDateOnly(options)
+    return new Date(
+      `${day}T${String(randomIntInclusive(0, 23)).padStart(2, '0')}:${String(randomIntInclusive(0, 59)).padStart(2, '0')}:00`
+    ).toString()
+  }
+  const offset = randomIntInclusive(defaultRangeMs.min, defaultRangeMs.max)
+  return new Date(Date.now() + offset).toString()
+}
 
 const LAST_NAMES = [
   'Smith',
@@ -321,7 +402,11 @@ function randomPhone(): string {
   return `${a}-${b}-${c}`
 }
 
-function def(key: string, description: string, generate: () => string): DynamicEnvVarDef {
+function def(
+  key: string,
+  description: string,
+  generate: (options?: DynamicGenerateOptions) => string
+): DynamicEnvVarDef {
   return { key, description, generate }
 }
 
@@ -338,8 +423,13 @@ export const DYNAMIC_ENV_VARS: readonly DynamicEnvVarDef[] = [
   // Text, numbers, colors
   def('$randomAlphaNumeric', 'A random alpha-numeric character', () => randomAlphaNumeric(1)),
   def('$randomBoolean', 'A random boolean value', () => (Math.random() < 0.5 ? 'true' : 'false')),
-  def('$randomInt', 'A random integer between 0 and 1000', () =>
-    String(randomIntInclusive(0, 1000))
+  def(
+    '$randomInt',
+    'A random integer between 0 and 1000 (supports | between:min,max)',
+    (options) => {
+      const { min, max } = resolveIntRange(options, 0, 1000)
+      return String(randomIntInclusive(Math.trunc(min), Math.trunc(max)))
+    }
   ),
   def('$randomColor', 'A random color', () => pick(COLORS)),
   def('$randomHexColor', 'A random hex color', () => `#${randomHex(6)}`),
@@ -362,16 +452,20 @@ export const DYNAMIC_ENV_VARS: readonly DynamicEnvVarDef[] = [
   ),
 
   // Names
-  def('$randomFirstName', 'A random first name', () => pick(FIRST_NAMES)),
+  def('$randomFirstName', 'A random first name (supports | female / | male)', (options) =>
+    pickFirstName(options)
+  ),
   def('$randomLastName', 'A random last name', () => pick(LAST_NAMES)),
   def(
     '$randomFullName',
-    'A random first and last name',
-    () => `${pick(FIRST_NAMES)} ${pick(LAST_NAMES)}`
+    'A random first and last name (supports | female / | male)',
+    (options) => `${pickFirstName(options)} ${pick(LAST_NAMES)}`
   ),
-  def('$randomNamePrefix', 'A random name prefix', () =>
-    pick(['Mr.', 'Ms.', 'Mrs.', 'Dr.'] as const)
-  ),
+  def('$randomNamePrefix', 'A random name prefix', (options) => {
+    if (options?.gender === 'female') return pick(['Ms.', 'Mrs.', 'Dr.'] as const)
+    if (options?.gender === 'male') return pick(['Mr.', 'Dr.'] as const)
+    return pick(['Mr.', 'Ms.', 'Mrs.', 'Dr.'] as const)
+  }),
   def('$randomNameSuffix', 'A random name suffix', () =>
     pick(['Jr.', 'Sr.', 'I', 'II', 'III', 'MD'] as const)
   ),
@@ -417,26 +511,31 @@ export const DYNAMIC_ENV_VARS: readonly DynamicEnvVarDef[] = [
   def(
     '$randomDomainName',
     'A random domain name',
-    () => `${pick(FIRST_NAMES).toLowerCase()}.${pick(['com', 'net', 'org', 'io'] as const)}`
+    (options) =>
+      `${pickFirstName(options).toLowerCase()}.${pick(['com', 'net', 'org', 'io'] as const)}`
   ),
   def('$randomDomainSuffix', 'A random domain suffix', () =>
     pick(['com', 'net', 'org', 'io'] as const)
   ),
-  def('$randomDomainWord', 'A random unqualified domain name', () =>
-    pick(FIRST_NAMES).toLowerCase()
+  def('$randomDomainWord', 'A random unqualified domain name', (options) =>
+    pickFirstName(options).toLowerCase()
   ),
-  def('$randomEmail', 'A random email address', () => {
-    const user = `${pick(FIRST_NAMES).toLowerCase()}${randomIntInclusive(1, 99)}`
+  def('$randomEmail', 'A random email address (supports | female / | male)', (options) => {
+    const user = `${pickFirstName(options).toLowerCase()}${randomIntInclusive(1, 99)}`
     return `${user}@${pick(['gmail.com', 'hotmail.com', 'yahoo.com', 'outlook.com'] as const)}`
   }),
-  def('$randomExampleEmail', 'A random email on an example domain', () => {
-    const user = `${pick(FIRST_NAMES)}${randomIntInclusive(1, 99)}`
+  def('$randomExampleEmail', 'A random email on an example domain', (options) => {
+    const user = `${pickFirstName(options)}${randomIntInclusive(1, 99)}`
     return `${user}@${pick(DOMAINS)}`
   }),
-  def('$randomUserName', 'A random username', () => {
-    return `${pick(FIRST_NAMES)}.${pick(LAST_NAMES)}${randomIntInclusive(1, 99)}`
+  def('$randomUserName', 'A random username (supports | female / | male)', (options) => {
+    return `${pickFirstName(options)}.${pick(LAST_NAMES)}${randomIntInclusive(1, 99)}`
   }),
-  def('$randomUrl', 'A random URL', () => `https://${pick(FIRST_NAMES).toLowerCase()}.example.com`),
+  def(
+    '$randomUrl',
+    'A random URL',
+    (options) => `https://${pickFirstName(options).toLowerCase()}.example.com`
+  ),
 
   // Finance / commerce (common)
   def('$randomBankAccount', 'A random 8-digit bank account number', () =>
@@ -450,8 +549,13 @@ export const DYNAMIC_ENV_VARS: readonly DynamicEnvVarDef[] = [
   def('$randomCurrencyName', 'A random currency name', () => pick(CURRENCY_NAMES)),
   def('$randomCurrencySymbol', 'A random currency symbol', () => pick(CURRENCY_SYMBOLS)),
   def('$randomBitcoin', 'A random bitcoin-like address', () => randomAlphaNumeric(26)),
-  def('$randomPrice', 'A random price between 0.00 and 1000.00', () =>
-    (Math.random() * 1000).toFixed(2)
+  def(
+    '$randomPrice',
+    'A random price between 0.00 and 1000.00 (supports | between:min,max)',
+    (options) => {
+      const { min, max } = resolveIntRange(options, 0, 1000)
+      return (min + Math.random() * (max - min)).toFixed(2)
+    }
   ),
   def('$randomProduct', 'A random product', () => pick(PRODUCTS)),
   def('$randomProductAdjective', 'A random product adjective', () => pick(PRODUCT_ADJECTIVES)),
@@ -472,18 +576,19 @@ export const DYNAMIC_ENV_VARS: readonly DynamicEnvVarDef[] = [
   def('$randomCompanySuffix', 'A random company suffix', () => pick(COMPANY_SUFFIXES)),
 
   // Dates
-  def('$randomDate', 'A random date (YYYY-MM-DD)', () => {
-    const daysAgo = randomIntInclusive(0, 365 * 40)
-    return new Date(Date.now() - daysAgo * 86_400_000).toISOString().slice(0, 10)
-  }),
-  def('$randomDateFuture', 'A random future datetime', () =>
-    new Date(Date.now() + randomIntInclusive(1, 365) * 86_400_000).toString()
+  def(
+    '$randomDate',
+    'A random date YYYY-MM-DD (supports | after / | before / | between)',
+    (options) => randomDateOnly(options)
   ),
-  def('$randomDatePast', 'A random past datetime', () =>
-    new Date(Date.now() - randomIntInclusive(1, 365) * 86_400_000).toString()
+  def('$randomDateFuture', 'A random future datetime', (options) =>
+    randomDateTimeInRange(options, { min: 86_400_000, max: 365 * 86_400_000 })
   ),
-  def('$randomDateRecent', 'A random recent datetime', () =>
-    new Date(Date.now() - randomIntInclusive(0, 7) * 86_400_000).toString()
+  def('$randomDatePast', 'A random past datetime', (options) =>
+    randomDateTimeInRange(options, { min: -365 * 86_400_000, max: -86_400_000 })
+  ),
+  def('$randomDateRecent', 'A random recent datetime', (options) =>
+    randomDateTimeInRange(options, { min: -7 * 86_400_000, max: 0 })
   ),
   def('$randomWeekday', 'A random weekday', () => pick(WEEKDAYS)),
   def('$randomMonth', 'A random month', () => pick(MONTHS)),
@@ -548,9 +653,12 @@ export function isDynamicEnvVar(key: string): boolean {
 }
 
 /** Generate a fresh value for a dynamic variable, or `undefined` if unknown. */
-export function resolveDynamicEnvVar(key: string): string | undefined {
+export function resolveDynamicEnvVar(
+  key: string,
+  options?: DynamicGenerateOptions
+): string | undefined {
   const defn = DYNAMIC_BY_KEY.get(key.trim())
-  return defn ? defn.generate() : undefined
+  return defn ? defn.generate(options) : undefined
 }
 
 /** Keys for completions / help (stable order). */

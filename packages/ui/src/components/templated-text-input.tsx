@@ -104,7 +104,9 @@ export function TemplatedValueDisplay({
   })
 
   const surfaceClassName = cn(
-    'flex min-h-7 w-full min-w-0 cursor-text flex-wrap items-center gap-y-0 overflow-x-auto rounded-sm border border-input bg-background px-2.5 py-0 font-mono text-foreground text-sm leading-none',
+    'flex w-full min-w-0 cursor-text flex-nowrap items-center gap-y-0 overflow-x-auto overflow-y-hidden rounded-sm border border-input bg-background px-2.5 py-0 font-mono text-foreground text-sm leading-none',
+    // Overlay must fill the real control without growing past it (e.g. h-6 arg rows).
+    overlay ? 'h-full max-h-full min-h-0' : 'min-h-7',
     !overlay &&
       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
     className
@@ -216,7 +218,7 @@ export const TemplatedTextInput = React.forwardRef<HTMLInputElement, TemplatedTe
     }, [])
 
     return (
-      <div className="relative w-full min-w-0">
+      <div className="relative flex w-full min-w-0 items-center">
         {showHighlight ? (
           <TemplatedValueDisplay
             value={draft}
@@ -230,7 +232,7 @@ export const TemplatedTextInput = React.forwardRef<HTMLInputElement, TemplatedTe
             valuePlaceholder={valuePlaceholder}
             onStartEdit={startEdit}
             overlay
-            className="absolute inset-0 z-10"
+            className={cn('absolute inset-0 z-10', className)}
             aria-label={props['aria-label']}
           />
         ) : null}

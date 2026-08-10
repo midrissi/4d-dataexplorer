@@ -87,15 +87,23 @@ export {
 } from './components/env-template'
 export {
   applyEnvTemplateCompletion,
+  ENV_TEMPLATE_FILTER_SUGGESTIONS,
   type EnvTemplateMatch,
   type EnvTemplateSuggestion,
   filterEnvTemplateSuggestions,
   getEnvTemplateMatch,
+  isEnvTemplateFilterPrefix,
 } from './components/env-template-autocomplete'
 export {
   EnvTemplateSuggestList,
   useEnvTemplateAutocomplete,
 } from './components/env-template-autocomplete-ui'
+export {
+  type EnvTemplateExpression,
+  type EnvTemplateFilter,
+  getEnvTemplateBaseKey,
+  parseTemplateExpression,
+} from './components/env-template-expression'
 export {
   type EnvVariableChangeHandler,
   EnvVariableChip,

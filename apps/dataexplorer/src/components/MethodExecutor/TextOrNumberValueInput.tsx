@@ -47,7 +47,7 @@ export function TextOrNumberValueInput({
           data-param-name={argument.name}
           {...{ [ARG_INPUT_ATTR]: '' }}
           placeholder={t('methodExecutor.stringPlaceholder')}
-          className={cn(inputClassName, 'min-h-6 items-center py-0 leading-none')}
+          className={cn(inputClassName, 'min-h-0 items-center py-0 leading-none')}
           spellCheck={false}
           {...envField}
         />

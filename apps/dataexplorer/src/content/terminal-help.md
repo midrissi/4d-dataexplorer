@@ -57,6 +57,14 @@ You can also embed `{{variable}}` in snippet source — values are substituted f
 
 Postman-style **dynamic variables** work the same way and generate a fresh value each time, for example `{{$timestamp}}`, `{{$isoTimestamp}}`, `{{$guid}}`, `{{$randomInt}}`, `{{$randomEmail}}`.
 
+**Pipe filters** (Liquid-style) apply to env vars and dynamics:
+
+- `{{name | upper}}` (also `lower`, `snake`, `camel`, `pascal`, `kebab`, `trim`) — transform the resolved string
+- `{{$randomFirstName | female}}` / `{{$randomFirstName | male}}` — gendered names (also `$randomFullName`, `$randomEmail`, …)
+- `{{$randomInt | between:10,100}}` or `{{$randomInt | min:10 | max:100}}` — integer in range
+- `{{$randomDate | after:2020-01-01 | before:2025-12-31}}` — date bounds (`YYYY-MM-DD`)
+
+Unknown filters leave the `{{…}}` token unresolved so typos are visible.
 ## `ds` surface
 
 ```js

@@ -36,6 +36,12 @@ describe('parseEnvTemplateSegments', () => {
       { kind: 'variable', key: 'baseUrl', raw: '{{ baseUrl }}' },
     ])
   })
+
+  it('strips filters from segment key', () => {
+    expect(parseEnvTemplateSegments('{{name | upper}}')).toEqual([
+      { kind: 'variable', key: 'name', raw: '{{name | upper}}' },
+    ])
+  })
 })
 
 describe('resolveEnvTemplates', () => {
@@ -54,11 +60,45 @@ describe('resolveEnvTemplates', () => {
   it('skips when no templates', () => {
     expect(resolveEnvTemplates('plain', {})).toEqual({ text: 'plain', unresolved: [] })
   })
+
+  it('applies transform filters on env values', () => {
+    const result = resolveEnvTemplates('{{name | upper}}', { name: 'ada' })
+    expect(result).toEqual({ text: 'ADA', unresolved: [] })
+  })
+
+  it('applies chained transforms', () => {
+    expect(resolveEnvTemplates('{{title | snake | upper}}', { title: 'Hello World' }).text).toBe(
+      'HELLO_WORLD'
+    )
+  })
+
+  it('leaves unknown filters unresolved', () => {
+    const result = resolveEnvTemplates('{{name | nope}}', { name: 'x' })
+    expect(result.text).toBe('{{name | nope}}')
+    expect(result.unresolved).toEqual(['name | nope'])
+  })
+
+  it('rejects generator options on plain env values', () => {
+    const result = resolveEnvTemplates('{{name | female}}', { name: 'Ada' })
+    expect(result.text).toBe('{{name | female}}')
+    expect(result.unresolved).toEqual(['name | female'])
+  })
+
+  it('resolves dynamic filters', () => {
+    expect(resolveEnvTemplates('{{$randomInt | between:7,7}}', {}).text).toBe('7')
+  })
 })
 
 describe('collectEnvTemplateKeys / collectUnresolved', () => {
   it('dedupes keys', () => {
     expect(collectEnvTemplateKeys('{{a}} {{b}} {{a}}')).toEqual(['a', 'b'])
+  })
+
+  it('collects base keys when filters are present', () => {
+    expect(collectEnvTemplateKeys('{{ $randomInt | between:1,5 }} {{name | upper}}')).toEqual([
+      '$randomInt',
+      'name',
+    ])
   })
 
   it('lists unresolved only', () => {

@@ -47,6 +47,20 @@ describe('applyEnvTemplateCompletion', () => {
       cursor: 13,
     })
   })
+
+  it('completes a filter after |', () => {
+    expect(applyEnvTemplateCompletion('{{$randomFirstName|lowe', 23, 'lower')).toEqual({
+      value: '{{$randomFirstName|lower}}',
+      cursor: 26,
+    })
+  })
+
+  it('completes a later filter in a chain', () => {
+    expect(applyEnvTemplateCompletion('{{name|female|up', 16, 'upper')).toEqual({
+      value: '{{name|female|upper}}',
+      cursor: 21,
+    })
+  })
 })
 
 describe('filterEnvTemplateSuggestions', () => {
@@ -74,5 +88,17 @@ describe('filterEnvTemplateSuggestions', () => {
       '$timestamp',
       '$isoTimestamp',
     ])
+  })
+
+  it('suggests filters after |', () => {
+    expect(filterEnvTemplateSuggestions(items, '$randomFirstName|lowe').map((i) => i.key)).toEqual([
+      'lower',
+    ])
+    expect(filterEnvTemplateSuggestions(items, 'name|').map((i) => i.key)).toContain('upper')
+    expect(filterEnvTemplateSuggestions(items, 'name|').map((i) => i.key)).toContain('female')
+  })
+
+  it('hides filter suggestions while typing args', () => {
+    expect(filterEnvTemplateSuggestions(items, '$randomInt|between:1')).toEqual([])
   })
 })

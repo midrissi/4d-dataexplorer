@@ -224,6 +224,8 @@ export const en = {
     responseBody: 'Response Body',
     errorDetails: 'Error',
     openInHttpClient: 'Open in HTTP Client',
+    showDecodedUrl: 'Show decoded URL',
+    showEncodedUrl: 'Show encoded URL',
     loadImage: 'Load image',
     hideImage: 'Hide image',
     imagePreviewAlt: 'Response image preview',
@@ -968,7 +970,7 @@ export const en = {
   environments: {
     title: 'Environments',
     description:
-      'Manage global variables and named environments. Use {{variable}} in requests, methods, queries, and more.',
+      'Manage global variables and named environments. Use {{variable}} in requests, methods, queries, and more. Pipe filters work too: {{name | upper}}, {{$randomInt | between:1,100}}.',
     globals: 'Globals',
     profile: 'Profile',
     base: 'This database',
@@ -980,7 +982,8 @@ export const en = {
     addEnvironmentHint:
       'Create a named environment, then add variables you can reference as {{name}}.',
     noVariablesTitle: 'No variables yet',
-    noVariablesDescription: 'Add a key to use as {{variable}} in requests and methods.',
+    noVariablesDescription:
+      'Add a key to use as {{variable}} in requests and methods. Filters: {{key | upper}}, {{$randomFirstName | female}}.',
     list: 'Environments',
     add: 'Add',
     addVariable: 'Add variable',
@@ -1018,6 +1021,7 @@ export const en = {
     scopeDynamic: 'Dynamic',
     suggestGroupEnvironment: 'Environment',
     suggestGroupDynamic: 'Dynamic',
+    suggestGroupFilter: 'Filters',
     noEnvironment: 'No environment',
     switcherLabel: 'Environment',
     switcherEmptyVars: 'No variables available',
@@ -2188,9 +2192,10 @@ export const en = {
     jsonHelpFix: 'Keys in double quotes, no trailing commas. Fix the JSON above and try again.',
     saveAndCreateNew: 'Save and create new',
     createCount: 'Create count',
-    createCountHint: 'Use {{variables}} in fields — they resolve when you create.',
+    createCountHint:
+      'Use {{variables}} and filters ({{$randomFirstName | female}}, {{name | upper}}) — they resolve when you create.',
     createCountHintTemplates:
-      'Creates {count} records. Templates like {{$randomUUID}} are evaluated before each create.',
+      'Creates {count} records. Templates like {{$randomUUID}} or {{$randomInt | between:1,100}} are evaluated before each create.',
     afterCreate: 'After create',
     afterCreateClose: 'Close dialog',
     afterCreateClear: 'Keep open · clear form',

@@ -230,6 +230,8 @@ export const fr = {
     responseBody: 'Corps de la réponse',
     errorDetails: 'Erreur',
     openInHttpClient: 'Ouvrir dans le client HTTP',
+    showDecodedUrl: 'Afficher l’URL décodée',
+    showEncodedUrl: 'Afficher l’URL encodée',
     loadImage: 'Charger l’image',
     hideImage: 'Masquer l’image',
     imagePreviewAlt: 'Aperçu de l’image de réponse',
@@ -988,7 +990,7 @@ export const fr = {
   environments: {
     title: 'Environnements',
     description:
-      'Gérez les variables globales et les environnements nommés. Utilisez {{variable}} dans les requêtes, méthodes, requêtes, etc.',
+      'Gérez les variables globales et les environnements nommés. Utilisez {{variable}} dans les requêtes, méthodes, etc. Filtres possibles : {{name | upper}}, {{$randomInt | between:1,100}}.',
     globals: 'Globales',
     profile: 'Profil',
     base: 'Cette base',
@@ -1001,7 +1003,8 @@ export const fr = {
     addEnvironmentHint:
       'Créez un environnement nommé, puis ajoutez des variables utilisables via {{name}}.',
     noVariablesTitle: 'Aucune variable',
-    noVariablesDescription: 'Ajoutez une clé à utiliser comme {{variable}} dans les requêtes.',
+    noVariablesDescription:
+      'Ajoutez une clé à utiliser comme {{variable}} dans les requêtes. Filtres : {{key | upper}}, {{$randomFirstName | female}}.',
     list: 'Environnements',
     add: 'Ajouter',
     addVariable: 'Ajouter une variable',
@@ -1040,6 +1043,7 @@ export const fr = {
     scopeDynamic: 'Dynamique',
     suggestGroupEnvironment: 'Environnement',
     suggestGroupDynamic: 'Dynamique',
+    suggestGroupFilter: 'Filtres',
     noEnvironment: 'Aucun environnement',
     switcherLabel: 'Environnement',
     switcherEmptyVars: 'Aucune variable disponible',
@@ -2231,9 +2235,10 @@ export const fr = {
       'Clés entre guillemets, pas de virgule finale. Corrigez le JSON ci-dessus et réessayez.',
     saveAndCreateNew: 'Enregistrer et créer une nouvelle',
     createCount: 'Nombre à créer',
-    createCountHint: 'Utilisez {{variables}} dans les champs — elles sont résolues à la création.',
+    createCountHint:
+      'Utilisez {{variables}} et filtres ({{$randomFirstName | female}}, {{name | upper}}) — résolus à la création.',
     createCountHintTemplates:
-      'Crée {count} enregistrements. Les modèles comme {{$randomUUID}} sont évalués avant chaque création.',
+      'Crée {count} enregistrements. Les modèles comme {{$randomUUID}} ou {{$randomInt | between:1,100}} sont évalués avant chaque création.',
     afterCreate: 'Après création',
     afterCreateClose: 'Fermer la boîte de dialogue',
     afterCreateClear: 'Rester ouvert · vider le formulaire',

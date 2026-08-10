@@ -72,7 +72,7 @@ export const ArgumentRow = memo(function ArgumentRow({
           </span>
         </div>
 
-        <div className="flex min-w-0 flex-1 items-center overflow-x-auto px-1">
+        <div className="flex min-w-0 flex-1 items-center overflow-x-auto overflow-y-hidden px-1">
           {isEntityRef ? (
             <EntityReferenceInput
               argument={{ ...argument, name: positionalName }}

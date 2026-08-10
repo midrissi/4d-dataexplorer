@@ -11,7 +11,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@4d/ui'
-import { ChevronsDownUp, Trash2, X } from 'lucide-react'
+import { Binary, Braces, ChevronsDownUp, Trash2, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from '~/i18n'
 import { isMobileShell } from '~/lib/platform'
@@ -34,6 +34,8 @@ export function ConsolePanel({
   const entries = useConsoleStore((state) => state.entries)
   const filter = useConsoleStore((state) => state.filter)
   const setFilter = useConsoleStore((state) => state.setFilter)
+  const showDecodedUrls = useConsoleStore((state) => state.showDecodedUrls)
+  const setShowDecodedUrls = useConsoleStore((state) => state.setShowDecodedUrls)
   const clear = useConsoleStore((state) => state.clear)
   const setConsoleOpen = useSettingsStore((state) => state.setConsoleOpen)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -44,6 +46,10 @@ export function ConsolePanel({
     filter === 'all' ? entries : entries.filter((entry) => entry.level === filter)
   const lastEntryId = filteredEntries[filteredEntries.length - 1]?.id
   const hasEntries = filteredEntries.length > 0
+
+  const decodeToggleLabel = showDecodedUrls
+    ? t('console.showEncodedUrl')
+    : t('console.showDecodedUrl')
 
   const collapseAll = () => {
     setViewEpoch((epoch) => epoch + 1)
@@ -106,6 +112,32 @@ export function ConsolePanel({
               ))}
             </SelectContent>
           </Select>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    mobile ? 'h-9 w-9' : 'h-6 w-6',
+                    showDecodedUrls && 'bg-accent text-accent-foreground'
+                  )}
+                  onClick={() => setShowDecodedUrls(!showDecodedUrls)}
+                  aria-label={decodeToggleLabel}
+                  aria-pressed={showDecodedUrls}
+                >
+                  {showDecodedUrls ? (
+                    <Braces className="h-3.5 w-3.5" />
+                  ) : (
+                    <Binary className="h-3.5 w-3.5" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">{decodeToggleLabel}</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
 
           <TooltipProvider>
             <Tooltip>

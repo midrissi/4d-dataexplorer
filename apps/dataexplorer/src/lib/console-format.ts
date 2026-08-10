@@ -27,6 +27,59 @@ export function splitNetworkUrl(url: string): { origin: string; pathWithQuery: s
   }
 }
 
+const PCT_ENCODED = /%[0-9A-Fa-f]{2}/
+
+/** True when the path+query still contains percent-encoded octets. */
+export function pathNeedsUrlDecode(pathWithQuery: string): boolean {
+  const q = pathWithQuery.indexOf('?')
+  if (q < 0) return PCT_ENCODED.test(pathWithQuery)
+  return PCT_ENCODED.test(pathWithQuery.slice(q + 1))
+}
+
+/**
+ * Path + query with percent-decoding applied to query values (and keys).
+ * Does not re-encode; suitable for console skim display.
+ */
+export function formatDecodedPathWithQuery(url: string): string {
+  try {
+    const parsed = new URL(url, 'http://localhost')
+    const pathname = parsed.pathname || '/'
+    if (!parsed.search || parsed.search === '?') {
+      return `${pathname}${parsed.hash}`
+    }
+    const params = new URLSearchParams(parsed.search)
+    const parts: string[] = []
+    for (const [key, value] of params.entries()) {
+      parts.push(`${key}=${value}`)
+    }
+    return `${pathname}?${parts.join('&')}${parsed.hash}`
+  } catch {
+    const q = url.indexOf('?')
+    if (q < 0) {
+      try {
+        return decodeURIComponent(url)
+      } catch {
+        return url
+      }
+    }
+    const path = url.slice(0, q)
+    const rest = url.slice(q + 1)
+    const hashIndex = rest.indexOf('#')
+    const search = hashIndex >= 0 ? rest.slice(0, hashIndex) : rest
+    const hash = hashIndex >= 0 ? rest.slice(hashIndex) : ''
+    try {
+      const params = new URLSearchParams(search)
+      const parts: string[] = []
+      for (const [key, value] of params.entries()) {
+        parts.push(`${key}=${value}`)
+      }
+      return `${path}?${parts.join('&')}${hash}`
+    } catch {
+      return url
+    }
+  }
+}
+
 export function networkMethodToneClass(method: string): string {
   switch (method.toUpperCase()) {
     case 'GET':

@@ -158,10 +158,12 @@ export function QueryBuilder() {
   const filterEditorRef = useRef<CodeEditorInstance | null>(null)
   const ordaServiceRef = useRef<LanguageService | null>(null)
   const ordaLanguageConfiguredRef = useRef(false)
+  const localFilterRef = useRef(localFilter)
+  localFilterRef.current = localFilter
 
   ordaServiceRef.current = ordaService
 
-  // Sync local filter with query options when tab changes
+  // Sync local filter with query options when tab changes or store rehydrates.
   useEffect(() => {
     setLocalFilter(queryOptions.filter)
   }, [queryOptions.filter])
@@ -231,6 +233,16 @@ export function QueryBuilder() {
       }
     },
     [activeDataclassTab, setQueryOptions]
+  )
+
+  // Persist filter drafts like sort/select so a page refresh keeps the expression.
+  // (Previously only Run wrote filter into the tab store.)
+  const handleFilterChange = useCallback(
+    (value: string) => {
+      setLocalFilter(value)
+      handleSetQueryOptions({ filter: value })
+    },
+    [handleSetQueryOptions]
   )
 
   const handleResetQueryOptions = useCallback(() => {
@@ -574,6 +586,13 @@ export function QueryBuilder() {
         monaco.languages.setMonarchTokensProvider(ORDA_LANGUAGE_ID, ORDA_MONARCH_LANGUAGE)
         monaco.languages.setLanguageConfiguration(ORDA_LANGUAGE_ID, ORDA_LANGUAGE_CONFIGURATION)
         ordaLanguageConfiguredRef.current = true
+      }
+
+      // keepCurrentModel can restore a stale path model after collapse/remount;
+      // align with the React-controlled filter string on every mount.
+      const expected = localFilterRef.current
+      if (editor.getValue() !== expected) {
+        editor.setValue(expected)
       }
 
       registerOrdaProviders(monaco)
@@ -1099,7 +1118,7 @@ export function QueryBuilder() {
               language={ORDA_LANGUAGE_ID}
               path={`orda-filter://${activeDataclassTab?.id ?? 'default'}`}
               value={localFilter}
-              onChange={(value) => setLocalFilter(value)}
+              onChange={handleFilterChange}
               onMount={handleFilterEditorMount}
               annotations={filterAnnotations}
               height="140px"

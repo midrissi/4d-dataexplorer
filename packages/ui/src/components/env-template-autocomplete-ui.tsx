@@ -1,4 +1,4 @@
-import { Braces, Sparkles } from 'lucide-react'
+import { Braces, Filter, Sparkles } from 'lucide-react'
 import * as React from 'react'
 import { createPortal } from 'react-dom'
 import { cn } from '../lib/utils'
@@ -278,6 +278,7 @@ export function EnvTemplateSuggestList({
             Boolean(item.group && groupLabels?.[item.group]) && item.group !== prevGroup
           const selected = index === activeIndex
           const isDynamic = item.group === 'dynamic'
+          const isFilter = item.group === 'filter'
 
           return (
             <div key={`${item.group ?? ''}:${item.key}`}>
@@ -291,7 +292,7 @@ export function EnvTemplateSuggestList({
                   <span
                     className={cn(
                       'size-1.5 shrink-0 rounded-full',
-                      isDynamic ? 'bg-sky-400' : 'bg-primary'
+                      isDynamic ? 'bg-sky-400' : isFilter ? 'bg-violet-400' : 'bg-primary'
                     )}
                     aria-hidden
                   />
@@ -324,11 +325,19 @@ export function EnvTemplateSuggestList({
                     'flex size-5 shrink-0 items-center justify-center rounded-sm border transition-colors duration-fast',
                     isDynamic
                       ? 'border-sky-400/25 bg-sky-400/10 text-sky-500 dark:text-sky-400'
-                      : 'border-primary/20 bg-primary/10 text-primary'
+                      : isFilter
+                        ? 'border-violet-400/25 bg-violet-400/10 text-violet-500 dark:text-violet-400'
+                        : 'border-primary/20 bg-primary/10 text-primary'
                   )}
                   aria-hidden
                 >
-                  {isDynamic ? <Sparkles className="size-3" /> : <Braces className="size-3" />}
+                  {isDynamic ? (
+                    <Sparkles className="size-3" />
+                  ) : isFilter ? (
+                    <Filter className="size-3" />
+                  ) : (
+                    <Braces className="size-3" />
+                  )}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-mono text-xs leading-snug">{item.key}</span>

@@ -1,3 +1,4 @@
+import { parseTemplateExpression } from '@4d/ui'
 import type * as Monaco from 'monaco-editor'
 import { DYNAMIC_ENV_VARS, ENV_TEMPLATE_RE, resolveDynamicEnvVar } from '~/lib/env'
 import { getActiveEnvMap } from '~/lib/env/runtime'
@@ -21,7 +22,12 @@ export function applyEnvTemplateDecorations(
   const re = new RegExp(ENV_TEMPLATE_RE.source, 'g')
   for (const match of text.matchAll(re)) {
     const raw = match[0]
-    const key = match[1]?.trim() ?? ''
+    const expr = parseTemplateExpression(match[1] ?? '')
+    const key = expr?.key ?? ''
+    const filterHint =
+      expr && expr.filters.length > 0
+        ? ` · filters: ${expr.filters.map((f) => (f.args.length ? `${f.name}:${f.args.join(',')}` : f.name)).join(' | ')}`
+        : ''
     const start = match.index ?? 0
     const end = start + raw.length
     const startPos = model.getPositionAt(start)
@@ -43,9 +49,9 @@ export function applyEnvTemplateDecorations(
         hoverMessage: {
           value:
             mapped !== undefined
-              ? `**${key}** = \`${mapped}\``
+              ? `**${key}** = \`${mapped}\`${filterHint}`
               : dynamicSample !== undefined
-                ? `**${key}** (dynamic) → \`${dynamicSample}\``
+                ? `**${key}** (dynamic) → \`${dynamicSample}\`${filterHint}\n\nTip: pipe filters e.g. \`{{$randomInt | between:1,100}}\`, \`{{$randomFirstName | female}}\`, \`{{name | upper}}\``
                 : `Unresolved variable **${key || raw}**`,
         },
       },

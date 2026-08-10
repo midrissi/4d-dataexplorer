@@ -1,4 +1,10 @@
+import { parseTemplateExpression } from '@4d/ui'
 import { resolveDynamicEnvVar } from './dynamic'
+import {
+  applyTransforms,
+  extractGeneratorOptions,
+  hasGeneratorOptionFilters,
+} from './template-filters'
 
 /** Matches `{{var_name}}` — key is non-empty, no nested braces. */
 export const ENV_TEMPLATE_RE = /\{\{([^{}]+)\}\}/g
@@ -18,7 +24,8 @@ export function parseEnvTemplateSegments(text: string): EnvTemplateSegment[] {
     if (index > lastIndex) {
       segments.push({ kind: 'text', text: text.slice(lastIndex, index) })
     }
-    const key = match[1]?.trim() ?? ''
+    const expr = parseTemplateExpression(match[1] ?? '')
+    const key = expr?.key ?? match[1]?.trim() ?? ''
     segments.push({ kind: 'variable', key, raw: match[0] })
     lastIndex = index + match[0].length
   }
@@ -29,13 +36,14 @@ export function parseEnvTemplateSegments(text: string): EnvTemplateSegment[] {
   return segments
 }
 
-/** Collect unique variable keys referenced in text (trimmed). */
+/** Collect unique base variable keys referenced in text (filters stripped). */
 export function collectEnvTemplateKeys(text: string): string[] {
   const keys: string[] = []
   const seen = new Set<string>()
   const re = new RegExp(ENV_TEMPLATE_RE.source, 'g')
   for (const match of text.matchAll(re)) {
-    const key = match[1]?.trim() ?? ''
+    const expr = parseTemplateExpression(match[1] ?? '')
+    const key = expr?.key ?? ''
     if (!key || seen.has(key)) continue
     seen.add(key)
     keys.push(key)
@@ -44,9 +52,9 @@ export function collectEnvTemplateKeys(text: string): string[] {
 }
 
 /**
- * Replace `{{key}}` using `map`. Unresolved tokens are left as-is.
+ * Replace `{{key | filters}}` using `map`. Unresolved tokens are left as-is.
  * Missing keys that match Postman dynamic vars (`$timestamp`, …) are generated.
- * Returns `{ text, unresolved }` where unresolved lists unique missing keys.
+ * Returns `{ text, unresolved }` where unresolved lists unique missing expression labels.
  */
 export function resolveEnvTemplates(
   text: string,
@@ -66,23 +74,62 @@ export function resolveEnvTemplates(
   const unresolved: string[] = []
   const seen = new Set<string>()
   const re = new RegExp(ENV_TEMPLATE_RE.source, 'g')
-  const resolved = text.replace(re, (raw, rawKey: string) => {
-    const key = rawKey.trim()
-    if (!key) return raw
-    const mapped = get(key)
-    if (mapped !== undefined) return mapped
-    const dynamic = resolveDynamicEnvVar(key)
-    if (dynamic !== undefined) return dynamic
-    if (!seen.has(key)) {
-      seen.add(key)
-      unresolved.push(key)
+  const resolved = text.replace(re, (raw, rawInner: string) => {
+    const expr = parseTemplateExpression(rawInner)
+    if (!expr) return raw
+
+    const { key, filters } = expr
+    const extracted = extractGeneratorOptions(filters)
+    if (!extracted) {
+      const label = rawInner.trim()
+      if (!seen.has(label)) {
+        seen.add(label)
+        unresolved.push(label)
+      }
+      return raw
     }
-    return raw
+
+    const { options, transforms } = extracted
+    let value = get(key)
+
+    if (value !== undefined) {
+      // Env values cannot use generator-only options (female, between, …).
+      if (hasGeneratorOptionFilters(filters)) {
+        const label = rawInner.trim()
+        if (!seen.has(label)) {
+          seen.add(label)
+          unresolved.push(label)
+        }
+        return raw
+      }
+    } else {
+      const dynamic = resolveDynamicEnvVar(key, options)
+      if (dynamic === undefined) {
+        const label = rawInner.trim()
+        if (!seen.has(label)) {
+          seen.add(label)
+          unresolved.push(label)
+        }
+        return raw
+      }
+      value = dynamic
+    }
+
+    const transformed = applyTransforms(value, transforms)
+    if (transformed === null) {
+      const label = rawInner.trim()
+      if (!seen.has(label)) {
+        seen.add(label)
+        unresolved.push(label)
+      }
+      return raw
+    }
+    return transformed
   })
   return { text: resolved, unresolved }
 }
 
-/** Keys referenced in text that are missing from the map. */
+/** Keys / expressions referenced in text that are missing from the map. */
 export function collectUnresolved(
   text: string,
   map: ReadonlyMap<string, string> | Record<string, string>

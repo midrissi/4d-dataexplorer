@@ -13,4 +13,15 @@ describe('parseEnvTemplateSegments', () => {
   it('handles empty string', () => {
     expect(parseEnvTemplateSegments('')).toEqual([{ kind: 'text', text: '', offset: 0 }])
   })
+
+  it('uses base key when filters are present', () => {
+    expect(parseEnvTemplateSegments('{{ $randomFirstName | female }}')).toEqual([
+      {
+        kind: 'variable',
+        key: '$randomFirstName',
+        raw: '{{ $randomFirstName | female }}',
+        offset: 0,
+      },
+    ])
+  })
 })

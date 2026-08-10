@@ -88,6 +88,7 @@ export function useTemplatedEnvFieldProps() {
     () => ({
       environment: t('environments.suggestGroupEnvironment'),
       dynamic: t('environments.suggestGroupDynamic'),
+      filter: t('environments.suggestGroupFilter'),
     }),
     [t]
   )

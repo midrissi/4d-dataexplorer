@@ -4,7 +4,9 @@ import {
   failedNetworkBackground,
   formatByteSize,
   formatConsoleTimestamp,
+  formatDecodedPathWithQuery,
   networkMethodToneClass,
+  pathNeedsUrlDecode,
   splitNetworkUrl,
 } from './console-format'
 
@@ -68,6 +70,30 @@ describe('splitNetworkUrl', () => {
       origin: '',
       pathWithQuery: '/rest/Person?$filter=1',
     })
+  })
+})
+
+describe('pathNeedsUrlDecode', () => {
+  it('is false when the query is already readable', () => {
+    expect(pathNeedsUrlDecode('/rest/Car?$skip=0')).toBe(false)
+  })
+
+  it('is true when the query contains percent-encoding', () => {
+    expect(pathNeedsUrlDecode('/rest/Car?filter=%7B%22active%22%3Atrue%7D')).toBe(true)
+  })
+})
+
+describe('formatDecodedPathWithQuery', () => {
+  it('decodes percent-encoded query values without re-encoding', () => {
+    expect(
+      formatDecodedPathWithQuery(
+        'https://example.com/rest/Car?filter=%7B%22active%22%3Atrue%7D&$skip=0'
+      )
+    ).toBe('/rest/Car?filter={"active":true}&$skip=0')
+  })
+
+  it('preserves hash and path when there is no query', () => {
+    expect(formatDecodedPathWithQuery('https://example.com/rest/Car#x')).toBe('/rest/Car#x')
   })
 })
 

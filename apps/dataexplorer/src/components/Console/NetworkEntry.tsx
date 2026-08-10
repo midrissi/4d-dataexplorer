@@ -12,8 +12,10 @@ import { useTranslation } from '~/i18n'
 import {
   formatByteSize,
   formatConsoleTimestamp,
+  formatDecodedPathWithQuery,
   isFailedNetwork,
   networkMethodToneClass,
+  pathNeedsUrlDecode,
   splitNetworkUrl,
 } from '~/lib/console-format'
 import { mapNetworkDetailsToSeed } from '~/lib/network-to-http-seed'
@@ -21,6 +23,7 @@ import { isObjectTreeTooLarge } from '~/lib/object-tree-size'
 import { parseDecodedQueryParams } from '~/lib/parse-decoded-query-params'
 import { isMobileShell } from '~/lib/platform'
 import type { NetworkDetails } from '~/store/console'
+import { useConsoleStore } from '~/store/console'
 import { useSettingsStore } from '~/store/settings'
 import { useTabsStore } from '~/store/tabs'
 import { ConsoleNetworkImageBody } from './ConsoleNetworkImageBody'
@@ -52,6 +55,7 @@ export function NetworkEntry({
   const mobile = isMobileShell()
   const openHttpClientTab = useTabsStore((state) => state.openHttpClientTab)
   const setConsoleOpen = useSettingsStore((state) => state.setConsoleOpen)
+  const showDecodedUrls = useConsoleStore((state) => state.showDecodedUrls)
   const [sectionsEpoch, setSectionsEpoch] = useState(0)
   const rootRef = useRef<HTMLDivElement>(null)
   const failed = isFailedNetwork(details)
@@ -65,6 +69,18 @@ export function NetworkEntry({
   )
   const { origin, pathWithQuery } = splitNetworkUrl(details.url)
   const hostLabel = origin ? origin.replace(/^https?:\/\//, '') : ''
+  const canDecodePath = pathNeedsUrlDecode(pathWithQuery)
+  const decodedPathWithQuery = useMemo(
+    () => (canDecodePath ? formatDecodedPathWithQuery(details.url) : pathWithQuery),
+    [canDecodePath, details.url, pathWithQuery]
+  )
+  const displayPath = showDecodedUrls && canDecodePath ? decodedPathWithQuery : pathWithQuery
+  const pathTitle =
+    showDecodedUrls && canDecodePath
+      ? pathWithQuery
+      : canDecodePath
+        ? decodedPathWithQuery
+        : details.url
 
   useLayoutEffect(() => {
     if (!open) return
@@ -183,9 +199,9 @@ export function NetworkEntry({
               {statusBadge}
               <span
                 className="min-w-0 flex-1 truncate font-mono text-[11px] text-foreground"
-                title={details.url}
+                title={pathTitle}
               >
-                {pathWithQuery}
+                {displayPath}
               </span>
               {sendButton}
             </div>
@@ -239,9 +255,9 @@ export function NetworkEntry({
           <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,max-content)_auto_minmax(0.5rem,1fr)_auto] items-center gap-x-1">
             <span
               className="min-w-0 truncate px-0.5 font-mono text-[11px] text-foreground"
-              title={details.url}
+              title={pathTitle}
             >
-              {pathWithQuery}
+              {displayPath}
             </span>
 
             <div className="flex shrink-0 items-center gap-0.5">

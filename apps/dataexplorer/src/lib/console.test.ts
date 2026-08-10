@@ -4,7 +4,7 @@ import { consoleService } from './console'
 
 describe('consoleService', () => {
   beforeEach(() => {
-    useConsoleStore.setState({ entries: [], filter: 'all' })
+    useConsoleStore.setState({ entries: [], filter: 'all', showDecodedUrls: false })
   })
 
   it('keeps object messages and additional arguments structured', () => {

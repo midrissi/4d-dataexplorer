@@ -229,6 +229,8 @@ export const es = {
     responseBody: 'Cuerpo de la respuesta',
     errorDetails: 'Error',
     openInHttpClient: 'Abrir en el cliente HTTP',
+    showDecodedUrl: 'Mostrar URL decodificada',
+    showEncodedUrl: 'Mostrar URL codificada',
     loadImage: 'Cargar imagen',
     hideImage: 'Ocultar imagen',
     imagePreviewAlt: 'Vista previa de la imagen de respuesta',
@@ -986,7 +988,7 @@ export const es = {
   environments: {
     title: 'Entornos',
     description:
-      'Administre variables globales y entornos con nombre. Use {{variable}} en solicitudes, métodos, consultas y más.',
+      'Administre variables globales y entornos con nombre. Use {{variable}} en solicitudes, métodos, consultas y más. También filtros: {{name | upper}}, {{$randomInt | between:1,100}}.',
     globals: 'Globales',
     profile: 'Perfil',
     base: 'Esta base',
@@ -998,7 +1000,8 @@ export const es = {
     addEnvironmentHint:
       'Cree un entorno con nombre y luego añada variables que pueda usar como {{name}}.',
     noVariablesTitle: 'Aún no hay variables',
-    noVariablesDescription: 'Añada una clave para usarla como {{variable}} en solicitudes.',
+    noVariablesDescription:
+      'Añada una clave para usarla como {{variable}} en solicitudes. Filtros: {{key | upper}}, {{$randomFirstName | female}}.',
     list: 'Entornos',
     add: 'Añadir',
     addVariable: 'Añadir variable',
@@ -1037,6 +1040,7 @@ export const es = {
     scopeDynamic: 'Dinámico',
     suggestGroupEnvironment: 'Entorno',
     suggestGroupDynamic: 'Dinámico',
+    suggestGroupFilter: 'Filtros',
     noEnvironment: 'Sin entorno',
     switcherLabel: 'Entorno',
     switcherEmptyVars: 'No hay variables disponibles',
@@ -2220,9 +2224,10 @@ export const es = {
       'Claves entre comillas, sin comas finales. Corrija el JSON anterior e intente de nuevo.',
     saveAndCreateNew: 'Guardar y crear nueva',
     createCount: 'Cantidad a crear',
-    createCountHint: 'Use {{variables}} en los campos — se resuelven al crear.',
+    createCountHint:
+      'Use {{variables}} y filtros ({{$randomFirstName | female}}, {{name | upper}}) — se resuelven al crear.',
     createCountHintTemplates:
-      'Crea {count} registros. Las plantillas como {{$randomUUID}} se evalúan antes de cada creación.',
+      'Crea {count} registros. Las plantillas como {{$randomUUID}} o {{$randomInt | between:1,100}} se evalúan antes de cada creación.',
     afterCreate: 'Después de crear',
     afterCreateClose: 'Cerrar diálogo',
     afterCreateClear: 'Mantener abierto · vaciar formulario',

@@ -64,6 +64,71 @@ describe('dynamic env vars', () => {
     expect(result.unresolved).toEqual([])
   })
 
+  it('honors gender options for first names', () => {
+    const female = new Set([
+      'Emma',
+      'Olivia',
+      'Ava',
+      'Sophia',
+      'Isabella',
+      'Mia',
+      'Charlotte',
+      'Amelia',
+      'Harper',
+      'Evelyn',
+      'Abigail',
+      'Emily',
+    ])
+    const male = new Set([
+      'Liam',
+      'Noah',
+      'Ethan',
+      'Mason',
+      'Logan',
+      'Lucas',
+      'James',
+      'Benjamin',
+      'Henry',
+      'Alexander',
+      'Michael',
+      'Daniel',
+    ])
+    for (let i = 0; i < 20; i++) {
+      const femaleName = resolveDynamicEnvVar('$randomFirstName', { gender: 'female' })
+      const maleName = resolveDynamicEnvVar('$randomFirstName', { gender: 'male' })
+      expect(femaleName).toBeDefined()
+      expect(maleName).toBeDefined()
+      expect(female.has(femaleName ?? '')).toBe(true)
+      expect(male.has(maleName ?? '')).toBe(true)
+    }
+  })
+
+  it('honors int between options', () => {
+    for (let i = 0; i < 30; i++) {
+      const n = Number(resolveDynamicEnvVar('$randomInt', { min: 10, max: 20 }))
+      expect(n).toBeGreaterThanOrEqual(10)
+      expect(n).toBeLessThanOrEqual(20)
+    }
+  })
+
+  it('honors date after/before options', () => {
+    for (let i = 0; i < 20; i++) {
+      const date = resolveDynamicEnvVar('$randomDate', {
+        after: '2020-01-01',
+        before: '2020-01-31',
+      })
+      expect(date).toBeDefined()
+      expect((date ?? '') >= '2020-01-01').toBe(true)
+      expect((date ?? '') <= '2020-01-31').toBe(true)
+    }
+  })
+
+  it('resolves pipe filters on dynamics', () => {
+    const result = resolveEnvTemplates('{{$randomInt | between:5,5}}', {})
+    expect(result.unresolved).toEqual([])
+    expect(result.text).toBe('5')
+  })
+
   it('lookup marks dynamic scope for UI chips', () => {
     const hit = lookupEnvVariable(
       '$isoTimestamp',

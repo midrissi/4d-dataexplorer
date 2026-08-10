@@ -1,3 +1,5 @@
+import { getEnvTemplateBaseKey } from './env-template-expression'
+
 /** Matches `{{var_name}}` — key is non-empty, no nested braces. */
 export const ENV_TEMPLATE_RE = /\{\{([^{}]+)\}\}/g
 
@@ -16,7 +18,8 @@ export function parseEnvTemplateSegments(text: string): EnvTemplateSegment[] {
     if (index > lastIndex) {
       segments.push({ kind: 'text', text: text.slice(lastIndex, index), offset: lastIndex })
     }
-    const key = match[1]?.trim() ?? ''
+    const inner = match[1] ?? ''
+    const key = getEnvTemplateBaseKey(inner)
     segments.push({ kind: 'variable', key, raw: match[0], offset: index })
     lastIndex = index + match[0].length
   }
