@@ -271,7 +271,7 @@ export function EnvTemplatePlaygroundDialog({
           >
             {t('common.close')}
           </Button>
-          <Button type="button" onClick={evaluate} className="gap-1.5 shadow-xs">
+          <Button type="button" onClick={() => evaluate()} className="gap-1.5 shadow-xs">
             {hasRun ? (
               <RotateCw className="size-3.5" aria-hidden />
             ) : (
