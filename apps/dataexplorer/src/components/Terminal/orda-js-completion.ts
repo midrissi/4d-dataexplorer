@@ -374,6 +374,112 @@ export function registerOrdaJsProviders(
           }
         }
 
+        // Root bindings: app / ds / console (before member completions).
+        const rootMatch = before.match(/(?:^|[^.\w$])([A-Za-z_$][\w$]*)$/)
+        if (rootMatch && !/\.\s*[A-Za-z_$][\w$]*$/.test(before)) {
+          const prefix = (rootMatch[1] ?? '').toLowerCase()
+          const roots: MethodSuggest[] = (
+            [
+              {
+                label: 'app',
+                insertText: 'app',
+                detail: 'App API — environment variables',
+                kind: 'class' as const,
+              },
+              {
+                label: 'ds',
+                insertText: 'ds',
+                detail: 'ORDA datastore',
+                kind: 'class' as const,
+              },
+              {
+                label: 'console',
+                insertText: 'console',
+                detail: 'Terminal console',
+                kind: 'class' as const,
+              },
+            ] satisfies MethodSuggest[]
+          ).filter((item) => item.label.toLowerCase().startsWith(prefix))
+          if (roots.length > 0) {
+            return {
+              suggestions: roots.map((item, index) => ({
+                label: item.label,
+                kind: monaco.languages.CompletionItemKind.Variable,
+                insertText: item.insertText,
+                detail: item.detail,
+                range,
+                // Rank above browser globals (AudioParamMap, …).
+                sortText: `0-${String(index).padStart(3, '0')}`,
+              })),
+            }
+          }
+        }
+
+        // app. / app.environment.
+        if (/(?:^|[^.\w$])app\s*\.\s*[\w]*$/.test(before)) {
+          return {
+            suggestions: toSuggestions(
+              [
+                {
+                  label: 'environment',
+                  insertText: 'environment',
+                  detail: 'Environment variables API',
+                  kind: 'class',
+                },
+              ],
+              monaco,
+              range
+            ),
+          }
+        }
+        if (/(?:^|[^.\w$])app\s*\.\s*environment\s*\.\s*[\w]*$/.test(before)) {
+          return {
+            suggestions: toSuggestions(
+              [
+                { label: 'get', insertText: 'get()', detail: 'get(key)' },
+                { label: 'set', insertText: 'set()', detail: 'set(key, value)' },
+                { label: 'remove', insertText: 'remove()', detail: 'remove(key)' },
+                { label: 'clear', insertText: 'clear()', detail: 'clear()' },
+                { label: 'list', insertText: 'list()', detail: 'list()' },
+                { label: 'use', insertText: 'use()', detail: 'use(name, scope?)' },
+                { label: 'getActive', insertText: 'getActive()', detail: 'getActive()' },
+                { label: 'globals', insertText: 'globals', detail: 'Global variables' },
+                {
+                  label: 'profile',
+                  insertText: 'profile',
+                  detail: 'Active profile environment',
+                },
+                {
+                  label: 'base',
+                  insertText: 'base',
+                  detail: 'Active database environment',
+                },
+              ],
+              monaco,
+              range
+            ),
+          }
+        }
+        if (
+          /(?:^|[^.\w$])app\s*\.\s*environment\s*\.\s*(?:globals|profile|base)\s*\.\s*[\w]*$/.test(
+            before
+          )
+        ) {
+          return {
+            suggestions: toSuggestions(
+              [
+                { label: 'get', insertText: 'get()', detail: 'get(key)' },
+                { label: 'set', insertText: 'set()', detail: 'set(key, value)' },
+                { label: 'remove', insertText: 'remove()', detail: 'remove(key)' },
+                { label: 'clear', insertText: 'clear()', detail: 'clear()' },
+                { label: 'list', insertText: 'list()', detail: 'list()' },
+              ],
+              monaco,
+              range
+            ),
+          }
+        }
+
         // ds.
         if (isDsMemberContext(before)) {
           const catalogMethods = methods

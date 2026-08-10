@@ -6,6 +6,9 @@ import { PostmanExportModal } from '~/components/PostmanExport'
 import { RequestResponseSplit } from '~/components/RequestResponseSplit'
 import { useTranslation } from '~/i18n'
 import { api } from '~/lib/api'
+import { consoleService } from '~/lib/console'
+import { resolveEnvTemplates } from '~/lib/env'
+import { getActiveEnvMap, mergeUnresolved } from '~/lib/env/runtime'
 import { isMobileShell } from '~/lib/platform'
 import {
   methodSeedExportLabel,
@@ -39,7 +42,7 @@ import {
   readLiveArgumentInputValues,
   withPositionalNames,
 } from './RuntimeArgumentsEditor'
-import { serializeRuntimeParams } from './serialize-params'
+import { resolveRuntimeArgumentsEnv, serializeRuntimeParams } from './serialize-params'
 import { type MethodCatalogItem, useMethodCatalog } from './useMethodCatalog'
 
 type SidePanel = 'none' | 'history' | 'favourites'
@@ -344,9 +347,28 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
     }
 
     let wrapper: Record<string, unknown> | undefined
+    const map = getActiveEnvMap()
+    const resolvedArgs = resolveRuntimeArgumentsEnv(args)
+    const resolvedKey = resolveEnvTemplates(key, map)
+    const resolvedEntitySetId = resolveEnvTemplates(entitySetId, map)
+    const resolvedFilter = resolveEnvTemplates(filter, map)
+    const resolvedOrderby = resolveEnvTemplates(orderby, map)
+    const resolvedWrapperText = resolveEnvTemplates(liveWrapperText, map)
+    const unresolved = mergeUnresolved(
+      resolvedArgs.unresolved,
+      resolvedKey.unresolved,
+      resolvedEntitySetId.unresolved,
+      resolvedFilter.unresolved,
+      resolvedOrderby.unresolved,
+      resolvedWrapperText.unresolved
+    )
+    if (unresolved.length > 0) {
+      consoleService.warn(t('environments.unresolvedWarning', { keys: unresolved.join(', ') }))
+    }
+
     if (wrapperEnabled) {
       try {
-        wrapper = parseWrapperText(liveWrapperText)
+        wrapper = parseWrapperText(resolvedWrapperText.text)
       } catch {
         setError(t('methodExecutor.invalidWrapperError'))
         return
@@ -366,12 +388,12 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
         methodName,
         dataClass: scope === 'singleton' ? undefined : dataClass || undefined,
         singletonName: scope === 'singleton' ? singletonName || undefined : undefined,
-        key: key || undefined,
-        entitySetId: entitySetId || undefined,
-        filter: entitySetId.trim() ? undefined : filter || undefined,
-        orderby: entitySetId.trim() ? undefined : orderby || undefined,
+        key: resolvedKey.text || undefined,
+        entitySetId: resolvedEntitySetId.text || undefined,
+        filter: resolvedEntitySetId.text.trim() ? undefined : resolvedFilter.text || undefined,
+        orderby: resolvedEntitySetId.text.trim() ? undefined : resolvedOrderby.text || undefined,
         allowedOnHTTPGET: useGetRequest,
-        params: serializeRuntimeParams(args),
+        params: serializeRuntimeParams(resolvedArgs.argumentsList),
         wrapper,
       })
       const detected = detectMethodResult(response.unwrap(), { webform: response.webform() })

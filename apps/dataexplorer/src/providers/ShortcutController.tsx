@@ -7,7 +7,10 @@ import {
   useRef,
   useState,
 } from 'react'
-import { shouldDeferShortcutsForEditableTarget } from '~/lib/shortcut-editable-target'
+import {
+  isOpenModalDialogPresent,
+  shouldDeferShortcutsForEditableTarget,
+} from '~/lib/shortcut-editable-target'
 import { eventToKeyCombo } from '~/lib/shortcut-search'
 import {
   formatKeyCombo,
@@ -110,6 +113,12 @@ export function ShortcutController({ children }: { children: ReactNode }) {
       // Don't steal plain typing in inputs/editors. Still allow Cmd/Ctrl shortcuts
       // so panel toggles (terminal, console, palette) work while editing.
       if (shouldDeferShortcutsForEditableTarget(e)) {
+        if (chordBufferRef.current) clearChordBuffer()
+        return
+      }
+
+      // Let open dialogs / confirms own Escape (cancel-edit must not swallow it).
+      if (e.key === 'Escape' && isOpenModalDialogPresent()) {
         if (chordBufferRef.current) clearChordBuffer()
         return
       }

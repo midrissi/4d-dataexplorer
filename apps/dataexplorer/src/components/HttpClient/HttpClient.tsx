@@ -37,12 +37,14 @@ import {
 } from 'lucide-react'
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { EmptyPanel } from '~/components/EmptyPanel'
+import { useTemplatedEnvFieldProps } from '~/components/Environments/use-templated-env-field-props'
 import { MobileFullscreenSheet } from '~/components/MobileFullscreenSheet'
 import { PostmanExportModal } from '~/components/PostmanExport'
 import { RequestResponseSplit } from '~/components/RequestResponseSplit'
 import { SuggestInput } from '~/components/SuggestInput'
 import { useTranslation } from '~/i18n'
 import { api } from '~/lib/api'
+import { applyEnvTemplateDecorations, registerEnvTemplateCompletionProvider } from '~/lib/env'
 import {
   applyParamsToPath,
   buildRestPathCatalog,
@@ -61,6 +63,7 @@ import {
   REST_QUERY_PARAMS,
   type RestPathCatalog,
   recentPathsFromHttpHistory,
+  resolveHttpClientDraftEnv,
   restParamValueSuggestions,
   setBuiltInHeaderEnabled,
   syncParamsFromPath,
@@ -228,6 +231,7 @@ function SettingsToggleRow({
 
 export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSeed }) {
   const { t } = useTranslation()
+  const envField = useTemplatedEnvFieldProps()
   const mobile = isMobileShell()
   const editorPrefs = useCodeEditorPrefs()
   const updateEditorPrefs = useUpdateCodeEditorPrefs()
@@ -449,6 +453,15 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
   }, [draft])
 
   const builderSeed = useMemo(() => draftToHttpSeed(draft), [draft])
+
+  // Keep the tab seed in sync so path/method/body survive page reload.
+  useEffect(() => {
+    const tab = useTabsStore.getState().tabs.find((item) => item.id === tabId)
+    if (tab?.type !== 'http-client') return
+    if (tab.seed && sameHttpSeed(tab.seed, builderSeed)) return
+    useTabsStore.getState().setHttpClientTabSeed(tabId, builderSeed)
+  }, [builderSeed, tabId])
+
   const linkedFavourite = linkedFavouriteId
     ? favourites.find((item) => item.id === linkedFavouriteId)
     : undefined
@@ -586,11 +599,14 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
   }, [])
 
   const previewUrl = useMemo(() => {
+    const { draft: resolved } = resolveHttpClientDraftEnv(draft)
     const origin =
-      draft.targetMode === 'custom' ? draft.customOrigin.trim().replace(/\/$/, '') : currentOrigin
+      resolved.targetMode === 'custom'
+        ? resolved.customOrigin.trim().replace(/\/$/, '')
+        : currentOrigin
     if (!origin) return ''
-    return joinOriginAndPath(origin, applyParamsToPath(draft.path || '/', draft.params))
-  }, [currentOrigin, draft.customOrigin, draft.params, draft.path, draft.targetMode])
+    return joinOriginAndPath(origin, applyParamsToPath(resolved.path || '/', resolved.params))
+  }, [currentOrigin, draft])
 
   const formDataFields = draft.body.formData
 
@@ -794,6 +810,10 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
                   <SuggestInput
                     className="min-w-0 flex-1"
                     inputClassName={cn(borderlessInputClass, 'font-mono text-[11px]')}
+                    highlightClassName={cn(
+                      borderlessInputClass,
+                      'h-full min-h-0 items-center font-mono text-[11px] leading-none'
+                    )}
                     placeholder="/rest/Car"
                     value={draft.path}
                     onChange={onPathChange}
@@ -801,6 +821,14 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
                     groupLabels={pathSuggestionGroupLabels}
                     aria-label={t('httpClient.url')}
                     minListWidth={240}
+                    resolveVariable={envField.resolveVariable}
+                    onVariableChange={envField.onVariableChange}
+                    onManageVariables={envField.onManageVariables}
+                    manageVariablesLabel={envField.manageVariablesLabel}
+                    writeTargets={envField.writeTargets}
+                    addToLabel={envField.addToLabel}
+                    unresolvedLabel={envField.unresolvedLabel}
+                    valuePlaceholder={envField.valuePlaceholder}
                   />
 
                   <div className="flex shrink-0 items-center gap-0.5 border-border/80 border-l bg-background/40 p-0.5">
@@ -1098,6 +1126,18 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
                           editorPrefs={editorPrefs}
                           onEditorPrefsChange={updateEditorPrefs}
                           path="http-client-request-body://raw"
+                          onMount={(editor, monaco) => {
+                            applyEnvTemplateDecorations(editor, monaco)
+                            const lang = monacoLanguageForRaw(draft.body.rawLanguage)
+                            const completion = registerEnvTemplateCompletionProvider(monaco, lang)
+                            const sub = editor.onDidChangeModelContent(() => {
+                              applyEnvTemplateDecorations(editor, monaco)
+                            })
+                            editor.onDidDispose(() => {
+                              sub.dispose()
+                              completion.dispose()
+                            })
+                          }}
                         />
                       </div>
                     ) : null}

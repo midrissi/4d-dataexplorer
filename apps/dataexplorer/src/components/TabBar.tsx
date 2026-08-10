@@ -27,6 +27,7 @@ import {
   Send,
   Settings,
   SquareStack,
+  Variable,
   X,
 } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -49,6 +50,7 @@ import {
 import {
   isAssistantMetadataTab,
   isDataclassTab,
+  isEnvironmentsTab,
   isGraphTab,
   isHomeTab,
   isHttpClientTab,
@@ -135,6 +137,9 @@ export function TabBar() {
       }
       if (isRestExportBuilderTab(tab)) {
         return mobile ? t('tabs.restExportShort') : t('tabs.restExport')
+      }
+      if (isEnvironmentsTab(tab)) {
+        return mobile ? t('tabs.environmentsShort') : t('tabs.environments')
       }
       if (isStaticTab(tab)) return t(STATIC_TAB_TITLE_KEYS[tab.staticId] ?? 'tabs.releaseNotes')
       if (isDataclassTab(tab) && tab.customTitle) {
@@ -390,7 +395,8 @@ export function TabBar() {
         isAssistantMetadataTab(tab) ||
         isMethodExecutorTab(tab) ||
         isHttpClientTab(tab) ||
-        isRestExportBuilderTab(tab)
+        isRestExportBuilderTab(tab) ||
+        isEnvironmentsTab(tab)
       ) {
         return 0
       }
@@ -472,6 +478,7 @@ export function TabBar() {
       if (isMethodExecutorTab(tab)) return <Play className={className} />
       if (isHttpClientTab(tab)) return <Send className={className} />
       if (isRestExportBuilderTab(tab)) return <FileDown className={className} />
+      if (isEnvironmentsTab(tab)) return <Variable className={className} />
       if (isStaticTab(tab)) return <FileText className={className} />
       if (isDataclassTab(tab)) {
         return (
@@ -531,6 +538,7 @@ export function TabBar() {
               const isMethodExecutor = isMethodExecutorTab(tab)
               const isHttpClient = isHttpClientTab(tab)
               const isRestExport = isRestExportBuilderTab(tab)
+              const isEnvironments = isEnvironmentsTab(tab)
               const isDataclass = isDataclassTab(tab)
               const showCount =
                 !isHome &&
@@ -541,7 +549,8 @@ export function TabBar() {
                 !isAssistantMetadata &&
                 !isMethodExecutor &&
                 !isHttpClient &&
-                !isRestExport
+                !isRestExport &&
+                !isEnvironments
 
               // Get customization for dataclass tabs
               const customization = isDataclass

@@ -13,7 +13,10 @@ import {
   normalizeHttpBody,
   normalizeHttpSettings,
 } from '~/store/http-client-types'
+import { consoleService } from './console'
 import { downloadBytes } from './download-bytes'
+import { resolveEnvTemplates } from './env'
+import { getActiveEnvMap, mergeUnresolved } from './env/runtime'
 import {
   getBaseUrl,
   getCookies,
@@ -86,6 +89,8 @@ export type BuiltHttpRequest = {
   settings: HttpClientSettings
   /** True when targeting the currently connected server origin. */
   isCurrentServer: boolean
+  /** Env variable keys that were referenced but not resolved. */
+  unresolvedEnvKeys?: string[]
 }
 
 export type HttpClientFetchOptions = {
@@ -1021,17 +1026,104 @@ export function inferRawContentType(
   }
 }
 
+function resolvePairEnv(
+  pair: HttpKeyValuePair,
+  map: Map<string, string>
+): { pair: HttpKeyValuePair; unresolved: string[] } {
+  const key = resolveEnvTemplates(pair.key, map)
+  const value = resolveEnvTemplates(pair.value, map)
+  return {
+    pair: { ...pair, key: key.text, value: value.text },
+    unresolved: mergeUnresolved(key.unresolved, value.unresolved),
+  }
+}
+
+/** Resolve `{{var}}` templates in an HTTP draft before build/send. */
+export function resolveHttpClientDraftEnv(draft: HttpClientRequestDraft): {
+  draft: HttpClientRequestDraft
+  unresolved: string[]
+} {
+  const map = getActiveEnvMap()
+  const unresolved: string[] = []
+  const push = (keys: string[]) => {
+    for (const key of keys) {
+      if (!unresolved.includes(key)) unresolved.push(key)
+    }
+  }
+
+  const customOrigin = resolveEnvTemplates(draft.customOrigin, map)
+  push(customOrigin.unresolved)
+  const path = resolveEnvTemplates(draft.path, map)
+  push(path.unresolved)
+  const customMethod = resolveEnvTemplates(draft.customMethod, map)
+  push(customMethod.unresolved)
+
+  const params = draft.params.map((pair) => {
+    const resolved = resolvePairEnv(pair, map)
+    push(resolved.unresolved)
+    return resolved.pair
+  })
+  const headers = draft.headers.map((pair) => {
+    const resolved = resolvePairEnv(pair, map)
+    push(resolved.unresolved)
+    return resolved.pair
+  })
+
+  const raw = resolveEnvTemplates(draft.body.raw, map)
+  push(raw.unresolved)
+  const rawContentType = resolveEnvTemplates(draft.body.rawContentType, map)
+  push(rawContentType.unresolved)
+  const urlencoded = draft.body.urlencoded.map((pair) => {
+    const resolved = resolvePairEnv(pair, map)
+    push(resolved.unresolved)
+    return resolved.pair
+  })
+  const formData = draft.body.formData.map((field) => {
+    const key = resolveEnvTemplates(field.key, map)
+    push(key.unresolved)
+    if (field.kind === 'text') {
+      const value = resolveEnvTemplates(field.value, map)
+      push(value.unresolved)
+      return { ...field, key: key.text, value: value.text }
+    }
+    return { ...field, key: key.text }
+  })
+
+  return {
+    draft: {
+      ...draft,
+      customOrigin: customOrigin.text,
+      path: path.text,
+      customMethod: customMethod.text,
+      params,
+      headers,
+      body: {
+        ...draft.body,
+        raw: raw.text,
+        rawContentType: rawContentType.text,
+        urlencoded,
+        formData,
+      },
+    },
+    unresolved,
+  }
+}
+
 export function buildHttpRequest(
   draft: HttpClientRequestDraft,
   options?: { fileMap?: Map<string, File>; binaryFile?: File | null }
 ): BuiltHttpRequest {
-  const settings = normalizeHttpSettings(draft.settings)
-  const method = resolveHttpMethod(draft)
-  const { isCurrentServer, url } = resolveDraftOrigin(draft)
-  const disabledBuiltIns = normalizeDisabledBuiltInHeaders(draft.disabledBuiltInHeaders)
+  const { draft: resolvedDraft, unresolved } = resolveHttpClientDraftEnv(draft)
+  if (unresolved.length > 0) {
+    consoleService.warn(`Unresolved environment variables: ${unresolved.join(', ')}`)
+  }
+  const settings = normalizeHttpSettings(resolvedDraft.settings)
+  const method = resolveHttpMethod(resolvedDraft)
+  const { isCurrentServer, url } = resolveDraftOrigin(resolvedDraft)
+  const disabledBuiltIns = normalizeDisabledBuiltInHeaders(resolvedDraft.disabledBuiltInHeaders)
   const desktop = isDesktop()
 
-  let headers = pairsToRecord(draft.headers)
+  let headers = pairsToRecord(resolvedDraft.headers)
 
   // Current-connection custom headers only for the connected origin.
   if (isCurrentServer) {
@@ -1042,7 +1134,7 @@ export function buildHttpRequest(
   }
 
   let body: BodyInit | undefined
-  const bodyMode = draft.body.mode
+  const bodyMode = resolvedDraft.body.mode
   const methodAllowsBody = method !== 'GET' && method !== 'HEAD'
 
   if (methodAllowsBody && bodyMode === 'form-data') {
@@ -1050,12 +1142,13 @@ export function buildHttpRequest(
     headers = removeHeader(headers, 'Content-Type')
     body = undefined // filled async in execute; sync path builds below via promise helper
   } else if (methodAllowsBody && bodyMode === 'urlencoded') {
-    body = buildUrlEncodedBody(draft.body.urlencoded)
+    body = buildUrlEncodedBody(resolvedDraft.body.urlencoded)
     headers = setHeaderIfMissing(headers, 'Content-Type', 'application/x-www-form-urlencoded')
   } else if (methodAllowsBody && bodyMode === 'raw') {
-    body = draft.body.raw
+    body = resolvedDraft.body.raw
     const contentType =
-      draft.body.rawContentType.trim() || inferRawContentType(draft.body.rawLanguage, '')
+      resolvedDraft.body.rawContentType.trim() ||
+      inferRawContentType(resolvedDraft.body.rawLanguage, '')
     if (contentType) headers = setHeaderIfMissing(headers, 'Content-Type', contentType)
   } else if (methodAllowsBody && bodyMode === 'binary') {
     const live = options?.binaryFile
@@ -1064,14 +1157,14 @@ export function buildHttpRequest(
       headers = setHeaderIfMissing(
         headers,
         'Content-Type',
-        live.type || draft.body.binaryContentType || 'application/octet-stream'
+        live.type || resolvedDraft.body.binaryContentType || 'application/octet-stream'
       )
-    } else if (draft.body.binaryBase64) {
-      body = base64ToBlob(draft.body.binaryBase64, draft.body.binaryContentType)
+    } else if (resolvedDraft.body.binaryBase64) {
+      body = base64ToBlob(resolvedDraft.body.binaryBase64, resolvedDraft.body.binaryContentType)
       headers = setHeaderIfMissing(
         headers,
         'Content-Type',
-        draft.body.binaryContentType || 'application/octet-stream'
+        resolvedDraft.body.binaryContentType || 'application/octet-stream'
       )
     }
   }
@@ -1121,7 +1214,7 @@ export function buildHttpRequest(
       !findHeader(headers, 'Content-Length') &&
       !isBuiltInHeaderDisabled(disabledBuiltIns, 'Content-Length')
     ) {
-      const contentLength = estimateContentLength(draft)
+      const contentLength = estimateContentLength(resolvedDraft)
       if (contentLength !== undefined) {
         headers['Content-Length'] = contentLength
       }
@@ -1135,6 +1228,7 @@ export function buildHttpRequest(
     body,
     settings,
     isCurrentServer,
+    unresolvedEnvKeys: unresolved.length > 0 ? unresolved : undefined,
   }
 }
 
@@ -1142,10 +1236,11 @@ export async function buildHttpRequestAsync(
   draft: HttpClientRequestDraft,
   options?: { fileMap?: Map<string, File>; binaryFile?: File | null }
 ): Promise<BuiltHttpRequest> {
+  const { draft: resolvedDraft } = resolveHttpClientDraftEnv(draft)
   const built = buildHttpRequest(draft, options)
   const methodAllowsBody = built.method !== 'GET' && built.method !== 'HEAD'
-  if (methodAllowsBody && draft.body.mode === 'form-data') {
-    built.body = await buildFormDataBody(draft.body.formData, options?.fileMap)
+  if (methodAllowsBody && resolvedDraft.body.mode === 'form-data') {
+    built.body = await buildFormDataBody(resolvedDraft.body.formData, options?.fileMap)
   }
   return built
 }

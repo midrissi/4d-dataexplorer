@@ -1,3 +1,4 @@
+export { type AppApi, createAppApi } from './create-app'
 export type {
   CreateDatastoreOptions,
   MethodMeta,

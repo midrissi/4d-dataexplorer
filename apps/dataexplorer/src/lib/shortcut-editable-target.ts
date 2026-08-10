@@ -1,10 +1,29 @@
 import { isShortcutCaptureLocked } from '~/lib/shortcut-capture-lock'
 
+/** Open Radix dialog / alertdialog — Escape must reach the modal, not app shortcuts. */
+export function isOpenModalDialogPresent(): boolean {
+  if (typeof document === 'undefined') return false
+  return Boolean(
+    document.querySelector(
+      '[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]'
+    )
+  )
+}
+
+/** Monaco suggest list is open (may live in the shared overflow widgets host). */
+export function isMonacoSuggestWidgetVisible(): boolean {
+  if (typeof document === 'undefined') return false
+  return Boolean(document.querySelector('.editor-widget.suggest-widget.visible'))
+}
+
 /**
  * Detect typing surfaces where most app shortcuts should stay quiet.
  * Monaco, textareas, and contenteditable hosts are included.
  */
 export function isEditableKeyboardTarget(event: KeyboardEvent): boolean {
+  // Suggest can briefly blur the textarea while still owning Up/Down/Enter.
+  if (isMonacoSuggestWidgetVisible()) return true
+
   const candidates: Array<EventTarget | null> = [event.target, document.activeElement]
   for (const candidate of candidates) {
     if (!(candidate instanceof Element)) continue

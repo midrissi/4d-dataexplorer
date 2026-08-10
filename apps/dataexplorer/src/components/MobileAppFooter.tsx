@@ -17,9 +17,11 @@ import {
   Send,
   Settings,
   Terminal,
+  Variable,
 } from 'lucide-react'
 import { AiTasksFooterControl } from '~/components/AiActions/AiTasksFooterControl'
 import { AppearanceControls } from '~/components/AppearanceControls'
+import { EnvSwitcher } from '~/components/Environments/EnvSwitcher'
 import { MobileDockButton } from '~/components/MobileDockButton'
 import { OnlineStatusFooterControl } from '~/components/OnlineStatusFooterControl'
 import { useAssistantLlmConfigured } from '~/hooks/useAssistantLlmConfigured'
@@ -70,7 +72,7 @@ export function MobileAppFooter() {
       <nav
         className={cn(
           'mx-auto grid max-w-lg gap-0.5 px-1.5',
-          aiConfigured ? 'grid-cols-5' : 'grid-cols-4'
+          aiConfigured ? 'grid-cols-6' : 'grid-cols-5'
         )}
         aria-label={t('layout.footerNavAria')}
       >
@@ -103,6 +105,8 @@ export function MobileAppFooter() {
           <Terminal className="h-5 w-5" />
         </MobileDockButton>
 
+        <EnvSwitcher side="top" align="center" size="sm" />
+
         {aiConfigured ? <AiTasksFooterControl dock /> : null}
 
         <DropdownMenu>
@@ -134,6 +138,13 @@ export function MobileAppFooter() {
             <DropdownMenuItem className={mobileMenuItemClass()} onClick={openRestExportBuilderTab}>
               <FileDown className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
               {t('tabs.restExport')}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className={mobileMenuItemClass()}
+              onClick={() => useTabsStore.getState().openEnvironmentsTab()}
+            >
+              <Variable className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+              {t('tabs.environments')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className={mobileMenuItemClass()} onClick={() => openSettingsTab()}>

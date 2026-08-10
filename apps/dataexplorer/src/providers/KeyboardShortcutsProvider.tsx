@@ -1,5 +1,6 @@
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useState } from 'react'
 import { eventBus } from '~/lib/eventBus'
+import { isOpenModalDialogPresent } from '~/lib/shortcut-editable-target'
 import { useShortcutController } from '~/providers/ShortcutController'
 import { useDataExplorerStore } from '~/store'
 import { useActiveDataclassTab, useTabsStore } from '~/store/tabs'
@@ -34,6 +35,7 @@ export function KeyboardShortcutsProvider({ children }: { children: ReactNode })
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
+      if (isOpenModalDialogPresent()) return
       const target = e.target as HTMLElement
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
         return

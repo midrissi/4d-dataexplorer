@@ -72,4 +72,54 @@ console.log(car)
     if (result.ok) return
     expect(result.error).toContain('boom')
   })
+
+  it('exposes app.environment and resolves {{var}} in source', async () => {
+    const { useEnvironmentsStore } = await import('~/store/environments')
+    useEnvironmentsStore
+      .getState()
+      .setGlobals([{ id: 'g1', key: 'greeting', value: 'hello', type: 'default', enabled: true }])
+    const setResult = await executeSnippet(
+      `app.environment.globals.set("token", "abc")
+return app.environment.globals.get("token")`,
+      {},
+      { mirrorToAppConsole: false, resolveEnvTemplatesInSource: false }
+    )
+    expect(setResult.ok).toBe(true)
+    if (!setResult.ok) return
+    expect(setResult.value).toBe('abc')
+
+    const tpl = await executeSnippet('"{{greeting}}-world"', {}, { mirrorToAppConsole: false })
+    expect(tpl.ok).toBe(true)
+    if (!tpl.ok) return
+    expect(tpl.value).toBe('hello-world')
+  })
+
+  it('sets variables on the active profile environment', async () => {
+    const { useEnvironmentsStore } = await import('~/store/environments')
+    useEnvironmentsStore.getState().setProfileBlock({
+      environments: [
+        {
+          id: 'env-1',
+          name: 'Local',
+          color: '#38bdf8',
+          variables: [],
+        },
+      ],
+      activeEnvironmentId: 'env-1',
+    })
+
+    const result = await executeSnippet(
+      `const ok = app.environment.profile.set("baseUrl", "https://example.test")
+return { ok, value: app.environment.profile.get("baseUrl"), listed: app.environment.profile.list() }`,
+      {},
+      { mirrorToAppConsole: false, resolveEnvTemplatesInSource: false }
+    )
+    expect(result.ok).toBe(true)
+    if (!result.ok) return
+    expect(result.value).toEqual({
+      ok: true,
+      value: 'https://example.test',
+      listed: { baseUrl: 'https://example.test' },
+    })
+  })
 })

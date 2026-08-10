@@ -562,6 +562,62 @@ describe('store/settings', () => {
       expect(useSettingsStore.getState().profiles.length).toBeGreaterThan(0)
     })
 
+    it('persist adapter setItem keeps profile environments', async () => {
+      const { getProfileEnvironmentsBlock, saveProfileEnvironmentsBlock } = await import(
+        '~/lib/storage'
+      )
+      saveProfileEnvironmentsBlock({
+        environments: [
+          {
+            id: 'env-keep',
+            name: 'Local',
+            color: '#38bdf8',
+            variables: [
+              {
+                id: 'v1',
+                key: 'token',
+                value: 'abc',
+                initialValue: 'abc',
+                type: 'default',
+                enabled: true,
+              },
+            ],
+          },
+        ],
+        activeEnvironmentId: 'env-keep',
+      })
+      expect(getProfileEnvironmentsBlock().environments).toHaveLength(1)
+
+      const storage = useSettingsStore.persist.getOptions().storage
+      expect(storage).toBeTruthy()
+      if (!storage) return
+      const state = useSettingsStore.getState()
+      storage.setItem('dataexplorer-settings', {
+        state: {
+          language: state.language,
+          readonlyMode: state.readonlyMode,
+          sidebarCollapsed: state.sidebarCollapsed,
+          assistantOpen: state.assistantOpen,
+          defaultViewMode: state.defaultViewMode,
+          defaultEntityViewMode: state.defaultEntityViewMode,
+          defaultEditMode: state.defaultEditMode,
+          sidebarViewMode: state.sidebarViewMode,
+          pageSize: state.pageSize,
+          shortcuts: state.shortcuts,
+          activeShortcutPreset: state.activeShortcutPreset,
+          codeEditorPrefs: state.codeEditorPrefs,
+          dataclassCustomizations: state.dataclassCustomizations,
+          profiles: state.profiles,
+          currentProfileId: state.currentProfileId,
+        },
+      })
+
+      const block = getProfileEnvironmentsBlock()
+      expect(block.environments).toHaveLength(1)
+      expect(block.environments[0]?.name).toBe('Local')
+      expect(block.activeEnvironmentId).toBe('env-keep')
+    })
+
     it('persist adapter setItem, getItem, removeItem, and parse errors', async () => {
       const storage = useSettingsStore.persist.getOptions().storage
       expect(storage).toBeTruthy()

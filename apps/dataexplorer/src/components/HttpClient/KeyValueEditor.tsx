@@ -1,4 +1,4 @@
-import { Button, Checkbox, cn } from '@4d/ui'
+import { Button, Checkbox, cn, TemplatedTextInput } from '@4d/ui'
 import {
   closestCenter,
   DndContext,
@@ -18,6 +18,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import { GripVertical, ListTree, Plus, Trash2 } from 'lucide-react'
 import { EmptyPanel, EmptyPanelAction } from '~/components/EmptyPanel'
+import { useTemplatedEnvFieldProps } from '~/components/Environments/use-templated-env-field-props'
 import { SuggestInput } from '~/components/SuggestInput'
 import { useTranslation } from '~/i18n'
 import { createKeyValuePair, type HttpKeyValuePair } from '~/store/http-client-types'
@@ -28,7 +29,6 @@ function SortableKeyValueRow({
   keyPlaceholder,
   valuePlaceholder,
   keySuggestions,
-  valueSuggestions,
   onUpdate,
   onRemove,
 }: {
@@ -42,6 +42,7 @@ function SortableKeyValueRow({
   onRemove: (index: number) => void
 }) {
   const { t } = useTranslation()
+  const envField = useTemplatedEnvFieldProps()
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: pair.id,
   })
@@ -77,7 +78,7 @@ function SortableKeyValueRow({
         />
       </div>
 
-      <div className="min-w-0 border-border/50 border-r">
+      <div className="flex min-w-0 items-center border-border/50 border-r">
         <SuggestInput
           value={pair.key}
           onChange={(key) => onUpdate(index, { key })}
@@ -90,16 +91,13 @@ function SortableKeyValueRow({
         />
       </div>
 
-      <div className="min-w-0 border-border/50 border-r">
-        <SuggestInput
+      <div className="flex min-w-0 items-center border-border/50 border-r">
+        <TemplatedTextInput
           value={pair.value}
           onChange={(value) => onUpdate(index, { value })}
-          suggestions={valueSuggestions}
-          filter="includes"
           placeholder={valuePlaceholder}
-          className="h-full w-full"
-          inputClassName="h-6 rounded-none border-0 bg-transparent px-2 font-mono text-xs shadow-none focus-visible:ring-0"
-          minListWidth={180}
+          className="h-6 w-full rounded-none border-0 bg-transparent px-2 py-0 font-mono text-xs leading-none shadow-none focus-visible:ring-0"
+          {...envField}
         />
       </div>
 

@@ -87,6 +87,7 @@ import { CommandPalette } from './CommandPalette'
 import { DatabaseIdentityHeaderChip } from './DatabaseIdentityPanel'
 import { DesktopSslWarningFooterControl } from './DesktopSslWarningFooterControl'
 import { DesktopUpdateFooterControl } from './DesktopUpdateFooterControl'
+import { EnvSwitcher } from './Environments/EnvSwitcher'
 import { KeyboardShortcutsModal } from './KeyboardShortcutsModal'
 import { MobileAppFooter } from './MobileAppFooter'
 import { useMobileCatalog } from './MobileCatalogContext'
@@ -711,6 +712,8 @@ export function Layout({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
+
+            <EnvSwitcher side="top" align="start" size="sm" />
 
             <AiTasksFooterControl />
             <OnlineStatusFooterControl />

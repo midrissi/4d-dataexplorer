@@ -14,7 +14,10 @@ import {
   RESTClient,
 } from '@4d/rest'
 import type { MethodToolInvokeInput } from '@4djs/assistant/tools'
+import { consoleService } from '~/lib/console'
 import { COUNT_FETCH_CONCURRENCY, mapWithConcurrency } from '~/lib/dataclass-counts'
+import { resolveEnvTemplates } from '~/lib/env'
+import { getActiveEnvMap, resolveEnvDeep } from '~/lib/env/runtime'
 import { getBaseUrl, getCustomHeaders, getLoggingFetch, getTimeout } from '~/lib/platform'
 import { getCurrentBaseId, getDataclassCustomizations, setCurrentBaseId } from '~/lib/storage'
 import type { Dataclass, Entity, Pagination } from '~/store'
@@ -141,29 +144,40 @@ function getEntitiesQueryKey(params?: {
 export function coerceFilterParams(
   filterParams: Array<{ type: string; value: string }>
 ): unknown[] {
-  return filterParams.map((p) => {
+  const map = getActiveEnvMap()
+  const unresolved: string[] = []
+  const coerced = filterParams.map((p) => {
+    const resolved = resolveEnvTemplates(p.value, map)
+    for (const key of resolved.unresolved) {
+      if (!unresolved.includes(key)) unresolved.push(key)
+    }
+    const value = resolved.text
     if (p.type === 'number') {
-      const n = Number(p.value)
-      return Number.isNaN(n) ? p.value : n
+      const n = Number(value)
+      return Number.isNaN(n) ? value : n
     }
     if (p.type === 'boolean') {
-      const v = p.value.toLowerCase()
+      const v = value.toLowerCase()
       return v === 'true' || v === '1'
     }
     if (p.type === 'date') {
-      return p.value.trim() || null
+      return value.trim() || null
     }
     if (p.type === 'json') {
-      const trimmed = p.value.trim()
+      const trimmed = value.trim()
       if (!trimmed) return null
       try {
         return JSON.parse(trimmed)
       } catch {
-        return p.value
+        return value
       }
     }
-    return p.value
+    return value
   })
+  if (unresolved.length > 0) {
+    consoleService.warn(`Unresolved environment variables: ${unresolved.join(', ')}`)
+  }
+  return coerced
 }
 
 type EntityQueryParams = {
@@ -204,7 +218,13 @@ function buildEntitySetPageOptions(params?: EntityQueryParams): QueryOptions {
 function buildDataclassQuery(dataclassName: string, params?: EntityQueryParams) {
   let baseQuery = client.dataclass(dataclassName).all()
   if (params?.filter) {
-    baseQuery = baseQuery.filter(params.filter)
+    const filterResolved = resolveEnvTemplates(params.filter, getActiveEnvMap())
+    if (filterResolved.unresolved.length > 0) {
+      consoleService.warn(
+        `Unresolved environment variables: ${filterResolved.unresolved.join(', ')}`
+      )
+    }
+    baseQuery = baseQuery.filter(filterResolved.text)
     const paramValues = params?.filterParams?.length ? coerceFilterParams(params.filterParams) : []
     if (paramValues.length > 0) {
       baseQuery = baseQuery.params(...paramValues)
@@ -802,7 +822,11 @@ export const api = {
    * Create a new entity
    */
   createEntity: async (dataclassName: string, data: Record<string, unknown>) => {
-    const result = await client.dataclass(dataclassName).create(data)
+    const resolved = resolveEnvDeep(data)
+    if (resolved.unresolved.length > 0) {
+      consoleService.warn(`Unresolved environment variables: ${resolved.unresolved.join(', ')}`)
+    }
+    const result = await client.dataclass(dataclassName).create(resolved.value)
     return {
       dataclass: dataclassName,
       entity: { ...result, id: result.__KEY },
@@ -814,7 +838,16 @@ export const api = {
    * Update an existing entity
    */
   updateEntity: async (dataclassName: string, key: string, data: Record<string, unknown>) => {
-    const result = await client.dataclass(dataclassName).update(key, data)
+    const keyResolved = resolveEnvTemplates(key, getActiveEnvMap())
+    const resolved = resolveEnvDeep(data)
+    const unresolved = [...keyResolved.unresolved]
+    for (const u of resolved.unresolved) {
+      if (!unresolved.includes(u)) unresolved.push(u)
+    }
+    if (unresolved.length > 0) {
+      consoleService.warn(`Unresolved environment variables: ${unresolved.join(', ')}`)
+    }
+    const result = await client.dataclass(dataclassName).update(keyResolved.text, resolved.value)
     return {
       dataclass: dataclassName,
       entity: { ...result, id: result.__KEY },

@@ -1,5 +1,8 @@
 import { formatThrownError } from '~/lib/api'
 import { consoleService } from '~/lib/console'
+import { resolveEnvTemplates } from '~/lib/env'
+import { getActiveEnvMap } from '~/lib/env/runtime'
+import { type AppApi, createAppApi } from './create-app'
 
 export type TerminalLogLevel = 'log' | 'info' | 'warn' | 'error'
 
@@ -72,10 +75,14 @@ function createCapturedConsole(logs: TerminalLogEntry[], mirrorToAppConsole: boo
 export type ExecuteSnippetOptions = {
   /** Mirror captured console.* into the app Console panel. @default true */
   mirrorToAppConsole?: boolean
+  /** Optional pre-built app facade (defaults to createAppApi()). */
+  app?: AppApi
+  /** When false, skip `{{var}}` substitution in source. @default true */
+  resolveEnvTemplatesInSource?: boolean
 }
 
 /**
- * Run a user snippet as an async function with injected `ds` and captured `console`.
+ * Run a user snippet as an async function with injected `ds`, `console`, and `app`.
  * Does not expose `window`, `fetch`, or other globals beyond the engine defaults.
  */
 export async function executeSnippet(
@@ -86,15 +93,24 @@ export async function executeSnippet(
   const logs: TerminalLogEntry[] = []
   const mirrorToAppConsole = options.mirrorToAppConsole !== false
   const capturedConsole = createCapturedConsole(logs, mirrorToAppConsole)
+  const app = options.app ?? createAppApi()
 
   try {
-    const body = wrapSource(code)
-    // AsyncFunction is the standard REPL evaluation approach; only ds + console are bound.
+    let source = code
+    if (options.resolveEnvTemplatesInSource !== false) {
+      const resolved = resolveEnvTemplates(code, getActiveEnvMap())
+      if (resolved.unresolved.length > 0) {
+        capturedConsole.warn(`Unresolved environment variables: ${resolved.unresolved.join(', ')}`)
+      }
+      source = resolved.text
+    }
+    const body = wrapSource(source)
+    // AsyncFunction is the standard REPL evaluation approach; only ds + console + app are bound.
     const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor as new (
       ...args: string[]
     ) => (...args: unknown[]) => Promise<unknown>
-    const fn = new AsyncFunction('ds', 'console', `"use strict";\n${body}`)
-    const value = await fn(ds, capturedConsole)
+    const fn = new AsyncFunction('ds', 'console', 'app', `"use strict";\n${body}`)
+    const value = await fn(ds, capturedConsole, app)
     return { ok: true, logs, value }
   } catch (error) {
     return {

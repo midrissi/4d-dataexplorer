@@ -3,6 +3,7 @@ import { formatCount } from '~/lib/utils'
 import {
   isAssistantMetadataTab,
   isDataclassTab,
+  isEnvironmentsTab,
   isGraphTab,
   isHomeTab,
   isHttpClientTab,
@@ -94,6 +95,9 @@ export function getTabOverviewDetails(
   }
   if (isRestExportBuilderTab(tab)) {
     return { subtitle: t('tabs.restExport'), chips: [] }
+  }
+  if (isEnvironmentsTab(tab)) {
+    return { subtitle: t('tabs.environments'), chips: [] }
   }
   if (isStaticTab(tab)) {
     return { subtitle: t('tabs.releaseNotes'), chips: [] }

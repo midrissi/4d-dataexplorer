@@ -238,3 +238,17 @@ button:focus-visible,
     -8px 0;
   background-size: 16px 16px;
 }
+
+/* Monaco inline env variable tokens ({{var}}) */
+.env-var-token-resolved {
+  border-radius: 3px;
+  border: 1px solid color-mix(in oklab, var(--color-sky-400, #38bdf8) 70%, transparent);
+  background: color-mix(in oklab, var(--muted) 80%, transparent);
+  color: var(--color-sky-400, #38bdf8);
+}
+.env-var-token-unresolved {
+  border-radius: 3px;
+  border: 1px solid color-mix(in oklab, var(--destructive) 60%, transparent);
+  background: color-mix(in oklab, var(--destructive) 10%, transparent);
+  color: var(--destructive);
+}

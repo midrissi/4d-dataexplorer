@@ -1,5 +1,6 @@
 import terminalHelpMarkdown from '~/content/terminal-help.md?raw'
 import { useDataExplorerStore } from '~/store'
+import { useEnvironmentsStore } from '~/store/environments'
 import { useSettingsStore } from '~/store/settings'
 import { useTerminalStore } from '~/store/terminal'
 import { useTerminalSnippetsStore } from '~/store/terminal-snippets'
@@ -17,6 +18,8 @@ export type DotCommandName =
   | 'classes'
   | 'about'
   | 'theme'
+  | 'env'
+  | 'envs'
   | 'unknown'
 
 export type ParsedDotCommand = {
@@ -56,6 +59,8 @@ const ALIASES: Record<string, DotCommandName> = {
   ds: 'classes',
   about: 'about',
   theme: 'theme',
+  env: 'env',
+  envs: 'envs',
 }
 
 /** Primary commands shown in `.` autocomplete (aliases match but insert the primary name). */
@@ -84,6 +89,8 @@ export const DOT_COMMAND_SUGGESTIONS: readonly DotCommandSuggest[] = [
   { command: 'classes', aliases: ['ds'], detail: 'List dataclass names' },
   { command: 'about', detail: 'Short about line' },
   { command: 'theme', detail: 'Tip: switch theme in Settings' },
+  { command: 'env', detail: 'Show or switch active environments', insertText: 'env ' },
+  { command: 'envs', detail: 'List profile and database environments' },
 ]
 
 /** True when the buffer so far is a single-line `.command` being typed. */
@@ -242,6 +249,47 @@ export function executeDotCommand(parsed: ParsedDotCommand): DotCommandResult {
         kind: 'message',
         text: 'Theme lives in Settings → Appearance. Tip: match Monaco prefs under Editor.',
       }
+
+    case 'env': {
+      const store = useEnvironmentsStore.getState()
+      const layers = store.getLayers()
+      if (!parsed.arg) {
+        const lines = [
+          `Profile: ${layers.profileEnv?.name ?? '(none)'}`,
+          `Database: ${layers.baseEnv?.name ?? '(none)'}`,
+          `Variables: ${store.getActiveMap().size}`,
+        ]
+        return { kind: 'message', text: lines.join('\n') }
+      }
+      const ok = store.activateEnvironmentByName(parsed.arg)
+      if (!ok) {
+        return { kind: 'error', message: `Unknown environment "${parsed.arg}".` }
+      }
+      return { kind: 'message', text: `Switched to environment "${parsed.arg}".` }
+    }
+
+    case 'envs': {
+      const store = useEnvironmentsStore.getState()
+      const profile = store.getProfileBlock()
+      const base = store.getBaseBlock()
+      const lines: string[] = ['Profile environments:']
+      if (profile.environments.length === 0) lines.push('  (none)')
+      else {
+        for (const env of profile.environments) {
+          const mark = env.id === profile.activeEnvironmentId ? '*' : ' '
+          lines.push(` ${mark} ${env.name}`)
+        }
+      }
+      lines.push('Database environments:')
+      if (base.environments.length === 0) lines.push('  (none)')
+      else {
+        for (const env of base.environments) {
+          const mark = env.id === base.activeEnvironmentId ? '*' : ' '
+          lines.push(` ${mark} ${env.name}`)
+        }
+      }
+      return { kind: 'message', text: lines.join('\n') }
+    }
 
     case 'unknown':
       return {

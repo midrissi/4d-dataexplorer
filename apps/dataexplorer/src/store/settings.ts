@@ -104,6 +104,25 @@ function settingsWithoutBaseOnlyFields(
 }
 
 /**
+ * Environments are written by the environments store into profile settings.
+ * The settings persist adapter rebuilds settings from Zustand state (which does
+ * not track environments), so merge them back from existing storage on write.
+ */
+function withPreservedEnvironments(
+  settings: Record<string, unknown>,
+  existing?: Record<string, unknown>
+): Record<string, unknown> {
+  const source = existing ?? {}
+  if (!Array.isArray(source.environments)) return settings
+  const activeRaw = source.activeEnvironmentId
+  return {
+    ...settings,
+    environments: source.environments,
+    activeEnvironmentId: typeof activeRaw === 'string' || activeRaw === null ? activeRaw : null,
+  }
+}
+
+/**
  * Custom storage adapter: dataexplorer:profiles format { current, profiles: { [id]: { name, settings } } }.
  * settings = merged prefs + profile settings (no dataclassCustomizations, no graphEditorState).
  */
@@ -227,6 +246,7 @@ const createSettingsStorage = () =>
         if (!state) return
         const profiles = state.profiles ?? [buildDefaultProfile()]
         const currentProfileId = state.currentProfileId ?? DEFAULT_PROFILE_ID
+        const existingData = getProfilesStorage()
         const dataclassCustomizations = getDataclassCustomizations() as Record<
           string,
           DataclassCustomization
@@ -280,7 +300,10 @@ const createSettingsStorage = () =>
             name: p.name,
             icon: p.icon,
             color: p.color,
-            settings: settingsWithoutBaseOnlyFields(merged) as Record<string, unknown>,
+            settings: withPreservedEnvironments(
+              settingsWithoutBaseOnlyFields(merged) as Record<string, unknown>,
+              existingData.profiles[p.id]?.settings
+            ),
           }
         }
         saveProfilesStorage({ current: currentProfileId, profiles: nextProfiles })
@@ -2703,12 +2726,17 @@ export const useSettingsStore = create<SettingsState>()(
             name: profile.name,
             icon: profile.icon,
             color: profile.color,
-            settings: settingsWithoutBaseOnlyFields(profile.settings) as Record<string, unknown>,
+            settings: withPreservedEnvironments(
+              settingsWithoutBaseOnlyFields(profile.settings) as Record<string, unknown>,
+              data.profiles[id]?.settings
+            ),
           }
           data.current = id
           saveProfilesStorage(data)
           useTabsStore.getState().applyDefaultViewModeToAllTabs(profile.settings.defaultViewMode)
           useTabsStore.getState().applyDefaultPageSizeToAllTabs(profile.settings.pageSize)
+          // Profile environments live in profile settings — refresh env selectors.
+          void import('~/store/environments').then((m) => m.useEnvironmentsStore.getState().touch())
         },
 
         exportSettings: () => {

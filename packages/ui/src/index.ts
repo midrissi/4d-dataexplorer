@@ -56,6 +56,18 @@ export {
   type EmojiPickerProps,
   type EmojiSelectModifiers,
 } from './components/emoji-picker'
+export {
+  ENV_TEMPLATE_RE,
+  type EnvTemplateSegment,
+  type EnvVarLookup,
+  parseEnvTemplateSegments,
+} from './components/env-template'
+export {
+  EnvVariableChip,
+  type EnvVariableChangeHandler,
+  type EnvVariableChipProps,
+  type EnvWriteTarget,
+} from './components/env-variable-chip'
 export { Input } from './components/input'
 export { Label } from './components/label'
 export {
@@ -93,6 +105,15 @@ export {
 export { Skeleton } from './components/skeleton'
 export { Switch } from './components/switch'
 export { Tabs, TabsContent, TabsList, TabsTrigger } from './components/tabs'
+export {
+  type TemplatedFieldSharedProps,
+  TemplatedTextarea,
+  type TemplatedTextareaProps,
+  TemplatedTextInput,
+  type TemplatedTextInputProps,
+  TemplatedValueDisplay,
+  type TemplatedValueDisplayProps,
+} from './components/templated-text-input'
 export { Textarea } from './components/textarea'
 export {
   Toast,

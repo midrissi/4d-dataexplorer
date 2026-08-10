@@ -61,6 +61,15 @@ describe('http client tabs', () => {
     expect(tab && isHttpClientTab(tab) ? tab.seed?.method : undefined).toBe('POST')
     expect(tab && isHttpClientTab(tab) ? tab.seed?.path : undefined).toBe('/rest/Car')
   })
+
+  it('persists draft seed and still reuses the workspace tab from the menu', () => {
+    const store = useTabsStore.getState()
+    const tabId = store.openHttpClientTab()
+    store.setHttpClientTabSeed(tabId, { method: 'GET', path: '/rest/{{key}}' })
+    expect(store.openHttpClientTab()).toBe(tabId)
+    const tab = useTabsStore.getState().tabs.find((item) => item.id === tabId)
+    expect(tab && isHttpClientTab(tab) ? tab.seed?.path : undefined).toBe('/rest/{{key}}')
+  })
 })
 
 describe('store/tabs', () => {

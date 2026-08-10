@@ -289,7 +289,9 @@ function getOverflowWidgetsDomNode(theme: 'vs' | 'vs-dark'): HTMLDivElement | un
   if (!overflowWidgetsContainer) {
     overflowWidgetsContainer = document.createElement('div')
     overflowWidgetsContainer.className = 'monaco-editor'
-    overflowWidgetsContainer.setAttribute('aria-hidden', 'true')
+    // Do not set aria-hidden: suggest/hover widgets mount here. Hiding the
+    // ancestor can blur the editor and break Up/Down suggestion navigation.
+    // pointer-events:none on the host still lets children (widgets) opt in.
     Object.assign(overflowWidgetsContainer.style, {
       position: 'fixed',
       left: '0',

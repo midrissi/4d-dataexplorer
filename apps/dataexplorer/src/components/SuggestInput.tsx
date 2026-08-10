@@ -1,4 +1,4 @@
-import { cn, Input } from '@4d/ui'
+import { cn, type EnvVarLookup, type EnvWriteTarget, Input, TemplatedValueDisplay } from '@4d/ui'
 import { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { measureSuggestionPlacement } from '~/components/QueryBuilder/AttributePathInput'
@@ -34,6 +34,10 @@ function filterSuggestions(
   })
 }
 
+function hasEnvTemplate(value: string): boolean {
+  return value.includes('{{') && value.includes('}}')
+}
+
 export function SuggestInput({
   value,
   onChange,
@@ -47,6 +51,15 @@ export function SuggestInput({
   minListWidth,
   disabled,
   groupLabels,
+  resolveVariable,
+  onVariableChange,
+  onManageVariables,
+  manageVariablesLabel,
+  writeTargets,
+  addToLabel,
+  unresolvedLabel,
+  valuePlaceholder,
+  highlightClassName,
 }: {
   value: string
   onChange: (value: string) => void
@@ -63,23 +76,44 @@ export function SuggestInput({
   disabled?: boolean
   /** Maps `SuggestOption.group` keys to visible section titles. */
   groupLabels?: Readonly<Record<string, string>>
+  /** When set with `onVariableChange`, show env chips while not editing. */
+  resolveVariable?: (key: string) => EnvVarLookup | null
+  onVariableChange?: (key: string, value: string, scope?: string) => void
+  onManageVariables?: () => void
+  manageVariablesLabel?: string
+  writeTargets?: readonly EnvWriteTarget[]
+  addToLabel?: string
+  unresolvedLabel?: string
+  valuePlaceholder?: string
+  /** Classes for the chip highlight surface (defaults to `inputClassName`). */
+  highlightClassName?: string
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const listboxId = useId()
   const [open, setOpen] = useState(false)
+  const [editing, setEditing] = useState(false)
   const [activeIndex, setActiveIndex] = useState(0)
   const [placement, setPlacement] = useState<SuggestionPlacement | null>(null)
+
+  const templatingEnabled = Boolean(resolveVariable && onVariableChange)
+  const showHighlight = templatingEnabled && !editing && !disabled && hasEnvTemplate(value)
+  // Don't offer path/catalog picks over in-progress or completed {{templates}}.
+  const suppressSuggestions = hasEnvTemplate(value)
 
   const normalized = useMemo(() => normalizeSuggestions(suggestions), [suggestions])
 
   const filtered = useMemo(
-    () => filterSuggestions(normalized, value, filter),
-    [filter, normalized, value]
+    () => (suppressSuggestions ? [] : filterSuggestions(normalized, value, filter)),
+    [filter, normalized, suppressSuggestions, value]
   )
 
-  const showSuggestions = open && filtered.length > 0
+  const showSuggestions = open && !showHighlight && filtered.length > 0
   const safeActiveIndex = filtered.length === 0 ? 0 : Math.min(activeIndex, filtered.length - 1)
   const activeOptionId = showSuggestions ? `${listboxId}-option-${safeActiveIndex}` : undefined
+
+  useEffect(() => {
+    if (editing && !showHighlight) inputRef.current?.focus()
+  }, [editing, showHighlight])
 
   useLayoutEffect(() => {
     if (!showSuggestions) {
@@ -155,6 +189,33 @@ export function SuggestInput({
     }
   }
 
+  if (showHighlight && resolveVariable && onVariableChange) {
+    return (
+      <div className={cn('relative', className)}>
+        <TemplatedValueDisplay
+          value={value}
+          resolveVariable={resolveVariable}
+          onVariableChange={onVariableChange}
+          onManageVariables={onManageVariables}
+          manageVariablesLabel={manageVariablesLabel}
+          writeTargets={writeTargets}
+          addToLabel={addToLabel}
+          unresolvedLabel={unresolvedLabel}
+          valuePlaceholder={valuePlaceholder}
+          aria-label={ariaLabel}
+          onStartEdit={() => {
+            setEditing(true)
+            setOpen(true)
+          }}
+          className={cn(
+            'min-h-0 items-center border-0 bg-transparent px-2 py-0 leading-none shadow-none focus-visible:ring-0',
+            highlightClassName ?? inputClassName
+          )}
+        />
+      </div>
+    )
+  }
+
   return (
     <div className={cn('relative', className)}>
       <Input
@@ -166,11 +227,18 @@ export function SuggestInput({
           onChange(event.target.value)
           setActiveIndex(0)
           setOpen(true)
+          setEditing(true)
         }}
-        onFocus={() => setOpen(true)}
+        onFocus={() => {
+          setEditing(true)
+          setOpen(true)
+        }}
         onBlur={() => {
           // Delay so option mousedown can commit before the list unmounts.
-          window.setTimeout(() => setOpen(false), 120)
+          window.setTimeout(() => {
+            setOpen(false)
+            setEditing(false)
+          }, 120)
         }}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}

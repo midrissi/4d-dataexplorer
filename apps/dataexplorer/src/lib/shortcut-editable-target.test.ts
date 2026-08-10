@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'bun:test'
 import { Window } from 'happy-dom'
-import { shouldDeferShortcutsForEditableTarget } from './shortcut-editable-target'
+import {
+  isOpenModalDialogPresent,
+  shouldDeferShortcutsForEditableTarget,
+} from './shortcut-editable-target'
 
 function withDom(run: (dom: Window) => void): void {
   const dom = new Window()
@@ -69,6 +72,22 @@ describe('shouldDeferShortcutsForEditableTarget', () => {
     })
   })
 
+  it('defers when Monaco suggest widget is visible even if focus left the editor', () => {
+    withDom((dom) => {
+      const widget = dom.document.createElement('div')
+      widget.className = 'editor-widget suggest-widget visible'
+      dom.document.body.appendChild(widget)
+      const body = dom.document.body
+
+      expect(
+        shouldDeferShortcutsForEditableTarget(fakeEvent({ target: body, metaKey: false }))
+      ).toBe(true)
+      expect(
+        shouldDeferShortcutsForEditableTarget(fakeEvent({ target: body, metaKey: true }))
+      ).toBe(false)
+    })
+  })
+
   it('allows Cmd/Ctrl shortcuts while focused in the terminal editor', () => {
     withDom((dom) => {
       const monaco = dom.document.createElement('div')
@@ -115,6 +134,29 @@ describe('shouldDeferShortcutsForEditableTarget', () => {
       } finally {
         release()
       }
+    })
+  })
+})
+
+describe('isOpenModalDialogPresent', () => {
+  it('detects open dialog and alertdialog', () => {
+    withDom((dom) => {
+      expect(isOpenModalDialogPresent()).toBe(false)
+
+      const dialog = dom.document.createElement('div')
+      dialog.setAttribute('role', 'dialog')
+      dialog.setAttribute('data-state', 'open')
+      dom.document.body.appendChild(dialog)
+      expect(isOpenModalDialogPresent()).toBe(true)
+
+      dialog.setAttribute('data-state', 'closed')
+      expect(isOpenModalDialogPresent()).toBe(false)
+
+      const alert = dom.document.createElement('div')
+      alert.setAttribute('role', 'alertdialog')
+      alert.setAttribute('data-state', 'open')
+      dom.document.body.appendChild(alert)
+      expect(isOpenModalDialogPresent()).toBe(true)
     })
   })
 })

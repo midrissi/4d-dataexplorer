@@ -8,6 +8,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  TemplatedTextInput,
 } from '@4d/ui'
 import {
   closestCenter,
@@ -29,6 +30,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { GripVertical, Inbox, Plus, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { EmptyPanel, EmptyPanelAction } from '~/components/EmptyPanel'
+import { useTemplatedEnvFieldProps } from '~/components/Environments/use-templated-env-field-props'
 import { useTranslation } from '~/i18n'
 import { createHttpId, type HttpFormDataField } from '~/store/http-client-types'
 import { HttpFilePicker } from './HttpFilePicker'
@@ -61,6 +63,7 @@ function SortableFormDataRow({
   onFileCleared: (fieldId: string) => void
 }) {
   const { t } = useTranslation()
+  const envField = useTemplatedEnvFieldProps()
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: field.id,
   })
@@ -131,13 +134,14 @@ function SortableFormDataRow({
         </Select>
       </div>
 
-      <div className="min-w-0 border-border/50 border-r">
+      <div className="flex min-w-0 items-center border-border/50 border-r">
         {field.kind === 'text' ? (
-          <Input
-            className="h-6 rounded-none border-0 bg-transparent px-2 font-mono text-xs shadow-none focus-visible:ring-0"
+          <TemplatedTextInput
+            className="h-6 w-full rounded-none border-0 bg-transparent px-2 py-0 font-mono text-xs leading-none shadow-none focus-visible:ring-0"
             placeholder={t('httpClient.value')}
             value={field.value}
-            onChange={(e) => onUpdate(index, { value: e.target.value })}
+            onChange={(value) => onUpdate(index, { value })}
+            {...envField}
           />
         ) : (
           <HttpFilePicker

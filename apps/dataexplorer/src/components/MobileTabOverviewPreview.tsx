@@ -5,6 +5,7 @@ import type { TabOverviewDetails } from '~/lib/tab-overview-details'
 import {
   isAssistantMetadataTab,
   isDataclassTab,
+  isEnvironmentsTab,
   isGraphTab,
   isHomeTab,
   isHttpClientTab,
@@ -324,7 +325,8 @@ export function MobileTabOverviewPreview({
     isSettingsTab(tab) ||
     isSchemaBuilderTab(tab) ||
     isAssistantMetadataTab(tab) ||
-    isRestExportBuilderTab(tab)
+    isRestExportBuilderTab(tab) ||
+    isEnvironmentsTab(tab)
   ) {
     body = <ListPreview isActive={isActive} icon={icon} rows={isHomeTab(tab) ? 4 : 5} />
   } else {

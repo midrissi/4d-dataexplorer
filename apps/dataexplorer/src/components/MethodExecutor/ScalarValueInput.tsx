@@ -20,7 +20,7 @@ export function ScalarValueInput({
 
   if (argument.kind === 'boolean') {
     return (
-      <div className="flex min-w-0 items-center gap-2">
+      <div className="flex min-w-0 flex-1 items-center gap-2">
         <span className="shrink-0 font-mono text-muted-foreground text-xs">{typeLabel}</span>
         <Switch
           id={inputId}
@@ -37,7 +37,7 @@ export function ScalarValueInput({
 
   if (argument.kind === 'date') {
     return (
-      <div className="flex min-w-0 items-center gap-2">
+      <div className="flex min-w-0 flex-1 items-center gap-2">
         <span className="shrink-0 font-mono text-muted-foreground text-xs">{typeLabel}</span>
         <DateArgumentPicker
           id={inputId}

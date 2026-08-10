@@ -166,7 +166,7 @@ export function RuntimeArgumentsEditor({
             strategy={verticalListSortingStrategy}
           >
             <div
-              className="overflow-hidden rounded-md border bg-background"
+              className="w-full overflow-hidden rounded-md border bg-background"
               data-runtime-arguments=""
             >
               {argumentsList.map((argument, index) => (

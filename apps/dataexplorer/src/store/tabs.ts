@@ -234,6 +234,17 @@ export type RestExportBuilderTab = BaseTab & {
 }
 
 /**
+ * Environments tab — manage globals / profile / base environments.
+ */
+export type EnvironmentsScope = 'globals' | 'profile' | 'base'
+
+export type EnvironmentsTab = BaseTab & {
+  type: 'environments'
+  /** Selected scope segment (Globals / Profile / This database). */
+  scope?: EnvironmentsScope
+}
+
+/**
  * Union type for all tab types.
  * Use type guards (isHomeTab, isDataclassTab, isSettingsTab, isGraphTab, isStaticTab, isSchemaBuilderTab, isAssistantMetadataTab) to narrow the type.
  */
@@ -248,6 +259,7 @@ export type Tab =
   | MethodExecutorTab
   | HttpClientTab
   | RestExportBuilderTab
+  | EnvironmentsTab
 
 // =============================================================================
 // Type Guards
@@ -312,6 +324,10 @@ export function isHttpClientTab(tab: Tab): tab is HttpClientTab {
 
 export function isRestExportBuilderTab(tab: Tab): tab is RestExportBuilderTab {
   return tab.type === 'rest-export-builder'
+}
+
+export function isEnvironmentsTab(tab: Tab): tab is EnvironmentsTab {
+  return tab.type === 'environments'
 }
 
 // =============================================================================
@@ -494,6 +510,13 @@ const createRestExportBuilderTab = (): RestExportBuilderTab => ({
   isPinned: false,
 })
 
+const createEnvironmentsTab = (scope: EnvironmentsScope = 'globals'): EnvironmentsTab => ({
+  id: generateTabId(),
+  type: 'environments',
+  isPinned: false,
+  scope,
+})
+
 // =============================================================================
 // Store Types
 // =============================================================================
@@ -532,6 +555,7 @@ type TabsState = {
   openMethodExecutorTab: (seed?: MethodExecutorSeed) => string
   openHttpClientTab: (seed?: HttpClientSeed) => string
   openRestExportBuilderTab: () => void
+  openEnvironmentsTab: () => void
   /** Called by DataclassGraph when mounted and ready to receive highlight events */
   notifyGraphTabReady: () => void
   closeTab: (tabId: string) => void
@@ -569,6 +593,11 @@ type TabsState = {
   setSettingsWidgetsExpanded: (tabId: string, expanded: boolean) => void
   clearSettingsScrollToSection: (tabId: string) => void
 
+  /** Persist which Environments scope segment is selected. */
+  setEnvironmentsScope: (tabId: string, scope: EnvironmentsScope) => void
+  /** Persist the live HTTP Client draft onto the tab so it survives reload. */
+  setHttpClientTabSeed: (tabId: string, seed: HttpClientSeed) => void
+
   // Apply default settings to all existing dataclass tabs
   applyDefaultViewModeToAllTabs: (viewMode: ViewMode) => void
   applyDefaultPageSizeToAllTabs: (pageSize: number) => void
@@ -598,6 +627,30 @@ const updateSettingsTab = (
 ): Tab[] =>
   tabs.map((tab) => {
     if (tab.id === tabId && isSettingsTab(tab)) {
+      return { ...tab, ...updates }
+    }
+    return tab
+  })
+
+const updateEnvironmentsTab = (
+  tabs: Tab[],
+  tabId: string,
+  updates: Partial<Omit<EnvironmentsTab, 'id' | 'type'>>
+): Tab[] =>
+  tabs.map((tab) => {
+    if (tab.id === tabId && isEnvironmentsTab(tab)) {
+      return { ...tab, ...updates }
+    }
+    return tab
+  })
+
+const updateHttpClientTab = (
+  tabs: Tab[],
+  tabId: string,
+  updates: Partial<Omit<HttpClientTab, 'id' | 'type'>>
+): Tab[] =>
+  tabs.map((tab) => {
+    if (tab.id === tabId && isHttpClientTab(tab)) {
       return { ...tab, ...updates }
     }
     return tab
@@ -900,14 +953,20 @@ export const useTabsStore = create<TabsState>()(
         },
 
         openHttpClientTab: (seed) => {
-          const { tabs, activeTabId } = get()
+          const { tabs, activeTabId, tabActivationOrder } = get()
           if (!seed) {
-            const existingBlankTab = tabs.find(
-              (tab) => isHttpClientTab(tab) && tab.seed === undefined
-            )
-            if (existingBlankTab) {
-              set({ activeTabId: existingBlankTab.id })
-              return existingBlankTab.id
+            const httpTabs = tabs.filter(isHttpClientTab)
+            const existingBlankTab = httpTabs.find((tab) => tab.seed === undefined)
+            // Drafts are persisted onto `seed`; still reuse a workspace tab from the menu.
+            const existing =
+              existingBlankTab ??
+              tabActivationOrder
+                .map((id) => httpTabs.find((tab) => tab.id === id))
+                .find((tab): tab is HttpClientTab => Boolean(tab)) ??
+              httpTabs[0]
+            if (existing) {
+              set({ activeTabId: existing.id })
+              return existing.id
             }
           }
 
@@ -929,6 +988,20 @@ export const useTabsStore = create<TabsState>()(
           }
 
           const newTab = createRestExportBuilderTab()
+          const pinnedCount = tabs.filter((t) => t.isPinned).length
+          const newTabs = [...tabs.slice(0, pinnedCount), newTab, ...tabs.slice(pinnedCount)]
+          set({ tabs: newTabs, activeTabId: newTab.id })
+        },
+
+        openEnvironmentsTab: () => {
+          const { tabs } = get()
+          const existingTab = tabs.find((t) => t.type === 'environments')
+          if (existingTab) {
+            set({ activeTabId: existingTab.id })
+            return
+          }
+
+          const newTab = createEnvironmentsTab()
           const pinnedCount = tabs.filter((t) => t.isPinned).length
           const newTabs = [...tabs.slice(0, pinnedCount), newTab, ...tabs.slice(pinnedCount)]
           set({ tabs: newTabs, activeTabId: newTab.id })
@@ -1285,6 +1358,14 @@ export const useTabsStore = create<TabsState>()(
           set({ tabs: updateSettingsTab(get().tabs, tabId, { scrollToSection: null }) })
         },
 
+        setEnvironmentsScope: (tabId, scope) => {
+          set({ tabs: updateEnvironmentsTab(get().tabs, tabId, { scope }) })
+        },
+
+        setHttpClientTabSeed: (tabId, seed) => {
+          set({ tabs: updateHttpClientTab(get().tabs, tabId, { seed }) })
+        },
+
         // Apply default view mode to all existing dataclass tabs
         applyDefaultViewModeToAllTabs: (viewMode) => {
           const { tabs } = get()
@@ -1539,4 +1620,14 @@ export const useIsRestExportBuilderTabActive = () => {
 export const useActiveRestExportBuilderTab = () => {
   const activeTab = useActiveTab()
   return activeTab && isRestExportBuilderTab(activeTab) ? activeTab : null
+}
+
+export const useIsEnvironmentsTabActive = () => {
+  const activeTab = useActiveTab()
+  return activeTab ? isEnvironmentsTab(activeTab) : false
+}
+
+export const useActiveEnvironmentsTab = () => {
+  const activeTab = useActiveTab()
+  return activeTab && isEnvironmentsTab(activeTab) ? activeTab : null
 }

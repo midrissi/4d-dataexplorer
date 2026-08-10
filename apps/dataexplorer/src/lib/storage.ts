@@ -1,4 +1,5 @@
 import type { AssistantMetadataSchema } from './assistant-metadata-schema'
+import type { Environment } from './env/types'
 import { eventBus } from './eventBus'
 
 /**
@@ -108,6 +109,10 @@ export type BaseSettings = {
   assistantMetadataSchema?: AssistantMetadataSchema
   /** Per-dataclass default field selection presets (keyed by dataclass name). */
   columnPresets?: Record<string, ColumnPreset>
+  /** Named environments for this database (Postman-style). */
+  environments?: Environment[]
+  /** Active environment id within `environments`, or null. */
+  activeEnvironmentId?: string | null
 }
 
 // =============================================================================
@@ -261,6 +266,81 @@ export function saveCurrentPrefs(partial: Partial<ProfilePrefs>): void {
   }
   data.profiles = { ...data.profiles, [currentId]: updated }
   saveProfilesStorage(data)
+}
+
+const PROFILE_ENVIRONMENTS_KEY = 'environments'
+const PROFILE_ACTIVE_ENV_KEY = 'activeEnvironmentId'
+
+/**
+ * Read named environments from the current profile's settings.
+ */
+export function getProfileEnvironmentsBlock(): {
+  environments: Environment[]
+  activeEnvironmentId: string | null
+} {
+  const data = getProfilesStorage()
+  const entry = data.profiles[data.current]
+  const settings = entry?.settings ?? {}
+  const environments = Array.isArray(settings[PROFILE_ENVIRONMENTS_KEY])
+    ? (settings[PROFILE_ENVIRONMENTS_KEY] as Environment[])
+    : []
+  const activeRaw = settings[PROFILE_ACTIVE_ENV_KEY]
+  const activeEnvironmentId =
+    typeof activeRaw === 'string' && environments.some((e) => e.id === activeRaw) ? activeRaw : null
+  return { environments, activeEnvironmentId }
+}
+
+/**
+ * Persist named environments on the current profile.
+ */
+export function saveProfileEnvironmentsBlock(block: {
+  environments: Environment[]
+  activeEnvironmentId: string | null
+}): void {
+  const data = getProfilesStorage()
+  const currentId = data.current
+  const entry = data.profiles[currentId]
+  if (!entry) return
+  const updated: ProfileEntry = {
+    ...entry,
+    settings: {
+      ...entry.settings,
+      [PROFILE_ENVIRONMENTS_KEY]: block.environments,
+      [PROFILE_ACTIVE_ENV_KEY]: block.activeEnvironmentId,
+    },
+  }
+  data.profiles = { ...data.profiles, [currentId]: updated }
+  saveProfilesStorage(data)
+}
+
+/**
+ * Read environments from the current base settings.
+ */
+export function getBaseEnvironmentsBlock(): {
+  environments: Environment[]
+  activeEnvironmentId: string | null
+} {
+  const settings = getBaseSettings()
+  const environments = settings.environments ?? []
+  const activeEnvironmentId =
+    typeof settings.activeEnvironmentId === 'string' &&
+    environments.some((e) => e.id === settings.activeEnvironmentId)
+      ? settings.activeEnvironmentId
+      : null
+  return { environments, activeEnvironmentId }
+}
+
+/**
+ * Persist environments on the current base.
+ */
+export function saveBaseEnvironmentsBlock(block: {
+  environments: Environment[]
+  activeEnvironmentId: string | null
+}): void {
+  saveBaseSettings({
+    environments: block.environments,
+    activeEnvironmentId: block.activeEnvironmentId,
+  })
 }
 
 // =============================================================================

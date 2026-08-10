@@ -9,11 +9,13 @@ import {
   Play,
   Send,
   Settings,
+  Variable,
 } from 'lucide-react'
 import type { ReactNode } from 'react'
 import {
   isAssistantMetadataTab,
   isDataclassTab,
+  isEnvironmentsTab,
   isGraphTab,
   isHomeTab,
   isHttpClientTab,
@@ -52,6 +54,7 @@ export function getTabDisplayName(tab: Tab, t: TFunction): string {
     return t('tabs.httpClient')
   }
   if (isRestExportBuilderTab(tab)) return t('tabs.restExport')
+  if (isEnvironmentsTab(tab)) return t('tabs.environments')
   if (isStaticTab(tab)) return t(STATIC_TAB_TITLE_KEYS[tab.staticId] ?? 'tabs.releaseNotes')
   if (isDataclassTab(tab)) return tab.dataclassName
   return t('tabs.home')
@@ -66,6 +69,7 @@ export function getTabIcon(tab: Tab): ReactNode {
   if (isMethodExecutorTab(tab)) return <Play className="h-4 w-4" />
   if (isHttpClientTab(tab)) return <Send className="h-4 w-4" />
   if (isRestExportBuilderTab(tab)) return <FileDown className="h-4 w-4" />
+  if (isEnvironmentsTab(tab)) return <Variable className="h-4 w-4" />
   if (isStaticTab(tab)) return <FileText className="h-4 w-4" />
   return <Database className="h-4 w-4" />
 }

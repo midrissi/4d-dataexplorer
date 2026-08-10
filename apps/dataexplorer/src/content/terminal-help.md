@@ -30,8 +30,32 @@ Type a command on its own line (starting with `.`):
 | `.classes` / `.ds` | List dataclass names |
 | `.about` | Short about line |
 | `.theme` | Tip: switch app theme in Settings |
+| `.env` | Show active environments; `.env <name>` switches |
+| `.envs` | List profile and database environments |
 
 Snippet names: letters, digits, `_`, `-` (e.g. `.save weekendCars`). Files appear as `weekendCars.js` in the terminal bar — open them to edit with JS highlighting and ORDA autocomplete (⌘/Ctrl+S to save).
+
+## `app.environment`
+
+```js
+app.environment.get("baseUrl")
+app.environment.set("token", "abc")
+app.environment.remove("token")
+app.environment.clear()
+app.environment.list()
+app.environment.use("Local")
+app.environment.getActive()
+app.environment.globals.get("apiKey")
+app.environment.globals.set("apiKey", "…")
+app.environment.profile.set("token", "abc")
+app.environment.base.set("baseUrl", "https://…")
+```
+
+`profile` / `base` read and write the **active** profile or database environment (`set` returns `false` if none is active). `globals` always writes the global layer.
+
+You can also embed `{{variable}}` in snippet source — values are substituted from the active environment map before the snippet runs.
+
+Postman-style **dynamic variables** work the same way and generate a fresh value each time, for example `{{$timestamp}}`, `{{$isoTimestamp}}`, `{{$guid}}`, `{{$randomInt}}`, `{{$randomEmail}}`.
 
 ## `ds` surface
 

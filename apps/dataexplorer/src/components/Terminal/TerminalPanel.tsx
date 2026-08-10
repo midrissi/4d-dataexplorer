@@ -393,21 +393,20 @@ export function TerminalPanel({ hideChrome = false }: { hideChrome?: boolean } =
         snippets: useTerminalSnippetsStore.getState().snippets.map((s) => s.name),
       }))
 
-      const isSuggestVisible = () =>
-        !!document.querySelector('.editor-widget.suggest-widget.visible')
-
-      editor.addCommand(monaco.KeyCode.Enter, () => {
-        if (isSuggestVisible()) {
-          editor.trigger('keyboard', 'acceptSelectedSuggestion', {})
-          return
-        }
-        // Code mode: Enter inserts a newline. REPL: Enter runs.
-        if (activeSnippetIdRef.current) {
-          editor.trigger('keyboard', 'type', { text: '\n' })
-          return
-        }
-        void runCode(editor.getValue())
-      })
+      // Bind only when suggest is closed (`!suggestWidgetVisible`). Unconditional
+      // addCommand steals Up/Down/Enter from Monaco's suggest widget.
+      editor.addCommand(
+        monaco.KeyCode.Enter,
+        () => {
+          // Code mode: Enter inserts a newline. REPL: Enter runs.
+          if (activeSnippetIdRef.current) {
+            editor.trigger('keyboard', 'type', { text: '\n' })
+            return
+          }
+          void runCode(editor.getValue())
+        },
+        '!suggestWidgetVisible'
+      )
 
       editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => {
         // Code mode: Shift+Enter runs. REPL: Shift+Enter inserts a newline.
@@ -428,39 +427,37 @@ export function TerminalPanel({ hideChrome = false }: { hideChrome?: boolean } =
         }
       })
 
-      // addCommand wins over suggest's own bindings, so when the widget is open
-      // we must forward Up/Down explicitly (precondition on addAction is not enough).
-      editor.addCommand(monaco.KeyCode.UpArrow, () => {
-        if (isSuggestVisible()) {
-          editor.trigger('keyboard', 'selectPrevSuggestion', {})
-          return
-        }
-        const model = editor.getModel()
-        const position = editor.getPosition()
-        if (!model || !position) return
-        if (position.lineNumber !== 1) {
-          editor.trigger('keyboard', 'cursorUp', {})
-          return
-        }
-        if (activeSnippetIdRef.current) return
-        showPreviousHistory()
-      })
+      editor.addCommand(
+        monaco.KeyCode.UpArrow,
+        () => {
+          const model = editor.getModel()
+          const position = editor.getPosition()
+          if (!model || !position) return
+          if (position.lineNumber !== 1) {
+            editor.trigger('keyboard', 'cursorUp', {})
+            return
+          }
+          if (activeSnippetIdRef.current) return
+          showPreviousHistory()
+        },
+        '!suggestWidgetVisible'
+      )
 
-      editor.addCommand(monaco.KeyCode.DownArrow, () => {
-        if (isSuggestVisible()) {
-          editor.trigger('keyboard', 'selectNextSuggestion', {})
-          return
-        }
-        const model = editor.getModel()
-        const position = editor.getPosition()
-        if (!model || !position) return
-        if (position.lineNumber !== model.getLineCount()) {
-          editor.trigger('keyboard', 'cursorDown', {})
-          return
-        }
-        if (activeSnippetIdRef.current) return
-        showNextHistory()
-      })
+      editor.addCommand(
+        monaco.KeyCode.DownArrow,
+        () => {
+          const model = editor.getModel()
+          const position = editor.getPosition()
+          if (!model || !position) return
+          if (position.lineNumber !== model.getLineCount()) {
+            editor.trigger('keyboard', 'cursorDown', {})
+            return
+          }
+          if (activeSnippetIdRef.current) return
+          showNextHistory()
+        },
+        '!suggestWidgetVisible'
+      )
 
       editor.focus()
 

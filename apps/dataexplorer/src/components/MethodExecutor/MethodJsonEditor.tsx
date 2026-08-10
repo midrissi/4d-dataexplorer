@@ -1,5 +1,6 @@
 import { CodeEditor } from '@4d/ui/code-editor'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { applyEnvTemplateDecorations, registerEnvTemplateCompletionProvider } from '~/lib/env'
 
 /**
  * Shared JSON CodeEditor (with toolbar) used by custom method args and the wrapper.
@@ -64,6 +65,17 @@ export function MethodJsonEditor({
         path={path}
         onBlur={flush}
         readOnly={readOnly}
+        onMount={(editor, monaco) => {
+          applyEnvTemplateDecorations(editor, monaco)
+          const completion = registerEnvTemplateCompletionProvider(monaco, 'json')
+          const sub = editor.onDidChangeModelContent(() => {
+            applyEnvTemplateDecorations(editor, monaco)
+          })
+          editor.onDidDispose(() => {
+            sub.dispose()
+            completion.dispose()
+          })
+        }}
       />
     </div>
   )
