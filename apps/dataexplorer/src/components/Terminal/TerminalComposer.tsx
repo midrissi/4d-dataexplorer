@@ -18,17 +18,20 @@ import { useTranslation } from '~/i18n'
 const LINE_PX = 18
 const PAD_Y = 4
 const MIN_LINES = 1
-const MAX_LINES = 12
-const SNIPPET_MIN_LINES = 4
-const SNIPPET_MIN_LINES_MOBILE = 6
+const MAX_LINES_REPL = 12
+const MAX_LINES_SNIPPET = 20
+const SNIPPET_MIN_LINES = 8
+const SNIPPET_MIN_LINES_MOBILE = 10
+/** Matches CodeEditor toolbar `min-h-6` when snippet tools are shown. */
+const SNIPPET_TOOLBAR_PX = 24
 
 function lineCountOf(draft: string): number {
   if (!draft) return 1
   return draft.split('\n').length
 }
 
-function heightForLines(lines: number): number {
-  const visible = Math.min(MAX_LINES, Math.max(MIN_LINES, lines))
+function heightForLines(lines: number, maxLines: number): number {
+  const visible = Math.min(maxLines, Math.max(MIN_LINES, lines))
   return visible * LINE_PX + PAD_Y * 2
 }
 
@@ -88,8 +91,9 @@ export function TerminalComposer({
   const canRun = !running && draft.trim().length > 0
   const lineCount = useMemo(() => lineCountOf(draft), [draft])
   const multiLine = isSnippet || lineCount > 1
+  const maxLines = isSnippet ? MAX_LINES_SNIPPET : MAX_LINES_REPL
   const minLines = isSnippet ? (mobile ? SNIPPET_MIN_LINES_MOBILE : SNIPPET_MIN_LINES) : MIN_LINES
-  const contentHeight = heightForLines(Math.max(minLines, lineCount))
+  const contentHeight = heightForLines(Math.max(minLines, lineCount), maxLines)
   const [extraHeight, setExtraHeight] = useState(0)
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: reset resize when editor session changes
@@ -97,12 +101,14 @@ export function TerminalComposer({
     setExtraHeight(0)
   }, [mode, fileName])
 
-  const inputHeight = Math.min(heightForLines(MAX_LINES), contentHeight + extraHeight)
+  const inputHeight = Math.min(heightForLines(maxLines, maxLines), contentHeight + extraHeight)
+  const showSnippetToolbar = isSnippet && Boolean(fileName)
+  const shellHeight = showSnippetToolbar ? inputHeight + SNIPPET_TOOLBAR_PX : inputHeight
 
   const beginResize = (clientY: number) => {
     const startY = clientY
     const startExtra = extraHeight
-    const maxExtra = heightForLines(MAX_LINES) - contentHeight
+    const maxExtra = heightForLines(maxLines, maxLines) - contentHeight
     const onMove = (y: number) => {
       const delta = (y - startY) * -1
       setExtraHeight(Math.min(maxExtra, Math.max(0, startExtra + delta)))
@@ -161,7 +167,7 @@ export function TerminalComposer({
       variant="default"
       className={cn(
         'shrink-0 touch-manipulation gap-1.5 shadow-sm transition-shadow',
-        mobile ? 'h-9 min-w-[5.5rem] px-3 text-sm' : 'h-7 px-2.5',
+        mobile ? 'h-9 min-w-22 px-3 text-sm' : 'h-7 px-2.5',
         canRun && 'shadow-primary/20'
       )}
       onClick={onRun}
@@ -180,6 +186,62 @@ export function TerminalComposer({
       ) : null}
     </Button>
   )
+
+  const snippetToolbarLeading = showSnippetToolbar ? (
+    <>
+      <FileCode2 className="h-3 w-3 shrink-0 text-primary/80" aria-hidden />
+      <span className="min-w-0 truncate font-mono text-[10px] text-foreground leading-none">
+        {fileName}
+        {dirty ? (
+          <span
+            className="ml-1 text-amber-600 dark:text-amber-400"
+            title={t('terminal.snippets.dirty')}
+          >
+            •
+          </span>
+        ) : null}
+      </span>
+    </>
+  ) : null
+
+  const snippetToolbarTrailing = showSnippetToolbar ? (
+    <>
+      <Button
+        size="xs"
+        variant={dirty ? 'secondary' : 'ghost'}
+        className={cn(
+          'touch-manipulation gap-1',
+          mobile ? 'h-7 px-2 text-[10px]' : 'h-5 px-1.5 text-[10px]'
+        )}
+        onClick={onSaveFile}
+        disabled={!dirty || !draft.trim()}
+      >
+        <Save className="h-3 w-3" aria-hidden />
+        {t('terminal.snippets.save')}
+      </Button>
+      <Button
+        size="xs"
+        variant="ghost"
+        className={cn(
+          'touch-manipulation text-destructive hover:text-destructive',
+          mobile ? 'h-7 w-7 p-0' : 'h-5 w-5 p-0'
+        )}
+        aria-label={t('terminal.snippets.delete')}
+        onClick={onDeleteFile}
+      >
+        <Trash2 className="h-3 w-3" />
+      </Button>
+      <Button
+        size="xs"
+        variant="ghost"
+        className={cn('touch-manipulation', mobile ? 'h-7 w-7 p-0' : 'h-5 w-5 p-0')}
+        aria-label={t('terminal.snippets.closeFile')}
+        onClick={onCloseFile}
+      >
+        <X className="h-3 w-3" />
+      </Button>
+    </>
+  ) : null
 
   return (
     <div className="shrink-0 overflow-visible border-border/80 border-t bg-linear-to-b from-muted/30 to-background pb-[max(0px,env(safe-area-inset-bottom,0px))]">
@@ -229,110 +291,53 @@ export function TerminalComposer({
 
       {mobile && !isSnippet ? historyNavigator : null}
 
-      {isSnippet && fileName ? (
-        <div
-          className={cn(
-            'flex items-center gap-1.5 border-border/50 border-t bg-muted/20',
-            mobile ? 'min-h-11 px-2 py-1.5' : 'px-2 py-1'
-          )}
-        >
-          <FileCode2
-            className={cn('shrink-0 text-primary/80', mobile ? 'h-4 w-4' : 'h-3.5 w-3.5')}
-            aria-hidden
-          />
-          <span
-            className={cn(
-              'min-w-0 truncate font-mono text-foreground',
-              mobile ? 'text-xs' : 'text-[11px]'
-            )}
-          >
-            {fileName}
-            {dirty ? (
-              <span
-                className="ml-1 text-amber-600 dark:text-amber-400"
-                title={t('terminal.snippets.dirty')}
-              >
-                •
-              </span>
-            ) : null}
-          </span>
-          <div className="ml-auto flex items-center gap-0.5">
-            <Button
-              size={mobile ? 'sm' : 'xs'}
-              variant={dirty ? 'secondary' : 'ghost'}
-              className={cn(
-                'touch-manipulation gap-1',
-                mobile ? 'h-9 px-2.5 text-xs' : 'h-6 px-1.5 text-[10px]'
-              )}
-              onClick={onSaveFile}
-              disabled={!dirty || !draft.trim()}
-            >
-              <Save className={mobile ? 'h-3.5 w-3.5' : 'h-3 w-3'} aria-hidden />
-              {t('terminal.snippets.save')}
-            </Button>
-            <Button
-              size={mobile ? 'sm' : 'xs'}
-              variant="ghost"
-              className={cn(
-                'touch-manipulation text-destructive hover:text-destructive',
-                mobile ? 'h-9 w-9 p-0' : 'h-6 w-6 p-0'
-              )}
-              aria-label={t('terminal.snippets.delete')}
-              onClick={onDeleteFile}
-            >
-              <Trash2 className={mobile ? 'h-4 w-4' : 'h-3 w-3'} />
-            </Button>
-            <Button
-              size={mobile ? 'sm' : 'xs'}
-              variant="ghost"
-              className={cn('touch-manipulation', mobile ? 'h-9 w-9 p-0' : 'h-6 w-6 p-0')}
-              aria-label={t('terminal.snippets.closeFile')}
-              onClick={onCloseFile}
-            >
-              <X className={mobile ? 'h-4 w-4' : 'h-3 w-3'} />
-            </Button>
-          </div>
-        </div>
-      ) : null}
-
       <div
-        style={{ height: inputHeight }}
+        style={{ height: shellHeight }}
         className={cn(
-          'relative flex border-border/50 border-t bg-background/40',
+          'relative flex overflow-hidden border-border/50 border-t bg-background/40',
           running && 'opacity-80'
         )}
       >
-        <div
-          className={cn(
-            'flex shrink-0 select-none items-center font-mono text-[12px]',
-            isSnippet
-              ? 'items-start py-1 pr-0.5 pl-1.5 text-sky-600 leading-[18px] dark:text-sky-400'
-              : multiLine
-                ? 'items-start py-1 pr-0.5 pl-1.5 text-emerald-600 leading-[18px] dark:text-emerald-400'
+        {!isSnippet ? (
+          <div
+            className={cn(
+              'flex shrink-0 select-none items-center font-mono text-[12px]',
+              multiLine
+                ? 'items-start py-1 pr-0.5 pl-1.5 text-emerald-600 leading-4.5 dark:text-emerald-400'
                 : 'pr-0.5 pl-1.5 text-emerald-600 dark:text-emerald-400'
-          )}
-          aria-hidden
-        >
-          {isSnippet ? '▸' : '>'}
-        </div>
-        <div className="min-w-0 flex-1">
+            )}
+            aria-hidden
+          >
+            {'>'}
+          </div>
+        ) : null}
+        <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <CodeEditor
             value={draft}
             onChange={(value) => onDraftChange(value ?? '')}
             language="javascript"
-            height="100%"
+            height={inputHeight}
             fontSize={mobile ? 16 : 14}
             lineHeight={LINE_PX}
             padding={{ top: PAD_Y, bottom: PAD_Y }}
             showLineNumbers={multiLine}
             wordBasedSuggestions="off"
-            toolbar={false}
+            toolbar={
+              showSnippetToolbar
+                ? {
+                    position: 'top',
+                    tools: ['format', 'copy', 'undo', 'redo', 'zoom-in', 'zoom-out', 'word-wrap'],
+                    leading: snippetToolbarLeading,
+                    trailing: snippetToolbarTrailing,
+                  }
+                : false
+            }
             path={editorPath}
             editorPrefs={editorPrefs}
             onEditorPrefsChange={onEditorPrefsChange}
             onMount={onMount}
             className={cn(
-              'h-full [&_.monaco-editor]:outline-none',
+              'min-h-0 flex-1 rounded-none border-0 [&_.monaco-editor]:outline-none',
               '[&_.monaco-editor_.overflow-guard]:pl-0!',
               !multiLine &&
                 '[&_.monaco-editor_.margin-view-overlays]:w-0! [&_.monaco-editor_.margin]:w-0!'

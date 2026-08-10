@@ -403,6 +403,10 @@ export interface ToolbarConfig {
   position?: 'top' | 'bottom'
   /** Subset of tools to display. Defaults to all tools. */
   tools?: ToolId[]
+  /** Optional content pinned to the start of the toolbar (e.g. file name). */
+  leading?: ReactNode
+  /** Optional content pinned to the end of the toolbar (before position toggle). */
+  trailing?: ReactNode
 }
 
 export interface CodeEditorProps {
@@ -505,6 +509,9 @@ const TOOL_GROUPS: ToolId[][] = [
   ['word-wrap', 'minimap'],
 ]
 
+/** Default zoom label when `fontSizeDelta` is `DEFAULT_EDITOR_PREFS.fontSizeDelta`. */
+const DEFAULT_ZOOM_PERCENT = 83
+
 interface ToolDef {
   id: ToolId
   label: string
@@ -521,10 +528,19 @@ interface ToolDef {
 function EditorToolbar({
   tools,
   position,
+  leading,
+  trailing,
+  zoomPercent,
+  onResetZoom,
   getToolDefs,
 }: {
   tools: ToolId[]
   position: 'top' | 'bottom'
+  leading?: ReactNode
+  trailing?: ReactNode
+  /** Current zoom vs reset baseline, e.g. 100. */
+  zoomPercent?: number
+  onResetZoom?: () => void
   getToolDefs: () => ToolDef[]
 }) {
   const defs = getToolDefs()
@@ -543,7 +559,11 @@ function EditorToolbar({
     ? defs.find((d) => d.id === 'toolbar-position')
     : null
 
-  if (!groups.length && !positionTool) return null
+  if (!groups.length && !positionTool && !leading && !trailing) return null
+
+  const showZoomLevel =
+    zoomPercent != null &&
+    (toolSet.has('zoom-in') || toolSet.has('zoom-out') || toolSet.has('zoom-reset'))
 
   const renderTool = (tool: ToolDef) => (
     <Tooltip key={tool.id}>
@@ -568,29 +588,68 @@ function EditorToolbar({
     </Tooltip>
   )
 
+  const zoomLevelControl =
+    showZoomLevel && zoomPercent != null ? (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            className={cn(
+              'min-w-8 shrink-0 rounded-sm px-1 py-0.5 font-mono text-[10px] tabular-nums',
+              'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+              'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring',
+              zoomPercent === DEFAULT_ZOOM_PERCENT && 'pointer-events-none opacity-80'
+            )}
+            aria-label={`${zoomPercent}%`}
+            disabled={zoomPercent === DEFAULT_ZOOM_PERCENT}
+            onClick={onResetZoom}
+          >
+            {zoomPercent}%
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side={position === 'top' ? 'bottom' : 'top'} className="text-xs">
+          {zoomPercent === DEFAULT_ZOOM_PERCENT
+            ? `${zoomPercent}%`
+            : (defs.find((d) => d.id === 'zoom-reset')?.label ?? 'Reset zoom')}
+        </TooltipContent>
+      </Tooltip>
+    ) : null
+
   return (
     <TooltipProvider delayDuration={300}>
       <div
         className={cn(
-          'flex min-h-7 shrink-0 items-center gap-1 px-2.5 py-1',
+          'flex min-h-6 shrink-0 items-center gap-1 px-1.5 py-0.5',
           position === 'top' ? 'border-border border-b' : 'border-border border-t',
           'bg-muted/30'
         )}
       >
-        {groups.map((group, gi) => (
-          <div key={group.map((t) => t.id).join()} className="flex items-center gap-0.5">
-            {gi > 0 ? (
-              <div className="mr-1 ml-0.5 h-3.5 w-px shrink-0 bg-border" aria-hidden />
-            ) : null}
-            {group.map(renderTool)}
-          </div>
-        ))}
-        {positionTool && (
-          <>
-            <div className="flex-1" />
-            {renderTool(positionTool)}
-          </>
-        )}
+        {leading ? <div className="flex min-w-0 shrink items-center gap-1.5">{leading}</div> : null}
+        {groups.map((group, gi) => {
+          const isZoomGroup = group.some(
+            (t) => t.id === 'zoom-in' || t.id === 'zoom-out' || t.id === 'zoom-reset'
+          )
+          const beforeLevel =
+            isZoomGroup && zoomLevelControl
+              ? group.filter((t) => t.id !== 'zoom-reset')
+              : group
+          const afterLevel =
+            isZoomGroup && zoomLevelControl ? group.filter((t) => t.id === 'zoom-reset') : []
+
+          return (
+            <div key={group.map((t) => t.id).join()} className="flex items-center gap-0.5">
+              {gi > 0 || leading ? (
+                <div className="mr-1 ml-0.5 h-3.5 w-px shrink-0 bg-border" aria-hidden />
+              ) : null}
+              {beforeLevel.map(renderTool)}
+              {isZoomGroup ? zoomLevelControl : null}
+              {afterLevel.map(renderTool)}
+            </div>
+          )
+        })}
+        {trailing || positionTool ? <div className="min-w-1 flex-1" /> : null}
+        {trailing ? <div className="flex shrink-0 items-center gap-0.5">{trailing}</div> : null}
+        {positionTool ? renderTool(positionTool) : null}
       </div>
     </TooltipProvider>
   )
@@ -606,6 +665,13 @@ const FONT_STEP = 2
 /** Floor for flex (`height="100%"`) editors so the Monaco pane never collapses under the toolbar. */
 const MIN_FLEX_EDITOR_HEIGHT_PX = 160
 const MIN_FLEX_EDITOR_BODY_PX = 120
+
+/** Map fontSizeDelta → toolbar zoom % (delta 0 = 100%, default delta = 83%). */
+function zoomPercentFromDelta(delta: number): number {
+  const refDelta = DEFAULT_EDITOR_PREFS.fontSizeDelta
+  if (refDelta === 0) return 100 + delta * Math.round(100 / FONT_STEP)
+  return Math.round(100 + (delta * (DEFAULT_ZOOM_PERCENT - 100)) / refDelta)
+}
 
 export function CodeEditor({
   value,
@@ -1082,15 +1148,29 @@ export function CodeEditor({
   )
 
   const needsFlexHeight = height === '100%' || height === 'inherit'
+  // Compact editors (no toolbar) must honor the caller's pixel height — e.g. the
+  // terminal REPL is intentionally 1–12 lines. Only floor flex / toolbar layouts.
   const resolvedHeight =
     typeof height === 'number'
-      ? Math.max(height, showToolbar ? MIN_FLEX_EDITOR_BODY_PX : 80)
+      ? showToolbar
+        ? Math.max(height, MIN_FLEX_EDITOR_BODY_PX)
+        : height
       : height
 
   /* ---- render ---- */
 
+  const zoomPercent = zoomPercentFromDelta(prefs.fontSizeDelta)
+
   const toolbar = showToolbar ? (
-    <EditorToolbar tools={toolbarTools} position={toolbarPosition} getToolDefs={getToolDefs} />
+    <EditorToolbar
+      tools={toolbarTools}
+      position={toolbarPosition}
+      leading={toolbarConfig?.leading}
+      trailing={toolbarConfig?.trailing}
+      zoomPercent={zoomPercent}
+      onResetZoom={() => updatePrefs({ fontSizeDelta: DEFAULT_EDITOR_PREFS.fontSizeDelta })}
+      getToolDefs={getToolDefs}
+    />
   ) : null
 
   return (
@@ -1109,7 +1189,7 @@ export function CodeEditor({
         needsFlexHeight
           ? { minHeight: MIN_FLEX_EDITOR_HEIGHT_PX }
           : typeof resolvedHeight === 'number'
-            ? { minHeight: resolvedHeight + (showToolbar ? 28 : 0) }
+            ? { minHeight: resolvedHeight + (showToolbar ? 24 : 0) }
             : undefined
       }
     >

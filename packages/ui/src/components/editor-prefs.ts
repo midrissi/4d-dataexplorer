@@ -11,6 +11,7 @@ export interface EditorPrefs {
 }
 
 export const DEFAULT_EDITOR_PREFS: EditorPrefs = {
+  /** ~83% zoom vs unscaled (`fontSize` prop); see CodeEditor zoomPercentFromDelta. */
   fontSizeDelta: -2,
   wordWrap: false,
   minimap: false,
