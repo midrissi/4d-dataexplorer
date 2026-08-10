@@ -16,6 +16,8 @@ import {
 import type * as Monaco from 'monaco-editor'
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { cn } from '../lib/utils'
+import { installMonacoContextMenuPasteFix } from '../monaco-context-menu-paste'
+import { ensureMonacoLoaderConfigured } from '../monaco-loader'
 import { Button } from './button'
 import {
   type CodeEditorLabels,
@@ -24,6 +26,8 @@ import {
   type EditorPrefs,
 } from './editor-prefs'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './tooltip'
+
+ensureMonacoLoaderConfigured()
 
 export type { CodeEditorLabels, EditorPrefs } from './editor-prefs'
 export { DEFAULT_EDITOR_LABELS, DEFAULT_EDITOR_PREFS } from './editor-prefs'
@@ -1107,6 +1111,9 @@ export function CodeEditor({
         bottom: paddingProp?.bottom ?? 8,
       },
       readOnly,
+      // Monaco 0.55 defaults EditContext on; keep the textarea input path so
+      // clipboard paste (incl. context menu) works in browsers / Tauri webviews.
+      editContext: false,
       quickSuggestions: { other: true, comments: false, strings: true },
       quickSuggestionsDelay: 100,
       suggestOnTriggerCharacters: true,
@@ -1240,6 +1247,7 @@ export function CodeEditor({
             if (onBlur) editor.onDidBlurEditorText(onBlur)
             syncAnnotations(editor, monaco, annotationsRef.current)
             registerSchemaProvider(schemaRef.current)
+            installMonacoContextMenuPasteFix(editor)
             // Alt+Space triggers the autocomplete/suggest widget (in addition
             // to Monaco's default Ctrl/Cmd+Space, which some OSes intercept).
             editor.addCommand(monaco.KeyMod.Alt | monaco.KeyCode.Space, () => {

@@ -203,6 +203,8 @@ export const fr = {
     clear: 'Effacer la console',
     collapseAll: 'Tout réduire',
     expandAll: 'Tout développer',
+    expandAllTooLarge: 'Trop volumineux pour tout développer',
+    expandSome: 'Partiellement développé',
     filter: 'Filtrer les journaux',
     filterAll: 'Tous les journaux',
     filterLog: 'Journaux',

@@ -1,4 +1,4 @@
-import { Button, cn } from '@4d/ui'
+import { cn } from '@4d/ui'
 import {
   Braces,
   Brackets,
@@ -12,13 +12,16 @@ import {
   FunctionSquare,
   Hash,
   Link2,
+  Minus,
   Quote,
   ToggleLeft,
   TriangleAlert,
 } from 'lucide-react'
-import { lazy, type ReactNode, Suspense, useState } from 'react'
+import { lazy, type ReactNode, Suspense, useMemo, useState } from 'react'
 import { isDecodedBinaryObject } from '~/components/DecodedBinary/types'
+import { TriStateIconButton } from '~/components/TriStateIconButton'
 import { useTranslation } from '~/i18n'
+import { isObjectTreeTooLarge } from '~/lib/object-tree-size'
 import { isPrivateBinaryObject, PRIVATE_BINARY_OBJECT_KEY } from '~/lib/private-binary-object'
 
 const BinaryObjectViewer = lazy(() =>
@@ -385,6 +388,8 @@ export function ObjectTree({
   childAncestors.add(value)
   const summary = objectSummary(value)
   const kind = kindOf(value)
+  // Expand-all must not recurse through huge subtrees (UI freeze).
+  const childDefaultOpen = defaultOpen && !isObjectTreeTooLarge(value)
 
   return (
     <div className={cn(depth > 0 && 'ml-2 border-border/40 border-l pl-1.5')}>
@@ -420,7 +425,7 @@ export function ObjectTree({
                 label={key}
                 depth={depth + 1}
                 ancestors={childAncestors}
-                defaultOpen={defaultOpen}
+                defaultOpen={childDefaultOpen}
               />
             ))
           ) : (
@@ -452,36 +457,31 @@ export function JsonTreePreview({
   const { t } = useTranslation()
   const [expanded, setExpanded] = useState(false)
   const [epoch, setEpoch] = useState(0)
+  const tooLarge = useMemo(() => isObjectTreeTooLarge(value), [value])
 
   return (
     <div className={cn('flex h-full min-h-0 flex-col overflow-hidden bg-muted/10', className)}>
       <div className="flex shrink-0 items-center gap-0.5 border-border/50 border-b px-1.5 py-0.5">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-5 gap-1 px-1.5 text-[10px] text-muted-foreground"
-          onClick={() => {
-            setExpanded(true)
+        <TriStateIconButton
+          appearance="labeled"
+          state={expanded}
+          blockExpand={tooLarge}
+          expandBlockedLabel={t('console.expandAllTooLarge')}
+          icons={{
+            false: ChevronsUpDown,
+            indeterminate: Minus,
+            true: ChevronsDownUp,
+          }}
+          labels={{
+            false: t('console.expandAll'),
+            indeterminate: t('console.expandSome'),
+            true: t('console.collapseAll'),
+          }}
+          onToggle={(expandAll) => {
+            setExpanded(expandAll)
             setEpoch((n) => n + 1)
           }}
-        >
-          <ChevronsUpDown className="h-3 w-3" />
-          {t('console.expandAll')}
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-5 gap-1 px-1.5 text-[10px] text-muted-foreground"
-          onClick={() => {
-            setExpanded(false)
-            setEpoch((n) => n + 1)
-          }}
-        >
-          <ChevronsDownUp className="h-3 w-3" />
-          {t('console.collapseAll')}
-        </Button>
+        />
       </div>
       <div
         className={cn('min-h-0 flex-1 overflow-auto px-2 py-1 font-mono text-xs', contentClassName)}

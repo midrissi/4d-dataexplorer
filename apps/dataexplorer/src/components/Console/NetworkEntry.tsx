@@ -1,6 +1,13 @@
 import { Button, cn, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@4d/ui'
-import { ChevronRight, ChevronsDownUp, ChevronsUpDown, Send } from 'lucide-react'
-import { type MouseEvent as ReactMouseEvent, useLayoutEffect, useRef, useState } from 'react'
+import { ChevronRight, ChevronsDownUp, ChevronsUpDown, Minus, Send } from 'lucide-react'
+import {
+  type MouseEvent as ReactMouseEvent,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
+import { TriStateIconButton } from '~/components/TriStateIconButton'
 import { useTranslation } from '~/i18n'
 import {
   formatByteSize,
@@ -10,6 +17,7 @@ import {
   splitNetworkUrl,
 } from '~/lib/console-format'
 import { mapNetworkDetailsToSeed } from '~/lib/network-to-http-seed'
+import { isObjectTreeTooLarge } from '~/lib/object-tree-size'
 import { parseDecodedQueryParams } from '~/lib/parse-decoded-query-params'
 import { isMobileShell } from '~/lib/platform'
 import type { NetworkDetails } from '~/store/console'
@@ -17,6 +25,19 @@ import { useSettingsStore } from '~/store/settings'
 import { useTabsStore } from '~/store/tabs'
 import { ConsoleNetworkImageBody } from './ConsoleNetworkImageBody'
 import { ObjectTree } from './ObjectTree'
+
+function isNetworkExpandAllBlocked(
+  details: NetworkDetails,
+  queryParams: Record<string, string | number | boolean | null | unknown> | null
+): boolean {
+  const values: unknown[] = [details.requestHeaders]
+  if (queryParams) values.push(queryParams)
+  if (details.requestBody !== undefined) values.push(details.requestBody)
+  if (details.responseHeaders !== undefined) values.push(details.responseHeaders)
+  if (details.responseBody !== undefined) values.push(details.responseBody)
+  if (details.error !== undefined) values.push(details.error)
+  return values.some((value) => isObjectTreeTooLarge(value))
+}
 
 export function NetworkEntry({
   details,
@@ -32,10 +53,16 @@ export function NetworkEntry({
   const openHttpClientTab = useTabsStore((state) => state.openHttpClientTab)
   const setConsoleOpen = useSettingsStore((state) => state.setConsoleOpen)
   const [sectionsEpoch, setSectionsEpoch] = useState(0)
-  const [sectionsExpanded, setSectionsExpanded] = useState(open)
   const rootRef = useRef<HTMLDivElement>(null)
   const failed = isFailedNetwork(details)
   const queryParams = open ? parseDecodedQueryParams(details.url) : null
+  const expandAllBlocked = useMemo(
+    () => isNetworkExpandAllBlocked(details, queryParams),
+    [details, queryParams]
+  )
+  const [sectionsExpanded, setSectionsExpanded] = useState(
+    () => open && !isNetworkExpandAllBlocked(details, parseDecodedQueryParams(details.url))
+  )
   const { origin, pathWithQuery } = splitNetworkUrl(details.url)
   const hostLabel = origin ? origin.replace(/^https?:\/\//, '') : ''
 
@@ -69,6 +96,11 @@ export function NetworkEntry({
   const collapseAllSections = () => {
     setSectionsExpanded(false)
     setSectionsEpoch((epoch) => epoch + 1)
+  }
+
+  const toggleAllSections = (expandAll: boolean) => {
+    if (expandAll) expandAllSections()
+    else collapseAllSections()
   }
 
   const openInHttpClient = (event: ReactMouseEvent) => {
@@ -249,32 +281,24 @@ export function NetworkEntry({
           )}
         >
           <div className="mb-0.5 flex items-center gap-0.5">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className={cn(
-                'gap-1 text-[10px] text-muted-foreground',
-                mobile ? 'h-8 px-2' : 'h-5 px-1.5'
-              )}
-              onClick={expandAllSections}
-            >
-              <ChevronsUpDown className="h-3 w-3" />
-              {t('console.expandAll')}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className={cn(
-                'gap-1 text-[10px] text-muted-foreground',
-                mobile ? 'h-8 px-2' : 'h-5 px-1.5'
-              )}
-              onClick={collapseAllSections}
-            >
-              <ChevronsDownUp className="h-3 w-3" />
-              {t('console.collapseAll')}
-            </Button>
+            <TriStateIconButton
+              appearance="labeled"
+              state={sectionsExpanded}
+              blockExpand={expandAllBlocked}
+              expandBlockedLabel={t('console.expandAllTooLarge')}
+              icons={{
+                false: ChevronsUpDown,
+                indeterminate: Minus,
+                true: ChevronsDownUp,
+              }}
+              labels={{
+                false: t('console.expandAll'),
+                indeterminate: t('console.expandSome'),
+                true: t('console.collapseAll'),
+              }}
+              className={mobile ? 'h-8 px-2' : undefined}
+              onToggle={toggleAllSections}
+            />
           </div>
           {queryParams ? (
             <ObjectTree

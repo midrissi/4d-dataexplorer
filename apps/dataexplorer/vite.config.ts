@@ -65,9 +65,9 @@ export default defineConfig({
       { find: '~', replacement: path.resolve(__dirname, './src') },
     ],
   },
-  // Patched package — do not serve a stale prebundle that ignores
-  // patches/@monaco-editor%2Freact@4.7.0.patch (getModel null race).
-  // WASM package uses top-level await + import.meta.url for the .wasm asset.
+  // Patched packages — do not serve a stale prebundle that ignores
+  // patches/@monaco-editor%2Freact@4.7.0.patch (getModel null race) or
+  // patches/monaco-editor@0.55.1.patch (context-menu paste / #5079).
   // Pre-bundle monaco-editor so opening Terminal does not trigger a mid-session
   // optimizeDeps reload (can OOM / Aw-Snap the tab).
   optimizeDeps: {

@@ -1,0 +1,95 @@
+diff --git a/esm/vs/editor/contrib/clipboard/browser/clipboard.js b/esm/vs/editor/contrib/clipboard/browser/clipboard.js
+index 1a8db88ee15a4c23c648f22bb6ae45af3a1f096d..9475ee608914eebfd80f99f572dea5115df68b70 100644
+--- a/esm/vs/editor/contrib/clipboard/browser/clipboard.js
++++ b/esm/vs/editor/contrib/clipboard/browser/clipboard.js
+@@ -1,14 +1,11 @@
+ import { isFirefox } from '../../../../base/browser/browser.js';
+ import { getActiveWindow, getActiveDocument } from '../../../../base/browser/dom.js';
+ import { isNative, isWeb } from '../../../../base/common/platform.js';
+-import { StopWatch } from '../../../../base/common/stopwatch.js';
+ import { localize, localize2 } from '../../../../nls.js';
+ import { MenuId, MenuRegistry } from '../../../../platform/actions/common/actions.js';
+ import { IClipboardService } from '../../../../platform/clipboard/common/clipboardService.js';
+ import { ContextKeyExpr } from '../../../../platform/contextkey/common/contextkey.js';
+ import { ILogService } from '../../../../platform/log/common/log.js';
+-import { IProductService } from '../../../../platform/product/common/productService.js';
+-import { ITelemetryService } from '../../../../platform/telemetry/common/telemetry.js';
+ import { InMemoryClipboardMetadataManager, CopyOptions } from '../../../browser/controller/editContext/clipboardUtils.js';
+ import { NativeEditContextRegistry } from '../../../browser/controller/editContext/native/nativeEditContextRegistry.js';
+ import { MultiCommand, registerEditorAction, EditorAction } from '../../../browser/editorExtensions.js';
+@@ -234,11 +231,11 @@ if (PasteAction) {
+         logService.trace('registerExecCommandImpl (addImplementation code-editor for : paste)');
+         const codeEditorService = accessor.get(ICodeEditorService);
+         const clipboardService = accessor.get(IClipboardService);
+-        const telemetryService = accessor.get(ITelemetryService);
+-        const productService = accessor.get(IProductService);
+-        // Only if editor text focus (i.e. not if editor has widget focus).
+-        const focusedEditor = codeEditorService.getFocusedCodeEditor();
+-        if (focusedEditor && focusedEditor.hasModel() && focusedEditor.hasTextFocus()) {
++        // Prefer focused editor; when the context menu steals focus, fall back to
++        // the active editor so Paste still works (monaco-editor#5079 / standalone).
++        const focusedEditor =
++            codeEditorService.getFocusedCodeEditor() ?? codeEditorService.getActiveCodeEditor();
++        if (focusedEditor && focusedEditor.hasModel()) {
+             // execCommand(paste) does not work with edit context
+             const editContextEnabled = focusedEditor.getOption(170 /* EditorOption.effectiveEditContext */);
+             if (editContextEnabled) {
+@@ -247,17 +244,12 @@ if (PasteAction) {
+                     nativeEditContext.onWillPaste();
+                 }
+             }
+-            const sw = StopWatch.create(true);
+             logService.trace('registerExecCommandImpl (before triggerPaste)');
+             const triggerPaste = clipboardService.triggerPaste(getActiveWindow().vscodeWindowId);
+             if (triggerPaste) {
+                 logService.trace('registerExecCommandImpl (triggerPaste defined)');
+                 return triggerPaste.then(async () => {
+                     logService.trace('registerExecCommandImpl (after triggerPaste)');
+-                    if (productService.quality !== 'stable') {
+-                        const duration = sw.elapsed();
+-                        telemetryService.publicLog2('editorAsyncPaste', { duration });
+-                    }
+                     return CopyPasteController.get(focusedEditor)?.finishedPaste() ?? Promise.resolve();
+                 });
+             }
+@@ -266,28 +258,19 @@ if (PasteAction) {
+             }
+             if (isWeb) {
+                 logService.trace('registerExecCommandImpl (Paste handling on web)');
+-                // Use the clipboard service if document.execCommand('paste') was not successful
+-                return (async () => {
+-                    const clipboardText = await clipboardService.readText();
+-                    if (clipboardText !== '') {
+-                        const metadata = InMemoryClipboardMetadataManager.INSTANCE.get(clipboardText);
+-                        let pasteOnNewLine = false;
+-                        let multicursorText = null;
+-                        let mode = null;
+-                        if (metadata) {
+-                            pasteOnNewLine = (focusedEditor.getOption(45 /* EditorOption.emptySelectionClipboard */) && !!metadata.isFromEmptySelection);
+-                            multicursorText = (typeof metadata.multicursorText !== 'undefined' ? metadata.multicursorText : null);
+-                            mode = metadata.mode;
+-                        }
+-                        logService.trace('registerExecCommandImpl (clipboardText.length : ', clipboardText.length, ' id : ', metadata?.id, ')');
+-                        focusedEditor.trigger('keyboard', "paste" /* Handler.Paste */, {
+-                            text: clipboardText,
+-                            pasteOnNewLine,
+-                            multicursorText,
+-                            mode
+-                        });
++                // Prefer execCommand into the editor textarea (editContext off in
++                // our app). Avoid navigator.clipboard.readText() — on macOS it
++                // shows a floating system "Paste" confirmation over the menu.
++                focusedEditor.focus();
++                try {
++                    if (focusedEditor.getContainerDomNode().ownerDocument.execCommand('paste')) {
++                        return CopyPasteController.get(focusedEditor)?.finishedPaste() ?? true;
+                     }
+-                })();
++                }
++                catch (_err) {
++                    // fall through
++                }
++                return true;
+             }
+             return true;
+         }

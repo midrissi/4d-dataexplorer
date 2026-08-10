@@ -11,7 +11,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@4d/ui'
-import { ChevronsDownUp, ChevronsUpDown, Trash2, X } from 'lucide-react'
+import { ChevronsDownUp, Trash2, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from '~/i18n'
 import { isMobileShell } from '~/lib/platform'
@@ -39,19 +39,13 @@ export function ConsolePanel({
   const scrollRef = useRef<HTMLDivElement>(null)
   const stickToBottomRef = useRef(true)
   const [viewEpoch, setViewEpoch] = useState(0)
-  const [entriesExpanded, setEntriesExpanded] = useState(false)
 
   const filteredEntries =
     filter === 'all' ? entries : entries.filter((entry) => entry.level === filter)
   const lastEntryId = filteredEntries[filteredEntries.length - 1]?.id
+  const hasEntries = filteredEntries.length > 0
 
   const collapseAll = () => {
-    setEntriesExpanded(false)
-    setViewEpoch((epoch) => epoch + 1)
-  }
-
-  const expandAll = () => {
-    setEntriesExpanded(true)
     setViewEpoch((epoch) => epoch + 1)
   }
 
@@ -121,27 +115,8 @@ export function ConsolePanel({
                   variant="ghost"
                   size="icon"
                   className={mobile ? 'h-9 w-9' : 'h-6 w-6'}
-                  onClick={expandAll}
-                  disabled={filteredEntries.length === 0}
-                  aria-label={t('console.expandAll')}
-                >
-                  <ChevronsUpDown className="h-3.5 w-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top">{t('console.expandAll')}</TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className={mobile ? 'h-9 w-9' : 'h-6 w-6'}
                   onClick={collapseAll}
-                  disabled={filteredEntries.length === 0}
+                  disabled={!hasEntries}
                   aria-label={t('console.collapseAll')}
                 >
                   <ChevronsDownUp className="h-3.5 w-3.5" />
@@ -205,11 +180,7 @@ export function ConsolePanel({
       >
         {filteredEntries.length > 0 ? (
           filteredEntries.map((entry) => (
-            <LogEntry
-              key={`${entry.id}:${viewEpoch}`}
-              entry={entry}
-              defaultExpanded={entriesExpanded}
-            />
+            <LogEntry key={`${entry.id}:${viewEpoch}`} entry={entry} />
           ))
         ) : (
           <ConsoleEmptyState

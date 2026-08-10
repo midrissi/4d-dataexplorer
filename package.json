@@ -63,6 +63,7 @@
     "@types/react-dom": "19.2.3"
   },
   "patchedDependencies": {
-    "@monaco-editor/react@4.7.0": "patches/@monaco-editor%2Freact@4.7.0.patch"
+    "@monaco-editor/react@4.7.0": "patches/@monaco-editor%2Freact@4.7.0.patch",
+    "monaco-editor@0.55.1": "patches/monaco-editor@0.55.1.patch"
   }
 }

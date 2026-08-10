@@ -61,6 +61,7 @@ export default defineConfig({
   },
   clearScreen: false,
   optimizeDeps: {
+    include: ['monaco-editor'],
     exclude: ['@monaco-editor/react', '@4d/base64-decoder'],
   },
   assetsInclude: ['**/*.wasm'],

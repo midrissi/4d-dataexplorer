@@ -60,10 +60,12 @@ export default defineConfig({
   },
   // Vite options tailored for Tauri development
   clearScreen: false,
-  // Patched package — do not serve a stale prebundle that ignores
-  // patches/@monaco-editor%2Freact@4.7.0.patch (getModel null race).
+  // Patched packages — do not serve a stale prebundle that ignores
+  // patches/@monaco-editor%2Freact@4.7.0.patch (getModel null race) or
+  // patches/monaco-editor@0.55.1.patch (context-menu paste / #5079).
   // WASM package uses top-level await + import.meta.url for the .wasm asset.
   optimizeDeps: {
+    include: ['monaco-editor'],
     exclude: ['@monaco-editor/react', '@4d/base64-decoder'],
   },
   assetsInclude: ['**/*.wasm'],

@@ -198,6 +198,8 @@ export const en = {
     clear: 'Clear console',
     collapseAll: 'Collapse all',
     expandAll: 'Expand all',
+    expandAllTooLarge: 'Too large to expand',
+    expandSome: 'Some expanded',
     filter: 'Filter logs',
     filterAll: 'All logs',
     filterLog: 'Logs',

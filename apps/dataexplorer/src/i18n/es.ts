@@ -203,6 +203,8 @@ export const es = {
     clear: 'Limpiar consola',
     collapseAll: 'Contraer todo',
     expandAll: 'Expandir todo',
+    expandAllTooLarge: 'Demasiado grande para expandir',
+    expandSome: 'Parcialmente expandido',
     filter: 'Filtrar registros',
     filterAll: 'Todos los registros',
     filterLog: 'Registros',
