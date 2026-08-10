@@ -275,6 +275,130 @@ function buildDocsCaptureJobs(selection: DocScreenshotSelection): DocScreenshotJ
     })
   }
 
+  const envPages = [
+    '40-environments-editor',
+    '41-environments-profile',
+    '42-environments-switcher',
+  ] as const
+  if (selection.hasAny(envPages)) {
+    jobs.push({
+      id: 'environments',
+      label: 'Environment variables',
+      async capture(ctx) {
+        const { app, page } = ctx
+        await bootstrapAuthenticatedJob(ctx, { openFirstDataclass: false })
+        logDocScreenshotStep('🧩', 'Environment editor / switcher')
+        await page.evaluate(
+          ({ globals, profileEnv }) => {
+            localStorage.setItem(
+              'dataexplorer-env-globals-v1',
+              JSON.stringify({ state: { globals }, version: 0 })
+            )
+            const profilesKey = 'dataexplorer:profiles'
+            const raw = localStorage.getItem(profilesKey)
+            const profilesData = raw
+              ? (JSON.parse(raw) as {
+                  current?: string
+                  profiles?: Record<string, { name?: string; settings?: Record<string, unknown> }>
+                })
+              : {
+                  current: 'default',
+                  profiles: { default: { name: 'Default', settings: {} } },
+                }
+            const currentId = profilesData.current ?? 'default'
+            profilesData.profiles ??= {}
+            profilesData.profiles[currentId] ??= { name: 'Default', settings: {} }
+            const settings = profilesData.profiles[currentId].settings ?? {}
+            settings.environments = [profileEnv]
+            settings.activeEnvironmentId = profileEnv.id
+            profilesData.profiles[currentId].settings = settings
+            localStorage.setItem(profilesKey, JSON.stringify(profilesData))
+          },
+          {
+            globals: [
+              {
+                id: 'var-doc-global-1',
+                key: 'apiKey',
+                value: 'demo-key-123',
+                initialValue: 'demo-key-123',
+                type: 'secret',
+                enabled: true,
+              },
+              {
+                id: 'var-doc-global-2',
+                key: 'tenant',
+                value: 'acme',
+                initialValue: 'acme',
+                type: 'default',
+                enabled: true,
+              },
+            ],
+            profileEnv: {
+              id: 'env-doc-profile-1',
+              name: 'Local',
+              color: '#f472b6',
+              variables: [
+                {
+                  id: 'var-doc-profile-1',
+                  key: 'baseUrl',
+                  value: 'http://localhost:8080',
+                  initialValue: 'http://localhost:8080',
+                  type: 'default',
+                  enabled: true,
+                },
+                {
+                  id: 'var-doc-profile-2',
+                  key: 'token',
+                  value: 'local-token',
+                  initialValue: 'local-token',
+                  type: 'secret',
+                  enabled: true,
+                },
+              ],
+            },
+          }
+        )
+        await page.reload({ waitUntil: 'domcontentloaded' })
+        await bootstrapAuthenticatedJob(ctx, { openFirstDataclass: false })
+
+        if (
+          selection.isSelected('40-environments-editor') ||
+          selection.isSelected('41-environments-profile')
+        ) {
+          await page.getByRole('button', { name: /Environment:/i }).click()
+          await page
+            .getByRole('button', { name: /^Manage/i })
+            .last()
+            .click()
+          await page.waitForTimeout(800)
+          await app.prepareForScreenshot()
+
+          if (selection.isSelected('40-environments-editor')) {
+            await page.getByRole('button', { name: /^Globals$/i }).click()
+            await page.waitForTimeout(400)
+            await app.screenshot('40-environments-editor')
+          }
+
+          if (selection.isSelected('41-environments-profile')) {
+            await page.getByRole('button', { name: /^Profile$/i }).click()
+            await page.waitForTimeout(500)
+            await app.screenshot('41-environments-profile')
+          }
+        }
+
+        if (selection.isSelected('42-environments-switcher')) {
+          await app.tabs.closeClosableTabs()
+          await app.tabs.goHome()
+          await app.prepareForScreenshot()
+          await page.getByRole('button', { name: /Environment:/i }).click()
+          await page.waitForTimeout(500)
+          await app.screenshot('42-environments-switcher')
+          await page.keyboard.press('Escape')
+        }
+      },
+    })
+  }
+
   if (selection.isSelected('17-schema-builder')) {
     jobs.push({
       id: '17-schema-builder',

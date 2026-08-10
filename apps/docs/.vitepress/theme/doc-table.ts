@@ -28,6 +28,7 @@ export const CONTROL_ICONS: Record<string, string> = {
   Keyboard: 'keyboard',
   Network: 'network',
   Wrench: 'wrench',
+  Environment: 'variable',
   'Profile badge': 'user',
   Gear: 'settings',
   Languages: 'globe',

@@ -48,6 +48,7 @@ const paths: Record<string, string> = {
   shield: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
   'alert-circle': 'M12 22a10 10 0 100-20 10 10 0 000 20z M12 8v4M12 16h.01',
   download: 'M12 3v12M8 11l4 4 4-4M4 21h16',
+  variable: 'M8 8c-2 0-3 1.5-3 3.5S6 15 8 15v2M16 8c2 0 3 1.5 3 3.5S18 15 16 15v2M10 12h4',
   circle: 'M12 12m-4 0a4 4 0 108 0a4 4 0 10-8 0',
 }
 </script>

@@ -59,6 +59,9 @@ export const CAPTURED_SCREENSHOTS = [
   '37-terminal-panel',
   '38-terminal-code',
   '39-rest-export',
+  '40-environments-editor',
+  '41-environments-profile',
+  '42-environments-switcher',
 ] as const
 
 /** Manually added assets (same image in dark/ and light/). */

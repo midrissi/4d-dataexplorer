@@ -6,7 +6,7 @@
 
 ### Overview
 
-Version `1.4.x` adds the **ORDA Terminal** (REPL and Code modes with snippet files) in a shared bottom dock with the Console; adds **REST Export** (Postman Collection v2.1 and OpenAPI 3.1 from the catalog, HTTP Client, and Method Executor); ships **iOS and Android** mobile apps; improves console network previews and image share/save; and polishes mobile HTTP Client and dock UX.
+Version `1.4.x` adds the **ORDA Terminal** (REPL and Code modes with snippet files) in a shared bottom dock with the Console; adds **REST Export** (Collection v2.1 and OpenAPI 3.1 from the catalog, HTTP Client, and Method Executor); ships **iOS and Android** mobile apps; improves console network previews and image share/save; and polishes mobile HTTP Client and dock UX.
 
 ### Features
 
@@ -21,10 +21,10 @@ Version `1.4.x` adds the **ORDA Terminal** (REPL and Code modes with snippet fil
 
 #### REST Export
 
-- **REST Export tab** — Open from Tools or the command palette; a four-step wizard (selection → categories → variables → preview) builds a Postman Collection v2.1 or OpenAPI 3.1 toolkit from the live catalog.
+- **REST Export tab** — Open from Tools or the command palette; a four-step wizard (selection → categories → variables → preview) builds a Collection v2.1 or OpenAPI 3.1 toolkit from the live catalog.
 - **Request catalog** — Auth, catalog, info, CRUD, entity sets, dataclass / entity / entitySelection functions, and singletons. Unexposed methods and directory login are off by default.
 - **Preview** — Expand or collapse folders (including expand / collapse all), turn emojis on or off, Shift-click to apply or clear emojis by category, and optionally attach official 4D REST documentation to each request.
-- **HTTP Client & Method Executor** — Export the current request or favourites as Postman or OpenAPI as well.
+- **HTTP Client & Method Executor** — Export the current request or favourites as a collection or OpenAPI as well.
 
 #### Mobile
 
@@ -52,9 +52,9 @@ Version `1.4.x` adds the **ORDA Terminal** (REPL and Code modes with snippet fil
 - **iOS downloads** — Snippet and settings exports use the native download/share path instead of `<a download>` (NSURLError -3000).
 - **Dock tab restore** — Reloading with Terminal open no longer forces Console.
 - **Entity reveal** — Opening an entity from the terminal uses primary-key lookup instead of `$filter` on `__KEY`.
-- **Empty query params** — Postman REST export disables empty `$filter` / `$orderby` / `$attributes` by default so they are not sent until filled in.
+- **Empty query params** — Collection export disables empty `$filter` / `$orderby` / `$attributes` by default so they are not sent until filled in.
 - **OpenAPI responses** — Exported specs list known 4D REST statuses (200, 401, 402, 404, 500).
-- **Postman Docs tab** — Request documentation includes the official 4D REST page markdown, not only a short summary.
+- **Request Docs tab** — Request documentation includes the official 4D REST page markdown, not only a short summary.
 
 ## 1.3.x
 

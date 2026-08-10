@@ -6,7 +6,7 @@
 
 ### Aperçu
 
-La version `1.4.x` ajoute le **terminal ORDA** (modes REPL et Code avec fichiers snippets) dans un dock bas partagé avec la Console ; ajoute **l’export REST** (collection Postman v2.1 et OpenAPI 3.1 depuis le catalogue, le Client HTTP et l’Exécuteur de méthodes) ; publie les applications **iOS et Android** ; améliore les aperçus réseau de la console et le partage/enregistrement d'images ; et peaufine l'expérience mobile (Client HTTP et dock).
+La version `1.4.x` ajoute le **terminal ORDA** (modes REPL et Code avec fichiers snippets) dans un dock bas partagé avec la Console ; ajoute **l’export REST** (collection v2.1 et OpenAPI 3.1 depuis le catalogue, le Client HTTP et l’Exécuteur de méthodes) ; publie les applications **iOS et Android** ; améliore les aperçus réseau de la console et le partage/enregistrement d'images ; et peaufine l'expérience mobile (Client HTTP et dock).
 
 ### Fonctionnalités
 
@@ -21,10 +21,10 @@ La version `1.4.x` ajoute le **terminal ORDA** (modes REPL et Code avec fichiers
 
 #### Export REST
 
-- **Onglet Export REST** — Ouvrez-le depuis Outils ou la palette de commandes ; un assistant en quatre étapes (sélection → catégories → variables → aperçu) génère une collection Postman v2.1 ou une spec OpenAPI 3.1 à partir du catalogue.
+- **Onglet Export REST** — Ouvrez-le depuis Outils ou la palette de commandes ; un assistant en quatre étapes (sélection → catégories → variables → aperçu) génère une collection v2.1 ou une spec OpenAPI 3.1 à partir du catalogue.
 - **Catalogue de requêtes** — Auth, catalog, info, CRUD, entity sets, fonctions dataclass / entity / entitySelection, et singletons. Les méthodes non exposées et le login directory sont désactivés par défaut.
 - **Aperçu** — Développez ou réduisez les dossiers (y compris tout développer / tout réduire), activez ou non les emojis, Maj+clic pour appliquer ou retirer un emoji par catégorie, et joignez éventuellement la documentation officielle REST 4D à chaque requête.
-- **Client HTTP et Exécuteur de méthodes** — Exportez aussi la requête courante ou les favoris en Postman ou OpenAPI.
+- **Client HTTP et Exécuteur de méthodes** — Exportez aussi la requête courante ou les favoris en collection ou OpenAPI.
 
 #### Mobile
 
@@ -52,9 +52,9 @@ La version `1.4.x` ajoute le **terminal ORDA** (modes REPL et Code avec fichiers
 - **Téléchargements iOS** — Les exports de snippets et de réglages utilisent le chemin natif au lieu de `<a download>` (NSURLError -3000).
 - **Restauration de l'onglet** — Recharger avec le Terminal ouvert ne force plus la Console.
 - **Révélation d'entité** — L'ouverture d'une entité depuis le terminal utilise la clé primaire au lieu d'un `$filter` sur `__KEY`.
-- **Paramètres de requête vides** — L’export Postman désactive par défaut les `$filter` / `$orderby` / `$attributes` vides pour qu’ils ne soient pas envoyés tant qu’ils ne sont pas renseignés.
+- **Paramètres de requête vides** — L’export collection désactive par défaut les `$filter` / `$orderby` / `$attributes` vides pour qu’ils ne soient pas envoyés tant qu’ils ne sont pas renseignés.
 - **Réponses OpenAPI** — Les specs exportées listent les statuts REST 4D connus (200, 401, 402, 404, 500).
-- **Onglet Docs Postman** — La documentation de chaque requête reprend le markdown officiel 4D REST, pas seulement un résumé.
+- **Onglet Docs de la collection** — La documentation de chaque requête reprend le markdown officiel 4D REST, pas seulement un résumé.
 
 ## 1.3.x
 

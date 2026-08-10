@@ -8,7 +8,7 @@ import { introMetaRows, metaColumns } from '../.vitepress/data/tables'
 
 # Data Explorer — User Documentation
 
-**Data Explorer** (4D REST Explorer) is a web, desktop, and mobile application for browsing, querying, and managing data in a 4D database through the REST API. It provides a tabbed interface, visual structure graph, query builder, Method Executor, HTTP Client, REST Export (Postman / OpenAPI), console and ORDA terminal, AI assistant and dataclass AI actions, and rich customization options.
+**Data Explorer** (4D REST Explorer) is a web, desktop, and mobile application for browsing, querying, and managing data in a 4D database through the REST API. It provides a tabbed interface, visual structure graph, query builder, Method Executor, HTTP Client, REST Export (Collection / OpenAPI), console and ORDA terminal, AI assistant and dataclass AI actions, and rich customization options.
 
 <DocTable :columns="metaColumns" :rows="introMetaRows" variant="meta" hide-header />
 

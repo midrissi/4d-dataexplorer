@@ -30,6 +30,7 @@ function createMockContext(overrides: Partial<CommandContext> = {}): CommandCont
     openMethodExecutorTab: mock(() => 'method-tab'),
     openHttpClientTab: mock(() => 'http-tab'),
     openRestExportBuilderTab: mock(() => {}),
+    openEnvironmentsTab: mock(() => {}),
     setIsEditing: mock(() => {}),
     setViewMode: mock(() => {}),
     closeTab: mock(() => {}),

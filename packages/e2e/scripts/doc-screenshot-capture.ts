@@ -71,12 +71,20 @@ export const DOC_SCREENSHOT_PAGE_NAMES = [
   '37-terminal-panel',
   '38-terminal-code',
   '39-rest-export',
+  '40-environments-editor',
+  '41-environments-profile',
+  '42-environments-switcher',
 ] as const
 
 export type DocScreenshotPageName = (typeof DOC_SCREENSHOT_PAGE_NAMES)[number]
 
 export const CONSOLE_SCREENSHOT_PAGE_NAMES = ['22-console-panel'] as const
 export const TERMINAL_SCREENSHOT_PAGE_NAMES = ['37-terminal-panel', '38-terminal-code'] as const
+export const ENVIRONMENTS_SCREENSHOT_PAGE_NAMES = [
+  '40-environments-editor',
+  '41-environments-profile',
+  '42-environments-switcher',
+] as const
 export const AI_ACTIONS_SCREENSHOT_PAGE_NAMES = [
   '23-ai-actions-menu',
   '24-ai-generate-data',

@@ -63,6 +63,7 @@ const guideSidebar = [
     collapsed: true,
     items: [
       { text: 'Settings & appearance', link: '/guide/settings' },
+      { text: 'Environment variables', link: '/guide/environments' },
       { text: 'Keyboard shortcuts', link: '/guide/keyboard-shortcuts' },
       { text: 'Language & localization', link: '/guide/localization' },
       { text: 'Profiles & import/export', link: '/guide/profiles' },

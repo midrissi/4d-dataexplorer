@@ -55,7 +55,7 @@ app.environment.base.set("baseUrl", "https://…")
 
 You can also embed `{{variable}}` in snippet source — values are substituted from the active environment map before the snippet runs.
 
-Postman-style **dynamic variables** work the same way and generate a fresh value each time, for example `{{$timestamp}}`, `{{$isoTimestamp}}`, `{{$guid}}`, `{{$randomInt}}`, `{{$randomEmail}}`.
+**Dynamic variables** (keys that start with `$`) work the same way and generate a fresh value each time, for example `{{$timestamp}}`, `{{$isoTimestamp}}`, `{{$guid}}`, `{{$randomInt}}`, `{{$randomEmail}}`.
 
 **Pipe filters** (Liquid-style) apply to env vars and dynamics:
 

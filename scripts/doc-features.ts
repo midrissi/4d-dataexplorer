@@ -436,6 +436,18 @@ export const DOC_FEATURES: DocFeature[] = [
     patterns: ['## Profiles', 'import/export'],
   },
   {
+    id: 'environments',
+    label: 'Environment variables',
+    category: 'Other',
+    patterns: [
+      'Environment variables',
+      '40-environments-editor',
+      '{{variable}}',
+      '$guid',
+      'Pipe filters',
+    ],
+  },
+  {
     id: 'per-database-storage',
     label: 'Per-database persistence',
     category: 'Other',

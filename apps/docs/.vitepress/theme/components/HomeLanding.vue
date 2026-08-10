@@ -67,8 +67,14 @@ const capabilities = [
   {
     num: '11',
     title: 'REST Export',
-    desc: 'Build a Postman Collection or OpenAPI spec from the catalog, HTTP Client, or Method Executor.',
+    desc: 'Build a collection or OpenAPI spec from the catalog, HTTP Client, or Method Executor.',
     link: '/guide/rest-export',
+  },
+  {
+    num: '12',
+    title: 'Environment variables',
+    desc: 'Globals and named environments with {{templates}}, pipe filters, and $dynamic variables.',
+    link: '/guide/environments',
   },
 ] as const
 
@@ -79,6 +85,8 @@ type GalleryItem = {
   link: string
   src?: string
   alt?: string
+  /** Full-width row on large screens (Structure graph). */
+  wide?: boolean
 }
 
 const gallery: GalleryItem[] = [
@@ -89,6 +97,7 @@ const gallery: GalleryItem[] = [
     link: '/guide/structure-graph',
     src: '/screenshots/08-structure-graph.png',
     alt: 'Structure graph showing dataclass relationships',
+    wide: true,
   },
   {
     num: '02',
@@ -141,10 +150,18 @@ const gallery: GalleryItem[] = [
   {
     num: '08',
     title: 'REST Export',
-    desc: 'Pick dataclasses, categories, and variables, then export a Postman Collection v2.1 or OpenAPI 3.1 toolkit — with optional emojis and official 4D REST docs.',
+    desc: 'Pick dataclasses, categories, and variables, then export a Collection v2.1 or OpenAPI 3.1 toolkit — with optional emojis and official 4D REST docs.',
     link: '/guide/rest-export',
     src: '/screenshots/39-rest-export.png',
-    alt: 'REST Export preview with Postman/OpenAPI toolkit folders',
+    alt: 'REST Export preview with Collection/OpenAPI toolkit folders',
+  },
+  {
+    num: '09',
+    title: 'Environment editor',
+    desc: 'Manage globals and named environments, insert {{variables}} and $dynamics with filters, and switch active profile or database scopes from the footer.',
+    link: '/guide/environments',
+    src: '/screenshots/40-environments-editor.png',
+    alt: 'Environment editor with globals and variables',
   },
 ]
 </script>
@@ -204,14 +221,20 @@ const gallery: GalleryItem[] = [
           Start with the structure graph, lean on the AI assistant when you need guidance, drill into
           precise queries when you know what to fetch, run exposed methods in the Method Executor
           when you need to call ORDA functions, use the HTTP Client to compose or replay REST
-          requests, export a Postman or OpenAPI toolkit from REST Export, and keep the Console and
+          requests, export a Collection or OpenAPI toolkit from REST Export, manage environment
+          variables for reusable <code v-pre>{{…}}</code> templates, and keep the Console and
           ORDA Terminal docked for logs and live
           <code>ds.*</code> exploration.
         </p>
       </div>
 
       <div class="home-landing__gallery-grid">
-        <article v-for="item in gallery" :key="item.num" class="home-landing__figure">
+        <article
+          v-for="item in gallery"
+          :key="item.num"
+          class="home-landing__figure"
+          :class="{ 'home-landing__figure--wide': item.wide }"
+        >
           <header class="home-landing__figure-header">
             <div class="home-landing__figure-meta">
               <span class="home-landing__figure-num" aria-hidden="true">{{ item.num }}</span>

@@ -15,7 +15,8 @@
     "capture:screenshots:console": "bun ./scripts/capture-console-screenshot.ts",
     "capture:screenshots:terminal": "bun ./scripts/capture-terminal-screenshot.ts",
     "capture:screenshots:http-client": "bun ./scripts/capture-http-client-screenshot.ts",
-    "capture:screenshots:ai-actions": "bun ./scripts/capture-ai-actions-screenshot.ts"
+    "capture:screenshots:ai-actions": "bun ./scripts/capture-ai-actions-screenshot.ts",
+    "capture:screenshots:environments": "bun ./scripts/capture-environments-screenshot.ts"
   },
   "devDependencies": {
     "@playwright/test": "1.61.1",

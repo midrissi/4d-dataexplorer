@@ -210,7 +210,9 @@ function EnvSection({
         >
           {icon}
         </span>
-        <p className="min-w-0 flex-1 truncate font-medium text-[11px] text-foreground/80">{title}</p>
+        <p className="min-w-0 flex-1 truncate font-medium text-[11px] text-foreground/80">
+          {title}
+        </p>
         <span className="rounded-full border border-border/70 bg-background px-1.5 py-px font-mono text-[10px] text-muted-foreground tabular-nums">
           {count}
         </span>
@@ -236,15 +238,7 @@ function maskSecret(value: string): string {
   return '•'.repeat(Math.min(Math.max(value.length, 4), 12))
 }
 
-function ScopeBadge({
-  scope,
-  label,
-  accent,
-}: {
-  scope: EnvScope
-  label: string
-  accent?: string
-}) {
+function ScopeBadge({ scope, label, accent }: { scope: EnvScope; label: string; accent?: string }) {
   return (
     <span
       className={cn(

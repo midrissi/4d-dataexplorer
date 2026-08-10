@@ -54,6 +54,11 @@ export const footerRows: DocTableRow[] = [
     control: 'Wrench',
     action: '**Tools** menu (HTTP Client, REST Export, Schema Builder, Assistant Metadata)',
   },
+  {
+    control: 'Environment',
+    action:
+      'Switch active profile/database environments; open the [environment editor](/guide/environments)',
+  },
   { control: 'Profile badge', action: 'Switch profile (when multiple profiles exist)' },
   { control: 'Gear', action: 'Open **Settings**' },
   { control: 'Languages', action: 'Change UI language' },

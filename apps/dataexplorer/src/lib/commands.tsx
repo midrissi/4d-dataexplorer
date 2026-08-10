@@ -34,6 +34,7 @@ import {
   Table2,
   Terminal,
   Trash2,
+  Variable,
   X,
 } from 'lucide-react'
 import type { ReactNode } from 'react'
@@ -103,6 +104,7 @@ export type CommandContext = {
   openMethodExecutorTab: () => string
   openHttpClientTab: () => string
   openRestExportBuilderTab: () => void
+  openEnvironmentsTab: () => void
   // Entities
   entities: Entity[]
   selectedEntityId: string | null
@@ -462,6 +464,18 @@ function buildNavigationCommandsContinued(ctx: CommandContext): Command[] {
       category: 'Navigation',
       action: () => {
         ctx.openRestExportBuilderTab()
+        ctx.onClose()
+      },
+    },
+    {
+      id: 'open-environments',
+      label: ctx.t('command.openEnvironments'),
+      description: ctx.t('commandDesc.openEnvironments'),
+      keywords: ['environment', 'env', 'variable', 'globals', 'template', 'postman'],
+      icon: <Variable className="h-4 w-4" />,
+      category: 'Navigation',
+      action: () => {
+        ctx.openEnvironmentsTab()
         ctx.onClose()
       },
     },

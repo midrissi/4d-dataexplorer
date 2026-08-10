@@ -85,7 +85,7 @@ Failed fetches (CORS, mixed content, cancelled, or offline targets) show a struc
 
 ### Export
 
-Use **Export** to download the current request (or favourites) as a **Postman Collection v2.1** or **OpenAPI 3.1** document. For a full catalog toolkit, use [REST Export](/guide/rest-export).
+Use **Export** to download the current request (or favourites) as a **Collection v2.1** or **OpenAPI 3.1** document. For a full catalog toolkit, use [REST Export](/guide/rest-export).
 
 ### History
 
