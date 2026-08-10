@@ -47,8 +47,9 @@ describe('resolveHelperTemplate', () => {
       { name: 'from', args: ['draft', 'published', 'archived'] },
     ])
     expect(result).not.toBeNull()
-    expect(['draft', 'published', 'archived']).toContain(result?.text)
-    expect(result?.rehydrate).toBe(false)
+    if (!result) return
+    expect(['draft', 'published', 'archived']).toContain(result.text)
+    expect(result.rehydrate).toBe(false)
   })
 
   it('samples a unique subset', () => {
