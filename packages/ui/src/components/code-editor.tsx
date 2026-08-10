@@ -630,9 +630,7 @@ function EditorToolbar({
             (t) => t.id === 'zoom-in' || t.id === 'zoom-out' || t.id === 'zoom-reset'
           )
           const beforeLevel =
-            isZoomGroup && zoomLevelControl
-              ? group.filter((t) => t.id !== 'zoom-reset')
-              : group
+            isZoomGroup && zoomLevelControl ? group.filter((t) => t.id !== 'zoom-reset') : group
           const afterLevel =
             isZoomGroup && zoomLevelControl ? group.filter((t) => t.id === 'zoom-reset') : []
 
