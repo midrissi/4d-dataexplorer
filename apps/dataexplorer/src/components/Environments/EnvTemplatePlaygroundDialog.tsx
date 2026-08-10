@@ -21,7 +21,7 @@ import {
   RotateCw,
   Sparkles,
 } from 'lucide-react'
-import { useCallback, useEffect, useId, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import { EmptyPanel } from '~/components/EmptyPanel'
 import {
   EnvTemplatePlaygroundExamples,
@@ -60,12 +60,15 @@ export function EnvTemplatePlaygroundDialog({
   )
   const [result, setResult] = useState<EvalResult | null>(null)
   const [copiedSource, setCopiedSource] = useState<'template' | 'result' | null>(null)
+  const draftRef = useRef(draft)
+  draftRef.current = draft
 
-  const evaluate = useCallback(() => {
-    const next = resolveEnvString(draft)
+  const evaluate = useCallback((source?: string) => {
+    const text = source ?? draftRef.current
+    const next = resolveEnvString(text)
     setResult({ ...next, runId: Date.now() })
     setCopiedSource(null)
-  }, [draft])
+  }, [])
 
   useEffect(() => {
     if (!open) setCopiedSource(null)
@@ -168,7 +171,9 @@ export function EnvTemplatePlaygroundDialog({
                   onKeyDown={(event) => {
                     if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
                       event.preventDefault()
-                      evaluate()
+                      const live = event.currentTarget.value
+                      if (live !== draftRef.current) onDraftChange(live)
+                      evaluate(live)
                     }
                   }}
                   {...envField}

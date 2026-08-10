@@ -208,12 +208,19 @@ export const TemplatedTextInput = React.forwardRef<HTMLInputElement, TemplatedTe
 
     // Keep the real <input> mounted so Tab can leave the field. Chips are a visual overlay only.
     const showHighlight = !focused && !disabled && hasEnvTemplate(draft)
-    const autocomplete = useEnvTemplateAutocomplete({
-      value: draft,
-      onChange: (next) => {
+
+    const pushDraft = React.useCallback(
+      (next: string) => {
         setDraft(next)
         draftRef.current = next
+        if (next !== valueRef.current) onChange(next)
       },
+      [onChange]
+    )
+
+    const autocomplete = useEnvTemplateAutocomplete({
+      value: draft,
+      onChange: pushDraft,
       suggestions: variableSuggestions,
       groupLabels: variableGroupLabels,
       enabled: !disabled && variableSuggestions.length > 0,
@@ -339,12 +346,19 @@ export const TemplatedTextarea = React.forwardRef<HTMLTextAreaElement, Templated
     React.useImperativeHandle(ref, () => areaRef.current as HTMLTextAreaElement)
 
     const showHighlight = !focused && !disabled && hasEnvTemplate(draft)
-    const autocomplete = useEnvTemplateAutocomplete({
-      value: draft,
-      onChange: (next) => {
+
+    const pushDraft = React.useCallback(
+      (next: string) => {
         setDraft(next)
         draftRef.current = next
+        if (next !== valueRef.current) onChange(next)
       },
+      [onChange]
+    )
+
+    const autocomplete = useEnvTemplateAutocomplete({
+      value: draft,
+      onChange: pushDraft,
       suggestions: variableSuggestions,
       groupLabels: variableGroupLabels,
       enabled: !disabled && variableSuggestions.length > 0,
