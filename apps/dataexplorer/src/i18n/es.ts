@@ -1044,6 +1044,7 @@ export const es = {
     noEnvironment: 'Sin entorno',
     switcherLabel: 'Entorno',
     switcherEmptyVars: 'No hay variables disponibles',
+    switcherEmptySection: 'Aún no hay entornos',
     showSecrets: 'Mostrar secretos',
     hideSecrets: 'Ocultar secretos',
     manage: 'Gestionar…',

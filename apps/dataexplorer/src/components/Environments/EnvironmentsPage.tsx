@@ -32,8 +32,8 @@ import {
   Upload,
   Variable,
 } from 'lucide-react'
-import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react'
-import { EmptyPanel as AppEmptyPanel } from '~/components/EmptyPanel'
+import { type KeyboardEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { EmptyPanel as AppEmptyPanel, EmptyPanelAction } from '~/components/EmptyPanel'
 import { SavedListBadge } from '~/components/SavedListPanel'
 import { useTranslation } from '~/i18n'
 import {
@@ -159,6 +159,7 @@ function VariableRow({
   return (
     <div
       data-env-var-row
+      data-env-var-id={row.id}
       className={cn(
         'group grid grid-cols-[1.5rem_minmax(7rem,0.9fr)_minmax(0,1fr)_minmax(0,1fr)_5.5rem_1.75rem] items-center gap-1 border-border/50 border-b px-2 py-1',
         'hover:bg-muted/30',
@@ -238,6 +239,26 @@ function VariablesList({
   emptyDescription: string
 }) {
   const { t } = useTranslation()
+  const focusKeyForIdRef = useRef<string | null>(null)
+
+  const addVariable = () => {
+    const next = createEmptyVariable()
+    focusKeyForIdRef.current = next.id
+    onChange([...variables, next])
+  }
+
+  useLayoutEffect(() => {
+    const id = focusKeyForIdRef.current
+    if (!id) return
+    if (!variables.some((variable) => variable.id === id)) return
+    focusKeyForIdRef.current = null
+    const input = document.querySelector(
+      `[data-env-var-id="${CSS.escape(id)}"] [data-env-var-field="key"]`
+    )
+    if (input instanceof HTMLInputElement) {
+      input.focus()
+    }
+  }, [variables])
 
   const updateRow = (index: number, patch: Partial<EnvVariable>) => {
     onChange(variables.map((row, i) => (i === index ? { ...row, ...patch } : row)))
@@ -254,6 +275,11 @@ function VariablesList({
           ghost="rows"
           bordered
           size="sm"
+          action={
+            <EmptyPanelAction icon={Plus} onClick={addVariable}>
+              {t('environments.addVariable')}
+            </EmptyPanelAction>
+          }
         />
       </div>
     )
@@ -283,7 +309,7 @@ function VariablesList({
           variant="ghost"
           size="sm"
           className="h-6 px-2 text-[11px] text-muted-foreground"
-          onClick={() => onChange([...variables, createEmptyVariable()])}
+          onClick={addVariable}
         >
           <Plus className="mr-1 h-3.5 w-3.5" />
           {t('environments.addVariable')}
@@ -472,6 +498,8 @@ function EnvironmentsEditor({
     updateEnvironment(selected.id, patch)
   }
 
+  const focusNameAfterAddRef = useRef(false)
+
   const addEnvironment = () => {
     const env = createEmptyEnvironment(
       nextNewEnvironmentName(
@@ -480,12 +508,23 @@ function EnvironmentsEditor({
       ),
       environments.map((item) => item.color)
     )
+    focusNameAfterAddRef.current = true
     onChange({
       environments: [...environments, env],
       activeEnvironmentId,
     })
     setSelectedId(env.id)
   }
+
+  useLayoutEffect(() => {
+    if (!focusNameAfterAddRef.current || !selected) return
+    focusNameAfterAddRef.current = false
+    const input = document.querySelector('[data-env-name-input]')
+    if (input instanceof HTMLInputElement) {
+      input.focus()
+      input.select()
+    }
+  }, [selected])
 
   const duplicateEnvironment = (env: Environment) => {
     const copy = cloneEnvironment(
@@ -539,19 +578,12 @@ function EnvironmentsEditor({
             ghost="rows"
             bordered
             size="sm"
+            action={
+              <EmptyPanelAction icon={Plus} onClick={addEnvironment}>
+                {t('environments.addVariable')}
+              </EmptyPanelAction>
+            }
           />
-        </div>
-        <div className="border-border/50 border-t px-2 py-1.5">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-6 px-2 text-[11px] text-muted-foreground"
-            onClick={addEnvironment}
-          >
-            <Plus className="mr-1 h-3.5 w-3.5" />
-            {t('environments.add')}
-          </Button>
         </div>
       </div>
     )
@@ -622,6 +654,7 @@ function EnvironmentsEditor({
                     })
                   }
                 }}
+                data-env-name-input
                 className="h-6 max-w-48 border-0 bg-transparent px-1.5 text-xs shadow-none focus-visible:ring-0"
                 aria-label={t('environments.name')}
               />
@@ -845,7 +878,7 @@ export function EnvironmentsPage() {
               className="h-6 px-2 text-[11px] text-muted-foreground"
               onClick={exportAll}
             >
-              <Download className="mr-1 h-3.5 w-3.5" aria-hidden />
+              <Upload className="mr-1 h-3.5 w-3.5" aria-hidden />
               {t('environments.export')}
             </Button>
             <Button
@@ -855,7 +888,7 @@ export function EnvironmentsPage() {
               className="h-6 px-2 text-[11px] text-muted-foreground"
               onClick={() => fileRef.current?.click()}
             >
-              <Upload className="mr-1 h-3.5 w-3.5" aria-hidden />
+              <Download className="mr-1 h-3.5 w-3.5" aria-hidden />
               {t('environments.import')}
             </Button>
             <input

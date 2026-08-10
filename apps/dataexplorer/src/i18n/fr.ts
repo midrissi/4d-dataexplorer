@@ -1047,6 +1047,7 @@ export const fr = {
     noEnvironment: 'Aucun environnement',
     switcherLabel: 'Environnement',
     switcherEmptyVars: 'Aucune variable disponible',
+    switcherEmptySection: 'Aucun environnement pour le moment',
     showSecrets: 'Afficher les secrets',
     hideSecrets: 'Masquer les secrets',
     manage: 'Gérer…',

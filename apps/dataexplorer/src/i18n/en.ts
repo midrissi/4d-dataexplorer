@@ -1025,6 +1025,7 @@ export const en = {
     noEnvironment: 'No environment',
     switcherLabel: 'Environment',
     switcherEmptyVars: 'No variables available',
+    switcherEmptySection: 'No environments yet',
     showSecrets: 'Show secrets',
     hideSecrets: 'Hide secrets',
     manage: 'Manage…',

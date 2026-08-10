@@ -9,7 +9,17 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@4d/ui'
-import { Check, Database, Eye, EyeOff, RotateCcw, UserRound } from 'lucide-react'
+import {
+  Check,
+  Database,
+  Eye,
+  EyeOff,
+  Lock,
+  RotateCcw,
+  Settings2,
+  UserRound,
+  Variable,
+} from 'lucide-react'
 import { type ReactNode, useMemo, useState } from 'react'
 import { useTranslation } from '~/i18n'
 import { effectiveEnvValue } from '~/lib/env/merge-active'
@@ -17,6 +27,8 @@ import type { EnvVariable } from '~/lib/env/types'
 import { getCurrentBaseId } from '~/lib/storage'
 import { useActiveEnvironmentLabels, useEnvironmentsStore } from '~/store/environments'
 import { useTabsStore } from '~/store/tabs'
+
+type EnvScope = 'global' | 'profile' | 'base'
 
 function EnvColorDot({
   color,
@@ -35,6 +47,16 @@ function EnvColorDot({
         className
       )}
       style={empty ? undefined : { backgroundColor: color || 'var(--muted-foreground)' }}
+      aria-hidden
+    />
+  )
+}
+
+function EnvScopeAccent({ color, className }: { color?: string; className?: string }) {
+  return (
+    <span
+      className={cn('h-3 w-0.5 shrink-0 rounded-full', className)}
+      style={{ backgroundColor: color || 'var(--muted-foreground)' }}
       aria-hidden
     />
   )
@@ -70,14 +92,10 @@ function EnvActiveSummary({
     <span className={cn('inline-flex min-w-0 items-center gap-1', className)}>
       {profile ? (
         <span
-          className="inline-flex max-w-30 items-center gap-1 truncate rounded-sm border border-border bg-background px-1 py-px"
+          className="inline-flex max-w-30 items-center gap-1 truncate rounded-md border border-border/80 bg-background/90 px-1.5 py-0.5 shadow-xs"
           title={profile.name}
         >
-          <span
-            className="h-3 w-0.5 shrink-0 rounded-full"
-            style={{ backgroundColor: profile.color || 'var(--muted-foreground)' }}
-            aria-hidden
-          />
+          <EnvScopeAccent color={profile.color} />
           <UserRound className="size-2.5 shrink-0 text-muted-foreground" aria-hidden />
           <span className="min-w-0 truncate font-mono text-[10px] text-foreground leading-none">
             {profile.name}
@@ -86,14 +104,10 @@ function EnvActiveSummary({
       ) : null}
       {base ? (
         <span
-          className="inline-flex max-w-30 items-center gap-1 truncate rounded-sm border border-border bg-background px-1 py-px"
+          className="inline-flex max-w-30 items-center gap-1 truncate rounded-md border border-border/80 bg-background/90 px-1.5 py-0.5 shadow-xs"
           title={base.name}
         >
-          <span
-            className="h-3 w-0.5 shrink-0 rounded-full"
-            style={{ backgroundColor: base.color || 'var(--muted-foreground)' }}
-            aria-hidden
-          />
+          <EnvScopeAccent color={base.color} />
           <Database className="size-2.5 shrink-0 text-muted-foreground" aria-hidden />
           <span className="min-w-0 truncate font-mono text-[10px] text-foreground leading-none">
             {base.name}
@@ -145,23 +159,25 @@ function EnvOptionButton({
       role="option"
       aria-selected={selected}
       className={cn(
-        'relative flex w-full items-center gap-1.5 border-border/50 border-b bg-background px-2 py-1 text-left last:border-b-0',
-        'transition-colors hover:bg-muted',
+        'group/option relative flex w-full items-center gap-1.5 border-border/40 border-b bg-background px-2 py-1.5 text-left last:border-b-0',
+        'transition-colors duration-150 hover:bg-muted/70',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
-        selected && 'bg-accent'
+        selected && 'bg-accent/80'
       )}
       onClick={onSelect}
     >
       {selected ? (
         <span
           aria-hidden
-          className="absolute top-1 bottom-1 left-0 w-0.5 rounded-full bg-primary"
+          className="absolute top-1.5 bottom-1.5 left-0 w-0.5 rounded-full bg-primary"
         />
       ) : null}
       <span
         className={cn(
-          'flex size-3.5 shrink-0 items-center justify-center',
-          selected ? 'text-primary' : 'text-transparent'
+          'flex size-3.5 shrink-0 items-center justify-center rounded-sm transition-colors duration-150',
+          selected
+            ? 'bg-primary/15 text-primary'
+            : 'text-transparent group-hover/option:text-muted-foreground/50'
         )}
         aria-hidden
       >
@@ -176,28 +192,31 @@ function EnvSection({
   icon,
   title,
   count,
+  empty,
   children,
 }: {
   icon: ReactNode
   title: string
   count: number
+  empty?: ReactNode
   children: ReactNode
 }) {
   return (
     <section className="bg-background">
-      <div className="flex items-center gap-1.5 border-border/50 border-b bg-muted px-2 py-1">
-        <span className="shrink-0 text-muted-foreground">{icon}</span>
-        <p className="min-w-0 flex-1 truncate font-medium text-[11px] text-muted-foreground">
-          {title}
-        </p>
-        {count > 0 ? (
-          <span className="rounded-full border border-border bg-background px-1.5 py-px font-mono text-[10px] text-muted-foreground tabular-nums">
-            {count}
-          </span>
-        ) : null}
+      <div className="flex items-center gap-1.5 border-border/50 border-b bg-muted/80 px-2 py-1.5">
+        <span
+          className="flex size-5 shrink-0 items-center justify-center rounded-md border border-border/60 bg-background text-muted-foreground shadow-xs"
+          aria-hidden
+        >
+          {icon}
+        </span>
+        <p className="min-w-0 flex-1 truncate font-medium text-[11px] text-foreground/80">{title}</p>
+        <span className="rounded-full border border-border/70 bg-background px-1.5 py-px font-mono text-[10px] text-muted-foreground tabular-nums">
+          {count}
+        </span>
       </div>
       <div role="listbox" className="max-h-40 overflow-y-auto overscroll-contain bg-background">
-        {children}
+        {count === 0 && empty ? empty : children}
       </div>
     </section>
   )
@@ -207,12 +226,173 @@ type PreviewVar = {
   key: string
   value: string
   secret: boolean
+  scope: EnvScope
   scopeLabel: string
+  accent?: string
 }
 
 function maskSecret(value: string): string {
   if (!value) return '••••'
   return '•'.repeat(Math.min(Math.max(value.length, 4), 12))
+}
+
+function ScopeBadge({
+  scope,
+  label,
+  accent,
+}: {
+  scope: EnvScope
+  label: string
+  accent?: string
+}) {
+  return (
+    <span
+      className={cn(
+        'inline-flex shrink-0 items-center gap-1 rounded-sm border px-1 py-px font-sans text-[9px] leading-none',
+        scope === 'global' && 'border-border/70 bg-muted/60 text-muted-foreground',
+        scope === 'profile' && 'border-border/70 bg-background text-muted-foreground',
+        scope === 'base' && 'border-border/70 bg-background text-muted-foreground'
+      )}
+    >
+      {scope !== 'global' ? <EnvScopeAccent color={accent} className="h-2.5" /> : null}
+      {label}
+    </span>
+  )
+}
+
+function EnvVarsPreview({
+  vars,
+  revealSecrets,
+  onToggleSecrets,
+  hasSecrets,
+  title,
+  activeSummary,
+  emptyLabel,
+  showSecretsLabel,
+  hideSecretsLabel,
+}: {
+  vars: PreviewVar[]
+  revealSecrets: boolean
+  onToggleSecrets: () => void
+  hasSecrets: boolean
+  title: string
+  activeSummary: ReactNode
+  emptyLabel: string
+  showSecretsLabel: string
+  hideSecretsLabel: string
+}) {
+  return (
+    <div className="overflow-hidden">
+      <div className="border-border/60 border-b bg-muted/40 px-2.5 py-2">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 space-y-1.5">
+            <div className="flex items-center gap-1.5">
+              <span
+                className="flex size-5 shrink-0 items-center justify-center rounded-md border border-border/70 bg-background text-muted-foreground shadow-xs"
+                aria-hidden
+              >
+                <Variable className="size-3" />
+              </span>
+              <span className="font-medium text-[11px] text-foreground">{title}</span>
+              {vars.length > 0 ? (
+                <span className="rounded-full border border-border/70 bg-background/80 px-1.5 py-px font-mono text-[10px] text-muted-foreground tabular-nums">
+                  {vars.length}
+                </span>
+              ) : null}
+            </div>
+            <div className="min-w-0 pl-0.5">{activeSummary}</div>
+          </div>
+          {hasSecrets ? (
+            <button
+              type="button"
+              className={cn(
+                'inline-flex shrink-0 items-center gap-1 rounded-md border border-border/70 bg-background/90 px-1.5 py-1 text-[10px] text-muted-foreground shadow-xs',
+                'transition-colors duration-150 hover:border-border hover:bg-muted hover:text-foreground',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+              )}
+              onPointerDown={(event) => {
+                // Keep the hover tooltip open while toggling.
+                event.preventDefault()
+              }}
+              onClick={(event) => {
+                event.stopPropagation()
+                onToggleSecrets()
+              }}
+              aria-label={revealSecrets ? hideSecretsLabel : showSecretsLabel}
+              aria-pressed={revealSecrets}
+            >
+              {revealSecrets ? (
+                <EyeOff className="size-3" aria-hidden />
+              ) : (
+                <Eye className="size-3" aria-hidden />
+              )}
+              <span className="hidden sm:inline">
+                {revealSecrets ? hideSecretsLabel : showSecretsLabel}
+              </span>
+            </button>
+          ) : null}
+        </div>
+      </div>
+
+      {vars.length === 0 ? (
+        <div className="flex flex-col items-center gap-1.5 px-3 py-4 text-center">
+          <span
+            className="flex size-8 items-center justify-center rounded-lg border border-border/70 border-dashed bg-muted/30 text-muted-foreground"
+            aria-hidden
+          >
+            <Variable className="size-3.5" />
+          </span>
+          <p className="text-[11px] text-muted-foreground">{emptyLabel}</p>
+        </div>
+      ) : (
+        <ul className="max-h-56 overflow-y-auto overscroll-contain py-1">
+          {vars.map((item) => {
+            const showValue = !item.secret || revealSecrets
+            return (
+              <li
+                key={item.key}
+                className="group/row relative grid grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] items-center gap-2 px-2.5 py-1 transition-colors duration-150 hover:bg-muted/50"
+              >
+                <span
+                  aria-hidden
+                  className="absolute top-1.5 bottom-1.5 left-0 w-0.5 rounded-full opacity-70"
+                  style={{
+                    backgroundColor:
+                      item.scope === 'global'
+                        ? 'var(--muted-foreground)'
+                        : item.accent || 'var(--muted-foreground)',
+                  }}
+                />
+                <span className="flex min-w-0 items-center gap-1.5 pl-1.5">
+                  <span
+                    className="min-w-0 truncate font-mono text-[11px] text-foreground"
+                    title={item.key}
+                  >
+                    {item.key}
+                  </span>
+                  <ScopeBadge scope={item.scope} label={item.scopeLabel} accent={item.accent} />
+                </span>
+                <span
+                  className={cn(
+                    'flex min-w-0 items-center justify-end gap-1 font-mono text-[11px] text-muted-foreground',
+                    item.secret && !showValue && 'tracking-wider'
+                  )}
+                  title={showValue ? item.value : undefined}
+                >
+                  {item.secret && !showValue ? (
+                    <Lock className="size-2.5 shrink-0 opacity-70" aria-hidden />
+                  ) : null}
+                  <span className="truncate">
+                    {showValue ? item.value || '—' : maskSecret(item.value)}
+                  </span>
+                </span>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </div>
+  )
 }
 
 export function EnvSwitcher({
@@ -251,7 +431,12 @@ export function EnvSwitcher({
 
   const previewVars = useMemo((): PreviewVar[] => {
     const byKey = new Map<string, PreviewVar>()
-    const push = (variables: readonly EnvVariable[], scopeLabel: string) => {
+    const push = (
+      variables: readonly EnvVariable[],
+      scope: EnvScope,
+      scopeLabel: string,
+      accent?: string
+    ) => {
       for (const variable of variables) {
         if (!variable.enabled) continue
         const key = variable.key.trim()
@@ -260,14 +445,16 @@ export function EnvSwitcher({
           key,
           value: effectiveEnvValue(variable),
           secret: variable.type === 'secret',
+          scope,
           scopeLabel,
+          accent,
         })
       }
     }
     // Lowest priority first so higher scopes overwrite (same as resolve).
-    push(globals, t('environments.scopeGlobal'))
-    if (profile) push(profile.variables, t('environments.scopeProfile'))
-    if (base) push(base.variables, t('environments.scopeBase'))
+    push(globals, 'global', t('environments.scopeGlobal'))
+    if (profile) push(profile.variables, 'profile', t('environments.scopeProfile'), profile.color)
+    if (base) push(base.variables, 'base', t('environments.scopeBase'), base.color)
     return [...byKey.values()].sort((a, b) => a.key.localeCompare(b.key))
   }, [globals, profile, base, t])
 
@@ -285,6 +472,26 @@ export function EnvSwitcher({
     setOpen(false)
   }
 
+  const openManage = () => {
+    setOpen(false)
+    openEnvironmentsTab()
+  }
+
+  const emptySection = (
+    <div className="px-2.5 py-3 text-center">
+      <p className="text-[11px] text-muted-foreground">{t('environments.switcherEmptySection')}</p>
+      <Button
+        type="button"
+        size="sm"
+        variant="ghost"
+        className="mt-1 h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+        onClick={openManage}
+      >
+        {t('environments.manage')}
+      </Button>
+    </div>
+  )
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <TooltipProvider delayDuration={250}>
@@ -300,7 +507,7 @@ export function EnvSwitcher({
                 variant="ghost"
                 size={size === 'sm' ? 'sm' : 'default'}
                 className={cn(
-                  'h-6 max-w-[18rem] gap-1 px-1 text-[11px] transition-colors',
+                  'h-6 max-w-[18rem] gap-1 px-1 text-[11px] transition-colors duration-150',
                   hasActiveEnv
                     ? 'text-foreground hover:bg-muted'
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground',
@@ -318,79 +525,26 @@ export function EnvSwitcher({
             </PopoverTrigger>
           </TooltipTrigger>
           {!open ? (
-            <TooltipContent side={side} className="max-w-80 p-0">
-              <div className="flex items-center justify-between gap-2 border-border/60 border-b px-2.5 py-1.5">
-                <div className="flex min-w-0 items-center gap-1.5 font-medium text-[11px]">
-                  <span className="shrink-0 text-muted-foreground">
-                    {t('environments.switcherLabel')}
-                  </span>
-                  {hasActiveEnv ? (
-                    <span className="min-w-0 font-normal">{activeSummary}</span>
-                  ) : null}
-                </div>
-                {hasSecrets ? (
-                  <button
-                    type="button"
-                    className="inline-flex shrink-0 items-center gap-1 rounded px-1 py-0.5 text-[10px] text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    onPointerDown={(event) => {
-                      // Keep the hover tooltip open while toggling.
-                      event.preventDefault()
-                    }}
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      setRevealSecrets((value) => !value)
-                    }}
-                    aria-label={
-                      revealSecrets ? t('environments.hideSecrets') : t('environments.showSecrets')
-                    }
-                    aria-pressed={revealSecrets}
-                  >
-                    {revealSecrets ? (
-                      <EyeOff className="h-3 w-3" aria-hidden />
-                    ) : (
-                      <Eye className="h-3 w-3" aria-hidden />
-                    )}
-                    <span>
-                      {revealSecrets
-                        ? t('environments.hideSecrets')
-                        : t('environments.showSecrets')}
+            <TooltipContent side={side} className="max-w-80 overflow-hidden p-0">
+              <EnvVarsPreview
+                vars={previewVars}
+                revealSecrets={revealSecrets}
+                onToggleSecrets={() => setRevealSecrets((value) => !value)}
+                hasSecrets={hasSecrets}
+                title={t('environments.switcherLabel')}
+                activeSummary={
+                  hasActiveEnv ? (
+                    activeSummary
+                  ) : (
+                    <span className="text-[10px] text-muted-foreground">
+                      {t('environments.noEnvironment')}
                     </span>
-                  </button>
-                ) : null}
-              </div>
-              {previewVars.length === 0 ? (
-                <p className="px-2.5 py-2 text-[11px] text-muted-foreground">
-                  {t('environments.switcherEmptyVars')}
-                </p>
-              ) : (
-                <ul className="max-h-56 overflow-y-auto overscroll-contain py-1">
-                  {previewVars.map((item) => {
-                    const showValue = !item.secret || revealSecrets
-                    return (
-                      <li
-                        key={item.key}
-                        className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] gap-2 px-2.5 py-0.5 font-mono text-[11px]"
-                      >
-                        <span className="truncate text-foreground" title={item.key}>
-                          {item.key}
-                          <span className="ml-1 font-sans text-[10px] text-muted-foreground">
-                            {item.scopeLabel}
-                          </span>
-                        </span>
-                        <span
-                          className={cn(
-                            'truncate text-right text-muted-foreground',
-                            item.secret && !showValue && 'tracking-wider'
-                          )}
-                          title={showValue ? item.value : undefined}
-                        >
-                          {showValue ? item.value || '—' : maskSecret(item.value)}
-                        </span>
-                      </li>
-                    )
-                  })}
-                </ul>
-              )}
+                  )
+                }
+                emptyLabel={t('environments.switcherEmptyVars')}
+                showSecretsLabel={t('environments.showSecrets')}
+                hideSecretsLabel={t('environments.hideSecrets')}
+              />
             </TooltipContent>
           ) : null}
         </Tooltip>
@@ -402,18 +556,29 @@ export function EnvSwitcher({
         className="z-100 w-72 overflow-hidden border-border bg-background p-0 text-foreground opacity-100 shadow-md"
         style={{ backgroundColor: 'var(--background)' }}
       >
-        <div className="flex items-center gap-2 border-border border-b bg-muted px-2 py-1">
-          <div className="min-w-0 flex-1">{activeSummary}</div>
-          <span className="shrink-0 font-medium text-[10px] text-muted-foreground">
-            {t('environments.switcherLabel')}
-          </span>
+        <div className="border-border border-b bg-muted/70 px-2 py-1.5">
+          <div className="flex items-center gap-2">
+            <span
+              className="flex size-5 shrink-0 items-center justify-center rounded-md border border-border/70 bg-background text-muted-foreground shadow-xs"
+              aria-hidden
+            >
+              <Variable className="size-3" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="font-medium text-[11px] text-foreground leading-none">
+                {t('environments.switcherLabel')}
+              </p>
+              <div className="mt-1 min-w-0">{activeSummary}</div>
+            </div>
+          </div>
         </div>
 
-        <div className="bg-background">
+        <div className="divide-y divide-border/60 bg-background">
           <EnvSection
             icon={<UserRound className="size-3" aria-hidden />}
             title={t('environments.profileSection')}
             count={profileCount}
+            empty={emptySection}
           >
             <EnvOptionButton selected={!profile} onSelect={() => selectProfileEnvironment(null)}>
               <EnvChip name={null} emptyLabel={t('environments.noEnvironment')} />
@@ -434,6 +599,7 @@ export function EnvSwitcher({
               icon={<Database className="size-3" aria-hidden />}
               title={t('environments.baseSection')}
               count={baseCount}
+              empty={emptySection}
             >
               <EnvOptionButton selected={!base} onSelect={() => selectBaseEnvironment(null)}>
                 <EnvChip name={null} emptyLabel={t('environments.noEnvironment')} />
@@ -451,7 +617,7 @@ export function EnvSwitcher({
           ) : null}
         </div>
 
-        <div className="flex items-center gap-1 border-border border-t bg-muted px-1.5 py-1">
+        <div className="flex items-center gap-1 border-border border-t bg-muted/70 px-1.5 py-1">
           {profile || base ? (
             <Button
               type="button"
@@ -473,9 +639,10 @@ export function EnvSwitcher({
             type="button"
             size="sm"
             variant="ghost"
-            className="h-6 shrink-0 px-2 text-[11px] text-muted-foreground hover:text-foreground"
-            onClick={() => openEnvironmentsTab()}
+            className="h-6 shrink-0 gap-1 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+            onClick={openManage}
           >
+            <Settings2 className="size-3 shrink-0" aria-hidden />
             {t('environments.manage')}
           </Button>
         </div>
