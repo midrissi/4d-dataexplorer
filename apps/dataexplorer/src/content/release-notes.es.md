@@ -17,7 +17,8 @@ La versión `1.4.x` añade **variables de entorno** (capas globales, perfil y ba
 - **Plantillas** — Inserte `{{name}}` en el Cliente HTTP, el Ejecutor de métodos, el Query Builder, Crear entidad, snippets del terminal ORDA y otros campos con plantilla; se resuelven al enviar/ejecutar.
 - **Filtros pipe** — Transformaciones estilo Liquid (`upper`, `lower`, `snake`, …) y opciones de generación (`female` / `male`, `min` / `max` / `between`, `after` / `before`).
 - **Variables dinámicas** — Superficie Faker completa vía `{{$faker.module.method}}` (p. ej. `{{$faker.person.fullName}}`, `{{$faker.string.uuid}}`), más alias de reloj `{{$timestamp}}` / `{{$isoTimestamp}}`.
-- **Chips y autocompletado** — Las variables conocidas se destacan como chips; sugerencias para claves de entorno, alias y rutas `$faker.*`; las claves sin resolver permanecen visibles como `{{…}}`.
+- **Plantillas helper** — `$pick` / `$sample` / `$unique` / `$repeat` / `$object` (y `$faker.helpers.*`) para listas y objetos JSON; `count:n`, `count:min,max` o `count:>=n` / `count:<=n` para longitud dinámica; la resolución profunda rehidrata hojas estructuradas exactas.
+- **Chips y autocompletado** — Las variables conocidas se destacan como chips; sugerencias para claves de entorno, alias, helpers y rutas `$faker.*`; las claves sin resolver permanecen visibles como `{{…}}`.
 - **Exportar / Importar** — Comparta entornos como JSON desde la barra del editor.
 - **API del terminal** — Helpers `app.environment` y comandos `.env` / `.envs`.
 

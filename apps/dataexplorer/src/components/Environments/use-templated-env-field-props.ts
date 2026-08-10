@@ -1,7 +1,7 @@
 import type { EnvTemplateSuggestion, EnvWriteTarget } from '@4d/ui'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from '~/i18n'
-import { listAllDynamicEnvVarDefs } from '~/lib/env/dynamic'
+import { HELPER_TEMPLATE_DEFS, listAllDynamicEnvVarDefs } from '~/lib/env'
 import type { EnvScope } from '~/lib/env/types'
 import { getCurrentBaseId } from '~/lib/storage'
 import { setEnvVarCurrentValue, useEnvironmentsStore } from '~/store/environments'
@@ -72,6 +72,16 @@ export function useTemplatedEnvFieldProps() {
       })
     }
     envItems.sort((a, b) => a.key.localeCompare(b.key))
+    const helperItems: EnvTemplateSuggestion[] = []
+    for (const item of HELPER_TEMPLATE_DEFS) {
+      if (seen.has(item.key)) continue
+      seen.add(item.key)
+      helperItems.push({
+        key: item.key,
+        detail: item.description,
+        group: 'dynamic',
+      })
+    }
     const dynamicItems: EnvTemplateSuggestion[] = []
     for (const item of listAllDynamicEnvVarDefs()) {
       if (seen.has(item.key)) continue
@@ -81,7 +91,7 @@ export function useTemplatedEnvFieldProps() {
         group: 'dynamic',
       })
     }
-    return [...envItems, ...dynamicItems]
+    return [...envItems, ...helperItems, ...dynamicItems]
   }, [revision])
 
   const variableGroupLabels = useMemo(

@@ -64,6 +64,14 @@ You can also embed `{{variable}}` in snippet source — values are substituted f
 - `{{$faker.number.int | between:10,100}}` or `{{$faker.number.int | min:10 | max:100}}` — integer in range
 - `{{$faker.date.between | after:2020-01-01 | before:2025-12-31}}` — date bounds (`YYYY-MM-DD`)
 
+**Helper templates** (lists / objects — nested generators use bare `$faker…` paths, no nested braces):
+
+- `{{$pick | from:draft,published,archived}}` — random item
+- `{{$sample | from:a,b,c,d | count:2}}` / `{{$unique | from:a,b,c,d | count:3}}` — JSON array subsets
+- `{{$repeat | of:$faker.person.firstName | count:5}}` — repeat a generator as a JSON array
+- `count:2,5` / `count:>=2` / `count:<=4` — dynamic array length (range or one-sided bound; open lower bounds cap at 10)
+- `{{$object | name:$faker.person.fullName | email:$faker.internet.email}}` — JSON object
+
 Unknown filters leave the `{{…}}` token unresolved so typos are visible.
 
 ## `faker`

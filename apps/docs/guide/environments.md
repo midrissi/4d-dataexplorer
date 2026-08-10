@@ -98,7 +98,27 @@ Call any Faker module method with <code>&#123;&#123;$faker.module.method&#125;&#
 {{$faker.date.between | after:2024-01-01 | before:2024-12-31}}
 ```
 
-Pipe filters (`female` / `male`, `min` / `max` / `between`, `after` / `before`) map onto Faker options when the method supports them. Methods that need custom caller data (many `helpers.*`) may stay unresolved.
+Pipe filters (`female` / `male`, `min` / `max` / `between`, `after` / `before`) map onto Faker options when the method supports them.
+
+### Helper templates (lists & objects)
+
+Ergonomic keys for picking from lists, building arrays, and constructing JSON objects. Nested generators use **bare** <code>$faker…</code> paths in filter args (no nested <code>&#123;&#123;…&#125;&#125;</code>):
+
+```text
+{{$pick | from:draft,published,archived}}
+{{$sample | from:a,b,c,d | count:2}}
+{{$sample | from:a,b,c,d | count:2,4}}
+{{$unique | from:a,b,c,d | count:>=2}}
+{{$repeat | of:$faker.person.firstName | count:5}}
+{{$repeat | of:$faker.person.firstName | count:2,5}}
+{{$repeat | of:$faker.person.firstName | count:<=4}}
+{{$object | name:$faker.person.fullName | email:$faker.internet.email | status:draft}}
+```
+
+`count` accepts a fixed length (`count:3`), an inclusive range (`count:2,5`), or a one-sided bound (`count:>=2`, `count:>2`, `count:<=4`, `count:<5`). Open lower bounds default the upper end to 10; open upper bounds start at 1. For `$sample` / `$unique`, the range is clamped to the `from` list length.
+The same filters work on <code>$faker.helpers.arrayElement</code>, <code>arrayElements</code>, <code>multiple</code>, <code>uniqueArray</code>, and <code>weightedArrayElement</code> (e.g. <code>&#123;&#123;$faker.helpers.weightedArrayElement | from&#58;a&#58;3,b&#58;1&#125;&#125;</code>).
+
+In JSON / entity payloads, a leaf that is **exactly** one <code>$object</code> / <code>$sample</code> / <code>$unique</code> / <code>$repeat</code> template rehydrates to a real object or array (not a JSON string).
 
 ### Clock aliases
 

@@ -33,6 +33,9 @@ export const ENV_TEMPLATE_FILTER_SUGGESTIONS: readonly EnvTemplateSuggestion[] =
   { key: 'between', detail: 'between:a,b (number or date)', group: 'filter' },
   { key: 'after', detail: 'after:YYYY-MM-DD (date dynamics)', group: 'filter' },
   { key: 'before', detail: 'before:YYYY-MM-DD (date dynamics)', group: 'filter' },
+  { key: 'from', detail: 'from:a,b,c (pick/sample/unique)', group: 'filter' },
+  { key: 'of', detail: 'of:$faker.path (repeat/uniqueArray)', group: 'filter' },
+  { key: 'count', detail: 'count:n | count:min,max | count:>=n | count:<=n', group: 'filter' },
 ]
 
 /**

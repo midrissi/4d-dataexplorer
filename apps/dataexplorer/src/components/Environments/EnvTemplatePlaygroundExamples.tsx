@@ -3,7 +3,7 @@ import { type LucideIcon, Sparkles } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useTranslation } from '~/i18n'
 
-export type PlaygroundExampleId = 'greeting' | 'email' | 'mixed'
+export type PlaygroundExampleId = 'greeting' | 'email' | 'mixed' | 'pick' | 'repeat' | 'object'
 
 export type PlaygroundExample = {
   id: PlaygroundExampleId
@@ -29,12 +29,31 @@ export const PLAYGROUND_EXAMPLES: readonly PlaygroundExample[] = [
       '{{$faker.person.fullName | female}}\n{{$faker.location.city}}, {{$faker.location.country}}\n{{$timestamp}}',
     preview: '{{$faker.person.fullName | female}} · city · $timestamp',
   },
+  {
+    id: 'pick',
+    template: '{{$pick | from:draft,published,archived}}',
+    preview: '{{$pick | from:draft,published,archived}}',
+  },
+  {
+    id: 'repeat',
+    template: '{{$repeat | of:$faker.person.firstName | count:2,5}}',
+    preview: '{{$repeat | of:$faker.person.firstName | count:2,5}}',
+  },
+  {
+    id: 'object',
+    template:
+      '{{$object | name:$faker.person.fullName | email:$faker.internet.email | city:$faker.location.city}}',
+    preview: '{{$object | name:… | email:… | city:…}}',
+  },
 ]
 
 const EXAMPLE_LABEL_KEYS = {
   greeting: 'environments.testTemplatesExampleGreeting',
   email: 'environments.testTemplatesExampleEmail',
   mixed: 'environments.testTemplatesExampleMixed',
+  pick: 'environments.testTemplatesExamplePick',
+  repeat: 'environments.testTemplatesExampleRepeat',
+  object: 'environments.testTemplatesExampleObject',
 } as const
 
 /** Favourites-style examples strip for the template playground. */

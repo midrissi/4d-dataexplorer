@@ -24,7 +24,7 @@ The tab is a four-step wizard. Use **Next** / **Back** (or the step indicator) t
 **Dataclass mode** (Selection step, first choice):
 
 - **Expanded** (default) — one folder per selected dataclass with concrete paths (`/rest/Agency`) and `Functions/{dataclass|entity|entitySelection}`.
-- **Collection variable** — one shared `DataClass` CRUD/catalog template using `{{Dataclass}}` (`/rest/$catalog/{{Dataclass}}`, `/rest/{{Dataclass}}`, …). The dataclass list only includes classes with member functions; those export as direct `dataclass` / `entity` / `entitySelection` subfolders (no `Functions` wrapper). The exported collection includes a `Dataclass` variable (defaults to the first selected dataclass). Use this for large catalogs so the export stays small.
+- **Collection variable** — one shared `DataClass` CRUD/catalog template using <code>&#123;&#123;Dataclass&#125;&#125;</code> (<code>/rest/$catalog/&#123;&#123;Dataclass&#125;&#125;</code>, <code>/rest/&#123;&#123;Dataclass&#125;&#125;</code>, …). The dataclass list only includes classes with member functions; those export as direct `dataclass` / `entity` / `entitySelection` subfolders (no `Functions` wrapper). The exported collection includes a `Dataclass` variable (defaults to the first selected dataclass). Use this for large catalogs so the export stays small.
 
 **Directory login** and **include non-exposed methods** are off by default. Turn them on under **Advanced** on the Categories step if you need them.
 

@@ -11,6 +11,7 @@ export {
   listDynamicEnvVarKeys,
   listFakerModuleMethods,
   listFakerModules,
+  listHelperTemplateKeys,
   resolveDynamicEnvVar,
 } from './dynamic'
 export {
@@ -57,6 +58,16 @@ export {
   resolveEnvString,
   warnUnresolvedEnvVars,
 } from './runtime'
+export {
+  HELPER_FILTER_NAMES,
+  HELPER_TEMPLATE_DEFS,
+  type HelperTemplateDef,
+  type HelperTemplateResult,
+  isHelperTemplateKey,
+  isStructuredHelperKey,
+  resolveHelperArgValue,
+  resolveHelperTemplate,
+} from './template-helpers'
 export type {
   Environment,
   EnvironmentsBlock,

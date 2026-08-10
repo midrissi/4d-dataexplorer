@@ -17,7 +17,8 @@ Version `1.4.x` adds **environment variables** (globals, profile, and database l
 - **Templates** — Insert `{{name}}` in HTTP Client, Method Executor, Query Builder, Create Entity, ORDA Terminal snippets, and other templated fields; values resolve at send/run time.
 - **Pipe filters** — Liquid-style transforms (`upper`, `lower`, `snake`, …) plus generator options (`female` / `male`, `min` / `max` / `between`, `after` / `before`).
 - **Dynamic variables** — Full Faker surface via `{{$faker.module.method}}` (e.g. `{{$faker.person.fullName}}`, `{{$faker.string.uuid}}`), plus clock aliases `{{$timestamp}}` / `{{$isoTimestamp}}`.
-- **Chips & autocomplete** — Known variables highlight as chips; completions cover environment keys, aliases, and `$faker.*` paths; unresolved keys stay visible as `{{…}}`.
+- **Helper templates** — `$pick` / `$sample` / `$unique` / `$repeat` / `$object` (and `$faker.helpers.*`) for lists and JSON objects; `count:n`, `count:min,max`, or `count:>=n` / `count:<=n` for dynamic array length; deep resolve rehydrates exact structured leaves.
+- **Chips & autocomplete** — Known variables highlight as chips; completions cover environment keys, aliases, helpers, and `$faker.*` paths; unresolved keys stay visible as `{{…}}`.
 - **Export / Import** — Share environments as JSON from the editor toolbar.
 - **Terminal API** — `app.environment` helpers plus `.env` / `.envs` dot commands.
 

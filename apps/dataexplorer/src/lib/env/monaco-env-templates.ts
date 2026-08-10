@@ -1,6 +1,13 @@
 import { parseTemplateExpression } from '@4d/ui'
 import type * as Monaco from 'monaco-editor'
-import { ENV_TEMPLATE_RE, listAllDynamicEnvVarDefs, resolveDynamicEnvVar } from '~/lib/env'
+import {
+  ENV_TEMPLATE_RE,
+  HELPER_TEMPLATE_DEFS,
+  isHelperTemplateKey,
+  listAllDynamicEnvVarDefs,
+  resolveDynamicEnvVar,
+  resolveHelperTemplate,
+} from '~/lib/env'
 import { getActiveEnvMap } from '~/lib/env/runtime'
 
 const DECORATION_KEY = 'env-template-decorations'
@@ -24,9 +31,10 @@ export function applyEnvTemplateDecorations(
     const raw = match[0]
     const expr = parseTemplateExpression(match[1] ?? '')
     const key = expr?.key ?? ''
+    const filters = expr?.filters ?? []
     const filterHint =
-      expr && expr.filters.length > 0
-        ? ` · filters: ${expr.filters.map((f) => (f.args.length ? `${f.name}:${f.args.join(',')}` : f.name)).join(' | ')}`
+      filters.length > 0
+        ? ` · filters: ${filters.map((f) => (f.args.length ? `${f.name}:${f.args.join(',')}` : f.name)).join(' | ')}`
         : ''
     const start = match.index ?? 0
     const end = start + raw.length
@@ -39,9 +47,15 @@ export function applyEnvTemplateDecorations(
       endPos.column
     )
     const mapped = key.length > 0 ? map.get(key) : undefined
+    const helperSample =
+      key.length > 0 && mapped === undefined && isHelperTemplateKey(key)
+        ? resolveHelperTemplate(key, filters)
+        : null
     const dynamicSample =
-      key.length > 0 && mapped === undefined ? resolveDynamicEnvVar(key) : undefined
-    const known = mapped !== undefined || dynamicSample !== undefined
+      key.length > 0 && mapped === undefined && !helperSample
+        ? resolveDynamicEnvVar(key)
+        : undefined
+    const known = mapped !== undefined || dynamicSample !== undefined || helperSample !== null
     const decoration: Monaco.editor.IModelDeltaDecoration = {
       range,
       options: {
@@ -50,9 +64,11 @@ export function applyEnvTemplateDecorations(
           value:
             mapped !== undefined
               ? `**${key}** = \`${mapped}\`${filterHint}`
-              : dynamicSample !== undefined
-                ? `**${key}** (dynamic) → \`${dynamicSample}\`${filterHint}\n\nTip: pipe filters e.g. \`{{$faker.number.int | between:1,100}}\`, \`{{$faker.person.firstName | female}}\`, \`{{name | upper}}\``
-                : `Unresolved variable **${key || raw}**`,
+              : helperSample
+                ? `**${key}** (helper) → \`${helperSample.text}\`${filterHint}`
+                : dynamicSample !== undefined
+                  ? `**${key}** (dynamic) → \`${dynamicSample}\`${filterHint}\n\nTip: pipe filters e.g. \`{{$faker.number.int | between:1,100}}\`, \`{{$pick | from:a,b}}\`, \`{{$object | name:$faker.person.fullName}}\``
+                  : `Unresolved variable **${key || raw}**`,
         },
       },
     }
@@ -102,6 +118,19 @@ export function registerEnvTemplateCompletionProvider(
           detail: map.get(key),
           range,
           sortText: `0-${key}`,
+        })
+      }
+      for (const item of HELPER_TEMPLATE_DEFS) {
+        if (prefix && !item.key.startsWith(prefix)) continue
+        if (seen.has(item.key)) continue
+        seen.add(item.key)
+        suggestions.push({
+          label: item.key,
+          kind: monaco.languages.CompletionItemKind.Snippet,
+          insertText: item.key,
+          detail: item.description,
+          range,
+          sortText: `0.5-${item.key}`,
         })
       }
       for (const item of listAllDynamicEnvVarDefs()) {

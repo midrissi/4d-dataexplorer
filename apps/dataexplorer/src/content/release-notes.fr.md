@@ -17,7 +17,8 @@ La version `1.4.x` ajoute les **variables d'environnement** (couches globales, p
 - **Templates** — Insérez `{{name}}` dans le Client HTTP, l'Exécuteur de méthodes, le Query Builder, Créer une entité, les snippets du terminal ORDA et d'autres champs templated ; résolution à l'envoi / l'exécution.
 - **Filtres pipe** — Transformations style Liquid (`upper`, `lower`, `snake`, …) et options de génération (`female` / `male`, `min` / `max` / `between`, `after` / `before`).
 - **Variables dynamiques** — Surface Faker complète via `{{$faker.module.method}}` (ex. `{{$faker.person.fullName}}`, `{{$faker.string.uuid}}`), plus alias horloge `{{$timestamp}}` / `{{$isoTimestamp}}`.
-- **Chips et autocomplétion** — Les variables connues s'affichent en chips ; suggestions pour clés d'environnement, alias et chemins `$faker.*` ; les clés non résolues restent visibles en `{{…}}`.
+- **Templates helpers** — `$pick` / `$sample` / `$unique` / `$repeat` / `$object` (et `$faker.helpers.*`) pour listes et objets JSON ; `count:n`, `count:min,max` ou `count:>=n` / `count:<=n` pour une longueur dynamique ; la résolution profonde réhydrate les feuilles structurées exactes.
+- **Chips et autocomplétion** — Les variables connues s'affichent en chips ; suggestions pour clés d'environnement, alias, helpers et chemins `$faker.*` ; les clés non résolues restent visibles en `{{…}}`.
 - **Export / Import** — Partagez les environnements en JSON depuis la barre d'outils de l'éditeur.
 - **API Terminal** — Helpers `app.environment` et commandes `.env` / `.envs`.
 

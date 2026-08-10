@@ -87,6 +87,26 @@ describe('resolveEnvTemplates', () => {
   it('resolves dynamic filters', () => {
     expect(resolveEnvTemplates('{{$faker.number.int | between:7,7}}', {}).text).toBe('7')
   })
+
+  it('resolves $pick from a list', () => {
+    const result = resolveEnvTemplates('{{$pick | from:only}}', {})
+    expect(result).toEqual({ text: 'only', unresolved: [] })
+  })
+
+  it('resolves $repeat as a JSON array string', () => {
+    const result = resolveEnvTemplates(
+      '{{$repeat | of:$faker.number.int | count:3 | min:2 | max:2}}',
+      {}
+    )
+    expect(result.unresolved).toEqual([])
+    expect(result.text).toBe('[2,2,2]')
+  })
+
+  it('leaves invalid helper templates unresolved', () => {
+    const result = resolveEnvTemplates('{{$pick}}', {})
+    expect(result.text).toBe('{{$pick}}')
+    expect(result.unresolved).toEqual(['$pick'])
+  })
 })
 
 describe('collectEnvTemplateKeys / collectUnresolved', () => {
@@ -123,6 +143,23 @@ describe('resolveEnvTemplatesDeep', () => {
     const result = resolveEnvTemplatesDeep({ a: '{{x}}', b: '{{y}}' }, { x: '1' })
     expect(result.value).toEqual({ a: '1', b: '{{y}}' })
     expect(result.unresolved).toEqual(['y'])
+  })
+
+  it('rehydrates exact $object and $repeat leaves', () => {
+    const result = resolveEnvTemplatesDeep(
+      {
+        person: '{{$object | name:Ada | age:$faker.number.int | min:30 | max:30}}',
+        ids: '{{$repeat | of:$faker.number.int | count:2 | min:1 | max:1}}',
+        label: 'Status: {{$pick | from:ok}}',
+      } as Record<string, unknown>,
+      {}
+    )
+    expect(result.unresolved).toEqual([])
+    expect(result.value).toEqual({
+      person: { name: 'Ada', age: 30 },
+      ids: [1, 1],
+      label: 'Status: ok',
+    })
   })
 })
 

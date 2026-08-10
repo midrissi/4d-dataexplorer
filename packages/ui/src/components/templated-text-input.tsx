@@ -109,7 +109,8 @@ export function TemplatedValueDisplay({
         addToLabel={addToLabel}
         unresolvedLabel={unresolvedLabel}
         valuePlaceholder={valuePlaceholder}
-        className={multiline ? 'max-w-full shrink align-baseline' : undefined}
+        wrap={multiline}
+        className={multiline ? 'min-w-0 max-w-full shrink align-baseline' : undefined}
       />
     )
   })

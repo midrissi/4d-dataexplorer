@@ -5,6 +5,11 @@ import {
   extractGeneratorOptions,
   hasGeneratorOptionFilters,
 } from './template-filters'
+import {
+  isHelperTemplateKey,
+  isStructuredHelperKey,
+  resolveHelperTemplate,
+} from './template-helpers'
 
 /** Matches `{{var_name}}` — key is non-empty, no nested braces. */
 export const ENV_TEMPLATE_RE = /\{\{([^{}]+)\}\}/g
@@ -12,6 +17,16 @@ export const ENV_TEMPLATE_RE = /\{\{([^{}]+)\}\}/g
 export type EnvTemplateSegment =
   | { kind: 'text'; text: string }
   | { kind: 'variable'; key: string; raw: string }
+
+const TRANSFORM_FILTER_NAMES = new Set([
+  'lower',
+  'upper',
+  'snake',
+  'camel',
+  'pascal',
+  'kebab',
+  'trim',
+])
 
 /** Split text into plain text and `{{var}}` segments (for UI highlighting). */
 export function parseEnvTemplateSegments(text: string): EnvTemplateSegment[] {
@@ -51,9 +66,15 @@ export function collectEnvTemplateKeys(text: string): string[] {
   return keys
 }
 
+function pushUnresolved(seen: Set<string>, unresolved: string[], label: string) {
+  if (seen.has(label)) return
+  seen.add(label)
+  unresolved.push(label)
+}
+
 /**
  * Replace `{{key | filters}}` using `map`. Unresolved tokens are left as-is.
- * Missing keys that match Postman dynamic vars (`$timestamp`, …) are generated.
+ * Missing keys that match dynamic vars (`$timestamp`, `$faker…`, `$pick`, …) are generated.
  * Returns `{ text, unresolved }` where unresolved lists unique missing expression labels.
  */
 export function resolveEnvTemplates(
@@ -79,13 +100,34 @@ export function resolveEnvTemplates(
     if (!expr) return raw
 
     const { key, filters } = expr
+    const label = rawInner.trim()
+
+    // Ergonomic helpers (`$pick`, `$object`, `$faker.helpers.*`, …) before generic filters.
+    if (isHelperTemplateKey(key)) {
+      const helper = resolveHelperTemplate(key, filters)
+      if (!helper) {
+        pushUnresolved(seen, unresolved, label)
+        return raw
+      }
+      if (!helper.rehydrate) {
+        const transformFilters = filters.filter((f) =>
+          TRANSFORM_FILTER_NAMES.has(f.name.toLowerCase())
+        )
+        if (transformFilters.length > 0) {
+          const transformed = applyTransforms(helper.text, transformFilters)
+          if (transformed === null) {
+            pushUnresolved(seen, unresolved, label)
+            return raw
+          }
+          return transformed
+        }
+      }
+      return helper.text
+    }
+
     const extracted = extractGeneratorOptions(filters)
     if (!extracted) {
-      const label = rawInner.trim()
-      if (!seen.has(label)) {
-        seen.add(label)
-        unresolved.push(label)
-      }
+      pushUnresolved(seen, unresolved, label)
       return raw
     }
 
@@ -95,21 +137,13 @@ export function resolveEnvTemplates(
     if (value !== undefined) {
       // Env values cannot use generator-only options (female, between, …).
       if (hasGeneratorOptionFilters(filters)) {
-        const label = rawInner.trim()
-        if (!seen.has(label)) {
-          seen.add(label)
-          unresolved.push(label)
-        }
+        pushUnresolved(seen, unresolved, label)
         return raw
       }
     } else {
       const dynamic = resolveDynamicEnvVar(key, options)
       if (dynamic === undefined) {
-        const label = rawInner.trim()
-        if (!seen.has(label)) {
-          seen.add(label)
-          unresolved.push(label)
-        }
+        pushUnresolved(seen, unresolved, label)
         return raw
       }
       value = dynamic
@@ -117,11 +151,7 @@ export function resolveEnvTemplates(
 
     const transformed = applyTransforms(value, transforms)
     if (transformed === null) {
-      const label = rawInner.trim()
-      if (!seen.has(label)) {
-        seen.add(label)
-        unresolved.push(label)
-      }
+      pushUnresolved(seen, unresolved, label)
       return raw
     }
     return transformed
@@ -142,8 +172,25 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 }
 
 /**
+ * Resolve a string that is exactly one structured helper template into a typed value.
+ * Returns `null` when the string is not an exact structured helper leaf.
+ */
+function resolveExactStructuredLeaf(text: string): { value: unknown; unresolved: boolean } | null {
+  const trimmed = text.trim()
+  const match = /^\{\{([^{}]+)\}\}$/.exec(trimmed)
+  if (!match) return null
+  const expr = parseTemplateExpression(match[1] ?? '')
+  if (!expr || !isStructuredHelperKey(expr.key)) return null
+  const helper = resolveHelperTemplate(expr.key, expr.filters)
+  if (!helper) return { value: text, unresolved: true }
+  if (!helper.rehydrate) return null
+  return { value: helper.structured, unresolved: false }
+}
+
+/**
  * Deep-walk a JSON-compatible value and resolve string leaves.
  * Arrays/objects are cloned; non-string primitives are unchanged.
+ * Exact `$object` / `$repeat` / `$sample` / `$unique` leaves rehydrate to real structures.
  */
 export function resolveEnvTemplatesDeep<T>(
   value: T,
@@ -152,7 +199,7 @@ export function resolveEnvTemplatesDeep<T>(
   const unresolved: string[] = []
   const seen = new Set<string>()
 
-  const pushUnresolved = (keys: string[]) => {
+  const pushUnresolvedKeys = (keys: string[]) => {
     for (const key of keys) {
       if (seen.has(key)) continue
       seen.add(key)
@@ -162,8 +209,17 @@ export function resolveEnvTemplatesDeep<T>(
 
   const walk = (node: unknown): unknown => {
     if (typeof node === 'string') {
+      const structured = resolveExactStructuredLeaf(node)
+      if (structured) {
+        if (structured.unresolved) {
+          const inner = node.trim().slice(2, -2).trim()
+          pushUnresolvedKeys([inner])
+          return node
+        }
+        return structured.value
+      }
       const result = resolveEnvTemplates(node, map)
-      pushUnresolved(result.unresolved)
+      pushUnresolvedKeys(result.unresolved)
       return result.text
     }
     if (Array.isArray(node)) {

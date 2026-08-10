@@ -19,13 +19,18 @@ const RELEASE_NOTES = [
   { file: 'release-notes.es.md', out: 'es.md', title: 'Notas de la versión' },
 ]
 
+/** Escape `{{…}}` so VitePress/Vue does not treat them as interpolations. */
+function escapeVueMustaches(md: string): string {
+  return md.replaceAll('{{', '&#123;&#123;').replaceAll('}}', '&#125;&#125;')
+}
+
 for (const { file, out, title } of RELEASE_NOTES) {
   const src = join(contentDir, file)
   if (!existsSync(src)) {
     console.warn(`Release notes source not found: ${src}`)
     continue
   }
-  const body = readFileSync(src, 'utf8')
+  const body = escapeVueMustaches(readFileSync(src, 'utf8'))
   writeFileSync(join(releaseNotesDir, out), `---\ntitle: ${title}\n---\n\n${body}`)
 }
 

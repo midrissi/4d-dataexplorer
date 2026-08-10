@@ -1,4 +1,5 @@
 import { resolveDynamicEnvVar } from './dynamic'
+import { HELPER_TEMPLATE_DEFS, isHelperTemplateKey } from './template-helpers'
 import type { Environment, EnvScope, EnvVariable, EnvVarLookup } from './types'
 
 /**
@@ -119,6 +120,17 @@ export function lookupEnvVariable(
   if (dynamicValue !== undefined) {
     return {
       value: dynamicValue,
+      scope: 'dynamic',
+      scopeLabel: labels.dynamic ?? 'Dynamic',
+      unresolved: false,
+      dynamic: true,
+    }
+  }
+
+  if (isHelperTemplateKey(trimmed)) {
+    const def = HELPER_TEMPLATE_DEFS.find((item) => item.key === trimmed)
+    return {
+      value: def?.description ?? 'Helper template',
       scope: 'dynamic',
       scopeLabel: labels.dynamic ?? 'Dynamic',
       unresolved: false,

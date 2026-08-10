@@ -35,6 +35,11 @@ export type EnvVariableChipProps = {
   addToLabel?: string
   unresolvedLabel?: string
   valuePlaceholder?: string
+  /**
+   * Allow the chip label to wrap (textarea / multiline preview).
+   * Default truncates so single-line fields stay one row.
+   */
+  wrap?: boolean
   className?: string
 }
 
@@ -49,6 +54,7 @@ export function EnvVariableChip({
   addToLabel = 'Add to',
   unresolvedLabel = 'Unresolved',
   valuePlaceholder = 'Enter value',
+  wrap = false,
   className,
 }: EnvVariableChipProps) {
   const unresolved = !lookup || lookup.unresolved
@@ -131,7 +137,10 @@ export function EnvVariableChip({
           tabIndex={-1}
           className={cn(
             // Hug text metrics; self-center so flex rows align chip with plain text.
-            'env-var-chip inline-flex w-fit max-w-full items-center self-center truncate rounded-xs px-0.5 py-px font-mono text-[1em] leading-none',
+            'env-var-chip inline-flex w-fit max-w-full self-center rounded-xs px-0.5 py-px font-mono text-[1em]',
+            wrap
+              ? 'min-w-0 items-start whitespace-normal break-all text-left leading-snug'
+              : 'items-center truncate leading-none',
             unresolved
               ? 'bg-destructive/10 text-destructive shadow-[inset_0_0_0_1px] shadow-destructive/60'
               : 'bg-sky-400/10 text-sky-400 shadow-[inset_0_0_0_1px] shadow-sky-400/70',

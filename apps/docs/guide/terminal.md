@@ -46,7 +46,7 @@ ds.Car.query("color.label=:1", "black")
 await ds.Car.get(12).select("name")
 ```
 
-The REPL also injects **`faker`** ([Faker.js](https://fakerjs.dev/api/)) — the same English instance used by `{{$faker…}}` templates — with module/method autocomplete:
+The REPL also injects **`faker`** ([Faker.js](https://fakerjs.dev/api/)) — the same English instance used by <code>&#123;&#123;$faker…&#125;&#125;</code> templates — with module/method autocomplete:
 
 ```js
 faker.person.firstName()
