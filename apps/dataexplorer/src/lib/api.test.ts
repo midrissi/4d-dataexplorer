@@ -433,6 +433,35 @@ describe('lib/api', () => {
       expect(result.count).toBe(2)
       expect(result.entities).toHaveLength(2)
     })
+
+    it('batches payloads larger than CREATE_ENTITIES_BATCH_SIZE', async () => {
+      const { CREATE_ENTITIES_BATCH_SIZE } = await import('./api')
+      const payload = Array.from({ length: CREATE_ENTITIES_BATCH_SIZE + 5 }, (_, i) => ({
+        name: `N${i}`,
+      }))
+      mockDataclassUpdateMany.mockClear()
+      mockDataclassUpdateMany.mockImplementation(async (entities: unknown[]) =>
+        (entities as Array<{ name: string }>).map((entity, index) => ({
+          __KEY: String(index + 1),
+          ...entity,
+        }))
+      )
+
+      try {
+        const result = await api.createManyEntities('Employee', payload)
+        expect(mockDataclassUpdateMany).toHaveBeenCalledTimes(2)
+        expect(mockDataclassUpdateMany.mock.calls[0]?.[0]).toHaveLength(CREATE_ENTITIES_BATCH_SIZE)
+        expect(mockDataclassUpdateMany.mock.calls[1]?.[0]).toHaveLength(5)
+        expect(result.count).toBe(CREATE_ENTITIES_BATCH_SIZE + 5)
+      } finally {
+        mockDataclassUpdateMany.mockImplementation(() =>
+          Promise.resolve([
+            { __KEY: '1', name: 'Updated' },
+            { __KEY: '2', name: 'Updated' },
+          ])
+        )
+      }
+    })
   })
 
   describe('updateManyEntities', () => {

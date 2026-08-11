@@ -2253,7 +2253,7 @@ export const es = {
     createCountHint:
       'Use {{variables}} y filtros ({{$faker.person.firstName | female}}, {{name | upper}}) — se resuelven al crear.',
     createCountHintTemplates:
-      'Crea {count} registros. Las plantillas como {{$faker.string.uuid}} o {{$faker.number.int | between:1,100}} se evalúan antes de cada creación.',
+      'Crea {count} registros en bloque (lotes de 100 si hay más). Las plantillas como {{$faker.string.uuid}} o {{$faker.number.int | between:1,100}} se evalúan una vez por registro antes de enviar.',
     afterCreate: 'Después de crear',
     afterCreateClose: 'Cerrar diálogo',
     afterCreateClear: 'Mantener abierto · vaciar formulario',

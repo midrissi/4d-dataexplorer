@@ -2264,7 +2264,7 @@ export const fr = {
     createCountHint:
       'Utilisez {{variables}} et filtres ({{$faker.person.firstName | female}}, {{name | upper}}) — résolus à la création.',
     createCountHintTemplates:
-      'Crée {count} enregistrements. Les modèles comme {{$faker.string.uuid}} ou {{$faker.number.int | between:1,100}} sont évalués avant chaque création.',
+      'Crée {count} enregistrements en masse (lots de 100 au-delà). Les modèles comme {{$faker.string.uuid}} ou {{$faker.number.int | between:1,100}} sont évalués une fois par enregistrement avant l’envoi.',
     afterCreate: 'Après création',
     afterCreateClose: 'Fermer la boîte de dialogue',
     afterCreateClear: 'Rester ouvert · vider le formulaire',

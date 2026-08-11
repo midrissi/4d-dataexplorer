@@ -8,6 +8,7 @@ import {
   mockDataclassDelete,
   mockDataclassFetch,
   mockDataclassUpdate,
+  mockDataclassUpdateMany,
   mockFetchPage,
   mockToEntitySet,
 } from '../test-rest-mock'
@@ -198,6 +199,22 @@ describe('store/index', () => {
       await useDataExplorerStore.getState().createEntity({ name: 'New' }, { refresh: false })
       expect(mockDataclassCreate).toHaveBeenCalled()
       expect(useDataExplorerStore.getState().entities).toEqual([])
+    })
+
+    it('bulk-creates when count is greater than 1', async () => {
+      useDataExplorerStore.setState({ selectedDataclass: 'Employee', entities: [] })
+      mockDataclassCreate.mockClear()
+      mockDataclassUpdateMany.mockClear()
+      await useDataExplorerStore
+        .getState()
+        .createEntity({ name: 'Bulk' }, { refresh: false, count: 3 })
+      expect(mockDataclassCreate).not.toHaveBeenCalled()
+      expect(mockDataclassUpdateMany).toHaveBeenCalledTimes(1)
+      expect(mockDataclassUpdateMany.mock.calls[0]?.[0]).toEqual([
+        { name: 'Bulk' },
+        { name: 'Bulk' },
+        { name: 'Bulk' },
+      ])
     })
   })
 

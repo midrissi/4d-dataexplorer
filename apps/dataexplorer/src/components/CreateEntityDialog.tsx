@@ -35,7 +35,8 @@ import type { EditMode } from '~/store/settings'
 import { useCodeEditorPrefs, useDefaultEditMode, useUpdateCodeEditorPrefs } from '~/store/settings'
 
 const VALID_JSON_EXAMPLE = '{\n  "key": "value"\n}'
-const MAX_CREATE_COUNT = 100
+/** UI cap for create-many. Larger counts are sent in API batches of 100. */
+const MAX_CREATE_COUNT = 1000
 
 type AfterCreateMode = 'close' | 'clear' | 'keep'
 
@@ -64,7 +65,10 @@ interface CreateEntityDialogProps {
   dataclassName: string
   initialData?: Record<string, unknown>
   isDuplicate?: boolean
-  onSubmit: (data: Record<string, unknown>, options?: { refresh?: boolean }) => Promise<void>
+  onSubmit: (
+    data: Record<string, unknown>,
+    options?: { refresh?: boolean; count?: number }
+  ) => Promise<void>
   /** Refresh list/count after a create batch (or partial batch on error). */
   onRefresh?: () => Promise<void>
 }
@@ -130,12 +134,9 @@ export function CreateEntityDialog({
       const times = clampCreateCount(createCount)
       let created = 0
       try {
-        // Each create resolves {{templates}} fresh in the API layer.
-        // Defer list refresh until the whole batch finishes.
-        for (let i = 0; i < times; i++) {
-          await onSubmit(data, { refresh: false })
-          created++
-        }
+        // One bulk request (or 100-sized batches). Templates resolve fresh per entity in the API.
+        await onSubmit(data, { refresh: false, count: times })
+        created = times
       } finally {
         if (created > 0) {
           await onRefresh?.()

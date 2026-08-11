@@ -2221,7 +2221,7 @@ export const en = {
     createCountHint:
       'Use {{variables}} and filters ({{$faker.person.firstName | female}}, {{name | upper}}) — they resolve when you create.',
     createCountHintTemplates:
-      'Creates {count} records. Templates like {{$faker.string.uuid}} or {{$faker.number.int | between:1,100}} are evaluated before each create.',
+      'Creates {count} records in bulk (batches of 100 when larger). Templates like {{$faker.string.uuid}} or {{$faker.number.int | between:1,100}} are evaluated once per record before sending.',
     afterCreate: 'After create',
     afterCreateClose: 'Close dialog',
     afterCreateClear: 'Keep open · clear form',

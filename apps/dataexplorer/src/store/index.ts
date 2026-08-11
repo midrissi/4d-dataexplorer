@@ -107,7 +107,10 @@ type DataExplorerState = {
   setSearchQuery: (query: string) => void
   setIsEditing: (editing: boolean) => void
   setEditedEntity: (entity: string | null) => void
-  createEntity: (data: Record<string, unknown>, options?: { refresh?: boolean }) => Promise<void>
+  createEntity: (
+    data: Record<string, unknown>,
+    options?: { refresh?: boolean; count?: number }
+  ) => Promise<void>
   updateEntity: (id: string, data: Record<string, unknown>) => Promise<void>
   deleteEntity: (id: string) => Promise<void>
   /** Batch delete via REST $method=delete (page keys, entity set, or all records). */
@@ -474,7 +477,19 @@ export const useDataExplorerStore = create<DataExplorerState>()(
           const { selectedDataclass } = get()
           if (!selectedDataclass) return
 
-          await api.createEntity(selectedDataclass, data)
+          const count =
+            typeof options?.count === 'number' && Number.isFinite(options.count)
+              ? Math.max(1, Math.trunc(options.count))
+              : 1
+
+          if (count === 1) {
+            await api.createEntity(selectedDataclass, data)
+          } else {
+            // Same template N times — createManyEntities resolves templates per item, then batches.
+            const templates = Array.from({ length: count }, () => data)
+            await api.createManyEntities(selectedDataclass, templates)
+          }
+
           if (options?.refresh === false) return
           await get().fetchDataclassCount(selectedDataclass)
           await get().fetchEntities()

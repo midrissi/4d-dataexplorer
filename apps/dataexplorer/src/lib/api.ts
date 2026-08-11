@@ -25,6 +25,9 @@ import type { Dataclass, Entity, Pagination } from '~/store'
 import { type DataclassCustomization, useSettingsStore } from '~/store/settings'
 import { useTabsStore } from '~/store/tabs'
 
+/** Max entities per `$method=update` array body when bulk-creating. */
+export const CREATE_ENTITIES_BATCH_SIZE = 100
+
 /**
  * Flatten an unknown thrown value (and Error.cause chain) into a readable message.
  */
@@ -934,15 +937,47 @@ export const api = {
   },
 
   /**
-   * Create multiple entities in one REST request ($method=update with an array body).
+   * Create multiple entities via REST `$method=update` (array body).
+   * Resolves env templates per entity, then sends in batches of {@link CREATE_ENTITIES_BATCH_SIZE}.
    */
   createManyEntities: async (dataclassName: string, entities: Record<string, unknown>[]) => {
-    const results = await client.dataclass(dataclassName).updateMany(entities)
+    if (entities.length === 0) {
+      return {
+        dataclass: dataclassName,
+        created: true,
+        count: 0,
+        entities: [] as Array<Record<string, unknown> & { id: unknown }>,
+      }
+    }
+
+    const schema = await api.getDataclassSchema(dataclassName)
+    const prepared: Record<string, unknown>[] = []
+    const unresolved: string[] = []
+    for (const entity of entities) {
+      const resolved = resolveEnvDeep(entity)
+      for (const key of resolved.unresolved) {
+        if (!unresolved.includes(key)) unresolved.push(key)
+      }
+      prepared.push(
+        coerceEntityDataBySchema(resolved.value as Record<string, unknown>, schema.attributes)
+      )
+    }
+    if (unresolved.length > 0) {
+      consoleService.warn(`Unresolved environment variables: ${unresolved.join(', ')}`)
+    }
+
+    const allResults: Array<Record<string, unknown> & { __KEY?: unknown }> = []
+    for (let offset = 0; offset < prepared.length; offset += CREATE_ENTITIES_BATCH_SIZE) {
+      const chunk = prepared.slice(offset, offset + CREATE_ENTITIES_BATCH_SIZE)
+      const results = await client.dataclass(dataclassName).updateMany(chunk)
+      allResults.push(...results)
+    }
+
     return {
       dataclass: dataclassName,
       created: true,
-      count: results.length,
-      entities: results.map((entity) => ({ ...entity, id: entity.__KEY })),
+      count: allResults.length,
+      entities: allResults.map((entity) => ({ ...entity, id: entity.__KEY })),
     }
   },
 
