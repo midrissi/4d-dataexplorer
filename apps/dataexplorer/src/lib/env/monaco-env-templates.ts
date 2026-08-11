@@ -67,7 +67,7 @@ export function applyEnvTemplateDecorations(
               : helperSample
                 ? `**${key}** (helper) → \`${helperSample.text}\`${filterHint}`
                 : dynamicSample !== undefined
-                  ? `**${key}** (dynamic) → \`${dynamicSample}\`${filterHint}\n\nTip: pipe filters e.g. \`{{$faker.number.int | between:1,100}}\`, \`{{$pick | from:a,b}}\`, \`{{$object | name:$faker.person.fullName}}\``
+                  ? `**${key}** (dynamic) → \`${dynamicSample}\`${filterHint}\n\nTip: pipe filters e.g. \`{{$faker.number.int | between:1,100}}\`, \`{{$faker.person.firstName | hash:md5}}\`, \`{{$pick | from:a,b}}\`, \`{{$vector | dims:8}}\`, \`{{$object | name:$faker.person.fullName}}\``
                   : `Unresolved variable **${key || raw}**`,
         },
       },

@@ -15,9 +15,9 @@ La version `1.4.x` ajoute les **variables d'environnement** (couches globales, p
 - **Éditeur d'environnements** — Gérez les portées **Globals**, **Profil** et **Cette base** depuis Outils, la palette de commandes (**Environnements**), ou le sélecteur **Environment** du pied de page → **Gérer…**.
 - **Environnements actifs** — Un environnement profil et un environnement base actifs à la fois ; le sélecteur du pied de page les choisit et prévisualise la liste fusionnée (les secrets restent masqués jusqu'à révélation).
 - **Templates** — Insérez `{{name}}` dans le Client HTTP, l'Exécuteur de méthodes, le Query Builder, Créer une entité, les snippets du terminal ORDA et d'autres champs templated ; résolution à l'envoi / l'exécution.
-- **Filtres pipe** — Transformations style Liquid (`upper`, `lower`, `snake`, …) et options de génération (`female` / `male`, `min` / `max` / `between`, `after` / `before`).
+- **Filtres pipe** — Transformations style Liquid (`upper`, `lower`, `snake`, `hash:md5`, …) et options de génération (`female` / `male`, `min` / `max` / `between`, `after` / `before`).
 - **Variables dynamiques** — Surface Faker complète via `{{$faker.module.method}}` (ex. `{{$faker.person.fullName}}`, `{{$faker.string.uuid}}`), plus alias horloge `{{$timestamp}}` / `{{$isoTimestamp}}`.
-- **Templates helpers** — `$pick` / `$sample` / `$unique` / `$repeat` / `$object` (et `$faker.helpers.*`) pour listes et objets JSON ; `count:n`, `count:min,max` ou `count:>=n` / `count:<=n` pour une longueur dynamique ; la résolution profonde réhydrate les feuilles structurées exactes.
+- **Templates helpers** — `$pick` / `$sample` / `$unique` / `$repeat` / `$object` / `$vector` (et `$faker.helpers.*`) pour listes, objets JSON et tableaux float style embedding ; `count:n`, `count:min,max` ou `count:>=n` / `count:<=n` pour une longueur dynamique ; `$vector | dims:n` (option `normalize`) ; la résolution profonde réhydrate les feuilles structurées exactes.
 - **Chips et autocomplétion** — Les variables connues s'affichent en chips ; suggestions pour clés d'environnement, alias, helpers et chemins `$faker.*` ; les clés non résolues restent visibles en `{{…}}`.
 - **Export / Import** — Partagez les environnements en JSON depuis la barre d'outils de l'éditeur.
 - **API Terminal** — Helpers `app.environment` et commandes `.env` / `.envs`.

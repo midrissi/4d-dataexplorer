@@ -15,9 +15,9 @@ La versión `1.4.x` añade **variables de entorno** (capas globales, perfil y ba
 - **Editor de entornos** — Gestione los ámbitos **Globals**, **Perfil** y **Esta base** desde Herramientas, la paleta de comandos (**Entornos**) o el conmutador **Environment** del pie → **Gestionar…**.
 - **Entornos activos** — Un entorno de perfil y uno de base activos a la vez; el conmutador del pie los selecciona y previsualiza la lista fusionada (los secretos permanecen enmascarados hasta revelarlos).
 - **Plantillas** — Inserte `{{name}}` en el Cliente HTTP, el Ejecutor de métodos, el Query Builder, Crear entidad, snippets del terminal ORDA y otros campos con plantilla; se resuelven al enviar/ejecutar.
-- **Filtros pipe** — Transformaciones estilo Liquid (`upper`, `lower`, `snake`, …) y opciones de generación (`female` / `male`, `min` / `max` / `between`, `after` / `before`).
+- **Filtros pipe** — Transformaciones estilo Liquid (`upper`, `lower`, `snake`, `hash:md5`, …) y opciones de generación (`female` / `male`, `min` / `max` / `between`, `after` / `before`).
 - **Variables dinámicas** — Superficie Faker completa vía `{{$faker.module.method}}` (p. ej. `{{$faker.person.fullName}}`, `{{$faker.string.uuid}}`), más alias de reloj `{{$timestamp}}` / `{{$isoTimestamp}}`.
-- **Plantillas helper** — `$pick` / `$sample` / `$unique` / `$repeat` / `$object` (y `$faker.helpers.*`) para listas y objetos JSON; `count:n`, `count:min,max` o `count:>=n` / `count:<=n` para longitud dinámica; la resolución profunda rehidrata hojas estructuradas exactas.
+- **Plantillas helper** — `$pick` / `$sample` / `$unique` / `$repeat` / `$object` / `$vector` (y `$faker.helpers.*`) para listas, objetos JSON y arrays float tipo embedding; `count:n`, `count:min,max` o `count:>=n` / `count:<=n` para longitud dinámica; `$vector | dims:n` (opción `normalize`); la resolución profunda rehidrata hojas estructuradas exactas.
 - **Chips y autocompletado** — Las variables conocidas se destacan como chips; sugerencias para claves de entorno, alias, helpers y rutas `$faker.*`; las claves sin resolver permanecen visibles como `{{…}}`.
 - **Exportar / Importar** — Comparta entornos como JSON desde la barra del editor.
 - **API del terminal** — Helpers `app.environment` y comandos `.env` / `.envs`.

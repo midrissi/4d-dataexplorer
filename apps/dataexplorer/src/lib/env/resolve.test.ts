@@ -88,6 +88,13 @@ describe('resolveEnvTemplates', () => {
     expect(resolveEnvTemplates('{{$faker.number.int | between:7,7}}', {}).text).toBe('7')
   })
 
+  it('applies hash filter on dynamics', () => {
+    // firstName is random; pin via hashing a fixed env value instead
+    expect(resolveEnvTemplates('{{name | hash:md5}}', { name: 'test' }).text).toBe(
+      '098f6bcd4621d373cade4e832627b4f6'
+    )
+  })
+
   it('resolves $pick from a list', () => {
     const result = resolveEnvTemplates('{{$pick | from:only}}', {})
     expect(result).toEqual({ text: 'only', unresolved: [] })
@@ -100,6 +107,12 @@ describe('resolveEnvTemplates', () => {
     )
     expect(result.unresolved).toEqual([])
     expect(result.text).toBe('[2,2,2]')
+  })
+
+  it('resolves $vector as a JSON array string', () => {
+    const result = resolveEnvTemplates('{{$vector | dims:3 | min:0 | max:0}}', {})
+    expect(result.unresolved).toEqual([])
+    expect(result.text).toBe('[0,0,0]')
   })
 
   it('leaves invalid helper templates unresolved', () => {
@@ -150,6 +163,7 @@ describe('resolveEnvTemplatesDeep', () => {
       {
         person: '{{$object | name:Ada | age:$faker.number.int | min:30 | max:30}}',
         ids: '{{$repeat | of:$faker.number.int | count:2 | min:1 | max:1}}',
+        embedding: '{{$vector | dims:2 | min:0 | max:0}}',
         label: 'Status: {{$pick | from:ok}}',
       } as Record<string, unknown>,
       {}
@@ -158,6 +172,7 @@ describe('resolveEnvTemplatesDeep', () => {
     expect(result.value).toEqual({
       person: { name: 'Ada', age: 30 },
       ids: [1, 1],
+      embedding: [0, 0],
       label: 'Status: ok',
     })
   })

@@ -43,22 +43,24 @@ const maxPlatform = computed(() =>
 const totalForShare = computed(() => Math.max(1, target.value.total))
 
 const platforms = computed(() =>
-  target.value.platforms.map((platform, index) => {
-    const downloads = Math.round(platform.downloads * progress.value)
-    const share = (downloads / Math.max(1, displayTotal.value)) * 100
-    const targetShare = (platform.downloads / totalForShare.value) * 100
-    const rawBar = (platform.downloads / maxPlatform.value) * 100 * progress.value
-    const bar = platform.downloads > 0 ? (progress.value >= 1 ? Math.max(rawBar, 4) : rawBar) : 0
-    return {
-      ...platform,
-      index,
-      downloads,
-      share,
-      targetShare,
-      bar,
-      shareLabel: formatShare(progress.value >= 1 ? targetShare : share),
-    }
-  })
+  [...target.value.platforms]
+    .sort((a, b) => b.downloads - a.downloads || a.label.localeCompare(b.label))
+    .map((platform, index) => {
+      const downloads = Math.round(platform.downloads * progress.value)
+      const share = (downloads / Math.max(1, displayTotal.value)) * 100
+      const targetShare = (platform.downloads / totalForShare.value) * 100
+      const rawBar = (platform.downloads / maxPlatform.value) * 100 * progress.value
+      const bar = platform.downloads > 0 ? (progress.value >= 1 ? Math.max(rawBar, 4) : rawBar) : 0
+      return {
+        ...platform,
+        index,
+        downloads,
+        share,
+        targetShare,
+        bar,
+        shareLabel: formatShare(progress.value >= 1 ? targetShare : share),
+      }
+    })
 )
 
 const leading = computed(() => {

@@ -26,6 +26,7 @@ export const ENV_TEMPLATE_FILTER_SUGGESTIONS: readonly EnvTemplateSuggestion[] =
   { key: 'pascal', detail: 'PascalCase', group: 'filter' },
   { key: 'kebab', detail: 'kebab-case', group: 'filter' },
   { key: 'trim', detail: 'Trim whitespace', group: 'filter' },
+  { key: 'hash', detail: 'hash:md5|sha1|sha256|sha384|sha512', group: 'filter' },
   { key: 'female', detail: 'Female name (dynamics)', group: 'filter' },
   { key: 'male', detail: 'Male name (dynamics)', group: 'filter' },
   { key: 'min', detail: 'min:n (number dynamics)', group: 'filter' },
@@ -36,6 +37,8 @@ export const ENV_TEMPLATE_FILTER_SUGGESTIONS: readonly EnvTemplateSuggestion[] =
   { key: 'from', detail: 'from:a,b,c (pick/sample/unique)', group: 'filter' },
   { key: 'of', detail: 'of:$faker.path (repeat/uniqueArray)', group: 'filter' },
   { key: 'count', detail: 'count:n | count:min,max | count:>=n | count:<=n', group: 'filter' },
+  { key: 'dims', detail: 'dims:n (vector dimensions)', group: 'filter' },
+  { key: 'normalize', detail: 'L2-normalize ($vector)', group: 'filter' },
 ]
 
 /**

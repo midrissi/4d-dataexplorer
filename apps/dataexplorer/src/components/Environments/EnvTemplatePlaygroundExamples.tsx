@@ -3,7 +3,15 @@ import { type LucideIcon, Sparkles } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useTranslation } from '~/i18n'
 
-export type PlaygroundExampleId = 'greeting' | 'email' | 'mixed' | 'pick' | 'repeat' | 'object'
+export type PlaygroundExampleId =
+  | 'greeting'
+  | 'email'
+  | 'mixed'
+  | 'pick'
+  | 'repeat'
+  | 'object'
+  | 'vector'
+  | 'hash'
 
 export type PlaygroundExample = {
   id: PlaygroundExampleId
@@ -45,6 +53,16 @@ export const PLAYGROUND_EXAMPLES: readonly PlaygroundExample[] = [
       '{{$object | name:$faker.person.fullName | email:$faker.internet.email | city:$faker.location.city}}',
     preview: '{{$object | name:… | email:… | city:…}}',
   },
+  {
+    id: 'vector',
+    template: '{{$vector | dims:8 | normalize}}',
+    preview: '{{$vector | dims:8 | normalize}}',
+  },
+  {
+    id: 'hash',
+    template: '{{$faker.person.firstName | hash:md5}}',
+    preview: '{{$faker.person.firstName | hash:md5}}',
+  },
 ]
 
 const EXAMPLE_LABEL_KEYS = {
@@ -54,6 +72,8 @@ const EXAMPLE_LABEL_KEYS = {
   pick: 'environments.testTemplatesExamplePick',
   repeat: 'environments.testTemplatesExampleRepeat',
   object: 'environments.testTemplatesExampleObject',
+  vector: 'environments.testTemplatesExampleVector',
+  hash: 'environments.testTemplatesExampleHash',
 } as const
 
 /** Favourites-style examples strip for the template playground. */

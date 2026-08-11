@@ -1,5 +1,5 @@
 /**
- * Ergonomic template helpers: `$pick`, `$sample`, `$unique`, `$repeat`, `$object`
+ * Ergonomic template helpers: `$pick`, `$sample`, `$unique`, `$repeat`, `$object`, `$vector`
  * and matching `$faker.helpers.*` paths with `from` / `of` / `count` filters.
  *
  * Nested generators use bare paths (no nested braces): `of:$faker.person.firstName`.
@@ -7,6 +7,7 @@
 
 import type { EnvTemplateFilter } from '@4d/ui'
 import { type DynamicGenerateOptions, getEnvFaker, resolveDynamicEnvVar } from './dynamic'
+import { TRANSFORM_FILTER_NAMES } from './template-filters'
 
 export type HelperTemplateResult = {
   /** String form for text substitution (JSON for arrays/objects). */
@@ -22,14 +23,12 @@ export type HelperTemplateDef = {
   description: string
 }
 
-const ALIAS_KEYS = ['$pick', '$sample', '$unique', '$repeat', '$object'] as const
+const ALIAS_KEYS = ['$pick', '$sample', '$unique', '$repeat', '$object', '$vector'] as const
 
 const HELPERS_PATH_RE =
   /^\$faker\.helpers\.(arrayElement|arrayElements|multiple|uniqueArray|weightedArrayElement)$/
 
-const RESERVED_HELPER_FILTERS = new Set(['from', 'of', 'count'])
-
-const TRANSFORM_NAMES = new Set(['lower', 'upper', 'snake', 'camel', 'pascal', 'kebab', 'trim'])
+const RESERVED_HELPER_FILTERS = new Set(['from', 'of', 'count', 'dims', 'normalize'])
 
 const GENERATOR_OPTION_NAMES = new Set([
   'female',
@@ -40,6 +39,9 @@ const GENERATOR_OPTION_NAMES = new Set([
   'after',
   'before',
 ])
+
+/** Soft cap so a typo like `dims:1000000` cannot freeze the UI. */
+const MAX_VECTOR_DIMS = 8192
 
 /** Completions for ergonomic helper keys (not `$faker.helpers.*`). */
 export const HELPER_TEMPLATE_DEFS: readonly HelperTemplateDef[] = [
@@ -60,10 +62,15 @@ export const HELPER_TEMPLATE_DEFS: readonly HelperTemplateDef[] = [
     key: '$object',
     description: 'Build a JSON object (`| name:$faker… | status:draft`)',
   },
+  {
+    key: '$vector',
+    description:
+      'Random float embedding (`| dims:n` or `count:n`; optional `normalize`, `min`/`max`)',
+  },
 ]
 
 /** @internal — filter names offered after `|` for helper templates. */
-export const HELPER_FILTER_NAMES = ['from', 'of', 'count'] as const
+export const HELPER_FILTER_NAMES = ['from', 'of', 'count', 'dims', 'normalize'] as const
 
 export function isHelperTemplateKey(key: string): boolean {
   const trimmed = key.trim()
@@ -77,7 +84,8 @@ export function isStructuredHelperKey(key: string): boolean {
     trimmed === '$sample' ||
     trimmed === '$unique' ||
     trimmed === '$repeat' ||
-    trimmed === '$object'
+    trimmed === '$object' ||
+    trimmed === '$vector'
   ) {
     return true
   }
@@ -316,7 +324,15 @@ function parseWeighted(from: string[]): { value: string; weight: number }[] | nu
   return out.length > 0 ? out : null
 }
 
-type HelperKind = 'pick' | 'sample' | 'unique' | 'repeat' | 'object' | 'weighted' | 'uniqueArrayGen'
+type HelperKind =
+  | 'pick'
+  | 'sample'
+  | 'unique'
+  | 'repeat'
+  | 'object'
+  | 'vector'
+  | 'weighted'
+  | 'uniqueArrayGen'
 
 function helperKindForKey(key: string): HelperKind | null {
   const trimmed = key.trim()
@@ -331,6 +347,8 @@ function helperKindForKey(key: string): HelperKind | null {
       return 'repeat'
     case '$object':
       return 'object'
+    case '$vector':
+      return 'vector'
     default:
       break
   }
@@ -352,10 +370,57 @@ function helperKindForKey(key: string): HelperKind | null {
   }
 }
 
+/**
+ * Exact dimension for `$vector`: `dims:n` or `count:n` (positive integer, capped).
+ * Returns `null` when missing or invalid.
+ */
+function parseVectorDims(filters: readonly EnvTemplateFilter[]): number | null {
+  const dimsFilter = filters.find((f) => f.name.toLowerCase() === 'dims')
+  const countFilter = filters.find((f) => f.name.toLowerCase() === 'count')
+  const filter = dimsFilter ?? countFilter
+  if (filter?.args.length !== 1) return null
+  const n = isFiniteNumber(filter.args[0] ?? '')
+  if (n === null || !Number.isInteger(n) || n < 1 || n > MAX_VECTOR_DIMS) return null
+  return n
+}
+
+function hasNormalizeFlag(filters: readonly EnvTemplateFilter[]): boolean | null {
+  const filter = filters.find((f) => f.name.toLowerCase() === 'normalize')
+  if (!filter) return false
+  if (filter.args.length > 0) return null
+  return true
+}
+
+function generateEmbeddingVector(
+  dims: number,
+  options: DynamicGenerateOptions,
+  normalize: boolean,
+  faker: ReturnType<typeof getEnvFaker>
+): number[] {
+  let min = options.min ?? -1
+  let max = options.max ?? 1
+  if (min > max) {
+    const tmp = min
+    min = max
+    max = tmp
+  }
+  const values: number[] = []
+  for (let i = 0; i < dims; i++) {
+    values.push(faker.number.float({ min, max }))
+  }
+  if (!normalize) return values
+
+  let sumSq = 0
+  for (const v of values) sumSq += v * v
+  const norm = Math.sqrt(sumSq)
+  if (norm <= 0) return values
+  return values.map((v) => v / norm)
+}
+
 function validateHelperFilters(kind: HelperKind, filters: readonly EnvTemplateFilter[]): boolean {
   for (const filter of filters) {
     const name = filter.name.toLowerCase()
-    if (TRANSFORM_NAMES.has(name) || GENERATOR_OPTION_NAMES.has(name)) continue
+    if (TRANSFORM_FILTER_NAMES.has(name) || GENERATOR_OPTION_NAMES.has(name)) continue
     if (RESERVED_HELPER_FILTERS.has(name)) continue
     // Object fields are free-form filter names.
     if (kind === 'object') continue
@@ -387,7 +452,7 @@ export function resolveHelperTemplate(
       for (const filter of filters) {
         const name = filter.name.toLowerCase()
         if (
-          TRANSFORM_NAMES.has(name) ||
+          TRANSFORM_FILTER_NAMES.has(name) ||
           GENERATOR_OPTION_NAMES.has(name) ||
           RESERVED_HELPER_FILTERS.has(name)
         ) {
@@ -400,6 +465,14 @@ export function resolveHelperTemplate(
       }
       if (Object.keys(out).length === 0) return null
       return okStructured(out)
+    }
+
+    if (kind === 'vector') {
+      const dims = parseVectorDims(filters)
+      if (dims === null) return null
+      const normalize = hasNormalizeFlag(filters)
+      if (normalize === null) return null
+      return okStructured(generateEmbeddingVector(dims, options, normalize, faker))
     }
 
     if (kind === 'pick') {

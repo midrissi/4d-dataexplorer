@@ -139,7 +139,7 @@ function platformsFromBuckets(byPlatform: Record<PlatformId, number>): PlatformS
     id,
     label: PLATFORM_LABELS[id],
     downloads: byPlatform[id],
-  }))
+  })).sort((a, b) => b.downloads - a.downloads || a.label.localeCompare(b.label))
 }
 
 export function aggregateDownloads(releases: GhRelease[]): DownloadStatsSummary {
@@ -232,9 +232,9 @@ export const MOCK_DOWNLOAD_STATS: DownloadStatsSnapshot = {
     { id: 'macos', label: 'macOS', downloads: 812 },
     { id: 'windows', label: 'Windows', downloads: 268 },
     { id: 'linux', label: 'Linux', downloads: 141 },
+    { id: 'web', label: 'Web', downloads: 63 },
     { id: 'android', label: 'Android', downloads: 52 },
     { id: 'ios', label: 'iOS', downloads: 36 },
-    { id: 'web', label: 'Web', downloads: 63 },
   ],
   fetchedAt: null,
   sourceUrl: DOWNLOAD_STATS_SOURCE_URL,
@@ -322,6 +322,7 @@ export function parseDownloadStatsSnapshot(value: unknown): DownloadStatsSnapsho
       downloads: typeof match?.downloads === 'number' ? match.downloads : 0,
     })
   }
+  platforms.sort((a, b) => b.downloads - a.downloads || a.label.localeCompare(b.label))
 
   const releases: DownloadStatsReleaseRef[] = []
   if (Array.isArray(record.releases)) {

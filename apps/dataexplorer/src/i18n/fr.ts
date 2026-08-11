@@ -1075,6 +1075,8 @@ export const fr = {
     testTemplatesExamplePick: 'Choix',
     testTemplatesExampleRepeat: 'Répéter',
     testTemplatesExampleObject: 'Objet',
+    testTemplatesExampleVector: 'Vecteur',
+    testTemplatesExampleHash: 'Hash',
     unresolvedWarning: 'Variables d’environnement non résolues : {keys}',
     profileSection: 'Environnement profil',
     baseSection: 'Environnement base',

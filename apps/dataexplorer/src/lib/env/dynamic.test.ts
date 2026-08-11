@@ -135,6 +135,12 @@ describe('dynamic env vars', () => {
     expect(result.text).toBe('5')
   })
 
+  it('hashes faker output', () => {
+    const result = resolveEnvTemplates('{{$faker.string.alpha | hash:md5}}', {})
+    expect(result.unresolved).toEqual([])
+    expect(result.text).toMatch(/^[a-f0-9]{32}$/)
+  })
+
   it('lookup marks dynamic scope for UI chips', () => {
     const hit = lookupEnvVariable(
       '$isoTimestamp',

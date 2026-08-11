@@ -285,7 +285,7 @@ export function listAllDynamicEnvVarDefs(): readonly DynamicEnvVarDef[] {
 /** Ergonomic helper keys for completions (`$pick`, `$object`, …). */
 export function listHelperTemplateKeys(): string[] {
   // Imported lazily via re-export from template-helpers in index — avoid cycle by listing here.
-  return ['$pick', '$sample', '$unique', '$repeat', '$object']
+  return ['$pick', '$sample', '$unique', '$repeat', '$object', '$vector']
 }
 
 /** True when `key` is a known dynamic variable (alias or Faker path). */

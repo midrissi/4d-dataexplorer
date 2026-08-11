@@ -1053,6 +1053,8 @@ export const en = {
     testTemplatesExamplePick: 'Pick',
     testTemplatesExampleRepeat: 'Repeat',
     testTemplatesExampleObject: 'Object',
+    testTemplatesExampleVector: 'Vector',
+    testTemplatesExampleHash: 'Hash',
     unresolvedWarning: 'Unresolved environment variables: {keys}',
     profileSection: 'Profile environment',
     baseSection: 'Database environment',

@@ -60,17 +60,19 @@ You can also embed `{{variable}}` in snippet source — values are substituted f
 **Pipe filters** (Liquid-style) apply to env vars and dynamics:
 
 - `{{name | upper}}` (also `lower`, `snake`, `camel`, `pascal`, `kebab`, `trim`) — transform the resolved string
+- `{{$faker.person.firstName | hash:md5}}` — digest hex (`md5`, `sha1`, `sha256`, `sha384`, `sha512`)
 - `{{$faker.person.firstName | female}}` / `{{$faker.person.firstName | male}}` — gendered names (also `$faker.internet.email`, …)
 - `{{$faker.number.int | between:10,100}}` or `{{$faker.number.int | min:10 | max:100}}` — integer in range
 - `{{$faker.date.between | after:2020-01-01 | before:2025-12-31}}` — date bounds (`YYYY-MM-DD`)
 
-**Helper templates** (lists / objects — nested generators use bare `$faker…` paths, no nested braces):
+**Helper templates** (lists / objects / vectors — nested generators use bare `$faker…` paths, no nested braces):
 
 - `{{$pick | from:draft,published,archived}}` — random item
 - `{{$sample | from:a,b,c,d | count:2}}` / `{{$unique | from:a,b,c,d | count:3}}` — JSON array subsets
 - `{{$repeat | of:$faker.person.firstName | count:5}}` — repeat a generator as a JSON array
 - `count:2,5` / `count:>=2` / `count:<=4` — dynamic array length (range or one-sided bound; open lower bounds cap at 10)
 - `{{$object | name:$faker.person.fullName | email:$faker.internet.email}}` — JSON object
+- `{{$vector | dims:8}}` / `{{$vector | dims:384 | normalize}}` — embedding-style float array (`dims` or `count`; optional L2 `normalize`, `min`/`max`)
 
 Unknown filters leave the `{{…}}` token unresolved so typos are visible.
 

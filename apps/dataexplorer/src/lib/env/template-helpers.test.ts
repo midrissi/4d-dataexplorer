@@ -10,6 +10,7 @@ describe('isHelperTemplateKey', () => {
   it('recognizes aliases and helpers paths', () => {
     expect(isHelperTemplateKey('$pick')).toBe(true)
     expect(isHelperTemplateKey('$object')).toBe(true)
+    expect(isHelperTemplateKey('$vector')).toBe(true)
     expect(isHelperTemplateKey('$faker.helpers.arrayElement')).toBe(true)
     expect(isHelperTemplateKey('$faker.helpers.multiple')).toBe(true)
     expect(isHelperTemplateKey('$faker.person.firstName')).toBe(false)
@@ -22,6 +23,7 @@ describe('isStructuredHelperKey', () => {
     expect(isStructuredHelperKey('$pick')).toBe(false)
     expect(isStructuredHelperKey('$sample')).toBe(true)
     expect(isStructuredHelperKey('$object')).toBe(true)
+    expect(isStructuredHelperKey('$vector')).toBe(true)
     expect(isStructuredHelperKey('$faker.helpers.arrayElements')).toBe(true)
     expect(isStructuredHelperKey('$faker.helpers.arrayElement')).toBe(false)
   })
@@ -184,6 +186,37 @@ describe('resolveHelperTemplate', () => {
         { name: 'max', args: ['2'] },
       ])
     ).toBeNull()
+  })
+
+  it('builds a float vector with dims', () => {
+    const result = resolveHelperTemplate('$vector', [
+      { name: 'dims', args: ['4'] },
+      { name: 'min', args: ['0'] },
+      { name: 'max', args: ['0'] },
+    ])
+    expect(result).not.toBeNull()
+    expect(result?.rehydrate).toBe(true)
+    expect(result?.structured).toEqual([0, 0, 0, 0])
+  })
+
+  it('accepts count as dims alias and normalizes', () => {
+    const result = resolveHelperTemplate('$vector', [
+      { name: 'count', args: ['3'] },
+      { name: 'normalize', args: [] },
+      { name: 'min', args: ['1'] },
+      { name: 'max', args: ['1'] },
+    ])
+    expect(result).not.toBeNull()
+    const values = result?.structured as number[]
+    expect(values).toHaveLength(3)
+    const norm = Math.sqrt(values.reduce((sum, v) => sum + v * v, 0))
+    expect(norm).toBeCloseTo(1, 10)
+  })
+
+  it('rejects missing or invalid vector dims', () => {
+    expect(resolveHelperTemplate('$vector', [])).toBeNull()
+    expect(resolveHelperTemplate('$vector', [{ name: 'dims', args: ['0'] }])).toBeNull()
+    expect(resolveHelperTemplate('$vector', [{ name: 'dims', args: ['9000'] }])).toBeNull()
   })
 
   it('supports weighted picks', () => {

@@ -51,11 +51,11 @@ describe('parseDownloadStatsSnapshot', () => {
       releaseCount: 2,
       platforms: [
         { id: 'macos', label: 'macOS', downloads: 10 },
-        { id: 'windows', label: 'Windows', downloads: 0 },
-        { id: 'linux', label: 'Linux', downloads: 0 },
         { id: 'android', label: 'Android', downloads: 0 },
         { id: 'ios', label: 'iOS', downloads: 0 },
+        { id: 'linux', label: 'Linux', downloads: 0 },
         { id: 'web', label: 'Web', downloads: 0 },
+        { id: 'windows', label: 'Windows', downloads: 0 },
       ],
       fetchedAt: '2026-07-23T12:00:00.000Z',
       sourceUrl: 'https://example.com',
@@ -97,11 +97,11 @@ describe('aggregateDownloads', () => {
     expect(result.releaseCount).toBe(2)
     expect(result.platforms).toEqual([
       { id: 'macos', label: 'macOS', downloads: 13 },
+      { id: 'web', label: 'Web', downloads: 9 },
+      { id: 'android', label: 'Android', downloads: 5 },
       { id: 'windows', label: 'Windows', downloads: 4 },
       { id: 'linux', label: 'Linux', downloads: 2 },
-      { id: 'android', label: 'Android', downloads: 5 },
       { id: 'ios', label: 'iOS', downloads: 1 },
-      { id: 'web', label: 'Web', downloads: 9 },
     ])
   })
 })
@@ -136,11 +136,11 @@ describe('buildReleaseDetail', () => {
     expect(detail?.assets).toHaveLength(3)
     expect(detail?.platforms).toEqual([
       { id: 'macos', label: 'macOS', downloads: 10 },
-      { id: 'windows', label: 'Windows', downloads: 0 },
-      { id: 'linux', label: 'Linux', downloads: 0 },
+      { id: 'web', label: 'Web', downloads: 3 },
       { id: 'android', label: 'Android', downloads: 0 },
       { id: 'ios', label: 'iOS', downloads: 0 },
-      { id: 'web', label: 'Web', downloads: 3 },
+      { id: 'linux', label: 'Linux', downloads: 0 },
+      { id: 'windows', label: 'Windows', downloads: 0 },
     ])
   })
 })

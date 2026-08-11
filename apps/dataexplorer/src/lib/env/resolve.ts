@@ -4,6 +4,7 @@ import {
   applyTransforms,
   extractGeneratorOptions,
   hasGeneratorOptionFilters,
+  TRANSFORM_FILTER_NAMES,
 } from './template-filters'
 import {
   isHelperTemplateKey,
@@ -17,16 +18,6 @@ export const ENV_TEMPLATE_RE = /\{\{([^{}]+)\}\}/g
 export type EnvTemplateSegment =
   | { kind: 'text'; text: string }
   | { kind: 'variable'; key: string; raw: string }
-
-const TRANSFORM_FILTER_NAMES = new Set([
-  'lower',
-  'upper',
-  'snake',
-  'camel',
-  'pascal',
-  'kebab',
-  'trim',
-])
 
 /** Split text into plain text and `{{var}}` segments (for UI highlighting). */
 export function parseEnvTemplateSegments(text: string): EnvTemplateSegment[] {
@@ -190,7 +181,7 @@ function resolveExactStructuredLeaf(text: string): { value: unknown; unresolved:
 /**
  * Deep-walk a JSON-compatible value and resolve string leaves.
  * Arrays/objects are cloned; non-string primitives are unchanged.
- * Exact `$object` / `$repeat` / `$sample` / `$unique` leaves rehydrate to real structures.
+ * Exact `$object` / `$repeat` / `$sample` / `$unique` / `$vector` leaves rehydrate to real structures.
  */
 export function resolveEnvTemplatesDeep<T>(
   value: T,

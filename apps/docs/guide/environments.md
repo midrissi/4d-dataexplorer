@@ -68,6 +68,7 @@ Liquid-style filters apply left-to-right after the value is resolved (or generat
 | `upper` / `lower` | Case | <code>&#123;&#123;name \| upper&#125;&#125;</code> |
 | `trim` | Strip ends | <code>&#123;&#123;name \| trim&#125;&#125;</code> |
 | `snake` / `kebab` / `camel` / `pascal` | Identifier style | <code>&#123;&#123;title \| snake&#125;&#125;</code> |
+| `hash` | Digest hex (`md5`, `sha1`, `sha256`, `sha384`, `sha512`) | <code>&#123;&#123;$faker.person.firstName \| hash:md5&#125;&#125;</code> |
 | `female` / `male` | Gender for name/email dynamics | <code>&#123;&#123;$faker.person.firstName \| female&#125;&#125;</code> |
 | `min` / `max` / `between` | Numeric (or date) bounds | <code>&#123;&#123;$faker.number.int \| between:10,100&#125;&#125;</code> |
 | `after` / `before` | Date bounds (`YYYY-MM-DD`) | <code>&#123;&#123;$faker.date.between \| after:2020-01-01&#125;&#125;</code> |
@@ -76,6 +77,7 @@ Unknown filters leave the whole <code>&#123;&#123;…&#125;&#125;</code> token u
 
 ```text
 {{$faker.person.fullName | female | upper}}
+{{$faker.person.firstName | hash:md5}}
 {{$faker.number.int | min:1 | max:50}}
 {{$faker.date.between | between:2024-01-01,2024-12-31}}
 ```
@@ -113,12 +115,15 @@ Ergonomic keys for picking from lists, building arrays, and constructing JSON ob
 {{$repeat | of:$faker.person.firstName | count:2,5}}
 {{$repeat | of:$faker.person.firstName | count:<=4}}
 {{$object | name:$faker.person.fullName | email:$faker.internet.email | status:draft}}
+{{$vector | dims:8}}
+{{$vector | dims:384 | normalize | min:-1 | max:1}}
 ```
 
 `count` accepts a fixed length (`count:3`), an inclusive range (`count:2,5`), or a one-sided bound (`count:>=2`, `count:>2`, `count:<=4`, `count:<5`). Open lower bounds default the upper end to 10; open upper bounds start at 1. For `$sample` / `$unique`, the range is clamped to the `from` list length.
+`$vector` builds a float array for embedding-style fields (`dims:n` or `count:n`, max 8192). Optional `normalize` L2-normalizes the vector; `min` / `max` bound each component (default `-1`…`1`).
 The same filters work on <code>$faker.helpers.arrayElement</code>, <code>arrayElements</code>, <code>multiple</code>, <code>uniqueArray</code>, and <code>weightedArrayElement</code> (e.g. <code>&#123;&#123;$faker.helpers.weightedArrayElement | from&#58;a&#58;3,b&#58;1&#125;&#125;</code>).
 
-In JSON / entity payloads, a leaf that is **exactly** one <code>$object</code> / <code>$sample</code> / <code>$unique</code> / <code>$repeat</code> template rehydrates to a real object or array (not a JSON string).
+In JSON / entity payloads, a leaf that is **exactly** one <code>$object</code> / <code>$sample</code> / <code>$unique</code> / <code>$repeat</code> / <code>$vector</code> template rehydrates to a real object or array (not a JSON string).
 
 ### Clock aliases
 

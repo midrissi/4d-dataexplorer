@@ -1,7 +1,19 @@
 import type { EnvTemplateFilter } from '@4d/ui'
+import { md5, sha1 } from '@noble/hashes/legacy.js'
+import { sha256, sha384, sha512 } from '@noble/hashes/sha2.js'
+import { bytesToHex, utf8ToBytes } from '@noble/hashes/utils.js'
 import type { DynamicGenerateOptions } from './dynamic'
 
-const TRANSFORM_NAMES = new Set(['lower', 'upper', 'snake', 'camel', 'pascal', 'kebab', 'trim'])
+const TRANSFORM_NAMES = new Set([
+  'lower',
+  'upper',
+  'snake',
+  'camel',
+  'pascal',
+  'kebab',
+  'trim',
+  'hash',
+])
 
 const GENERATOR_OPTION_NAMES = new Set([
   'female',
@@ -12,6 +24,20 @@ const GENERATOR_OPTION_NAMES = new Set([
   'after',
   'before',
 ])
+
+const HASH_ALGORITHMS = {
+  md5,
+  sha1,
+  sha256,
+  sha384,
+  sha512,
+} as const
+
+type HashAlgorithm = keyof typeof HASH_ALGORITHMS
+
+function isHashAlgorithm(value: string): value is HashAlgorithm {
+  return Object.hasOwn(HASH_ALGORITHMS, value)
+}
 
 function isFiniteNumber(value: string): number | null {
   if (!/^-?\d+(\.\d+)?$/.test(value.trim())) return null
@@ -51,6 +77,10 @@ function toKebab(value: string): string {
   return words(value).join('-')
 }
 
+function hashHex(value: string, algorithm: HashAlgorithm): string {
+  return bytesToHex(HASH_ALGORITHMS[algorithm](utf8ToBytes(value)))
+}
+
 /**
  * Split filters into generator options (for `$dynamic` generate) and transform filters.
  * Returns `null` when a filter name is unknown or args are invalid.
@@ -65,7 +95,15 @@ export function extractGeneratorOptions(filters: readonly EnvTemplateFilter[]): 
   for (const filter of filters) {
     const name = filter.name.toLowerCase()
     if (TRANSFORM_NAMES.has(name)) {
-      transforms.push({ name, args: filter.args })
+      if (name === 'hash') {
+        if (filter.args.length !== 1) return null
+        const algo = (filter.args[0] ?? '').trim().toLowerCase()
+        if (!isHashAlgorithm(algo)) return null
+        transforms.push({ name: 'hash', args: [algo] })
+        continue
+      }
+      if (filter.args.length > 0) return null
+      transforms.push({ name, args: [] })
       continue
     }
     if (!GENERATOR_OPTION_NAMES.has(name)) {
@@ -146,6 +184,13 @@ export function applyTransforms(
   let out = value
   for (const filter of filters) {
     const name = filter.name.toLowerCase()
+    if (name === 'hash') {
+      if (filter.args.length !== 1) return null
+      const algo = (filter.args[0] ?? '').trim().toLowerCase()
+      if (!isHashAlgorithm(algo)) return null
+      out = hashHex(out, algo)
+      continue
+    }
     if (filter.args.length > 0) return null
     switch (name) {
       case 'lower':
@@ -180,3 +225,6 @@ export function applyTransforms(
 export function hasGeneratorOptionFilters(filters: readonly EnvTemplateFilter[]): boolean {
   return filters.some((f) => GENERATOR_OPTION_NAMES.has(f.name.toLowerCase()))
 }
+
+/** Transform filter names (case/style + hash). Exported for resolve / helpers. */
+export const TRANSFORM_FILTER_NAMES = TRANSFORM_NAMES
