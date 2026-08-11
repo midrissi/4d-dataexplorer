@@ -450,8 +450,9 @@ describe('lib/api', () => {
       try {
         const result = await api.createManyEntities('Employee', payload)
         expect(mockDataclassUpdateMany).toHaveBeenCalledTimes(2)
-        expect(mockDataclassUpdateMany.mock.calls[0]?.[0]).toHaveLength(CREATE_ENTITIES_BATCH_SIZE)
-        expect(mockDataclassUpdateMany.mock.calls[1]?.[0]).toHaveLength(5)
+        const calls = mockDataclassUpdateMany.mock.calls as Array<[unknown[]]>
+        expect(calls[0]?.[0]).toHaveLength(CREATE_ENTITIES_BATCH_SIZE)
+        expect(calls[1]?.[0]).toHaveLength(5)
         expect(result.count).toBe(CREATE_ENTITIES_BATCH_SIZE + 5)
       } finally {
         mockDataclassUpdateMany.mockImplementation(() =>

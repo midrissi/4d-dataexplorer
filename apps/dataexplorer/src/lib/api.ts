@@ -966,7 +966,7 @@ export const api = {
       consoleService.warn(`Unresolved environment variables: ${unresolved.join(', ')}`)
     }
 
-    const allResults: Array<Record<string, unknown> & { __KEY?: unknown }> = []
+    const allResults = []
     for (let offset = 0; offset < prepared.length; offset += CREATE_ENTITIES_BATCH_SIZE) {
       const chunk = prepared.slice(offset, offset + CREATE_ENTITIES_BATCH_SIZE)
       const results = await client.dataclass(dataclassName).updateMany(chunk)
