@@ -210,7 +210,7 @@ describe('store/index', () => {
         .createEntity({ name: 'Bulk' }, { refresh: false, count: 3 })
       expect(mockDataclassCreate).not.toHaveBeenCalled()
       expect(mockDataclassUpdateMany).toHaveBeenCalledTimes(1)
-      const calls = mockDataclassUpdateMany.mock.calls as Array<[unknown[]]>
+      const calls = mockDataclassUpdateMany.mock.calls as unknown as Array<[unknown[]]>
       expect(calls[0]?.[0]).toEqual([{ name: 'Bulk' }, { name: 'Bulk' }, { name: 'Bulk' }])
     })
   })

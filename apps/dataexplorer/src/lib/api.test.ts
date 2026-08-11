@@ -440,17 +440,16 @@ describe('lib/api', () => {
         name: `N${i}`,
       }))
       mockDataclassUpdateMany.mockClear()
-      mockDataclassUpdateMany.mockImplementation(async (entities: unknown[]) =>
+      mockDataclassUpdateMany.mockImplementation((async (entities: unknown[]) =>
         (entities as Array<{ name: string }>).map((entity, index) => ({
           __KEY: String(index + 1),
           ...entity,
-        }))
-      )
+        }))) as typeof mockDataclassUpdateMany)
 
       try {
         const result = await api.createManyEntities('Employee', payload)
         expect(mockDataclassUpdateMany).toHaveBeenCalledTimes(2)
-        const calls = mockDataclassUpdateMany.mock.calls as Array<[unknown[]]>
+        const calls = mockDataclassUpdateMany.mock.calls as unknown as Array<[unknown[]]>
         expect(calls[0]?.[0]).toHaveLength(CREATE_ENTITIES_BATCH_SIZE)
         expect(calls[1]?.[0]).toHaveLength(5)
         expect(result.count).toBe(CREATE_ENTITIES_BATCH_SIZE + 5)
