@@ -93,7 +93,7 @@ Reserved paths that read the **current execution object**. They are not stored i
 | Method Executor | <code>&#123;&#123;$this.methodName&#125;&#125;</code>, <code>&#123;&#123;$this.scope&#125;&#125;</code>, <code>&#123;&#123;$this.dataClass&#125;&#125;</code>, <code>&#123;&#123;$this.parent&#125;&#125;</code>, <code>&#123;&#123;$this.key&#125;&#125;</code>, <code>&#123;&#123;$this.args.0&#125;&#125;</code> |
 | Query Builder | <code>&#123;&#123;$this.dataclass&#125;&#125;</code>, <code>&#123;&#123;$this.filter&#125;&#125;</code>, <code>&#123;&#123;$this.entitySetId&#125;&#125;</code>, <code>&#123;&#123;$this.params.1&#125;&#125;</code> |
 
-Dotted paths walk objects (header names match case-insensitively) and arrays (numeric segments). Sibling fields that reference each other resolve in multiple passes (e.g. `email: {{$this.firstName | lower}}@example.com`). Cyclic `$this` references stay unresolved. An exact leaf <code>&#123;&#123;$this.vector&#125;&#125;</code> in a JSON payload rehydrates to the typed value.
+Dotted paths walk objects (header names match case-insensitively) and arrays (numeric segments). Sibling fields that reference each other resolve in multiple passes (e.g. <code>email: &#123;&#123;$this.firstName \| lower&#125;&#125;@example.com</code>). Cyclic `$this` references stay unresolved. An exact leaf <code>&#123;&#123;$this.vector&#125;&#125;</code> in a JSON payload rehydrates to the typed value.
 
 ```text
 {{$this.firstName | lower}}.{{$this.lastName | lower}}@example.com
