@@ -70,12 +70,6 @@ export {
   resolveHelperTemplate,
 } from './template-helpers'
 export {
-  buildEntityThis,
-  buildHttpThis,
-  buildMethodThis,
-  buildQueryThis,
-} from './this-context-builders'
-export {
   type EnvTemplateThis,
   isThisTemplateKey,
   listThisSuggestionKeys,
@@ -83,6 +77,12 @@ export {
   resolveThisPath,
   stringifyThisValue,
 } from './this-context'
+export {
+  buildEntityThis,
+  buildHttpThis,
+  buildMethodThis,
+  buildQueryThis,
+} from './this-context-builders'
 export type {
   Environment,
   EnvironmentsBlock,

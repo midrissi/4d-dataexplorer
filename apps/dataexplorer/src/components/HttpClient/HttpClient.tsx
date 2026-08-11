@@ -45,6 +45,7 @@ import { SuggestInput } from '~/components/SuggestInput'
 import { useTranslation } from '~/i18n'
 import { api } from '~/lib/api'
 import { applyEnvTemplateDecorations, registerEnvTemplateCompletionProvider } from '~/lib/env'
+import { buildHttpThis } from '~/lib/env/this-context-builders'
 import {
   applyParamsToPath,
   buildRestPathCatalog,
@@ -69,7 +70,6 @@ import {
   syncParamsFromPath,
   upsertBuiltInHeaderOverride,
 } from '~/lib/http-client'
-import { buildHttpThis } from '~/lib/env/this-context-builders'
 import { getBaseUrl, isDesktop, isMobileShell, onConnectionChange } from '~/lib/platform'
 import {
   httpSeedExportLabel,

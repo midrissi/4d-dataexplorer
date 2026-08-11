@@ -29,10 +29,8 @@ function joinUrl(origin: string, path: string): string {
 
 /** Friendly `$this` view of an HTTP Client request draft. */
 export function buildHttpThis(draft: HttpClientRequestDraft): Record<string, unknown> {
-  const method =
-    draft.method === 'CUSTOM' ? draft.customMethod.trim() || 'CUSTOM' : draft.method
-  const origin =
-    draft.targetMode === 'custom' ? draft.customOrigin.trim() : ''
+  const method = draft.method === 'CUSTOM' ? draft.customMethod.trim() || 'CUSTOM' : draft.method
+  const origin = draft.targetMode === 'custom' ? draft.customOrigin.trim() : ''
   const url = joinUrl(origin, draft.path)
 
   const formData = draft.body.formData.map((field) => {
@@ -88,7 +86,11 @@ export type MethodThisInput = {
 }
 
 function parentLabel(input: MethodThisInput): string {
-  if (input.scope === 'dataclass' || input.scope === 'entity' || input.scope === 'entitySelection') {
+  if (
+    input.scope === 'dataclass' ||
+    input.scope === 'entity' ||
+    input.scope === 'entitySelection'
+  ) {
     return input.dataClass?.trim() || input.scope
   }
   if (input.scope === 'singleton') return input.singletonName?.trim() || 'singleton'

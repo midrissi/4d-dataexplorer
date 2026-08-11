@@ -16,8 +16,8 @@ import {
 import { consoleService } from './console'
 import { downloadBytes } from './download-bytes'
 import { resolveEnvTemplates } from './env'
-import { buildHttpThis } from './env/this-context-builders'
 import { getActiveEnvMap, mergeUnresolved } from './env/runtime'
+import { buildHttpThis } from './env/this-context-builders'
 import {
   getBaseUrl,
   getCookies,

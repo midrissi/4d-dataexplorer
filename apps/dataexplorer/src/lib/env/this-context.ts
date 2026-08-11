@@ -57,8 +57,7 @@ export function resolveThisPath(
     if (isPlainObject(current)) {
       const keys = Object.keys(current)
       const exact = Object.hasOwn(current, segment) ? segment : undefined
-      const ci =
-        exact ?? keys.find((k) => k.toLowerCase() === segment.toLowerCase())
+      const ci = exact ?? keys.find((k) => k.toLowerCase() === segment.toLowerCase())
       if (ci === undefined) return { value: undefined, found: false }
       current = current[ci]
       continue

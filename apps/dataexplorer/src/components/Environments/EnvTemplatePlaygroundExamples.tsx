@@ -75,7 +75,8 @@ export const PLAYGROUND_EXAMPLES: readonly PlaygroundExample[] = [
   },
   {
     id: 'this',
-    template: '{{$this.method}} {{$this.path}}\nAuthorization: {{$this.headers.Authorization}}\nHi {{$this.name}}!',
+    template:
+      '{{$this.method}} {{$this.path}}\nAuthorization: {{$this.headers.Authorization}}\nHi {{$this.name}}!',
     preview: '{{$this.method}} {{$this.path}} · $this.name',
   },
 ]

@@ -1,6 +1,7 @@
 import { Button, Checkbox, cn, Label } from '@4d/ui'
 import { ChevronLeft, Clock3, Download, Loader2, Play, Star } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { EnvThisProvider } from '~/components/Environments/env-this-context'
 import { MobileFullscreenSheet } from '~/components/MobileFullscreenSheet'
 import { PostmanExportModal } from '~/components/PostmanExport'
 import { RequestResponseSplit } from '~/components/RequestResponseSplit'
@@ -10,7 +11,6 @@ import { consoleService } from '~/lib/console'
 import { resolveEnvTemplates } from '~/lib/env'
 import { getActiveEnvMap, mergeUnresolved } from '~/lib/env/runtime'
 import { buildMethodThis } from '~/lib/env/this-context-builders'
-import { EnvThisProvider } from '~/components/Environments/env-this-context'
 import { isMobileShell } from '~/lib/platform'
 import {
   methodSeedExportLabel,
@@ -499,251 +499,252 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
 
     return (
       <EnvThisProvider value={methodThis}>
-      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background">
-        <div className="flex shrink-0 items-center gap-1 border-b px-2 py-2">
-          {mobileStep !== 'method' ? (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 shrink-0"
-              onClick={() => setMobileStep(mobileStep === 'result' ? 'args' : 'method')}
-              aria-label={t('common.back')}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-          ) : null}
-          <div className="min-w-0 flex-1 px-1">
-            <p className="truncate font-semibold text-sm">{stepTitle}</p>
-            <p className="truncate text-muted-foreground text-xs">{stepHint}</p>
-          </div>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-9 w-9 shrink-0"
-            onClick={() => setSidePanel('favourites')}
-            aria-label={t('methodExecutor.favourites')}
-          >
-            <Star className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-9 w-9 shrink-0"
-            onClick={() => setSidePanel('history')}
-            aria-label={t('methodExecutor.history')}
-          >
-            <Clock3 className="h-4 w-4" />
-          </Button>
-        </div>
-
-        <div className="flex shrink-0 items-center gap-1.5 px-3 py-2" aria-hidden>
-          {(['method', 'args', 'result'] as const).map((step, index) => (
-            <span
-              key={step}
-              className={cn(
-                'h-1.5 flex-1 rounded-full transition-colors',
-                index <= stepIndex ? 'bg-primary' : 'bg-muted'
-              )}
-            />
-          ))}
-        </div>
-
-        <div className="min-h-0 flex-1 overflow-y-auto p-3">
-          {mobileStep === 'method' ? (
-            <MethodSelector
-              scope={scope}
-              methodName={methodName}
-              dataClass={dataClass}
-              singletonName={singletonName}
-              keyValue={key}
-              entitySetId={entitySetId}
-              methods={methods}
-              dataClasses={dataClasses}
-              singletons={singletons}
-              catalogLoading={catalogLoading}
-              catalogError={catalogError}
-              onScopeChange={(next) => {
-                setScope(next)
-                clearMethod()
-              }}
-              onChooseMethod={chooseMethod}
-              onClearMethod={clearMethod}
-              onDataClassChange={setDataClass}
-              onSingletonNameChange={setSingletonName}
-              onKeyChange={setKey}
-              onEntitySetIdChange={setEntitySetId}
-            />
-          ) : null}
-
-          {mobileStep === 'args' ? (
-            <div className="flex flex-col gap-3">
-              <RuntimeArgumentsEditor
-                argumentsList={argumentsList}
-                dataClasses={dataClasses}
-                onChange={setArgumentsList}
-              />
-              <MethodWrapperEditor
-                enabled={wrapperEnabled}
-                onEnabledChange={(next) => {
-                  setWrapperEnabled(next)
-                  if (next) setUseGet(false)
-                }}
-                value={wrapperText}
-                onChange={(next) => {
-                  setWrapperText(next)
-                  if (next.trim()) setUseGet(false)
-                }}
-              />
-              {error ? (
-                <p className="rounded-md bg-destructive/10 p-3 text-destructive text-sm">{error}</p>
-              ) : null}
+        <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background">
+          <div className="flex shrink-0 items-center gap-1 border-b px-2 py-2">
+            {mobileStep !== 'method' ? (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 shrink-0"
+                onClick={() => setMobileStep(mobileStep === 'result' ? 'args' : 'method')}
+                aria-label={t('common.back')}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+            ) : null}
+            <div className="min-w-0 flex-1 px-1">
+              <p className="truncate font-semibold text-sm">{stepTitle}</p>
+              <p className="truncate text-muted-foreground text-xs">{stepHint}</p>
             </div>
-          ) : null}
-
-          {mobileStep === 'result' ? (
-            <div className="flex h-full min-h-0 flex-col">
-              <ResultPanel result={result} rawBody={rawBody} responseMeta={responseMeta} />
-            </div>
-          ) : null}
-        </div>
-
-        <div
-          className="sticky bottom-0 flex shrink-0 items-center justify-between gap-3 border-t bg-background/95 px-3 py-2.5 backdrop-blur"
-          style={{ paddingBottom: 'max(0.625rem, var(--app-safe-bottom))' }}
-        >
-          {mobileStep === 'method' ? (
-            <Button
-              className="ml-auto h-11 px-4"
-              disabled={
-                !methodName ||
-                !methodExists ||
-                (scope === 'singleton' ? !singletonName : scope !== 'catalog' && !dataClass) ||
-                (scope === 'entity' && !key.trim()) ||
-                (scope === 'entitySelection' && !entitySetId.trim())
-              }
-              onClick={() => setMobileStep('args')}
-            >
-              {t('common.next')}
-            </Button>
-          ) : null}
-
-          {mobileStep === 'args' ? (
-            <>
-              {allowedOnHTTPGET ? (
-                <Label
-                  className="flex items-center gap-2 text-xs"
-                  title={wrapperEnabled ? t('methodExecutor.wrapperRequiresPost') : undefined}
-                >
-                  <Checkbox
-                    checked={useGet}
-                    disabled={wrapperEnabled}
-                    onCheckedChange={(checked) => setUseGet(checked === true)}
-                  />
-                  {t('methodExecutor.executeWithGet')}
-                </Label>
-              ) : (
-                <span className="text-muted-foreground text-xs">
-                  {t('methodExecutor.postRequest')}
-                </span>
-              )}
-              <div className="ml-auto flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-11 w-11"
-                  disabled={!canExecute}
-                  onClick={toggleCurrentFavourite}
-                  aria-label={favouriteButtonLabel}
-                  title={favouriteButtonLabel}
-                  aria-pressed={isCurrentFavourite}
-                >
-                  <Star
-                    className={cn(
-                      'h-4 w-4',
-                      isCurrentFavourite && 'fill-current text-amber-500',
-                      canUpdateFavourite && !isCurrentFavourite && 'text-amber-500'
-                    )}
-                  />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-11 w-11"
-                  disabled={!canExecute}
-                  onClick={() => setExportOpen(true)}
-                  aria-label={t('methodExecutor.exportCurrent')}
-                  title={t('methodExecutor.exportCurrent')}
-                >
-                  <Download className="h-4 w-4" />
-                </Button>
-                <Button
-                  size="sm"
-                  className="h-11 px-4"
-                  onClick={() => void execute()}
-                  disabled={executing || !canExecute}
-                >
-                  {executing ? (
-                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Play className="mr-1.5 h-3.5 w-3.5" />
-                  )}
-                  {t('methodExecutor.execute')}
-                </Button>
-              </div>
-            </>
-          ) : null}
-
-          {mobileStep === 'result' ? (
             <Button
               variant="outline"
-              className="ml-auto h-11 px-4"
-              onClick={() => setMobileStep('args')}
+              size="icon"
+              className="h-9 w-9 shrink-0"
+              onClick={() => setSidePanel('favourites')}
+              aria-label={t('methodExecutor.favourites')}
             >
-              {t('common.back')}
+              <Star className="h-4 w-4" />
             </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 shrink-0"
+              onClick={() => setSidePanel('history')}
+              aria-label={t('methodExecutor.history')}
+            >
+              <Clock3 className="h-4 w-4" />
+            </Button>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-1.5 px-3 py-2" aria-hidden>
+            {(['method', 'args', 'result'] as const).map((step, index) => (
+              <span
+                key={step}
+                className={cn(
+                  'h-1.5 flex-1 rounded-full transition-colors',
+                  index <= stepIndex ? 'bg-primary' : 'bg-muted'
+                )}
+              />
+            ))}
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-y-auto p-3">
+            {mobileStep === 'method' ? (
+              <MethodSelector
+                scope={scope}
+                methodName={methodName}
+                dataClass={dataClass}
+                singletonName={singletonName}
+                keyValue={key}
+                entitySetId={entitySetId}
+                methods={methods}
+                dataClasses={dataClasses}
+                singletons={singletons}
+                catalogLoading={catalogLoading}
+                catalogError={catalogError}
+                onScopeChange={(next) => {
+                  setScope(next)
+                  clearMethod()
+                }}
+                onChooseMethod={chooseMethod}
+                onClearMethod={clearMethod}
+                onDataClassChange={setDataClass}
+                onSingletonNameChange={setSingletonName}
+                onKeyChange={setKey}
+                onEntitySetIdChange={setEntitySetId}
+              />
+            ) : null}
+
+            {mobileStep === 'args' ? (
+              <div className="flex flex-col gap-3">
+                <RuntimeArgumentsEditor
+                  argumentsList={argumentsList}
+                  dataClasses={dataClasses}
+                  onChange={setArgumentsList}
+                />
+                <MethodWrapperEditor
+                  enabled={wrapperEnabled}
+                  onEnabledChange={(next) => {
+                    setWrapperEnabled(next)
+                    if (next) setUseGet(false)
+                  }}
+                  value={wrapperText}
+                  onChange={(next) => {
+                    setWrapperText(next)
+                    if (next.trim()) setUseGet(false)
+                  }}
+                />
+                {error ? (
+                  <p className="rounded-md bg-destructive/10 p-3 text-destructive text-sm">
+                    {error}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+
+            {mobileStep === 'result' ? (
+              <div className="flex h-full min-h-0 flex-col">
+                <ResultPanel result={result} rawBody={rawBody} responseMeta={responseMeta} />
+              </div>
+            ) : null}
+          </div>
+
+          <div
+            className="sticky bottom-0 flex shrink-0 items-center justify-between gap-3 border-t bg-background/95 px-3 py-2.5 backdrop-blur"
+            style={{ paddingBottom: 'max(0.625rem, var(--app-safe-bottom))' }}
+          >
+            {mobileStep === 'method' ? (
+              <Button
+                className="ml-auto h-11 px-4"
+                disabled={
+                  !methodName ||
+                  !methodExists ||
+                  (scope === 'singleton' ? !singletonName : scope !== 'catalog' && !dataClass) ||
+                  (scope === 'entity' && !key.trim()) ||
+                  (scope === 'entitySelection' && !entitySetId.trim())
+                }
+                onClick={() => setMobileStep('args')}
+              >
+                {t('common.next')}
+              </Button>
+            ) : null}
+
+            {mobileStep === 'args' ? (
+              <>
+                {allowedOnHTTPGET ? (
+                  <Label
+                    className="flex items-center gap-2 text-xs"
+                    title={wrapperEnabled ? t('methodExecutor.wrapperRequiresPost') : undefined}
+                  >
+                    <Checkbox
+                      checked={useGet}
+                      disabled={wrapperEnabled}
+                      onCheckedChange={(checked) => setUseGet(checked === true)}
+                    />
+                    {t('methodExecutor.executeWithGet')}
+                  </Label>
+                ) : (
+                  <span className="text-muted-foreground text-xs">
+                    {t('methodExecutor.postRequest')}
+                  </span>
+                )}
+                <div className="ml-auto flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-11 w-11"
+                    disabled={!canExecute}
+                    onClick={toggleCurrentFavourite}
+                    aria-label={favouriteButtonLabel}
+                    title={favouriteButtonLabel}
+                    aria-pressed={isCurrentFavourite}
+                  >
+                    <Star
+                      className={cn(
+                        'h-4 w-4',
+                        isCurrentFavourite && 'fill-current text-amber-500',
+                        canUpdateFavourite && !isCurrentFavourite && 'text-amber-500'
+                      )}
+                    />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-11 w-11"
+                    disabled={!canExecute}
+                    onClick={() => setExportOpen(true)}
+                    aria-label={t('methodExecutor.exportCurrent')}
+                    title={t('methodExecutor.exportCurrent')}
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="h-11 px-4"
+                    onClick={() => void execute()}
+                    disabled={executing || !canExecute}
+                  >
+                    {executing ? (
+                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Play className="mr-1.5 h-3.5 w-3.5" />
+                    )}
+                    {t('methodExecutor.execute')}
+                  </Button>
+                </div>
+              </>
+            ) : null}
+
+            {mobileStep === 'result' ? (
+              <Button
+                variant="outline"
+                className="ml-auto h-11 px-4"
+                onClick={() => setMobileStep('args')}
+              >
+                {t('common.back')}
+              </Button>
+            ) : null}
+          </div>
+
+          {sidePanel === 'history' ? (
+            <MobileFullscreenSheet open labelledBy="method-run-history-title">
+              <MethodRunHistory
+                runs={runs}
+                onOpenRun={(config) => {
+                  const match = favourites.find((item) => sameMethodConfig(item.config, config))
+                  applyConfig(config, match?.id ?? null)
+                  setSidePanel('none')
+                }}
+                onRemoveRun={removeRun}
+                onClearRuns={clearRuns}
+                onClose={() => setSidePanel('none')}
+              />
+            </MobileFullscreenSheet>
+          ) : null}
+          {exportModal}
+          {sidePanel === 'favourites' ? (
+            <MobileFullscreenSheet open labelledBy="method-favourites-title">
+              <MethodFavourites
+                favourites={favourites}
+                onOpenFavourite={(favourite) => {
+                  applyConfig(favourite.config, favourite.id)
+                  setSidePanel('none')
+                }}
+                onRemoveFavourite={removeFavourite}
+                onClearFavourites={clearFavourites}
+                onUpdateFavouriteMeta={updateFavouriteMeta}
+                onDuplicateFavourite={duplicateFavourite}
+                onClose={() => setSidePanel('none')}
+              />
+            </MobileFullscreenSheet>
           ) : null}
         </div>
-
-        {sidePanel === 'history' ? (
-          <MobileFullscreenSheet open labelledBy="method-run-history-title">
-            <MethodRunHistory
-              runs={runs}
-              onOpenRun={(config) => {
-                const match = favourites.find((item) => sameMethodConfig(item.config, config))
-                applyConfig(config, match?.id ?? null)
-                setSidePanel('none')
-              }}
-              onRemoveRun={removeRun}
-              onClearRuns={clearRuns}
-              onClose={() => setSidePanel('none')}
-            />
-          </MobileFullscreenSheet>
-        ) : null}
-        {exportModal}
-        {sidePanel === 'favourites' ? (
-          <MobileFullscreenSheet open labelledBy="method-favourites-title">
-            <MethodFavourites
-              favourites={favourites}
-              onOpenFavourite={(favourite) => {
-                applyConfig(favourite.config, favourite.id)
-                setSidePanel('none')
-              }}
-              onRemoveFavourite={removeFavourite}
-              onClearFavourites={clearFavourites}
-              onUpdateFavouriteMeta={updateFavouriteMeta}
-              onDuplicateFavourite={duplicateFavourite}
-              onClose={() => setSidePanel('none')}
-            />
-          </MobileFullscreenSheet>
-        ) : null}
-      </div>
       </EnvThisProvider>
     )
   }
 
   return (
     <EnvThisProvider value={methodThis}>
-    <>
       <RequestResponseSplit
         kind="methodExecutor"
         requestClassName="bg-background p-3"
@@ -946,7 +947,6 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
         }
       />
       {exportModal}
-    </>
     </EnvThisProvider>
   )
 }

@@ -1,17 +1,22 @@
 import { describe, expect, it } from 'bun:test'
+import type { HttpClientRequestDraft } from '~/lib/http-client'
+import {
+  resolveEnvTemplates,
+  resolveEnvTemplatesDeep,
+  resolveEnvTemplatesDeepWithThis,
+} from './resolve'
 import {
   isThisTemplateKey,
   listThisSuggestionKeys,
   resolveThisPath,
   stringifyThisValue,
 } from './this-context'
-import { buildEntityThis, buildHttpThis, buildMethodThis, buildQueryThis } from './this-context-builders'
 import {
-  resolveEnvTemplates,
-  resolveEnvTemplatesDeep,
-  resolveEnvTemplatesDeepWithThis,
-} from './resolve'
-import type { HttpClientRequestDraft } from '~/lib/http-client'
+  buildEntityThis,
+  buildHttpThis,
+  buildMethodThis,
+  buildQueryThis,
+} from './this-context-builders'
 
 describe('isThisTemplateKey', () => {
   it('matches $this and dotted paths', () => {
@@ -67,9 +72,13 @@ describe('stringifyThisValue', () => {
 
 describe('$this in resolveEnvTemplates', () => {
   it('resolves paths from options.this', () => {
-    const result = resolveEnvTemplates('Hi {{$this.firstName | upper}}!', {}, {
-      this: { firstName: 'Ada' },
-    })
+    const result = resolveEnvTemplates(
+      'Hi {{$this.firstName | upper}}!',
+      {},
+      {
+        this: { firstName: 'Ada' },
+      }
+    )
     expect(result).toEqual({ text: 'Hi ADA!', unresolved: [] })
   })
 

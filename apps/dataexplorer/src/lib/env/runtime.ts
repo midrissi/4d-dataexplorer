@@ -1,6 +1,6 @@
+import { useEnvironmentsStore } from '~/store/environments'
 import { resolveEnvTemplates, resolveEnvTemplatesDeep } from './resolve'
 import type { ResolveEnvOptions } from './this-context'
-import { useEnvironmentsStore } from '~/store/environments'
 
 /** Active env map for resolve helpers (call at execution time). */
 export function getActiveEnvMap(): Map<string, string> {

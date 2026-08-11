@@ -4,11 +4,11 @@ import { useEnvThisRoot } from '~/components/Environments/env-this-context'
 import { useTranslation } from '~/i18n'
 import { HELPER_TEMPLATE_DEFS, listAllDynamicEnvVarDefs } from '~/lib/env'
 import {
+  type EnvTemplateThis,
   isThisTemplateKey,
   listThisSuggestionKeys,
   resolveThisPath,
   stringifyThisValue,
-  type EnvTemplateThis,
 } from '~/lib/env/this-context'
 import type { EnvScope, EnvVarLookup } from '~/lib/env/types'
 import { getCurrentBaseId } from '~/lib/storage'

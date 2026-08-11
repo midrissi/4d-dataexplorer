@@ -49,9 +49,9 @@ import {
 } from '~/components/MethodExecutor/RuntimeArgumentsEditor'
 import { useAssistantLlmConfigured } from '~/hooks/useAssistantLlmConfigured'
 import { useCloudLlmOffline } from '~/hooks/useCloudLlmOffline'
-import { buildQueryThis } from '~/lib/env/this-context-builders'
 import { getIntlLocale, useTranslation } from '~/i18n'
 import { api } from '~/lib/api'
+import { buildQueryThis } from '~/lib/env/this-context-builders'
 import {
   mobileFullscreenDialogClass,
   mobileMenuCollisionProps,
