@@ -34,31 +34,31 @@ describe('getEnvTemplateMatch', () => {
 })
 
 describe('applyEnvTemplateCompletion', () => {
-  it('replaces unfinished prefix with {{key}}', () => {
+  it('replaces unfinished prefix with {{key}} and leaves cursor before }}', () => {
     expect(applyEnvTemplateCompletion('before {{tim', 12, 'timestamp')).toEqual({
       value: 'before {{timestamp}}',
-      cursor: 20,
+      cursor: 18,
     })
   })
 
   it('consumes an existing closing brace pair', () => {
     expect(applyEnvTemplateCompletion('{{tim}}', 5, 'timestamp')).toEqual({
       value: '{{timestamp}}',
-      cursor: 13,
+      cursor: 11,
     })
   })
 
   it('completes a filter after |', () => {
     expect(applyEnvTemplateCompletion('{{$faker.person.firstName|lowe', 30, 'lower')).toEqual({
       value: '{{$faker.person.firstName|lower}}',
-      cursor: 33,
+      cursor: 31,
     })
   })
 
   it('completes a later filter in a chain', () => {
     expect(applyEnvTemplateCompletion('{{name|female|up', 16, 'upper')).toEqual({
       value: '{{name|female|upper}}',
-      cursor: 21,
+      cursor: 19,
     })
   })
 })

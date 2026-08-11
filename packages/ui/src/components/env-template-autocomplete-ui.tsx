@@ -1,6 +1,7 @@
 import { Braces, Filter, Sparkles } from 'lucide-react'
 import * as React from 'react'
 import { createPortal } from 'react-dom'
+import { useDocumentWheelScroll } from '../hooks/use-document-wheel-scroll'
 import { cn } from '../lib/utils'
 import {
   applyEnvTemplateCompletion,
@@ -58,6 +59,9 @@ export type EnvTemplateSuggestListProps = {
   activeIndex: number
   placement: Placement
   groupLabels?: Readonly<Record<string, string>>
+  listRef?: React.Ref<HTMLDivElement | null>
+  /** Pointer is down on the list (scrollbar / chrome) — keep open despite input blur. */
+  onListInteraction?: (active: boolean) => void
   onHover: (index: number) => void
   onSelect: (item: EnvTemplateSuggestion) => void
 }
@@ -92,10 +96,13 @@ export function useEnvTemplateAutocomplete({
     () => (match ? filterEnvTemplateSuggestions(suggestions, match.prefix) : []),
     [match, suggestions]
   )
+  const listRef = React.useRef<HTMLDivElement | null>(null)
+  const interactingWithListRef = React.useRef(false)
 
+  // Close when the token is gone or has no suggestions — never force-reopen after
+  // select / Escape / blur (cursor often stays inside `{{…}}` after a filter pick).
   React.useEffect(() => {
-    if (match && items.length > 0) setOpen(true)
-    else if (!match) setOpen(false)
+    if (!match || items.length === 0) setOpen(false)
   }, [items.length, match])
 
   const active = Boolean(match) && items.length > 0 && open
@@ -107,6 +114,21 @@ export function useEnvTemplateAutocomplete({
     setCursor(el.selectionStart ?? el.value.length)
   }, [inputRef])
 
+  const dismiss = React.useCallback(() => {
+    setOpen(false)
+  }, [])
+
+  const markListInteraction = React.useCallback(
+    (activeInteraction: boolean) => {
+      interactingWithListRef.current = activeInteraction
+      if (!activeInteraction) {
+        // Scrollbar / list chrome can blur the input — restore so typing continues.
+        requestAnimationFrame(() => inputRef.current?.focus())
+      }
+    },
+    [inputRef]
+  )
+
   const commit = React.useCallback(
     (item: EnvTemplateSuggestion, options?: { keepFocus?: boolean }) => {
       const el = inputRef.current
@@ -116,6 +138,7 @@ export function useEnvTemplateAutocomplete({
       setOpen(false)
       setActiveIndex(0)
       setCursor(next.cursor)
+      interactingWithListRef.current = false
       if (options?.keepFocus === false) return
       requestAnimationFrame(() => {
         const node = inputRef.current
@@ -128,12 +151,37 @@ export function useEnvTemplateAutocomplete({
     [cursor, inputRef, onChange, value]
   )
 
+  React.useEffect(() => {
+    if (!active) interactingWithListRef.current = false
+  }, [active])
+
+  React.useEffect(() => {
+    if (!active) return
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target
+      if (!(target instanceof Node)) return
+      if (inputRef.current?.contains(target)) return
+      if (listRef.current?.contains(target)) return
+      dismiss()
+    }
+    document.addEventListener('pointerdown', onPointerDown, true)
+    return () => document.removeEventListener('pointerdown', onPointerDown, true)
+  }, [active, dismiss, inputRef])
+
   React.useLayoutEffect(() => {
     if (!active) {
       setPlacement(null)
       return
     }
-    const update = () => {
+    const update = (event?: Event) => {
+      // Scrolling inside the portal list must not remeasure / reset scrollTop.
+      if (event?.type === 'scroll') {
+        const target = event.target
+        if (target instanceof Node) {
+          const list = document.getElementById(listboxId)
+          if (list?.contains(target)) return
+        }
+      }
       const el = inputRef.current
       if (!el) return
       setPlacement(measurePlacement(el.getBoundingClientRect(), window.innerHeight))
@@ -145,7 +193,7 @@ export function useEnvTemplateAutocomplete({
       window.removeEventListener('resize', update)
       window.removeEventListener('scroll', update, true)
     }
-  }, [active, inputRef])
+  }, [active, inputRef, listboxId])
 
   React.useEffect(() => {
     if (!active) return
@@ -159,9 +207,11 @@ export function useEnvTemplateAutocomplete({
       onChange(next)
       setCursor(nextCursor)
       setActiveIndex(0)
-      setOpen(Boolean(getEnvTemplateMatch(next, nextCursor)))
+      const nextMatch = getEnvTemplateMatch(next, nextCursor)
+      const nextItems = nextMatch ? filterEnvTemplateSuggestions(suggestions, nextMatch.prefix) : []
+      setOpen(Boolean(nextMatch && nextItems.length > 0))
     },
-    [onChange]
+    [onChange, suggestions]
   )
 
   const onKeyDown = React.useCallback(
@@ -195,7 +245,7 @@ export function useEnvTemplateAutocomplete({
       }
       if (event.key === 'Escape') {
         event.preventDefault()
-        setOpen(false)
+        dismiss()
         return
       }
       if (event.key === 'Enter') {
@@ -213,12 +263,17 @@ export function useEnvTemplateAutocomplete({
         commit(selected, { keepFocus: false })
       }
     },
-    [commit, items, match, open, safeActiveIndex, syncCursor]
+    [commit, dismiss, items, match, open, safeActiveIndex, syncCursor]
   )
 
   const onBlur = React.useCallback(() => {
-    window.setTimeout(() => setOpen(false), 120)
-  }, [])
+    // Defer so list scrollbar / option clicks can run before we decide to close.
+    window.setTimeout(() => {
+      if (interactingWithListRef.current) return
+      if (listRef.current?.contains(document.activeElement)) return
+      dismiss()
+    }, 120)
+  }, [dismiss])
 
   return {
     listProps:
@@ -229,6 +284,8 @@ export function useEnvTemplateAutocomplete({
             activeIndex: safeActiveIndex,
             placement,
             groupLabels,
+            listRef,
+            onListInteraction: markListInteraction,
             onHover: setActiveIndex,
             onSelect: commit,
           }
@@ -241,19 +298,31 @@ export function useEnvTemplateAutocomplete({
   }
 }
 
+const LIST_FOOTER_HEIGHT = 30
+
 export function EnvTemplateSuggestList({
   id,
   items,
   activeIndex,
   placement,
   groupLabels,
+  listRef,
+  onListInteraction,
   onHover,
   onSelect,
 }: EnvTemplateSuggestListProps) {
   const width = Math.min(Math.max(placement.width, 280), 420)
+  const bodyMaxHeight = Math.max(80, placement.maxHeight - LIST_FOOTER_HEIGHT)
+  // Nested scroller: hit-test the outer listbox shell (parent), including when
+  // the caret stays in the field under a Dialog RemoveScroll lock.
+  const scrollBodyRef = useDocumentWheelScroll({
+    getHitRoot: (el) => el.parentElement,
+    includeFocusedTextControl: true,
+  })
 
   return createPortal(
     <div
+      ref={listRef}
       id={id}
       role="listbox"
       aria-label="Environment variables"
@@ -266,12 +335,20 @@ export function EnvTemplateSuggestList({
         maxHeight: placement.maxHeight,
       }}
       className={cn(
-        'z-50 flex flex-col overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-sm',
+        // Above dialog overlay/content (z-50) so the list receives pointer + wheel.
+        'pointer-events-auto z-[60] flex flex-col overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-sm',
         'fade-in-0 zoom-in-95 animate-in duration-fast',
         placement.side === 'bottom' ? 'slide-in-from-top-2' : 'slide-in-from-bottom-2'
       )}
+      onPointerDown={() => onListInteraction?.(true)}
+      onPointerUp={() => onListInteraction?.(false)}
+      onPointerCancel={() => onListInteraction?.(false)}
     >
-      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-0.5">
+      <div
+        ref={scrollBodyRef}
+        className="overflow-y-auto overscroll-contain p-0.5"
+        style={{ maxHeight: bodyMaxHeight }}
+      >
         {items.map((item, index) => {
           const prevGroup = index > 0 ? items[index - 1]?.group : undefined
           const showGroup =
@@ -279,6 +356,7 @@ export function EnvTemplateSuggestList({
           const selected = index === activeIndex
           const isDynamic = item.group === 'dynamic'
           const isFilter = item.group === 'filter'
+          const isContext = item.group === 'context'
 
           return (
             <div key={`${item.group ?? ''}:${item.key}`}>
@@ -292,7 +370,13 @@ export function EnvTemplateSuggestList({
                   <span
                     className={cn(
                       'size-1.5 shrink-0 rounded-full',
-                      isDynamic ? 'bg-sky-400' : isFilter ? 'bg-violet-400' : 'bg-primary'
+                      isDynamic
+                        ? 'bg-sky-400'
+                        : isFilter
+                          ? 'bg-violet-400'
+                          : isContext
+                            ? 'bg-amber-400'
+                            : 'bg-primary'
                     )}
                     aria-hidden
                   />
@@ -308,7 +392,9 @@ export function EnvTemplateSuggestList({
                 tabIndex={-1}
                 aria-selected={selected}
                 onMouseDown={(event) => {
+                  // Keep input focused; select on press (not click) so blur doesn't win.
                   event.preventDefault()
+                  event.stopPropagation()
                   onSelect(item)
                 }}
                 onMouseEnter={() => onHover(index)}
@@ -327,7 +413,9 @@ export function EnvTemplateSuggestList({
                       ? 'border-sky-400/25 bg-sky-400/10 text-sky-500 dark:text-sky-400'
                       : isFilter
                         ? 'border-violet-400/25 bg-violet-400/10 text-violet-500 dark:text-violet-400'
-                        : 'border-primary/20 bg-primary/10 text-primary'
+                        : isContext
+                          ? 'border-amber-400/25 bg-amber-400/10 text-amber-600 dark:text-amber-400'
+                          : 'border-primary/20 bg-primary/10 text-primary'
                   )}
                   aria-hidden
                 >

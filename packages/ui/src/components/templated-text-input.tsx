@@ -14,7 +14,8 @@ import { Textarea } from './textarea'
 export type TemplatedFieldSharedProps = {
   value: string
   onChange: (next: string) => void
-  resolveVariable: (key: string) => EnvVarLookup | null
+  /** Base key or full `{{key|filters}}` token (chips pass the token so filters apply). */
+  resolveVariable: (keyOrExpression: string) => EnvVarLookup | null
   onVariableChange: EnvVariableChangeHandler
   onManageVariables?: () => void
   manageVariablesLabel?: string
@@ -39,7 +40,8 @@ function hasEnvTemplate(value: string): boolean {
 
 export type TemplatedValueDisplayProps = {
   value: string
-  resolveVariable: (key: string) => EnvVarLookup | null
+  /** Base key or full `{{key|filters}}` token (chips pass the token so filters apply). */
+  resolveVariable: (keyOrExpression: string) => EnvVarLookup | null
   onVariableChange: EnvVariableChangeHandler
   onManageVariables?: () => void
   manageVariablesLabel?: string
@@ -86,11 +88,12 @@ export function TemplatedValueDisplay({
       return (
         <span
           key={`t-${segment.offset}`}
-          className={cn(
+          className={
             multiline
-              ? 'max-w-full whitespace-pre-wrap break-words'
+              ? // Stay in normal inline flow so newlines / spaces hug chips.
+                'whitespace-pre-wrap'
               : 'inline-flex items-center whitespace-pre leading-none'
-          )}
+          }
         >
           {segment.text}
         </span>
@@ -101,7 +104,8 @@ export function TemplatedValueDisplay({
         key={`v-${segment.offset}-${segment.key}`}
         raw={segment.raw}
         variableKey={segment.key}
-        lookup={resolveVariable(segment.key)}
+        // Pass the full `{{key|filters}}` token so previews apply transforms.
+        lookup={resolveVariable(segment.raw)}
         onVariableChange={onVariableChange}
         onManageVariables={onManageVariables}
         manageVariablesLabel={manageVariablesLabel}
@@ -110,7 +114,6 @@ export function TemplatedValueDisplay({
         unresolvedLabel={unresolvedLabel}
         valuePlaceholder={valuePlaceholder}
         wrap={multiline}
-        className={multiline ? 'min-w-0 max-w-full shrink align-baseline' : undefined}
       />
     )
   })
@@ -118,9 +121,9 @@ export function TemplatedValueDisplay({
   const surfaceClassName = cn(
     'w-full min-w-0 cursor-text rounded-sm border border-input bg-background px-2.5 font-mono text-foreground text-sm',
     multiline
-      ? // Inline-friendly wrap: chips stay in the text flow ("Hello {{var}}!").
-        'flex flex-wrap content-start items-baseline gap-x-0 gap-y-0.5 overflow-auto py-1.5 leading-normal'
-      : 'flex flex-nowrap items-center gap-y-0 overflow-x-auto overflow-y-hidden py-0 leading-none',
+      ? // Inline flow (not flex-wrap): "Hello {{var}}!" stays one visual line.
+        'block overflow-auto whitespace-pre-wrap break-words py-2 leading-relaxed'
+      : 'flex flex-nowrap items-center overflow-x-auto overflow-y-hidden py-0 leading-none',
     // Overlay must fill the real control without growing past it (e.g. h-6 arg rows).
     overlay ? 'h-full max-h-full min-h-0' : 'min-h-7',
     !overlay &&

@@ -102,6 +102,7 @@ export function filterEnvTemplateSuggestions(
  * Replace the unfinished `{{prefix` at the cursor with `{{key}}`,
  * or complete the filter after `|` when in filter mode.
  * If `}}` already follows the cursor, it is consumed.
+ * Cursor is left just before the closing `}}` so the user can keep typing (e.g. filters).
  */
 export function applyEnvTemplateCompletion(
   text: string,
@@ -112,7 +113,7 @@ export function applyEnvTemplateCompletion(
   if (!match) {
     const insert = `{{${key}}}`
     const value = `${text.slice(0, cursor)}${insert}${text.slice(cursor)}`
-    return { value, cursor: cursor + insert.length }
+    return { value, cursor: cursor + 2 + key.length }
   }
 
   const after = text.slice(match.cursor)
@@ -123,10 +124,10 @@ export function applyEnvTemplateCompletion(
     // Complete only the filter after the last `|`; keep key + prior filters.
     const pipeAbs = match.braceStart + 2 + pipe
     const value = `${text.slice(0, pipeAbs + 1)}${key}}}${text.slice(match.cursor + closeLen)}`
-    return { value, cursor: pipeAbs + 1 + key.length + 2 }
+    return { value, cursor: pipeAbs + 1 + key.length }
   }
 
   const insert = `{{${key}}}`
   const value = `${text.slice(0, match.braceStart)}${insert}${text.slice(match.cursor + closeLen)}`
-  return { value, cursor: match.braceStart + insert.length }
+  return { value, cursor: match.braceStart + 2 + key.length }
 }

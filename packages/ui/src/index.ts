@@ -179,8 +179,19 @@ export {
   Value,
 } from './components/value-tag'
 export { type ConfirmOptions, useConfirm } from './hooks/use-confirm'
+export {
+  type UseDocumentWheelScrollOptions,
+  useDocumentWheelScroll,
+} from './hooks/use-document-wheel-scroll'
 export { useEscapeToDismiss } from './hooks/use-escape-to-dismiss'
 export { type ToastInput, ToastProvider, useToast } from './hooks/use-toast'
+export {
+  applyWheelDeltaToScrollTop,
+  type DocumentWheelScrollHitInput,
+  isFocusedTextControl,
+  pointInRect,
+  shouldHandleDocumentWheelScroll,
+} from './lib/document-wheel-scroll'
 export {
   allEmojis,
   EMOJI_CATEGORIES,

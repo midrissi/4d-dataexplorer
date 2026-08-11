@@ -1,8 +1,9 @@
 import type { EnvTemplateSuggestion, EnvWriteTarget } from '@4d/ui'
+import { parseTemplateExpression } from '@4d/ui'
 import { useCallback, useMemo } from 'react'
 import { useEnvThisRoot } from '~/components/Environments/env-this-context'
 import { useTranslation } from '~/i18n'
-import { HELPER_TEMPLATE_DEFS, listAllDynamicEnvVarDefs } from '~/lib/env'
+import { HELPER_TEMPLATE_DEFS, listAllDynamicEnvVarDefs, resolveEnvTemplates } from '~/lib/env'
 import {
   type EnvTemplateThis,
   isThisTemplateKey,
@@ -14,6 +15,16 @@ import type { EnvScope, EnvVarLookup } from '~/lib/env/types'
 import { getCurrentBaseId } from '~/lib/storage'
 import { setEnvVarCurrentValue, useEnvironmentsStore } from '~/store/environments'
 import { useTabsStore } from '~/store/tabs'
+
+/** Normalize chip lookup arg to a full `{{…}}` token when possible. */
+function toTemplateToken(keyOrExpression: string): string | null {
+  const trimmed = keyOrExpression.trim()
+  if (!trimmed) return null
+  if (trimmed.startsWith('{{') && trimmed.endsWith('}}')) return trimmed
+  // Interior with filters (e.g. `$faker…|lower`) — wrap for resolve.
+  if (trimmed.includes('|')) return `{{${trimmed}}}`
+  return null
+}
 
 function isEnvScope(value: string | undefined): value is EnvScope {
   return value === 'global' || value === 'profile' || value === 'base'
@@ -49,30 +60,64 @@ export function useTemplatedEnvFieldProps(options?: TemplatedEnvFieldOptions) {
   const hasBaseEnv = useEnvironmentsStore((s) => Boolean(s.getLayers().baseEnv))
 
   const resolveVariable = useCallback(
-    (key: string): EnvVarLookup => {
+    (keyOrExpression: string): EnvVarLookup => {
+      void revision
+      const token = toTemplateToken(keyOrExpression)
+      const inner = token ? token.slice(2, -2) : keyOrExpression
+      const parsed = parseTemplateExpression(inner)
+      const key = parsed?.key ?? keyOrExpression.trim()
+
+      let base: EnvVarLookup
       if (isThisTemplateKey(key)) {
         const hit = resolveThisPath(thisRoot, key)
         if (hit.found) {
           const text = stringifyThisValue(hit.value)
-          return {
-            value: text ?? (hit.value === undefined ? '' : String(hit.value)),
+          base = {
+            // Path exists in `$this` — templated / cyclic values resolve at send time, not as typos.
+            value: text ?? '…',
             scope: 'dynamic',
             scopeLabel: labels.context,
-            unresolved: text === null,
+            unresolved: false,
+            dynamic: true,
+          }
+        } else {
+          base = {
+            value: '',
+            scope: 'dynamic',
+            scopeLabel: labels.context,
+            unresolved: true,
             dynamic: true,
           }
         }
+      } else {
+        base = useEnvironmentsStore.getState().lookup(key, labels)
+      }
+
+      // Evaluate the whole expression (dynamic generators + `|` filters) for chip previews.
+      if (token) {
+        const map = useEnvironmentsStore.getState().getActiveMap()
+        const { text, unresolved } = resolveEnvTemplates(token, map, { this: thisRoot })
+        if (unresolved.length > 0) {
+          return {
+            ...base,
+            value: '',
+            unresolved: true,
+          }
+        }
+        const hasFilters = (parsed?.filters.length ?? 0) > 0
         return {
-          value: '',
-          scope: 'dynamic',
-          scopeLabel: labels.context,
-          unresolved: true,
-          dynamic: true,
+          ...base,
+          value: text,
+          unresolved: false,
+          // Filtered results are computed — keep the popover read-only so we don't
+          // write a transformed preview back into the underlying env var.
+          dynamic: base.dynamic || hasFilters,
         }
       }
-      return useEnvironmentsStore.getState().lookup(key, labels)
+
+      return base
     },
-    [labels, thisRoot]
+    [labels, thisRoot, revision]
   )
 
   const writeTargets = useMemo((): EnvWriteTarget[] => {

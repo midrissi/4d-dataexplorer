@@ -136,11 +136,11 @@ export function EnvVariableChip({
           type="button"
           tabIndex={-1}
           className={cn(
-            // Hug text metrics; self-center so flex rows align chip with plain text.
-            'env-var-chip inline-flex w-fit max-w-full self-center rounded-xs px-0.5 py-px font-mono text-[1em]',
+            'env-var-chip max-w-full rounded-xs px-0.5 font-mono text-[1em]',
             wrap
-              ? 'min-w-0 items-start whitespace-normal break-all text-left leading-snug'
-              : 'items-center truncate leading-none',
+              ? // inline-block keeps the chip in the textarea text flow (no flex gaps).
+                'inline-block whitespace-pre-wrap break-all px-0.5 py-0 align-baseline leading-[inherit]'
+              : 'inline-flex items-center self-center truncate py-px leading-none',
             unresolved
               ? 'bg-destructive/10 text-destructive shadow-[inset_0_0_0_1px] shadow-destructive/60'
               : 'bg-sky-400/10 text-sky-400 shadow-[inset_0_0_0_1px] shadow-sky-400/70',
