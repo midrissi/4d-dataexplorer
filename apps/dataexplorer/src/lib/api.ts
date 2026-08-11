@@ -16,9 +16,10 @@ import {
 import type { MethodToolInvokeInput } from '@4djs/assistant/tools'
 import { consoleService } from '~/lib/console'
 import { COUNT_FETCH_CONCURRENCY, mapWithConcurrency } from '~/lib/dataclass-counts'
-import { resolveEnvTemplates } from '~/lib/env'
+import { resolveEnvTemplates, resolveEnvTemplatesDeepWithThis } from '~/lib/env'
 import { coerceEntityDataBySchema } from '~/lib/env/coerce-entity-data'
-import { getActiveEnvMap, resolveEnvDeep } from '~/lib/env/runtime'
+import { getActiveEnvMap } from '~/lib/env/runtime'
+import { buildEntityThis, buildQueryThis } from '~/lib/env/this-context-builders'
 import { getBaseUrl, getCustomHeaders, getLoggingFetch, getTimeout } from '~/lib/platform'
 import { getCurrentBaseId, getDataclassCustomizations, setCurrentBaseId } from '~/lib/storage'
 import type { Dataclass, Entity, Pagination } from '~/store'
@@ -146,12 +147,14 @@ function getEntitiesQueryKey(params?: {
 
 /** Coerce UI filter params to API values (:1, :2, ...). */
 export function coerceFilterParams(
-  filterParams: Array<{ type: string; value: string }>
+  filterParams: Array<{ type: string; value: string }>,
+  thisRoot?: unknown
 ): unknown[] {
   const map = getActiveEnvMap()
+  const opts = thisRoot !== undefined ? { this: thisRoot } : undefined
   const unresolved: string[] = []
   const coerced = filterParams.map((p) => {
-    const resolved = resolveEnvTemplates(p.value, map)
+    const resolved = resolveEnvTemplates(p.value, map, opts)
     for (const key of resolved.unresolved) {
       if (!unresolved.includes(key)) unresolved.push(key)
     }
@@ -222,14 +225,27 @@ function buildEntitySetPageOptions(params?: EntityQueryParams): QueryOptions {
 function buildDataclassQuery(dataclassName: string, params?: EntityQueryParams) {
   let baseQuery = client.dataclass(dataclassName).all()
   if (params?.filter) {
-    const filterResolved = resolveEnvTemplates(params.filter, getActiveEnvMap())
+    const thisRoot = buildQueryThis({
+      dataclassName,
+      queryOptions: {
+        filter: params.filter,
+        filterParams: params.filterParams ?? [],
+        sort: params.sort ?? '',
+        order: params.order ?? 'desc',
+        select: params.select?.join(',') ?? '',
+        top: 0,
+      },
+    })
+    const filterResolved = resolveEnvTemplates(params.filter, getActiveEnvMap(), { this: thisRoot })
     if (filterResolved.unresolved.length > 0) {
       consoleService.warn(
         `Unresolved environment variables: ${filterResolved.unresolved.join(', ')}`
       )
     }
     baseQuery = baseQuery.filter(filterResolved.text)
-    const paramValues = params?.filterParams?.length ? coerceFilterParams(params.filterParams) : []
+    const paramValues = params?.filterParams?.length
+      ? coerceFilterParams(params.filterParams, thisRoot)
+      : []
     if (paramValues.length > 0) {
       baseQuery = baseQuery.params(...paramValues)
     }
@@ -826,7 +842,9 @@ export const api = {
    * Create a new entity
    */
   createEntity: async (dataclassName: string, data: Record<string, unknown>) => {
-    const resolved = resolveEnvDeep(data)
+    const resolved = resolveEnvTemplatesDeepWithThis(data, getActiveEnvMap(), (current) =>
+      buildEntityThis(current as Record<string, unknown>)
+    )
     if (resolved.unresolved.length > 0) {
       consoleService.warn(`Unresolved environment variables: ${resolved.unresolved.join(', ')}`)
     }
@@ -847,8 +865,11 @@ export const api = {
    * Update an existing entity
    */
   updateEntity: async (dataclassName: string, key: string, data: Record<string, unknown>) => {
-    const keyResolved = resolveEnvTemplates(key, getActiveEnvMap())
-    const resolved = resolveEnvDeep(data)
+    const thisRoot = buildEntityThis(data)
+    const keyResolved = resolveEnvTemplates(key, getActiveEnvMap(), { this: thisRoot })
+    const resolved = resolveEnvTemplatesDeepWithThis(data, getActiveEnvMap(), (current) =>
+      buildEntityThis(current as Record<string, unknown>)
+    )
     const unresolved = [...keyResolved.unresolved]
     for (const u of resolved.unresolved) {
       if (!unresolved.includes(u)) unresolved.push(u)
@@ -954,7 +975,9 @@ export const api = {
     const prepared: Record<string, unknown>[] = []
     const unresolved: string[] = []
     for (const entity of entities) {
-      const resolved = resolveEnvDeep(entity)
+      const resolved = resolveEnvTemplatesDeepWithThis(entity, getActiveEnvMap(), (current) =>
+        buildEntityThis(current as Record<string, unknown>)
+      )
       for (const key of resolved.unresolved) {
         if (!unresolved.includes(key)) unresolved.push(key)
       }

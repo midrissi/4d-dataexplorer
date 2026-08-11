@@ -82,6 +82,25 @@ Unknown filters leave the whole <code>&#123;&#123;…&#125;&#125;</code> token u
 {{$faker.date.between | between:2024-01-01,2024-12-31}}
 ```
 
+### `$this` (call context)
+
+Reserved paths that read the **current execution object**. They are not stored in environments and cannot be overridden by env keys.
+
+| Surface | Examples |
+|---------|----------|
+| Entity create/edit | <code>&#123;&#123;$this.firstName&#125;&#125;</code>, <code>&#123;&#123;$this.email \| lower&#125;&#125;</code> |
+| HTTP Client | <code>&#123;&#123;$this.method&#125;&#125;</code>, <code>&#123;&#123;$this.path&#125;&#125;</code>, <code>&#123;&#123;$this.url&#125;&#125;</code>, <code>&#123;&#123;$this.headers.Authorization&#125;&#125;</code>, <code>&#123;&#123;$this.params.q&#125;&#125;</code>, <code>&#123;&#123;$this.body.raw&#125;&#125;</code> |
+| Method Executor | <code>&#123;&#123;$this.methodName&#125;&#125;</code>, <code>&#123;&#123;$this.scope&#125;&#125;</code>, <code>&#123;&#123;$this.dataClass&#125;&#125;</code>, <code>&#123;&#123;$this.parent&#125;&#125;</code>, <code>&#123;&#123;$this.key&#125;&#125;</code>, <code>&#123;&#123;$this.args.0&#125;&#125;</code> |
+| Query Builder | <code>&#123;&#123;$this.dataclass&#125;&#125;</code>, <code>&#123;&#123;$this.filter&#125;&#125;</code>, <code>&#123;&#123;$this.entitySetId&#125;&#125;</code>, <code>&#123;&#123;$this.params.1&#125;&#125;</code> |
+
+Dotted paths walk objects (header names match case-insensitively) and arrays (numeric segments). Sibling fields that reference each other resolve in multiple passes (e.g. `email: {{$this.firstName | lower}}@example.com`). Cyclic `$this` references stay unresolved. An exact leaf <code>&#123;&#123;$this.vector&#125;&#125;</code> in a JSON payload rehydrates to the typed value.
+
+```text
+{{$this.firstName | lower}}.{{$this.lastName | lower}}@example.com
+Authorization: {{$this.headers.Authorization}}
+{{$this.method}} {{$this.path}}
+```
+
 ## Dynamic variables
 
 Keys that start with `$` are **dynamic variables**. They are not stored in an environment — each resolve generates a fresh value via [Faker](https://fakerjs.dev/).

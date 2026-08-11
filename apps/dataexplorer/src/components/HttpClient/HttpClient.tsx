@@ -69,6 +69,7 @@ import {
   syncParamsFromPath,
   upsertBuiltInHeaderOverride,
 } from '~/lib/http-client'
+import { buildHttpThis } from '~/lib/env/this-context-builders'
 import { getBaseUrl, isDesktop, isMobileShell, onConnectionChange } from '~/lib/platform'
 import {
   httpSeedExportLabel,
@@ -231,11 +232,11 @@ function SettingsToggleRow({
 
 export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSeed }) {
   const { t } = useTranslation()
-  const envField = useTemplatedEnvFieldProps()
   const mobile = isMobileShell()
   const editorPrefs = useCodeEditorPrefs()
   const updateEditorPrefs = useUpdateCodeEditorPrefs()
   const [draft, setDraft] = useState<HttpClientRequestDraft>(() => createEmptyHttpDraft(seed))
+  const envField = useTemplatedEnvFieldProps({ thisRoot: buildHttpThis(draft) })
   const [requestTab, setRequestTab] = useState<RequestTab>('params')
   const [sending, setSending] = useState(false)
   const [response, setResponse] = useState<HttpClientResponse | null>(null)
@@ -963,6 +964,7 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
                     valuePlaceholder={t('httpClient.value')}
                     keySuggestions={REST_QUERY_PARAMS}
                     getValueSuggestions={restParamValueSuggestions}
+                    thisRoot={buildHttpThis(draft)}
                     addLabel={t('httpClient.addParam')}
                     emptyTitle={t('httpClient.noParamsTitle')}
                     emptyDescription={t('httpClient.noParamsDescription')}
@@ -1005,6 +1007,7 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
                         valuePlaceholder={t('httpClient.headerValue')}
                         keySuggestions={COMMON_REQUEST_HEADERS}
                         valueSuggestions={COMMON_CONTENT_TYPES}
+                        thisRoot={buildHttpThis(draft)}
                         addLabel={t('httpClient.addHeader')}
                         emptyTitle={t('httpClient.noHeadersRequestTitle')}
                         emptyDescription={t('httpClient.noHeadersRequestDescription')}
@@ -1064,6 +1067,7 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
                       <KeyValueEditor
                         pairs={draft.body.urlencoded}
                         onChange={(urlencoded) => setBody({ urlencoded })}
+                        thisRoot={buildHttpThis(draft)}
                         addLabel={t('httpClient.addField')}
                         emptyTitle={t('httpClient.noFieldsTitle')}
                         emptyDescription={t('httpClient.noFieldsDescription')}
@@ -1083,6 +1087,7 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
                         onFileChosen={(fieldId, file) => {
                           fileMapRef.current.set(fieldId, file)
                         }}
+                        thisRoot={buildHttpThis(draft)}
                       />
                     ) : null}
 

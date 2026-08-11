@@ -12,6 +12,7 @@ export type PlaygroundExampleId =
   | 'object'
   | 'vector'
   | 'hash'
+  | 'this'
 
 export type PlaygroundExample = {
   id: PlaygroundExampleId
@@ -19,6 +20,15 @@ export type PlaygroundExample = {
   /** Short mono preview shown under the title. */
   preview: string
 }
+
+/** Demo `$this` root for the Environments playground. */
+export const PLAYGROUND_THIS = {
+  name: 'Ada',
+  email: 'ada@example.com',
+  method: 'POST',
+  path: '/rest/Person',
+  headers: { Authorization: 'Bearer demo-token' },
+} as const
 
 export const PLAYGROUND_EXAMPLES: readonly PlaygroundExample[] = [
   {
@@ -63,6 +73,11 @@ export const PLAYGROUND_EXAMPLES: readonly PlaygroundExample[] = [
     template: '{{$faker.person.firstName | hash:md5}}',
     preview: '{{$faker.person.firstName | hash:md5}}',
   },
+  {
+    id: 'this',
+    template: '{{$this.method}} {{$this.path}}\nAuthorization: {{$this.headers.Authorization}}\nHi {{$this.name}}!',
+    preview: '{{$this.method}} {{$this.path}} · $this.name',
+  },
 ]
 
 const EXAMPLE_LABEL_KEYS = {
@@ -74,6 +89,7 @@ const EXAMPLE_LABEL_KEYS = {
   object: 'environments.testTemplatesExampleObject',
   vector: 'environments.testTemplatesExampleVector',
   hash: 'environments.testTemplatesExampleHash',
+  this: 'environments.testTemplatesExampleThis',
 } as const
 
 /** Favourites-style examples strip for the template playground. */

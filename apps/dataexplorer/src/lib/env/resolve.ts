@@ -11,6 +11,15 @@ import {
   isStructuredHelperKey,
   resolveHelperTemplate,
 } from './template-helpers'
+import {
+  type EnvTemplateThis,
+  isThisTemplateKey,
+  type ResolveEnvOptions,
+  resolveThisPath,
+  stringifyThisValue,
+} from './this-context'
+
+export type { ResolveEnvOptions } from './this-context'
 
 /** Matches `{{var_name}}` — key is non-empty, no nested braces. */
 export const ENV_TEMPLATE_RE = /\{\{([^{}]+)\}\}/g
@@ -66,11 +75,13 @@ function pushUnresolved(seen: Set<string>, unresolved: string[], label: string) 
 /**
  * Replace `{{key | filters}}` using `map`. Unresolved tokens are left as-is.
  * Missing keys that match dynamic vars (`$timestamp`, `$faker…`, `$pick`, …) are generated.
+ * `$this` / `$this.*` resolve from `options.this` (reserved; not overridable by env map).
  * Returns `{ text, unresolved }` where unresolved lists unique missing expression labels.
  */
 export function resolveEnvTemplates(
   text: string,
-  map: ReadonlyMap<string, string> | Record<string, string>
+  map: ReadonlyMap<string, string> | Record<string, string>,
+  options?: ResolveEnvOptions
 ): { text: string; unresolved: string[] } {
   if (!text?.includes('{{')) {
     return { text, unresolved: [] }
@@ -116,13 +127,42 @@ export function resolveEnvTemplates(
       return helper.text
     }
 
+    // Reserved `$this` context (not overridable by env map).
+    if (isThisTemplateKey(key)) {
+      const extracted = extractGeneratorOptions(filters)
+      if (!extracted) {
+        pushUnresolved(seen, unresolved, label)
+        return raw
+      }
+      if (hasGeneratorOptionFilters(filters)) {
+        pushUnresolved(seen, unresolved, label)
+        return raw
+      }
+      const hit = resolveThisPath(options?.this, key)
+      if (!hit.found) {
+        pushUnresolved(seen, unresolved, label)
+        return raw
+      }
+      const asText = stringifyThisValue(hit.value)
+      if (asText === null) {
+        pushUnresolved(seen, unresolved, label)
+        return raw
+      }
+      const transformed = applyTransforms(asText, extracted.transforms)
+      if (transformed === null) {
+        pushUnresolved(seen, unresolved, label)
+        return raw
+      }
+      return transformed
+    }
+
     const extracted = extractGeneratorOptions(filters)
     if (!extracted) {
       pushUnresolved(seen, unresolved, label)
       return raw
     }
 
-    const { options, transforms } = extracted
+    const { options: genOptions, transforms } = extracted
     let value = get(key)
 
     if (value !== undefined) {
@@ -132,7 +172,7 @@ export function resolveEnvTemplates(
         return raw
       }
     } else {
-      const dynamic = resolveDynamicEnvVar(key, options)
+      const dynamic = resolveDynamicEnvVar(key, genOptions)
       if (dynamic === undefined) {
         pushUnresolved(seen, unresolved, label)
         return raw
@@ -153,9 +193,10 @@ export function resolveEnvTemplates(
 /** Keys / expressions referenced in text that are missing from the map. */
 export function collectUnresolved(
   text: string,
-  map: ReadonlyMap<string, string> | Record<string, string>
+  map: ReadonlyMap<string, string> | Record<string, string>,
+  options?: ResolveEnvOptions
 ): string[] {
-  return resolveEnvTemplates(text, map).unresolved
+  return resolveEnvTemplates(text, map, options).unresolved
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -163,15 +204,35 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * Resolve a string that is exactly one structured helper template into a typed value.
- * Returns `null` when the string is not an exact structured helper leaf.
+ * Resolve a string that is exactly one structured helper or `$this` leaf into a typed value.
+ * Returns `null` when the string is not an exact structured leaf.
  */
-function resolveExactStructuredLeaf(text: string): { value: unknown; unresolved: boolean } | null {
+function resolveExactStructuredLeaf(
+  text: string,
+  options?: ResolveEnvOptions
+): { value: unknown; unresolved: boolean } | null {
   const trimmed = text.trim()
   const match = /^\{\{([^{}]+)\}\}$/.exec(trimmed)
   if (!match) return null
   const expr = parseTemplateExpression(match[1] ?? '')
-  if (!expr || !isStructuredHelperKey(expr.key)) return null
+  if (!expr) return null
+
+  if (isThisTemplateKey(expr.key)) {
+    const extracted = extractGeneratorOptions(expr.filters)
+    if (!extracted || hasGeneratorOptionFilters(expr.filters)) {
+      return { value: text, unresolved: true }
+    }
+    // Transforms require stringification — fall through to text resolve.
+    if (extracted.transforms.length > 0) return null
+    const hit = resolveThisPath(options?.this, expr.key)
+    if (!hit.found) return { value: text, unresolved: true }
+    if (typeof hit.value === 'string' && hit.value.includes('{{')) {
+      return { value: text, unresolved: true }
+    }
+    return { value: hit.value, unresolved: false }
+  }
+
+  if (!isStructuredHelperKey(expr.key)) return null
   const helper = resolveHelperTemplate(expr.key, expr.filters)
   if (!helper) return { value: text, unresolved: true }
   if (!helper.rehydrate) return null
@@ -181,11 +242,12 @@ function resolveExactStructuredLeaf(text: string): { value: unknown; unresolved:
 /**
  * Deep-walk a JSON-compatible value and resolve string leaves.
  * Arrays/objects are cloned; non-string primitives are unchanged.
- * Exact `$object` / `$repeat` / `$sample` / `$unique` / `$vector` leaves rehydrate to real structures.
+ * Exact `$object` / `$repeat` / `$sample` / `$unique` / `$vector` / `$this…` leaves rehydrate.
  */
 export function resolveEnvTemplatesDeep<T>(
   value: T,
-  map: ReadonlyMap<string, string> | Record<string, string>
+  map: ReadonlyMap<string, string> | Record<string, string>,
+  options?: ResolveEnvOptions
 ): { value: T; unresolved: string[] } {
   const unresolved: string[] = []
   const seen = new Set<string>()
@@ -200,7 +262,7 @@ export function resolveEnvTemplatesDeep<T>(
 
   const walk = (node: unknown): unknown => {
     if (typeof node === 'string') {
-      const structured = resolveExactStructuredLeaf(node)
+      const structured = resolveExactStructuredLeaf(node, options)
       if (structured) {
         if (structured.unresolved) {
           const inner = node.trim().slice(2, -2).trim()
@@ -209,7 +271,7 @@ export function resolveEnvTemplatesDeep<T>(
         }
         return structured.value
       }
-      const result = resolveEnvTemplates(node, map)
+      const result = resolveEnvTemplates(node, map, options)
       pushUnresolvedKeys(result.unresolved)
       return result.text
     }
@@ -227,4 +289,52 @@ export function resolveEnvTemplatesDeep<T>(
   }
 
   return { value: walk(value) as T, unresolved }
+}
+
+const DEFAULT_THIS_PASSES = 8
+
+function valueStillHasTemplates(node: unknown): boolean {
+  if (typeof node === 'string') return node.includes('{{')
+  if (Array.isArray(node)) return node.some(valueStillHasTemplates)
+  if (isPlainObject(node)) return Object.values(node).some(valueStillHasTemplates)
+  return false
+}
+
+/**
+ * Deep-resolve with `$this` rebuilt from the current snapshot each pass (sibling refs).
+ * Stops early when stable or when no templates remain. Cyclic `$this` refs stay unresolved.
+ */
+export function resolveEnvTemplatesDeepWithThis<T>(
+  value: T,
+  map: ReadonlyMap<string, string> | Record<string, string>,
+  getThis: (current: T) => EnvTemplateThis | undefined,
+  maxPasses = DEFAULT_THIS_PASSES
+): { value: T; unresolved: string[] } {
+  let current = value
+  let unresolved: string[] = []
+
+  for (let pass = 0; pass < maxPasses; pass++) {
+    if (!valueStillHasTemplates(current)) {
+      return { value: current, unresolved: [] }
+    }
+    const thisRoot = getThis(current)
+    const result = resolveEnvTemplatesDeep(current, map, { this: thisRoot })
+    unresolved = result.unresolved
+    const next = result.value
+    if (stableDeepEqual(current, next)) {
+      return { value: next, unresolved }
+    }
+    current = next
+  }
+
+  return { value: current, unresolved }
+}
+
+function stableDeepEqual(a: unknown, b: unknown): boolean {
+  if (Object.is(a, b)) return true
+  try {
+    return JSON.stringify(a) === JSON.stringify(b)
+  } catch {
+    return false
+  }
 }

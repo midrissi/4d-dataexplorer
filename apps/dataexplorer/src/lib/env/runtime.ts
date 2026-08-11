@@ -1,4 +1,5 @@
-import { resolveEnvTemplates, resolveEnvTemplatesDeep } from '~/lib/env'
+import { resolveEnvTemplates, resolveEnvTemplatesDeep } from './resolve'
+import type { ResolveEnvOptions } from './this-context'
 import { useEnvironmentsStore } from '~/store/environments'
 
 /** Active env map for resolve helpers (call at execution time). */
@@ -6,12 +7,18 @@ export function getActiveEnvMap(): Map<string, string> {
   return useEnvironmentsStore.getState().getActiveMap()
 }
 
-export function resolveEnvString(text: string): { text: string; unresolved: string[] } {
-  return resolveEnvTemplates(text, getActiveEnvMap())
+export function resolveEnvString(
+  text: string,
+  options?: ResolveEnvOptions
+): { text: string; unresolved: string[] } {
+  return resolveEnvTemplates(text, getActiveEnvMap(), options)
 }
 
-export function resolveEnvDeep<T>(value: T): { value: T; unresolved: string[] } {
-  return resolveEnvTemplatesDeep(value, getActiveEnvMap())
+export function resolveEnvDeep<T>(
+  value: T,
+  options?: ResolveEnvOptions
+): { value: T; unresolved: string[] } {
+  return resolveEnvTemplatesDeep(value, getActiveEnvMap(), options)
 }
 
 /** Merge unresolved key lists uniquely. */

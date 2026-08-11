@@ -49,6 +49,7 @@ function SortableFormDataRow({
   field,
   index,
   fileSize,
+  thisRoot,
   onUpdate,
   onRemove,
   onFileChosen,
@@ -57,13 +58,14 @@ function SortableFormDataRow({
   field: HttpFormDataField
   index: number
   fileSize?: number
+  thisRoot?: unknown
   onUpdate: (index: number, patch: Partial<HttpFormDataField> & { kind?: 'text' | 'file' }) => void
   onRemove: (index: number) => void
   onFileChosen: (fieldId: string, file: File) => void
   onFileCleared: (fieldId: string) => void
 }) {
   const { t } = useTranslation()
-  const envField = useTemplatedEnvFieldProps()
+  const envField = useTemplatedEnvFieldProps({ thisRoot })
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: field.id,
   })
@@ -184,10 +186,12 @@ export function FormDataEditor({
   fields,
   onChange,
   onFileChosen,
+  thisRoot,
 }: {
   fields: HttpFormDataField[]
   onChange: (fields: HttpFormDataField[]) => void
   onFileChosen: (fieldId: string, file: File) => void
+  thisRoot?: unknown
 }) {
   const { t } = useTranslation()
   const [fileSizes, setFileSizes] = useState<Record<string, number>>({})
@@ -319,6 +323,7 @@ export function FormDataEditor({
                   field={field}
                   index={index}
                   fileSize={fileSizes[field.id]}
+                  thisRoot={thisRoot}
                   onUpdate={update}
                   onRemove={remove}
                   onFileChosen={handleFileChosen}

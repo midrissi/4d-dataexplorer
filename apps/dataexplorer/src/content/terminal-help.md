@@ -64,6 +64,7 @@ You can also embed `{{variable}}` in snippet source — values are substituted f
 - `{{$faker.person.firstName | female}}` / `{{$faker.person.firstName | male}}` — gendered names (also `$faker.internet.email`, …)
 - `{{$faker.number.int | between:10,100}}` or `{{$faker.number.int | min:10 | max:100}}` — integer in range
 - `{{$faker.date.between | after:2020-01-01 | before:2025-12-31}}` — date bounds (`YYYY-MM-DD`)
+- `{{$this.firstName}}` / `{{$this.headers.Authorization}}` — call-site context (entity / HTTP / method / query); not available in the terminal
 
 **Helper templates** (lists / objects / vectors — nested generators use bare `$faker…` paths, no nested braces):
 

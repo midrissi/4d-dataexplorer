@@ -457,8 +457,8 @@ export const EntityForm = forwardRef<EntityFormHandle, EntityFormProps>(function
   ref
 ) {
   const { t } = useTranslation()
-  const envField = useTemplatedEnvFieldProps()
   const [formData, setFormData] = useState<Record<string, unknown>>(initialData)
+  const envField = useTemplatedEnvFieldProps({ thisRoot: formData })
   const [schema, setSchema] = useState<Awaited<ReturnType<typeof api.getDataclassSchema>> | null>(
     null
   )

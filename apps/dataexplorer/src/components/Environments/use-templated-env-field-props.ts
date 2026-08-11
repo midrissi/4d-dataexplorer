@@ -1,8 +1,16 @@
 import type { EnvTemplateSuggestion, EnvWriteTarget } from '@4d/ui'
 import { useCallback, useMemo } from 'react'
+import { useEnvThisRoot } from '~/components/Environments/env-this-context'
 import { useTranslation } from '~/i18n'
 import { HELPER_TEMPLATE_DEFS, listAllDynamicEnvVarDefs } from '~/lib/env'
-import type { EnvScope } from '~/lib/env/types'
+import {
+  isThisTemplateKey,
+  listThisSuggestionKeys,
+  resolveThisPath,
+  stringifyThisValue,
+  type EnvTemplateThis,
+} from '~/lib/env/this-context'
+import type { EnvScope, EnvVarLookup } from '~/lib/env/types'
 import { getCurrentBaseId } from '~/lib/storage'
 import { setEnvVarCurrentValue, useEnvironmentsStore } from '~/store/environments'
 import { useTabsStore } from '~/store/tabs'
@@ -11,9 +19,16 @@ function isEnvScope(value: string | undefined): value is EnvScope {
   return value === 'global' || value === 'profile' || value === 'base'
 }
 
+export type TemplatedEnvFieldOptions = {
+  /** Live `$this` root for completions and chip previews (overrides context provider). */
+  thisRoot?: EnvTemplateThis
+}
+
 /** Shared props for @4d/ui TemplatedTextInput / TemplatedTextarea. */
-export function useTemplatedEnvFieldProps() {
+export function useTemplatedEnvFieldProps(options?: TemplatedEnvFieldOptions) {
   const { t } = useTranslation()
+  const contextThis = useEnvThisRoot()
+  const thisRoot = options?.thisRoot !== undefined ? options.thisRoot : contextThis
   // Re-render when env data changes so chip lookups / suggestions stay fresh.
   const revision = useEnvironmentsStore((s) => s.revision)
 
@@ -25,6 +40,7 @@ export function useTemplatedEnvFieldProps() {
       profile: t('environments.scopeProfile'),
       base: t('environments.scopeBase'),
       dynamic: t('environments.scopeDynamic'),
+      context: t('environments.scopeContext'),
     }),
     [t]
   )
@@ -33,8 +49,30 @@ export function useTemplatedEnvFieldProps() {
   const hasBaseEnv = useEnvironmentsStore((s) => Boolean(s.getLayers().baseEnv))
 
   const resolveVariable = useCallback(
-    (key: string) => useEnvironmentsStore.getState().lookup(key, labels),
-    [labels]
+    (key: string): EnvVarLookup => {
+      if (isThisTemplateKey(key)) {
+        const hit = resolveThisPath(thisRoot, key)
+        if (hit.found) {
+          const text = stringifyThisValue(hit.value)
+          return {
+            value: text ?? (hit.value === undefined ? '' : String(hit.value)),
+            scope: 'dynamic',
+            scopeLabel: labels.context,
+            unresolved: text === null,
+            dynamic: true,
+          }
+        }
+        return {
+          value: '',
+          scope: 'dynamic',
+          scopeLabel: labels.context,
+          unresolved: true,
+          dynamic: true,
+        }
+      }
+      return useEnvironmentsStore.getState().lookup(key, labels)
+    },
+    [labels, thisRoot]
   )
 
   const writeTargets = useMemo((): EnvWriteTarget[] => {
@@ -72,6 +110,20 @@ export function useTemplatedEnvFieldProps() {
       })
     }
     envItems.sort((a, b) => a.key.localeCompare(b.key))
+
+    const contextItems: EnvTemplateSuggestion[] = []
+    for (const key of listThisSuggestionKeys(thisRoot)) {
+      if (seen.has(key)) continue
+      seen.add(key)
+      const hit = resolveThisPath(thisRoot, key)
+      const detail = hit.found ? (stringifyThisValue(hit.value) ?? '…') : 'Call context'
+      contextItems.push({
+        key,
+        detail: detail.length > 48 ? `${detail.slice(0, 45)}…` : detail,
+        group: 'context',
+      })
+    }
+
     const helperItems: EnvTemplateSuggestion[] = []
     for (const item of HELPER_TEMPLATE_DEFS) {
       if (seen.has(item.key)) continue
@@ -91,13 +143,14 @@ export function useTemplatedEnvFieldProps() {
         group: 'dynamic',
       })
     }
-    return [...envItems, ...helperItems, ...dynamicItems]
-  }, [revision])
+    return [...envItems, ...contextItems, ...helperItems, ...dynamicItems]
+  }, [revision, thisRoot])
 
   const variableGroupLabels = useMemo(
     () => ({
       environment: t('environments.suggestGroupEnvironment'),
       dynamic: t('environments.suggestGroupDynamic'),
+      context: t('environments.suggestGroupContext'),
       filter: t('environments.suggestGroupFilter'),
     }),
     [t]

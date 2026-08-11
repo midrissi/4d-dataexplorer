@@ -1,6 +1,6 @@
 import { Button, Checkbox, cn, Label } from '@4d/ui'
 import { ChevronLeft, Clock3, Download, Loader2, Play, Star } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { MobileFullscreenSheet } from '~/components/MobileFullscreenSheet'
 import { PostmanExportModal } from '~/components/PostmanExport'
 import { RequestResponseSplit } from '~/components/RequestResponseSplit'
@@ -9,6 +9,8 @@ import { api } from '~/lib/api'
 import { consoleService } from '~/lib/console'
 import { resolveEnvTemplates } from '~/lib/env'
 import { getActiveEnvMap, mergeUnresolved } from '~/lib/env/runtime'
+import { buildMethodThis } from '~/lib/env/this-context-builders'
+import { EnvThisProvider } from '~/components/Environments/env-this-context'
 import { isMobileShell } from '~/lib/platform'
 import {
   methodSeedExportLabel,
@@ -227,6 +229,35 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
   })
 
   const builderSeed = currentConfig()
+  const methodThis = useMemo(
+    () =>
+      buildMethodThis({
+        scope,
+        methodName,
+        dataClass: dataClass || undefined,
+        singletonName: singletonName || undefined,
+        key,
+        entitySetId,
+        filter,
+        orderby,
+        arguments: argumentsList,
+        wrapperText,
+        wrapperEnabled,
+      }),
+    [
+      scope,
+      methodName,
+      dataClass,
+      singletonName,
+      key,
+      entitySetId,
+      filter,
+      orderby,
+      argumentsList,
+      wrapperText,
+      wrapperEnabled,
+    ]
+  )
   const linkedFavourite = linkedFavouriteId
     ? favourites.find((item) => item.id === linkedFavouriteId)
     : undefined
@@ -348,12 +379,26 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
 
     let wrapper: Record<string, unknown> | undefined
     const map = getActiveEnvMap()
-    const resolvedArgs = resolveRuntimeArgumentsEnv(args)
-    const resolvedKey = resolveEnvTemplates(key, map)
-    const resolvedEntitySetId = resolveEnvTemplates(entitySetId, map)
-    const resolvedFilter = resolveEnvTemplates(filter, map)
-    const resolvedOrderby = resolveEnvTemplates(orderby, map)
-    const resolvedWrapperText = resolveEnvTemplates(liveWrapperText, map)
+    const thisRoot = buildMethodThis({
+      scope,
+      methodName,
+      dataClass: dataClass || undefined,
+      singletonName: singletonName || undefined,
+      key,
+      entitySetId,
+      filter,
+      orderby,
+      arguments: args,
+      wrapperText: liveWrapperText,
+      wrapperEnabled,
+    })
+    const resolveOpts = { this: thisRoot }
+    const resolvedArgs = resolveRuntimeArgumentsEnv(args, resolveOpts)
+    const resolvedKey = resolveEnvTemplates(key, map, resolveOpts)
+    const resolvedEntitySetId = resolveEnvTemplates(entitySetId, map, resolveOpts)
+    const resolvedFilter = resolveEnvTemplates(filter, map, resolveOpts)
+    const resolvedOrderby = resolveEnvTemplates(orderby, map, resolveOpts)
+    const resolvedWrapperText = resolveEnvTemplates(liveWrapperText, map, resolveOpts)
     const unresolved = mergeUnresolved(
       resolvedArgs.unresolved,
       resolvedKey.unresolved,
@@ -453,6 +498,7 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
           : t('methodExecutor.resultHint')
 
     return (
+      <EnvThisProvider value={methodThis}>
       <div className="flex h-full min-h-0 flex-col overflow-hidden bg-background">
         <div className="flex shrink-0 items-center gap-1 border-b px-2 py-2">
           {mobileStep !== 'method' ? (
@@ -691,10 +737,12 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
           </MobileFullscreenSheet>
         ) : null}
       </div>
+      </EnvThisProvider>
     )
   }
 
   return (
+    <EnvThisProvider value={methodThis}>
     <>
       <RequestResponseSplit
         kind="methodExecutor"
@@ -899,5 +947,6 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
       />
       {exportModal}
     </>
+    </EnvThisProvider>
   )
 }

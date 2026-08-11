@@ -9,6 +9,7 @@ import {
   resolveHelperTemplate,
 } from '~/lib/env'
 import { getActiveEnvMap } from '~/lib/env/runtime'
+import { isThisTemplateKey } from '~/lib/env/this-context'
 
 const DECORATION_KEY = 'env-template-decorations'
 
@@ -55,7 +56,11 @@ export function applyEnvTemplateDecorations(
       key.length > 0 && mapped === undefined && !helperSample
         ? resolveDynamicEnvVar(key)
         : undefined
-    const known = mapped !== undefined || dynamicSample !== undefined || helperSample !== null
+    const known =
+      mapped !== undefined ||
+      dynamicSample !== undefined ||
+      helperSample !== null ||
+      isThisTemplateKey(key)
     const decoration: Monaco.editor.IModelDeltaDecoration = {
       range,
       options: {
@@ -67,8 +72,10 @@ export function applyEnvTemplateDecorations(
               : helperSample
                 ? `**${key}** (helper) → \`${helperSample.text}\`${filterHint}`
                 : dynamicSample !== undefined
-                  ? `**${key}** (dynamic) → \`${dynamicSample}\`${filterHint}\n\nTip: pipe filters e.g. \`{{$faker.number.int | between:1,100}}\`, \`{{$faker.person.firstName | hash:md5}}\`, \`{{$pick | from:a,b}}\`, \`{{$vector | dims:8}}\`, \`{{$object | name:$faker.person.fullName}}\``
-                  : `Unresolved variable **${key || raw}**`,
+                  ? `**${key}** (dynamic) → \`${dynamicSample}\`${filterHint}\n\nTip: pipe filters e.g. \`{{$faker.number.int | between:1,100}}\`, \`{{$faker.person.firstName | hash:md5}}\`, \`{{$this.path}}\`, \`{{$pick | from:a,b}}\`, \`{{$vector | dims:8}}\`, \`{{$object | name:$faker.person.fullName}}\``
+                  : isThisTemplateKey(key)
+                    ? `**${key}** — call-site context (\`$this\` / \`$this.field\`)`
+                    : `Unresolved variable **${key || raw}**`,
         },
       },
     }
@@ -132,6 +139,19 @@ export function registerEnvTemplateCompletionProvider(
           range,
           sortText: `0.5-${item.key}`,
         })
+      }
+      if (!prefix || '$this'.startsWith(prefix) || prefix.startsWith('$this')) {
+        if (!seen.has('$this')) {
+          seen.add('$this')
+          suggestions.push({
+            label: '$this',
+            kind: monaco.languages.CompletionItemKind.Variable,
+            insertText: '$this',
+            detail: 'Call-site context root',
+            range,
+            sortText: '0.4-$this',
+          })
+        }
       }
       for (const item of listAllDynamicEnvVarDefs()) {
         if (prefix && !item.key.startsWith(prefix)) continue

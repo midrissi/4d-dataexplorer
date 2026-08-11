@@ -50,6 +50,7 @@ export {
   parseEnvTemplateSegments,
   resolveEnvTemplates,
   resolveEnvTemplatesDeep,
+  resolveEnvTemplatesDeepWithThis,
 } from './resolve'
 export {
   getActiveEnvMap,
@@ -68,6 +69,20 @@ export {
   resolveHelperArgValue,
   resolveHelperTemplate,
 } from './template-helpers'
+export {
+  buildEntityThis,
+  buildHttpThis,
+  buildMethodThis,
+  buildQueryThis,
+} from './this-context-builders'
+export {
+  type EnvTemplateThis,
+  isThisTemplateKey,
+  listThisSuggestionKeys,
+  type ResolveEnvOptions,
+  resolveThisPath,
+  stringifyThisValue,
+} from './this-context'
 export type {
   Environment,
   EnvironmentsBlock,

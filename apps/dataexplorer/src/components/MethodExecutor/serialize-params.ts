@@ -1,5 +1,6 @@
 import { resolveEnvTemplates } from '~/lib/env'
 import { getActiveEnvMap } from '~/lib/env/runtime'
+import type { ResolveEnvOptions } from '~/lib/env/this-context'
 import type { RuntimeArgument } from '~/store/method-executor-types'
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/
@@ -13,8 +14,11 @@ export function to4DDateLiteral(isoDate: string): string {
   return `!!${trimmed}!!`
 }
 
-/** Resolve `{{var}}` in string-like argument fields before serialize/send. */
-export function resolveRuntimeArgumentsEnv(argumentsList: RuntimeArgument[]): {
+/** Resolve `{{var}}` / `{{$this…}}` in string-like argument fields before serialize/send. */
+export function resolveRuntimeArgumentsEnv(
+  argumentsList: RuntimeArgument[],
+  options?: ResolveEnvOptions
+): {
   argumentsList: RuntimeArgument[]
   unresolved: string[]
 } {
@@ -28,24 +32,24 @@ export function resolveRuntimeArgumentsEnv(argumentsList: RuntimeArgument[]): {
 
   const resolved = argumentsList.map((argument) => {
     if (argument.kind === 'string' || argument.kind === 'number' || argument.kind === 'date') {
-      const value = resolveEnvTemplates(argument.value, map)
+      const value = resolveEnvTemplates(argument.value, map, options)
       push(value.unresolved)
       return { ...argument, value: value.text }
     }
     if (argument.kind === 'custom') {
-      const value = resolveEnvTemplates(argument.value, map)
+      const value = resolveEnvTemplates(argument.value, map, options)
       push(value.unresolved)
       return { ...argument, value: value.text }
     }
     if (argument.kind === 'entity') {
-      const dataClass = resolveEnvTemplates(argument.dataClass, map)
-      const key = resolveEnvTemplates(argument.key, map)
+      const dataClass = resolveEnvTemplates(argument.dataClass, map, options)
+      const key = resolveEnvTemplates(argument.key, map, options)
       push(dataClass.unresolved)
       push(key.unresolved)
       return { ...argument, dataClass: dataClass.text, key: key.text }
     }
     if (argument.kind === 'entitysel') {
-      const entitySetId = resolveEnvTemplates(argument.entitySetId, map)
+      const entitySetId = resolveEnvTemplates(argument.entitySetId, map, options)
       push(entitySetId.unresolved)
       return { ...argument, entitySetId: entitySetId.text }
     }

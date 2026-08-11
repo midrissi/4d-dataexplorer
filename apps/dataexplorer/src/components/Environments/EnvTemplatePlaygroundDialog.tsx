@@ -26,6 +26,7 @@ import { EmptyPanel } from '~/components/EmptyPanel'
 import {
   EnvTemplatePlaygroundExamples,
   PLAYGROUND_EXAMPLES,
+  PLAYGROUND_THIS,
   type PlaygroundExample,
   type PlaygroundExampleId,
   PlaygroundSection,
@@ -52,7 +53,7 @@ export function EnvTemplatePlaygroundDialog({
   const mobile = isMobileShell()
   const inputId = useId()
   const resultId = useId()
-  const envField = useTemplatedEnvFieldProps()
+  const envField = useTemplatedEnvFieldProps({ thisRoot: PLAYGROUND_THIS })
 
   const [draft, setDraft] = useState(PLAYGROUND_EXAMPLES[0].template)
   const [selectedId, setSelectedId] = useState<PlaygroundExampleId | null>(
@@ -65,7 +66,7 @@ export function EnvTemplatePlaygroundDialog({
 
   const evaluate = useCallback((source?: string) => {
     const text = source ?? draftRef.current
-    const next = resolveEnvString(text)
+    const next = resolveEnvString(text, { this: PLAYGROUND_THIS })
     setResult({ ...next, runId: Date.now() })
     setCopiedSource(null)
   }, [])
@@ -77,7 +78,7 @@ export function EnvTemplatePlaygroundDialog({
   const loadExample = (example: PlaygroundExample) => {
     setSelectedId(example.id)
     setDraft(example.template)
-    const next = resolveEnvString(example.template)
+    const next = resolveEnvString(example.template, { this: PLAYGROUND_THIS })
     setResult({ ...next, runId: Date.now() })
     setCopiedSource(null)
   }

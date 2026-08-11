@@ -29,6 +29,7 @@ function SortableKeyValueRow({
   keyPlaceholder,
   valuePlaceholder,
   keySuggestions,
+  thisRoot,
   onUpdate,
   onRemove,
 }: {
@@ -38,11 +39,12 @@ function SortableKeyValueRow({
   valuePlaceholder: string
   keySuggestions: readonly string[]
   valueSuggestions: readonly string[]
+  thisRoot?: unknown
   onUpdate: (index: number, patch: Partial<HttpKeyValuePair>) => void
   onRemove: (index: number) => void
 }) {
   const { t } = useTranslation()
-  const envField = useTemplatedEnvFieldProps()
+  const envField = useTemplatedEnvFieldProps({ thisRoot })
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: pair.id,
   })
@@ -125,6 +127,7 @@ export function KeyValueEditor({
   keySuggestions,
   valueSuggestions,
   getValueSuggestions,
+  thisRoot,
   addLabel = 'Add',
   emptyTitle = 'No entries yet',
   emptyDescription,
@@ -137,6 +140,7 @@ export function KeyValueEditor({
   valueSuggestions?: readonly string[]
   /** Per-row value suggestions based on the current key (overrides valueSuggestions when non-empty). */
   getValueSuggestions?: (key: string) => readonly string[]
+  thisRoot?: unknown
   addLabel?: string
   emptyTitle?: string
   emptyDescription?: string
@@ -213,6 +217,7 @@ export function KeyValueEditor({
                   valuePlaceholder={valuePlaceholder}
                   keySuggestions={keySuggestions ?? []}
                   valueSuggestions={getValueSuggestions?.(pair.key) ?? valueSuggestions ?? []}
+                  thisRoot={thisRoot}
                   onUpdate={update}
                   onRemove={remove}
                 />

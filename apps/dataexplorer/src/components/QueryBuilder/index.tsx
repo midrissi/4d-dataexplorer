@@ -41,6 +41,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { AiGenerateQueryModal } from '~/components/AiActions'
 import { AssistantSparklesIcon } from '~/components/AssistantSparklesIcon'
 import { EmptyPanel } from '~/components/EmptyPanel'
+import { EnvThisProvider } from '~/components/Environments/env-this-context'
 import {
   flushPendingArgumentValues,
   RuntimeArgumentsEditor,
@@ -48,6 +49,7 @@ import {
 } from '~/components/MethodExecutor/RuntimeArgumentsEditor'
 import { useAssistantLlmConfigured } from '~/hooks/useAssistantLlmConfigured'
 import { useCloudLlmOffline } from '~/hooks/useCloudLlmOffline'
+import { buildQueryThis } from '~/lib/env/this-context-builders'
 import { getIntlLocale, useTranslation } from '~/i18n'
 import { api } from '~/lib/api'
 import {
@@ -655,6 +657,32 @@ export function QueryBuilder() {
     )
   }, [filterParams])
 
+  const queryThis = useMemo(
+    () =>
+      buildQueryThis({
+        dataclassName: selectedDataclass ?? '',
+        queryOptions: {
+          filter: localFilter,
+          filterParams,
+          sort: queryOptions.sort,
+          order: queryOptions.order,
+          select: queryOptions.select,
+          top: queryOptions.top,
+        },
+        entitySetId: boundEntitySetId || null,
+      }),
+    [
+      selectedDataclass,
+      localFilter,
+      filterParams,
+      queryOptions.sort,
+      queryOptions.order,
+      queryOptions.select,
+      queryOptions.top,
+      boundEntitySetId,
+    ]
+  )
+
   const selectedAttributeCount = parseSelectAttributes(queryOptions.select).length
 
   const historyPanelBody = (
@@ -1135,14 +1163,16 @@ export function QueryBuilder() {
 
           {/* Filter parameters (for :1, :2, ... placeholders) */}
           {localFilter.trim() ? (
-            <RuntimeArgumentsEditor
-              argumentsList={filterArguments}
-              dataClasses={[]}
-              allowedKinds={FILTER_ARGUMENT_KINDS}
-              namePrefix=":"
-              className="border-t-0 pt-0"
-              onChange={handleFilterArgumentsChange}
-            />
+            <EnvThisProvider value={queryThis}>
+              <RuntimeArgumentsEditor
+                argumentsList={filterArguments}
+                dataClasses={[]}
+                allowedKinds={FILTER_ARGUMENT_KINDS}
+                namePrefix=":"
+                className="border-t-0 pt-0"
+                onChange={handleFilterArgumentsChange}
+              />
+            </EnvThisProvider>
           ) : null}
 
           {/* Options row */}

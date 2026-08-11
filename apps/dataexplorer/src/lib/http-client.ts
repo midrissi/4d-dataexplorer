@@ -16,6 +16,7 @@ import {
 import { consoleService } from './console'
 import { downloadBytes } from './download-bytes'
 import { resolveEnvTemplates } from './env'
+import { buildHttpThis } from './env/this-context-builders'
 import { getActiveEnvMap, mergeUnresolved } from './env/runtime'
 import {
   getBaseUrl,
@@ -1028,22 +1029,48 @@ export function inferRawContentType(
 
 function resolvePairEnv(
   pair: HttpKeyValuePair,
-  map: Map<string, string>
+  map: Map<string, string>,
+  thisRoot?: unknown
 ): { pair: HttpKeyValuePair; unresolved: string[] } {
-  const key = resolveEnvTemplates(pair.key, map)
-  const value = resolveEnvTemplates(pair.value, map)
+  const opts = thisRoot !== undefined ? { this: thisRoot } : undefined
+  const key = resolveEnvTemplates(pair.key, map, opts)
+  const value = resolveEnvTemplates(pair.value, map, opts)
   return {
     pair: { ...pair, key: key.text, value: value.text },
     unresolved: mergeUnresolved(key.unresolved, value.unresolved),
   }
 }
 
-/** Resolve `{{var}}` templates in an HTTP draft before build/send. */
-export function resolveHttpClientDraftEnv(draft: HttpClientRequestDraft): {
-  draft: HttpClientRequestDraft
-  unresolved: string[]
-} {
-  const map = getActiveEnvMap()
+const HTTP_THIS_PASSES = 8
+
+function draftStillHasTemplates(draft: HttpClientRequestDraft): boolean {
+  if (draft.customOrigin.includes('{{')) return true
+  if (draft.path.includes('{{')) return true
+  if (draft.customMethod.includes('{{')) return true
+  if (draft.body.raw.includes('{{')) return true
+  if (draft.body.rawContentType.includes('{{')) return true
+  for (const pair of draft.params) {
+    if (pair.key.includes('{{') || pair.value.includes('{{')) return true
+  }
+  for (const pair of draft.headers) {
+    if (pair.key.includes('{{') || pair.value.includes('{{')) return true
+  }
+  for (const pair of draft.body.urlencoded) {
+    if (pair.key.includes('{{') || pair.value.includes('{{')) return true
+  }
+  for (const field of draft.body.formData) {
+    if (field.key.includes('{{')) return true
+    if (field.kind === 'text' && field.value.includes('{{')) return true
+  }
+  return false
+}
+
+function resolveHttpClientDraftEnvOnce(
+  draft: HttpClientRequestDraft,
+  map: Map<string, string>,
+  thisRoot: unknown
+): { draft: HttpClientRequestDraft; unresolved: string[] } {
+  const opts = { this: thisRoot }
   const unresolved: string[] = []
   const push = (keys: string[]) => {
     for (const key of keys) {
@@ -1051,38 +1078,38 @@ export function resolveHttpClientDraftEnv(draft: HttpClientRequestDraft): {
     }
   }
 
-  const customOrigin = resolveEnvTemplates(draft.customOrigin, map)
+  const customOrigin = resolveEnvTemplates(draft.customOrigin, map, opts)
   push(customOrigin.unresolved)
-  const path = resolveEnvTemplates(draft.path, map)
+  const path = resolveEnvTemplates(draft.path, map, opts)
   push(path.unresolved)
-  const customMethod = resolveEnvTemplates(draft.customMethod, map)
+  const customMethod = resolveEnvTemplates(draft.customMethod, map, opts)
   push(customMethod.unresolved)
 
   const params = draft.params.map((pair) => {
-    const resolved = resolvePairEnv(pair, map)
+    const resolved = resolvePairEnv(pair, map, thisRoot)
     push(resolved.unresolved)
     return resolved.pair
   })
   const headers = draft.headers.map((pair) => {
-    const resolved = resolvePairEnv(pair, map)
+    const resolved = resolvePairEnv(pair, map, thisRoot)
     push(resolved.unresolved)
     return resolved.pair
   })
 
-  const raw = resolveEnvTemplates(draft.body.raw, map)
+  const raw = resolveEnvTemplates(draft.body.raw, map, opts)
   push(raw.unresolved)
-  const rawContentType = resolveEnvTemplates(draft.body.rawContentType, map)
+  const rawContentType = resolveEnvTemplates(draft.body.rawContentType, map, opts)
   push(rawContentType.unresolved)
   const urlencoded = draft.body.urlencoded.map((pair) => {
-    const resolved = resolvePairEnv(pair, map)
+    const resolved = resolvePairEnv(pair, map, thisRoot)
     push(resolved.unresolved)
     return resolved.pair
   })
   const formData = draft.body.formData.map((field) => {
-    const key = resolveEnvTemplates(field.key, map)
+    const key = resolveEnvTemplates(field.key, map, opts)
     push(key.unresolved)
     if (field.kind === 'text') {
-      const value = resolveEnvTemplates(field.value, map)
+      const value = resolveEnvTemplates(field.value, map, opts)
       push(value.unresolved)
       return { ...field, key: key.text, value: value.text }
     }
@@ -1107,6 +1134,31 @@ export function resolveHttpClientDraftEnv(draft: HttpClientRequestDraft): {
     },
     unresolved,
   }
+}
+
+/** Resolve `{{var}}` / `{{$this…}}` templates in an HTTP draft before build/send. */
+export function resolveHttpClientDraftEnv(draft: HttpClientRequestDraft): {
+  draft: HttpClientRequestDraft
+  unresolved: string[]
+} {
+  const map = getActiveEnvMap()
+  let current = draft
+  let unresolved: string[] = []
+
+  for (let pass = 0; pass < HTTP_THIS_PASSES; pass++) {
+    if (!draftStillHasTemplates(current)) {
+      return { draft: current, unresolved: [] }
+    }
+    const thisRoot = buildHttpThis(current)
+    const result = resolveHttpClientDraftEnvOnce(current, map, thisRoot)
+    unresolved = result.unresolved
+    if (JSON.stringify(result.draft) === JSON.stringify(current)) {
+      return { draft: result.draft, unresolved }
+    }
+    current = result.draft
+  }
+
+  return { draft: current, unresolved }
 }
 
 export function buildHttpRequest(
