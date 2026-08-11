@@ -5,6 +5,10 @@ import { useEnvThisRoot } from '~/components/Environments/env-this-context'
 import { useTranslation } from '~/i18n'
 import { HELPER_TEMPLATE_DEFS, listAllDynamicEnvVarDefs, resolveEnvTemplates } from '~/lib/env'
 import {
+  type FieldTemplateHint,
+  mergeFieldTemplateSuggestions,
+} from '~/lib/env/suggest-field-templates'
+import {
   type EnvTemplateThis,
   isThisTemplateKey,
   listThisSuggestionKeys,
@@ -33,6 +37,11 @@ function isEnvScope(value: string | undefined): value is EnvScope {
 export type TemplatedEnvFieldOptions = {
   /** Live `$this` root for completions and chip previews (overrides context provider). */
   thisRoot?: EnvTemplateThis
+  /**
+   * When set, prepend a “For this field” suggestion group ranked from the
+   * attribute name / type (entity forms, typed args, …).
+   */
+  field?: FieldTemplateHint
 }
 
 /** Shared props for @4d/ui TemplatedTextInput / TemplatedTextarea. */
@@ -98,6 +107,16 @@ export function useTemplatedEnvFieldProps(options?: TemplatedEnvFieldOptions) {
         const map = useEnvironmentsStore.getState().getActiveMap()
         const { text, unresolved } = resolveEnvTemplates(token, map, { this: thisRoot })
         if (unresolved.length > 0) {
+          // `$this.field` can point at another templated value (`{{$faker…}}`). The path is
+          // valid — it resolves at send time — so don't paint the chip as an error typo.
+          if (isThisTemplateKey(key) && !base.unresolved) {
+            return {
+              ...base,
+              value: base.value || '…',
+              unresolved: false,
+              dynamic: true,
+            }
+          }
           return {
             ...base,
             value: '',
@@ -188,11 +207,13 @@ export function useTemplatedEnvFieldProps(options?: TemplatedEnvFieldOptions) {
         group: 'dynamic',
       })
     }
-    return [...envItems, ...contextItems, ...helperItems, ...dynamicItems]
-  }, [revision, thisRoot])
+    const catalog = [...envItems, ...contextItems, ...helperItems, ...dynamicItems]
+    return mergeFieldTemplateSuggestions(catalog, options?.field)
+  }, [revision, thisRoot, options?.field])
 
   const variableGroupLabels = useMemo(
     () => ({
+      field: t('environments.suggestGroupField'),
       environment: t('environments.suggestGroupEnvironment'),
       dynamic: t('environments.suggestGroupDynamic'),
       context: t('environments.suggestGroupContext'),

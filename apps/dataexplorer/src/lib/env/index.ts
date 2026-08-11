@@ -60,6 +60,15 @@ export {
   warnUnresolvedEnvVars,
 } from './runtime'
 export {
+  buildFieldTemplateSuggestions,
+  type FieldTemplateHint,
+  mergeFieldTemplateSuggestions,
+  normalizeFieldKey,
+  proposeFieldTemplateKeys,
+  tokenizeFieldName,
+  withFieldTemplateSuggestions,
+} from './suggest-field-templates'
+export {
   HELPER_FILTER_NAMES,
   HELPER_TEMPLATE_DEFS,
   type HelperTemplateDef,

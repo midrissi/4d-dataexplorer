@@ -1046,6 +1046,7 @@ export const fr = {
     suggestGroupDynamic: 'Dynamique',
     suggestGroupContext: 'Contexte ($this)',
     suggestGroupFilter: 'Filtres',
+    suggestGroupField: 'Pour ce champ',
     noEnvironment: 'Aucun environnement',
     switcherLabel: 'Environnement',
     switcherEmptyVars: 'Aucune variable disponible',
@@ -2278,6 +2279,13 @@ export const fr = {
     afterCreateClear: 'Rester ouvert · vider le formulaire',
     afterCreateKeep: 'Rester ouvert · conserver les valeurs',
     createN: 'Créer {count}',
+    emptyBeforeInsert: 'Vider la table avant insertion',
+    emptyBeforeInsertHint:
+      'Supprime toutes les entités de {dataclassName}, puis crée les nouveaux enregistrements.',
+    emptyBeforeInsertConfirmTitle: 'Vider la table et créer ?',
+    emptyBeforeInsertConfirmDescription:
+      'Cela supprimera définitivement toutes les entités de {dataclassName}, puis créera {count} nouveaux enregistrements. Cette action est irréversible.',
+    emptyBeforeInsertConfirm: 'Vider et créer {count}',
     fixJsonAbove: "Corrigez le JSON ci-dessus ou utilisez les actions du panneau d'erreur.",
     fixJsonOrUse:
       'Corrigez le JSON ou utilisez « Continuer avec formulaire vide » / « Insérer un exemple valide »',

@@ -1472,7 +1472,13 @@ export function EntityList({ tabId }: { tabId: string }) {
           initialData={duplicateData}
           isDuplicate={!!duplicateData}
           onSubmit={async (data, options) => {
-            await createEntity(data, options)
+            if (options?.emptyBeforeInsert) {
+              await deleteManyEntities({ all: true })
+            }
+            await createEntity(data, {
+              refresh: options?.refresh,
+              count: options?.count,
+            })
           }}
           onRefresh={async () => {
             if (!selectedDataclass) return

@@ -1,4 +1,4 @@
-import { Button, cn, Input, Label, ScrollArea, TemplatedTextInput } from '@4d/ui'
+import { Button, cn, Input, Label, ScrollArea } from '@4d/ui'
 import { CodeEditor } from '@4d/ui/code-editor'
 import { Loader2, Upload, X } from 'lucide-react'
 import {
@@ -15,8 +15,8 @@ import {
   isPrivateBinaryObject,
   PRIVATE_BINARY_OBJECT_KEY,
 } from '~/components/BinaryObjectViewer'
+import { EntityFormTemplatedAttrField } from '~/components/EntityFormTemplatedAttrField'
 import { EntityFormValueOrTemplateField } from '~/components/EntityFormValueOrTemplateField'
-import { useTemplatedEnvFieldProps } from '~/components/Environments/use-templated-env-field-props'
 import { useEditorLabels, useTranslation } from '~/i18n'
 import { useCodeEditorPrefs, useUpdateCodeEditorPrefs } from '~/store/settings'
 
@@ -458,7 +458,6 @@ export const EntityForm = forwardRef<EntityFormHandle, EntityFormProps>(function
 ) {
   const { t } = useTranslation()
   const [formData, setFormData] = useState<Record<string, unknown>>(initialData)
-  const envField = useTemplatedEnvFieldProps({ thisRoot: formData })
   const [schema, setSchema] = useState<Awaited<ReturnType<typeof api.getDataclassSchema>> | null>(
     null
   )
@@ -597,8 +596,8 @@ export const EntityForm = forwardRef<EntityFormHandle, EntityFormProps>(function
           attrType={attr.type}
           fieldId={fieldId}
           fieldValue={fieldValue}
+          thisRoot={formData}
           onFieldChange={handleFormFieldChange}
-          envField={envField}
         />
       )
     }
@@ -627,34 +626,16 @@ export const EntityForm = forwardRef<EntityFormHandle, EntityFormProps>(function
       )
     }
 
-    if (attr.type === 'string' || attr.type === 'uuid') {
-      return (
-        <div key={attr.name} className="space-y-1.5">
-          <Label htmlFor={fieldId} className="text-sm">
-            {attr.name}
-          </Label>
-          <TemplatedTextInput
-            id={fieldId}
-            value={fieldValue != null ? String(fieldValue) : ''}
-            onChange={(value) => handleFormFieldChange(attr.name, value || null)}
-            {...envField}
-          />
-        </div>
-      )
-    }
-
     return (
-      <div key={attr.name} className="space-y-1.5">
-        <Label htmlFor={fieldId} className="text-sm">
-          {attr.name}
-        </Label>
-        <TemplatedTextInput
-          id={fieldId}
-          value={fieldValue != null ? String(fieldValue) : ''}
-          onChange={(value) => handleFormFieldChange(attr.name, value || null)}
-          {...envField}
-        />
-      </div>
+      <EntityFormTemplatedAttrField
+        key={attr.name}
+        attrName={attr.name}
+        attrType={attr.type}
+        fieldId={fieldId}
+        fieldValue={fieldValue}
+        thisRoot={formData}
+        onFieldChange={handleFormFieldChange}
+      />
     )
   }
 

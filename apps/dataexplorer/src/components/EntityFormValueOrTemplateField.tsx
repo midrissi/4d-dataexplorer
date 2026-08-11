@@ -7,33 +7,20 @@ import {
   SegmentedControl,
   type SegmentedControlOption,
   TemplatedTextInput,
-  type TemplatedTextInputProps,
 } from '@4d/ui'
 import { Braces, CalendarDays, Hash, ToggleLeft } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { useTemplatedEnvFieldProps } from '~/components/Environments/use-templated-env-field-props'
 import { getIntlLocale, useTranslation } from '~/i18n'
 import {
   isNumberAttrType,
   stringHasEnvTemplate,
   toDateOnlyString,
 } from '~/lib/env/coerce-entity-data'
+import type { EnvTemplateThis } from '~/lib/env/this-context'
 
 type FieldMode = 'value' | 'template'
 type FieldKind = 'number' | 'date' | 'bool'
-
-type EnvFieldProps = Pick<
-  TemplatedTextInputProps,
-  | 'resolveVariable'
-  | 'onVariableChange'
-  | 'onManageVariables'
-  | 'manageVariablesLabel'
-  | 'writeTargets'
-  | 'addToLabel'
-  | 'unresolvedLabel'
-  | 'valuePlaceholder'
-  | 'variableSuggestions'
-  | 'variableGroupLabels'
->
 
 function fieldKind(attrType: string): FieldKind {
   if (attrType === 'bool') return 'bool'
@@ -93,19 +80,23 @@ export function EntityFormValueOrTemplateField({
   attrType,
   fieldId,
   fieldValue,
+  thisRoot,
   onFieldChange,
-  envField,
 }: {
   attrName: string
   attrType: string
   fieldId: string
   fieldValue: unknown
+  thisRoot: EnvTemplateThis
   onFieldChange: (field: string, value: unknown) => void
-  envField: EnvFieldProps
 }) {
   const { t, language } = useTranslation()
   const kind = fieldKind(attrType)
   const [mode, setMode] = useState<FieldMode>(() => initialMode(fieldValue))
+  const fieldEnv = useTemplatedEnvFieldProps({
+    thisRoot,
+    field: { name: attrName, type: attrType },
+  })
 
   const datePickerLabels = useMemo(
     () => ({
@@ -218,7 +209,7 @@ export function EntityFormValueOrTemplateField({
           placeholder={templatePlaceholder}
           value={templateValue}
           onChange={(value) => onFieldChange(attrName, value === '' ? null : value)}
-          {...envField}
+          {...fieldEnv}
         />
       ) : kind === 'date' ? (
         <DatePicker

@@ -1,4 +1,4 @@
-import { Braces, Filter, Sparkles } from 'lucide-react'
+import { Braces, Filter, Sparkles, WandSparkles } from 'lucide-react'
 import * as React from 'react'
 import { createPortal } from 'react-dom'
 import { useDocumentWheelScroll } from '../hooks/use-document-wheel-scroll'
@@ -357,6 +357,7 @@ export function EnvTemplateSuggestList({
           const isDynamic = item.group === 'dynamic'
           const isFilter = item.group === 'filter'
           const isContext = item.group === 'context'
+          const isField = item.group === 'field'
 
           return (
             <div key={`${item.group ?? ''}:${item.key}`}>
@@ -370,13 +371,15 @@ export function EnvTemplateSuggestList({
                   <span
                     className={cn(
                       'size-1.5 shrink-0 rounded-full',
-                      isDynamic
-                        ? 'bg-sky-400'
-                        : isFilter
-                          ? 'bg-violet-400'
-                          : isContext
-                            ? 'bg-amber-400'
-                            : 'bg-primary'
+                      isField
+                        ? 'bg-emerald-400'
+                        : isDynamic
+                          ? 'bg-sky-400'
+                          : isFilter
+                            ? 'bg-violet-400'
+                            : isContext
+                              ? 'bg-amber-400'
+                              : 'bg-primary'
                     )}
                     aria-hidden
                   />
@@ -409,17 +412,21 @@ export function EnvTemplateSuggestList({
                 <span
                   className={cn(
                     'flex size-5 shrink-0 items-center justify-center rounded-sm border transition-colors duration-fast',
-                    isDynamic
-                      ? 'border-sky-400/25 bg-sky-400/10 text-sky-500 dark:text-sky-400'
-                      : isFilter
-                        ? 'border-violet-400/25 bg-violet-400/10 text-violet-500 dark:text-violet-400'
-                        : isContext
-                          ? 'border-amber-400/25 bg-amber-400/10 text-amber-600 dark:text-amber-400'
-                          : 'border-primary/20 bg-primary/10 text-primary'
+                    isField
+                      ? 'border-emerald-400/25 bg-emerald-400/10 text-emerald-600 dark:text-emerald-400'
+                      : isDynamic
+                        ? 'border-sky-400/25 bg-sky-400/10 text-sky-500 dark:text-sky-400'
+                        : isFilter
+                          ? 'border-violet-400/25 bg-violet-400/10 text-violet-500 dark:text-violet-400'
+                          : isContext
+                            ? 'border-amber-400/25 bg-amber-400/10 text-amber-600 dark:text-amber-400'
+                            : 'border-primary/20 bg-primary/10 text-primary'
                   )}
                   aria-hidden
                 >
-                  {isDynamic ? (
+                  {isField ? (
+                    <WandSparkles className="size-3" />
+                  ) : isDynamic ? (
                     <Sparkles className="size-3" />
                   ) : isFilter ? (
                     <Filter className="size-3" />

@@ -7,13 +7,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  Input,
-  Label,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+  useConfirm,
   useToast,
 } from '@4d/ui'
 import { CodeEditor } from '@4d/ui/code-editor'
@@ -27,6 +21,11 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  type CreateEntityAfterMode,
+  CreateEntityDialogOptions,
+  MAX_CREATE_COUNT,
+} from '~/components/CreateEntityDialogOptions'
 import { EntityForm, type EntityFormHandle } from '~/components/EntityForm'
 import { useEditorLabels, useTranslation } from '~/i18n'
 import { mobileFullscreenDialogClass } from '~/lib/mobile-menu'
@@ -35,10 +34,8 @@ import type { EditMode } from '~/store/settings'
 import { useCodeEditorPrefs, useDefaultEditMode, useUpdateCodeEditorPrefs } from '~/store/settings'
 
 const VALID_JSON_EXAMPLE = '{\n  "key": "value"\n}'
-/** UI cap for create-many. Larger counts are sent in API batches of 100. */
-const MAX_CREATE_COUNT = 1000
 
-type AfterCreateMode = 'close' | 'clear' | 'keep'
+type AfterCreateMode = CreateEntityAfterMode
 
 /** Convert character offset to 0-based row and column for Ace annotations */
 function charOffsetToRowColumn(text: string, position: number): { row: number; column: number } {
@@ -67,7 +64,7 @@ interface CreateEntityDialogProps {
   isDuplicate?: boolean
   onSubmit: (
     data: Record<string, unknown>,
-    options?: { refresh?: boolean; count?: number }
+    options?: { refresh?: boolean; count?: number; emptyBeforeInsert?: boolean }
   ) => Promise<void>
   /** Refresh list/count after a create batch (or partial batch on error). */
   onRefresh?: () => Promise<void>
@@ -84,6 +81,7 @@ export function CreateEntityDialog({
 }: CreateEntityDialogProps) {
   const { t } = useTranslation()
   const toast = useToast()
+  const { confirm, ConfirmDialog } = useConfirm()
   const mobile = isMobileShell()
   const editorLabels = useEditorLabels()
   const codeEditorPrefs = useCodeEditorPrefs()
@@ -95,6 +93,7 @@ export function CreateEntityDialog({
   const [afterCreate, setAfterCreate] = useState<AfterCreateMode>('close')
   const [createCount, setCreateCount] = useState(1)
   const [createCountInput, setCreateCountInput] = useState('1')
+  const [emptyBeforeInsert, setEmptyBeforeInsert] = useState(false)
   const [formInitialData, setFormInitialData] = useState<Record<string, unknown>>({})
   const [editMode, setEditMode] = useState<EditMode>(defaultEditMode)
   const [jsonValue, setJsonValue] = useState('{\n  \n}')
@@ -116,6 +115,9 @@ export function CreateEntityDialog({
       setSwitchToFormErrorDetail(null)
       setCreateSuccessShownAt(null)
       setLastCreatedCount(1)
+      setEmptyBeforeInsert(false)
+      setCreateCount(1)
+      setCreateCountInput('1')
     }
   }, [open, initialData, defaultEditMode, mobile])
 
@@ -132,10 +134,30 @@ export function CreateEntityDialog({
   const handleSubmit = useCallback(
     async (data: Record<string, unknown>) => {
       const times = clampCreateCount(createCount)
+      const shouldEmpty = times > 1 && emptyBeforeInsert
+
+      if (shouldEmpty) {
+        const ok = await confirm({
+          title: t('createEntity.emptyBeforeInsertConfirmTitle'),
+          description: t('createEntity.emptyBeforeInsertConfirmDescription', {
+            dataclassName,
+            count: times,
+          }),
+          confirmText: t('createEntity.emptyBeforeInsertConfirm', { count: times }),
+          cancelText: t('createEntity.cancel'),
+          variant: 'destructive',
+        })
+        if (!ok) return
+      }
+
       let created = 0
       try {
         // One bulk request (or 100-sized batches). Templates resolve fresh per entity in the API.
-        await onSubmit(data, { refresh: false, count: times })
+        await onSubmit(data, {
+          refresh: false,
+          count: times,
+          emptyBeforeInsert: shouldEmpty,
+        })
         created = times
       } finally {
         if (created > 0) {
@@ -165,7 +187,18 @@ export function CreateEntityDialog({
       )
       onClose()
     },
-    [afterCreate, createCount, onClose, onRefresh, onSubmit, t, toast]
+    [
+      afterCreate,
+      confirm,
+      createCount,
+      dataclassName,
+      emptyBeforeInsert,
+      onClose,
+      onRefresh,
+      onSubmit,
+      t,
+      toast,
+    ]
   )
 
   const switchToForm = useCallback(() => {
@@ -462,66 +495,34 @@ export function CreateEntityDialog({
   )
 
   const footerContent = (
-    <DialogFooter className="flex-col items-stretch gap-3 sm:flex-row sm:items-end">
-      <div className="flex min-w-0 flex-1 flex-col gap-2.5">
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="space-y-1">
-            <Label htmlFor="create-entity-count" className="text-muted-foreground text-xs">
-              {t('createEntity.createCount')}
-            </Label>
-            <Input
-              id="create-entity-count"
-              type="number"
-              min={1}
-              max={MAX_CREATE_COUNT}
-              inputMode="numeric"
-              value={createCountInput}
-              disabled={isSubmitting}
-              onChange={(e) => {
-                const raw = e.target.value
-                setCreateCountInput(raw)
-                const parsed = Number.parseInt(raw, 10)
-                if (!Number.isNaN(parsed)) setCreateCount(clampCreateCount(parsed))
-              }}
-              onBlur={() => {
-                const next = clampCreateCount(Number.parseInt(createCountInput, 10) || 1)
-                setCreateCount(next)
-                setCreateCountInput(String(next))
-              }}
-              className="h-8 w-20"
-              aria-describedby="create-entity-count-hint"
-            />
-          </div>
-          <div className="min-w-[12rem] flex-1 space-y-1">
-            <Label htmlFor="create-entity-after" className="text-muted-foreground text-xs">
-              {t('createEntity.afterCreate')}
-            </Label>
-            <Select
-              value={afterCreate}
-              onValueChange={(value) => setAfterCreate(value as AfterCreateMode)}
-              disabled={isSubmitting}
-            >
-              <SelectTrigger id="create-entity-after" className="h-8">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="close">{t('createEntity.afterCreateClose')}</SelectItem>
-                <SelectItem value="clear">{t('createEntity.afterCreateClear')}</SelectItem>
-                <SelectItem value="keep">{t('createEntity.afterCreateKeep')}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <p id="create-entity-count-hint" className="text-muted-foreground text-xs">
-          {createCount > 1
-            ? t('createEntity.createCountHintTemplates', { count: createCount })
-            : t('createEntity.createCountHint')}
-        </p>
-        {editMode === 'json' && (jsonError || switchToFormError) && (
-          <p className="text-muted-foreground text-xs">{t('createEntity.fixJsonAbove')}</p>
-        )}
-      </div>
-      <div className={cn('flex gap-2 sm:flex-shrink-0', mobile && 'flex-col-reverse')}>
+    <DialogFooter className="flex-col gap-3 sm:flex-col sm:items-stretch sm:space-x-0">
+      <CreateEntityDialogOptions
+        createCount={createCount}
+        createCountInput={createCountInput}
+        afterCreate={afterCreate}
+        emptyBeforeInsert={emptyBeforeInsert}
+        dataclassName={dataclassName}
+        isSubmitting={isSubmitting}
+        showJsonFixHint={editMode === 'json' && (!!jsonError || !!switchToFormError)}
+        onCreateCountInputChange={(raw) => {
+          setCreateCountInput(raw)
+          const parsed = Number.parseInt(raw, 10)
+          if (!Number.isNaN(parsed)) {
+            const next = clampCreateCount(parsed)
+            setCreateCount(next)
+            if (next <= 1) setEmptyBeforeInsert(false)
+          }
+        }}
+        onCreateCountBlur={() => {
+          const next = clampCreateCount(Number.parseInt(createCountInput, 10) || 1)
+          setCreateCount(next)
+          setCreateCountInput(String(next))
+          if (next <= 1) setEmptyBeforeInsert(false)
+        }}
+        onAfterCreateChange={setAfterCreate}
+        onEmptyBeforeInsertChange={setEmptyBeforeInsert}
+      />
+      <div className={cn('flex w-full justify-end gap-2', mobile && 'flex-col-reverse')}>
         <Button
           variant="outline"
           onClick={onClose}
@@ -531,6 +532,7 @@ export function CreateEntityDialog({
           {t('createEntity.cancel')}
         </Button>
         <Button
+          variant={emptyBeforeInsert && createCount > 1 ? 'destructive' : 'default'}
           onClick={handleCreateClick}
           disabled={
             isSubmitting ||
@@ -540,7 +542,9 @@ export function CreateEntityDialog({
           title={
             editMode === 'json' && (jsonError || switchToFormError)
               ? t('createEntity.fixJsonOrUse')
-              : undefined
+              : emptyBeforeInsert && createCount > 1
+                ? t('createEntity.emptyBeforeInsertHint', { dataclassName })
+                : undefined
           }
           className={mobile ? 'h-11' : undefined}
         >
@@ -560,25 +564,28 @@ export function CreateEntityDialog({
   )
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent
-        className={cn(mobile ? mobileFullscreenDialogClass() : 'sm:max-w-2xl')}
-        onKeyDown={handleContentKeyDown}
-      >
-        {mobile ? (
-          <>
-            <div className="shrink-0 border-b px-3 pt-3 pb-2.5">{headerContent}</div>
-            <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">{bodyContent}</div>
-            <div className="shrink-0 border-t px-3 pt-3 pb-3">{footerContent}</div>
-          </>
-        ) : (
-          <>
-            {headerContent}
-            {bodyContent}
-            {footerContent}
-          </>
-        )}
-      </DialogContent>
-    </Dialog>
+    <>
+      <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+        <DialogContent
+          className={cn(mobile ? mobileFullscreenDialogClass() : 'sm:max-w-2xl')}
+          onKeyDown={handleContentKeyDown}
+        >
+          {mobile ? (
+            <>
+              <div className="shrink-0 border-b px-3 pt-3 pb-2.5">{headerContent}</div>
+              <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">{bodyContent}</div>
+              <div className="shrink-0 border-t px-3 pt-3 pb-3">{footerContent}</div>
+            </>
+          ) : (
+            <>
+              {headerContent}
+              {bodyContent}
+              {footerContent}
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+      <ConfirmDialog />
+    </>
   )
 }

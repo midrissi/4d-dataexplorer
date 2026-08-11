@@ -1043,6 +1043,7 @@ export const es = {
     suggestGroupDynamic: 'Dinámico',
     suggestGroupContext: 'Contexto ($this)',
     suggestGroupFilter: 'Filtros',
+    suggestGroupField: 'Para este campo',
     noEnvironment: 'Sin entorno',
     switcherLabel: 'Entorno',
     switcherEmptyVars: 'No hay variables disponibles',
@@ -2267,6 +2268,13 @@ export const es = {
     afterCreateClear: 'Mantener abierto · vaciar formulario',
     afterCreateKeep: 'Mantener abierto · mismos valores',
     createN: 'Crear {count}',
+    emptyBeforeInsert: 'Vaciar la tabla antes de insertar',
+    emptyBeforeInsertHint:
+      'Elimina todas las entidades de {dataclassName} y luego crea los nuevos registros.',
+    emptyBeforeInsertConfirmTitle: '¿Vaciar la tabla y crear?',
+    emptyBeforeInsertConfirmDescription:
+      'Esto eliminará permanentemente todas las entidades de {dataclassName} y luego creará {count} registros nuevos. No se puede deshacer.',
+    emptyBeforeInsertConfirm: 'Vaciar y crear {count}',
     fixJsonAbove: 'Corrija el JSON anterior o use las acciones del panel de error.',
     fixJsonOrUse:
       'Corrija el JSON o use "Continuar con formulario vacío" / "Insertar ejemplo válido"',
