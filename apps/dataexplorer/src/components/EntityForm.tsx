@@ -1,4 +1,4 @@
-import { Button, Checkbox, cn, Input, Label, ScrollArea, TemplatedTextInput } from '@4d/ui'
+import { Button, cn, Input, Label, ScrollArea, TemplatedTextInput } from '@4d/ui'
 import { CodeEditor } from '@4d/ui/code-editor'
 import { Loader2, Upload, X } from 'lucide-react'
 import {
@@ -577,21 +577,6 @@ export const EntityForm = forwardRef<EntityFormHandle, EntityFormProps>(function
     const fieldValue = formData[attr.name]
     const fieldId = `${fieldIdPrefix}-${attr.name}`
 
-    if (attr.type === 'bool') {
-      return (
-        <div key={attr.name} className="flex items-center gap-2">
-          <Checkbox
-            id={fieldId}
-            checked={fieldValue === true}
-            onCheckedChange={(checked) => handleFormFieldChange(attr.name, checked === true)}
-          />
-          <Label htmlFor={fieldId} className="text-sm">
-            {attr.name}
-          </Label>
-        </div>
-      )
-    }
-
     if (attr.type === 'image' || attr.type === 'blob') {
       return (
         <EntityFormUploadField
@@ -604,7 +589,7 @@ export const EntityForm = forwardRef<EntityFormHandle, EntityFormProps>(function
       )
     }
 
-    if (isNumberAttrType(attr.type) || attr.type === 'date') {
+    if (attr.type === 'bool' || isNumberAttrType(attr.type) || attr.type === 'date') {
       return (
         <EntityFormValueOrTemplateField
           key={`${attr.name}-${dataVersion}`}

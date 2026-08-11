@@ -1,5 +1,6 @@
 import { dateValueToInputValue } from '@4d/rest'
 import {
+  Checkbox,
   DatePicker,
   Input,
   Label,
@@ -8,7 +9,7 @@ import {
   TemplatedTextInput,
   type TemplatedTextInputProps,
 } from '@4d/ui'
-import { Braces, CalendarDays, Hash } from 'lucide-react'
+import { Braces, CalendarDays, Hash, ToggleLeft } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { getIntlLocale, useTranslation } from '~/i18n'
 import {
@@ -18,6 +19,7 @@ import {
 } from '~/lib/env/coerce-entity-data'
 
 type FieldMode = 'value' | 'template'
+type FieldKind = 'number' | 'date' | 'bool'
 
 type EnvFieldProps = Pick<
   TemplatedTextInputProps,
@@ -33,6 +35,12 @@ type EnvFieldProps = Pick<
   | 'variableGroupLabels'
 >
 
+function fieldKind(attrType: string): FieldKind {
+  if (attrType === 'bool') return 'bool'
+  if (isNumberAttrType(attrType)) return 'number'
+  return 'date'
+}
+
 function initialMode(fieldValue: unknown): FieldMode {
   return typeof fieldValue === 'string' && stringHasEnvTemplate(fieldValue) ? 'template' : 'value'
 }
@@ -46,6 +54,12 @@ function dateDisplayValue(fieldValue: unknown): string {
 
 function numberDisplayValue(fieldValue: unknown): string {
   return fieldValue != null ? String(fieldValue) : ''
+}
+
+function boolDisplayValue(fieldValue: unknown): string {
+  if (fieldValue == null) return ''
+  if (typeof fieldValue === 'boolean') return fieldValue ? 'true' : 'false'
+  return String(fieldValue)
 }
 
 function toPickerDateValue(fieldValue: unknown): string {
@@ -64,6 +78,16 @@ function toPickerNumberValue(fieldValue: unknown): string {
   return Number.isFinite(num) ? String(num) : ''
 }
 
+function toPickerBoolValue(fieldValue: unknown): boolean {
+  if (typeof fieldValue === 'boolean') return fieldValue
+  if (typeof fieldValue === 'string') {
+    const lower = fieldValue.trim().toLowerCase()
+    if (lower === 'true') return true
+    if (lower === 'false') return false
+  }
+  return false
+}
+
 export function EntityFormValueOrTemplateField({
   attrName,
   attrType,
@@ -80,7 +104,7 @@ export function EntityFormValueOrTemplateField({
   envField: EnvFieldProps
 }) {
   const { t, language } = useTranslation()
-  const kind = isNumberAttrType(attrType) ? 'number' : 'date'
+  const kind = fieldKind(attrType)
   const [mode, setMode] = useState<FieldMode>(() => initialMode(fieldValue))
 
   const datePickerLabels = useMemo(
@@ -98,6 +122,12 @@ export function EntityFormValueOrTemplateField({
   )
 
   const modeOptions = useMemo((): SegmentedControlOption<FieldMode>[] => {
+    const templateOption = {
+      value: 'template' as const,
+      label: t('entity.fieldModeTemplate'),
+      icon: Braces,
+      ariaLabel: t('entity.fieldModeTemplateAria', { field: attrName }),
+    }
     if (kind === 'date') {
       return [
         {
@@ -106,12 +136,18 @@ export function EntityFormValueOrTemplateField({
           icon: CalendarDays,
           ariaLabel: t('entity.fieldModeDateAria', { field: attrName }),
         },
+        templateOption,
+      ]
+    }
+    if (kind === 'bool') {
+      return [
         {
-          value: 'template',
-          label: t('entity.fieldModeTemplate'),
-          icon: Braces,
-          ariaLabel: t('entity.fieldModeTemplateAria', { field: attrName }),
+          value: 'value',
+          label: t('entity.fieldModeBool'),
+          icon: ToggleLeft,
+          ariaLabel: t('entity.fieldModeBoolAria', { field: attrName }),
         },
+        templateOption,
       ]
     }
     return [
@@ -121,12 +157,7 @@ export function EntityFormValueOrTemplateField({
         icon: Hash,
         ariaLabel: t('entity.fieldModeNumberAria', { field: attrName }),
       },
-      {
-        value: 'template',
-        label: t('entity.fieldModeTemplate'),
-        icon: Braces,
-        ariaLabel: t('entity.fieldModeTemplateAria', { field: attrName }),
-      },
+      templateOption,
     ]
   }, [attrName, kind, t])
 
@@ -135,16 +166,37 @@ export function EntityFormValueOrTemplateField({
     if (next === 'value') {
       if (kind === 'date') {
         onFieldChange(attrName, toPickerDateValue(fieldValue) || null)
+      } else if (kind === 'bool') {
+        onFieldChange(attrName, toPickerBoolValue(fieldValue))
       } else {
         const raw = toPickerNumberValue(fieldValue)
         onFieldChange(attrName, raw === '' ? null : raw)
       }
     } else {
-      const asText = kind === 'date' ? dateDisplayValue(fieldValue) : numberDisplayValue(fieldValue)
+      const asText =
+        kind === 'date'
+          ? dateDisplayValue(fieldValue)
+          : kind === 'bool'
+            ? boolDisplayValue(fieldValue)
+            : numberDisplayValue(fieldValue)
       onFieldChange(attrName, asText === '' ? null : asText)
     }
     setMode(next)
   }
+
+  const templateValue =
+    kind === 'date'
+      ? dateDisplayValue(fieldValue)
+      : kind === 'bool'
+        ? boolDisplayValue(fieldValue)
+        : numberDisplayValue(fieldValue)
+
+  const templatePlaceholder =
+    kind === 'date'
+      ? t('entity.dateOrTemplatePlaceholder')
+      : kind === 'bool'
+        ? t('entity.boolOrTemplatePlaceholder')
+        : t('entity.numberOrTemplatePlaceholder')
 
   return (
     <div className="space-y-1.5">
@@ -163,12 +215,8 @@ export function EntityFormValueOrTemplateField({
         <TemplatedTextInput
           id={fieldId}
           inputMode={kind === 'number' ? 'decimal' : undefined}
-          placeholder={
-            kind === 'date'
-              ? t('entity.dateOrTemplatePlaceholder')
-              : t('entity.numberOrTemplatePlaceholder')
-          }
-          value={kind === 'date' ? dateDisplayValue(fieldValue) : numberDisplayValue(fieldValue)}
+          placeholder={templatePlaceholder}
+          value={templateValue}
           onChange={(value) => onFieldChange(attrName, value === '' ? null : value)}
           {...envField}
         />
@@ -181,6 +229,15 @@ export function EntityFormValueOrTemplateField({
           labels={datePickerLabels}
           aria-label={attrName}
         />
+      ) : kind === 'bool' ? (
+        <div className="flex items-center pt-0.5">
+          <Checkbox
+            id={fieldId}
+            checked={toPickerBoolValue(fieldValue)}
+            onCheckedChange={(checked) => onFieldChange(attrName, checked === true)}
+            aria-label={attrName}
+          />
+        </div>
       ) : (
         <Input
           id={fieldId}
