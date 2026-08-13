@@ -579,6 +579,7 @@
 		<field name="country" uuid="39CB5CFF09EE44C0B9DF20C10FB093F5" type="10" limiting_length="255" id="7">
 			<field_extra multi_line="false"/>
 		</field>
+		<field name="blob" uuid="CE90A17E04F84678962EC0772AAD7048" type="18" id="8"/>
 		<primary_key field_name="ID" field_uuid="1A8CADAFACA546FE85E51994C89DE716"/>
 		<table_extra>
 			<editor_table_info displayable_fields_count="9">
