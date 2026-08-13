@@ -17,7 +17,8 @@
     </clipPath>
   </defs>
 
-  <!-- Full-bleed solid fill: platform masks apply the squircle. -->
+  <!-- Full-bleed solid fill: macOS/iOS apply their own squircle mask.
+       Linux/Windows shell PNGs are post-rounded by `bun run branding`. -->
   <rect width="1024" height="1024" fill="#f97316"/>
 
   <!--

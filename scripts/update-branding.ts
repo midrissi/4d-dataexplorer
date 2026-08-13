@@ -13,6 +13,7 @@
  * Updates:
  *   - branding/ + desktop + mobile icon-source.svg
  *   - Tauri icon sets (icns/ico/png/ios/android) via `tauri icon`
+ *   - Desktop Linux/Windows shell PNGs + .ico rounded (OS dock has no mask)
  *   - iOS gen/ AppIcon sync + splash patch into gen/
  *   - Android adaptive launcher background color
  *   - Squircle brand marks: favicon, docs logo, AppBrandIcon asset
@@ -27,6 +28,8 @@ import { $ } from 'bun'
 
 const ROOT = join(import.meta.dir, '..')
 const SQUIRCLE_RATIO = 0.22375
+/** Apple macOS icon template: artwork lives in 824×824 of a 1024×1024 canvas. */
+const MACOS_ICON_CONTENT_RATIO = 824 / 1024
 
 const PATHS = {
   brandingSource: join(ROOT, 'branding/icon-source.svg'),
@@ -280,6 +283,114 @@ out.save(${JSON.stringify(dst)}, format='PNG')
   )
 }
 
+/**
+ * Linux (and many Windows docks) show PNG/ICO pixels as-is — no OS squircle mask.
+ * macOS `tauri:dev` also often shows the raw icon without the .app mask.
+ * Bake transparent rounded corners into shell icons; leave iOS AppIcons full-bleed.
+ */
+async function roundDesktopShellIcons(iconsDir: string, dryRun: boolean) {
+  const pngNames = ['32x32.png', '64x64.png', '128x128.png', '128x128@2x.png', 'icon.png']
+  for (const name of pngNames) {
+    const path = join(iconsDir, name)
+    if (!existsSync(path)) continue
+    if (dryRun) {
+      log(`[dry-run] round shell icon ${name}`)
+      continue
+    }
+    await runPython(
+      `
+from PIL import Image, ImageDraw
+path = ${JSON.stringify(path)}
+im = Image.open(path).convert('RGBA')
+w, h = im.size
+radius = max(1, round(min(w, h) * ${SQUIRCLE_RATIO}))
+mask = Image.new('L', (w, h), 0)
+ImageDraw.Draw(mask).rounded_rectangle((0, 0, w - 1, h - 1), radius=radius, fill=255)
+out = Image.new('RGBA', (w, h), (0, 0, 0, 0))
+out.paste(im, (0, 0), mask=mask)
+out.save(path, format='PNG')
+`,
+      false
+    )
+  }
+
+  const iconPng = join(iconsDir, 'icon.png')
+  const iconIco = join(iconsDir, 'icon.ico')
+  const iconIcns = join(iconsDir, 'icon.icns')
+  if (!existsSync(iconPng)) return
+
+  if (dryRun) {
+    log('[dry-run] rebuild icon.ico + icon.icns from rounded icon.png')
+    return
+  }
+
+  await runPython(
+    `
+from PIL import Image
+src = Image.open(${JSON.stringify(iconPng)}).convert('RGBA')
+sizes = [(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)]
+frames = [src.resize(size, Image.Resampling.LANCZOS) for size in sizes]
+frames[0].save(
+    ${JSON.stringify(iconIco)},
+    format='ICO',
+    sizes=sizes,
+    append_images=frames[1:],
+)
+`,
+    false
+  )
+
+  // macOS dock in tauri:dev uses .icns without the packaged .app mask.
+  // Fit artwork into Apple's 824/1024 safe area so size matches installed apps.
+  if (process.platform === 'darwin' && Bun.which('iconutil')) {
+    const iconset = join(ROOT, '.tmp/branding/icon.iconset')
+    if (existsSync(iconset)) rmSync(iconset, { recursive: true, force: true })
+    mkdirSync(iconset, { recursive: true })
+    await runPython(
+      `
+from PIL import Image, ImageDraw
+from pathlib import Path
+
+out = Path(${JSON.stringify(iconset)})
+pairs = [
+    (16, 'icon_16x16.png'),
+    (32, 'diana.k@example.org'),
+    (32, 'icon_32x32.png'),
+    (64, 'ivan.p@example.net'),
+    (128, 'icon_128x128.png'),
+    (256, 'wendy.h@example.net'),
+    (256, 'icon_256x256.png'),
+    (512, 'alice.j@example.com'),
+    (512, 'icon_512x512.png'),
+    (1024, 'hannah.h@example.com'),
+]
+master = Path(${JSON.stringify(join(ROOT, '.tmp/branding/master-1024.png'))})
+base = Image.open(master if master.exists() else ${JSON.stringify(iconPng)}).convert('RGBA')
+
+canvas_size = 1024
+content = max(1, round(canvas_size * ${MACOS_ICON_CONTENT_RATIO}))
+pad = (canvas_size - content) // 2
+art = base.resize((content, content), Image.Resampling.LANCZOS)
+radius = max(1, round(content * ${SQUIRCLE_RATIO}))
+mask = Image.new('L', (content, content), 0)
+ImageDraw.Draw(mask).rounded_rectangle((0, 0, content - 1, content - 1), radius=radius, fill=255)
+rounded = Image.new('RGBA', (content, content), (0, 0, 0, 0))
+rounded.paste(art, (0, 0), mask=mask)
+framed = Image.new('RGBA', (canvas_size, canvas_size), (0, 0, 0, 0))
+framed.paste(rounded, (pad, pad), rounded)
+
+for size, name in pairs:
+    framed.resize((size, size), Image.Resampling.LANCZOS).save(out / name, format='PNG')
+`,
+      false
+    )
+    await $`iconutil -c icns ${iconset} -o ${iconIcns}`.quiet()
+    ok('🍎 Rebuilt icon.icns with macOS 824/1024 padding + squircle')
+  } else {
+    warn('Skipping icon.icns rebuild (macOS iconutil only)')
+  }
+}
+
 async function compositeAndroidLaunchers(androidRoot: string, bg: string, dryRun: boolean) {
   if (!existsSync(androidRoot)) return
   await runPython(
@@ -510,12 +621,13 @@ print(a)
 
   if (!args.skipTauri) {
     await runTauriIcon(join(ROOT, 'apps/desktop'), PATHS.desktopSource, brandColor, args.dryRun)
+    await roundDesktopShellIcons(PATHS.desktopIcons, args.dryRun)
     await runTauriIcon(join(ROOT, 'apps/mobile'), PATHS.mobileSource, brandColor, args.dryRun)
     writeText(PATHS.desktopAndroidBg, androidBgXml(brandColor), args.dryRun)
     writeText(PATHS.mobileAndroidBg, androidBgXml(brandColor), args.dryRun)
     await compositeAndroidLaunchers(join(PATHS.desktopIcons, 'android'), brandColor, args.dryRun)
     await compositeAndroidLaunchers(join(PATHS.mobileIcons, 'android'), brandColor, args.dryRun)
-    ok('🖥️  Generated desktop + mobile Tauri icon sets')
+    ok('🖥️  Generated desktop + mobile Tauri icon sets (Linux/Windows PNGs rounded)')
   } else {
     log('⏭️  Skipped tauri icon (--skip-tauri)')
   }
