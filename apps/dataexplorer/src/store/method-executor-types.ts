@@ -1,3 +1,5 @@
+import type { HttpKeyValuePair } from './http-client-types'
+
 export type MethodScope = 'catalog' | 'singleton' | 'dataclass' | 'entity' | 'entitySelection'
 
 export type CustomRuntimeArgument = {
@@ -93,4 +95,8 @@ export type MethodExecutorSeed = {
    * (e.g. `{ "foo": "test" }` → `{ "params": [...], "foo": "test" }`).
    */
   wrapperText?: string
+  /** Extra URL query pairs (same editor as HTTP Client Params). */
+  queryParams?: HttpKeyValuePair[]
+  /** Per-request HTTP headers (same editor as HTTP Client custom Headers). */
+  headers?: HttpKeyValuePair[]
 }

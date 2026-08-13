@@ -83,6 +83,8 @@ export type MethodThisInput = {
   arguments?: RuntimeArgument[]
   wrapperText?: string
   wrapperEnabled?: boolean
+  queryParams?: ReadonlyArray<{ key: string; value: string; enabled?: boolean }>
+  headers?: ReadonlyArray<{ key: string; value: string; enabled?: boolean }>
 }
 
 function parentLabel(input: MethodThisInput): string {
@@ -138,6 +140,8 @@ export function buildMethodThis(input: MethodThisInput): Record<string, unknown>
     argumentsByName: byName,
     wrapperText: input.wrapperText ?? '',
     wrapperEnabled: Boolean(input.wrapperEnabled),
+    queryParams: pairsToRecord(input.queryParams ?? []),
+    headers: pairsToRecord(input.headers ?? []),
   }
 }
 

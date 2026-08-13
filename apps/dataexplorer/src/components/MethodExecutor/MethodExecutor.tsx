@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { EnvThisProvider } from '~/components/Environments/env-this-context'
 import { MobileFullscreenSheet } from '~/components/MobileFullscreenSheet'
 import { PostmanExportModal } from '~/components/PostmanExport'
+import { RequestHeadersParamsEditor } from '~/components/RequestKeyValue'
 import { RequestResponseSplit } from '~/components/RequestResponseSplit'
 import { useTranslation } from '~/i18n'
 import { api } from '~/lib/api'
@@ -11,12 +12,18 @@ import { consoleService } from '~/lib/console'
 import { resolveEnvTemplates } from '~/lib/env'
 import { getActiveEnvMap, mergeUnresolved } from '~/lib/env/runtime'
 import { buildMethodThis } from '~/lib/env/this-context-builders'
+import {
+  keyValuePairsToRecord,
+  nonemptyKeyValuePairs,
+  resolveKeyValuePairs,
+} from '~/lib/key-value-pairs'
 import { isMobileShell } from '~/lib/platform'
 import {
   methodSeedExportLabel,
   methodSeedToPostmanItem,
   type PostmanExportItemInput,
 } from '~/lib/postman'
+import type { HttpKeyValuePair } from '~/store/http-client-types'
 import type {
   MethodExecutorSeed,
   MethodScope,
@@ -26,6 +33,7 @@ import { useMethodFavouritesStore } from '~/store/method-favourites'
 import { useMethodRunHistoryStore } from '~/store/method-run-history'
 import { sameMethodConfig } from '~/store/same-method-config'
 import { useTabsStore } from '~/store/tabs'
+import { MethodAdvancedSection } from './MethodAdvancedSection'
 import { type DetectedMethodResult, detectMethodResult } from './detect-method-result'
 import { MethodFavourites } from './MethodFavourites'
 import { MethodRunHistory } from './MethodRunHistory'
@@ -89,6 +97,14 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
     seed?.wrapperEnabled ?? Boolean(seed?.wrapperText?.trim())
   )
   const [wrapperText, setWrapperText] = useState(seed?.wrapperText ?? DEFAULT_METHOD_WRAPPER_TEXT)
+  const [queryParams, setQueryParams] = useState<HttpKeyValuePair[]>(() => seed?.queryParams ?? [])
+  const [headers, setHeaders] = useState<HttpKeyValuePair[]>(() => seed?.headers ?? [])
+  const [advancedOpen, setAdvancedOpen] = useState(
+    () =>
+      Boolean(seed?.wrapperEnabled) ||
+      Boolean(seed?.queryParams?.length) ||
+      Boolean(seed?.headers?.length)
+  )
   const [argumentsList, setArgumentsListState] = useState<RuntimeArgument[]>(() =>
     initialArguments(seed)
   )
@@ -136,6 +152,13 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
     setUseGet(config.useGet ?? false)
     setWrapperEnabled(config.wrapperEnabled ?? Boolean(config.wrapperText?.trim()))
     setWrapperText(config.wrapperText ?? DEFAULT_METHOD_WRAPPER_TEXT)
+    setQueryParams(config.queryParams ?? [])
+    setHeaders(config.headers ?? [])
+    setAdvancedOpen(
+      Boolean(config.wrapperEnabled) ||
+        Boolean(config.queryParams?.length) ||
+        Boolean(config.headers?.length)
+    )
     setArgumentsList(initialArguments(config))
     setResult(null)
     setRawBody(undefined)
@@ -227,9 +250,55 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
     arguments: argumentsList,
     wrapperEnabled: wrapperEnabled || undefined,
     wrapperText: wrapperEnabled && wrapperText.trim() ? wrapperText : undefined,
+    queryParams: nonemptyKeyValuePairs(queryParams),
+    headers: nonemptyKeyValuePairs(headers),
   })
 
-  const builderSeed = currentConfig()
+  const builderSeed = useMemo(
+    () => ({
+      scope,
+      methodName,
+      dataClass: scope === 'singleton' ? undefined : dataClass || undefined,
+      singletonName: scope === 'singleton' ? singletonName || undefined : undefined,
+      key: key || undefined,
+      entitySetId: entitySetId || undefined,
+      filter: entitySetId.trim() ? undefined : filter || undefined,
+      orderby: entitySetId.trim() ? undefined : orderby || undefined,
+      allowedOnHTTPGET,
+      useGet,
+      arguments: argumentsList,
+      wrapperEnabled: wrapperEnabled || undefined,
+      wrapperText: wrapperEnabled && wrapperText.trim() ? wrapperText : undefined,
+      queryParams: nonemptyKeyValuePairs(queryParams),
+      headers: nonemptyKeyValuePairs(headers),
+    }),
+    [
+      scope,
+      methodName,
+      dataClass,
+      singletonName,
+      key,
+      entitySetId,
+      filter,
+      orderby,
+      allowedOnHTTPGET,
+      useGet,
+      argumentsList,
+      wrapperEnabled,
+      wrapperText,
+      queryParams,
+      headers,
+    ]
+  )
+
+  // Keep the tab seed in sync so method / args / wrapper / params / headers survive reload.
+  useEffect(() => {
+    const tab = useTabsStore.getState().tabs.find((item) => item.id === tabId)
+    if (tab?.type !== 'method-executor') return
+    if (tab.seed && sameMethodConfig(tab.seed, builderSeed)) return
+    useTabsStore.getState().setMethodExecutorTabSeed(tabId, builderSeed)
+  }, [builderSeed, tabId])
+
   const methodThis = useMemo(
     () =>
       buildMethodThis({
@@ -244,6 +313,8 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
         arguments: argumentsList,
         wrapperText,
         wrapperEnabled,
+        queryParams,
+        headers,
       }),
     [
       scope,
@@ -257,6 +328,8 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
       argumentsList,
       wrapperText,
       wrapperEnabled,
+      queryParams,
+      headers,
     ]
   )
   const linkedFavourite = linkedFavouriteId
@@ -295,6 +368,42 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
       signatureLabel={t('favouriteMeta.viewSignature')}
       itemsSectionLabel={t('postmanExport.currentRequestSection')}
     />
+  )
+
+  const advancedBadgeCount =
+    (wrapperEnabled ? 1 : 0) +
+    queryParams.filter((pair) => pair.enabled && pair.key.trim()).length +
+    headers.filter((pair) => pair.enabled && pair.key.trim()).length
+
+  const advancedEditors = (
+    <MethodAdvancedSection
+      open={advancedOpen}
+      onOpenChange={setAdvancedOpen}
+      badgeCount={advancedBadgeCount}
+    >
+      <MethodWrapperEditor
+        enabled={wrapperEnabled}
+        onEnabledChange={(next) => {
+          setWrapperEnabled(next)
+          if (next) {
+            setUseGet(false)
+            setAdvancedOpen(true)
+          }
+        }}
+        value={wrapperText}
+        onChange={(next) => {
+          setWrapperText(next)
+          if (next.trim()) setUseGet(false)
+        }}
+      />
+      <RequestHeadersParamsEditor
+        params={queryParams}
+        headers={headers}
+        onParamsChange={setQueryParams}
+        onHeadersChange={setHeaders}
+        thisRoot={methodThis}
+      />
+    </MethodAdvancedSection>
   )
 
   const toggleCurrentFavourite = () => {
@@ -392,6 +501,8 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
       arguments: args,
       wrapperText: liveWrapperText,
       wrapperEnabled,
+      queryParams,
+      headers,
     })
     const resolveOpts = { this: thisRoot }
     const resolvedArgs = resolveRuntimeArgumentsEnv(args, resolveOpts)
@@ -400,13 +511,17 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
     const resolvedFilter = resolveEnvTemplates(filter, map, resolveOpts)
     const resolvedOrderby = resolveEnvTemplates(orderby, map, resolveOpts)
     const resolvedWrapperText = resolveEnvTemplates(liveWrapperText, map, resolveOpts)
+    const resolvedQuery = resolveKeyValuePairs(queryParams, map, thisRoot)
+    const resolvedHeaders = resolveKeyValuePairs(headers, map, thisRoot)
     const unresolved = mergeUnresolved(
       resolvedArgs.unresolved,
       resolvedKey.unresolved,
       resolvedEntitySetId.unresolved,
       resolvedFilter.unresolved,
       resolvedOrderby.unresolved,
-      resolvedWrapperText.unresolved
+      resolvedWrapperText.unresolved,
+      resolvedQuery.unresolved,
+      resolvedHeaders.unresolved
     )
     if (unresolved.length > 0) {
       consoleService.warn(t('environments.unresolvedWarning', { keys: unresolved.join(', ') }))
@@ -426,6 +541,8 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
     }
     // Wrapper is POST-only; ignore GET when a wrapper object is present
     const useGetRequest = useGet && wrapper === undefined
+    const requestHeaders = keyValuePairsToRecord(resolvedHeaders.pairs)
+    const requestQuery = keyValuePairsToRecord(resolvedQuery.pairs)
 
     try {
       abortRef.current?.abort()
@@ -446,6 +563,8 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
         params: serializeRuntimeParams(resolvedArgs.argumentsList),
         wrapper,
         signal: controller.signal,
+        headers: Object.keys(requestHeaders).length > 0 ? requestHeaders : undefined,
+        query: Object.keys(requestQuery).length > 0 ? requestQuery : undefined,
       })
       if (controller.signal.aborted) return
       const detected = detectMethodResult(response.unwrap(), { webform: response.webform() })
@@ -459,6 +578,8 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
           useGet: useGetRequest,
           wrapperEnabled: wrapperEnabled || undefined,
           wrapperText: wrapperEnabled && liveWrapperText.trim() ? liveWrapperText : undefined,
+          queryParams: nonemptyKeyValuePairs(queryParams),
+          headers: nonemptyKeyValuePairs(headers),
         },
         detected.kind
       )
@@ -603,18 +724,7 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
                   dataClasses={dataClasses}
                   onChange={setArgumentsList}
                 />
-                <MethodWrapperEditor
-                  enabled={wrapperEnabled}
-                  onEnabledChange={(next) => {
-                    setWrapperEnabled(next)
-                    if (next) setUseGet(false)
-                  }}
-                  value={wrapperText}
-                  onChange={(next) => {
-                    setWrapperText(next)
-                    if (next.trim()) setUseGet(false)
-                  }}
-                />
+                {advancedEditors}
                 {error ? (
                   <p className="rounded-md bg-destructive/10 p-3 text-destructive text-sm">
                     {error}
@@ -879,18 +989,7 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
                 onChange={setArgumentsList}
               />
 
-              <MethodWrapperEditor
-                enabled={wrapperEnabled}
-                onEnabledChange={(next) => {
-                  setWrapperEnabled(next)
-                  if (next) setUseGet(false)
-                }}
-                value={wrapperText}
-                onChange={(next) => {
-                  setWrapperText(next)
-                  if (next.trim()) setUseGet(false)
-                }}
-              />
+              {advancedEditors}
 
               {error ? (
                 <p className="rounded-md bg-destructive/10 p-3 text-destructive text-sm">{error}</p>

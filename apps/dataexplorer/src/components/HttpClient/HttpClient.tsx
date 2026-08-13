@@ -98,7 +98,7 @@ import { HttpRequestFavourites } from './HttpRequestFavourites'
 import { HttpRequestHistory } from './HttpRequestHistory'
 import { HttpResponsePanel } from './HttpResponsePanel'
 import { httpMethodTone, httpRequestLabel } from './http-request-display'
-import { KeyValueEditor } from './KeyValueEditor'
+import { KeyValueEditor } from '~/components/RequestKeyValue'
 
 type RequestTab = 'params' | 'headers' | 'body' | 'settings'
 type SidePanel = 'none' | 'history' | 'favourites'
@@ -964,6 +964,7 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
                     valuePlaceholder={t('httpClient.value')}
                     keySuggestions={REST_QUERY_PARAMS}
                     getValueSuggestions={restParamValueSuggestions}
+                    smartParamValues
                     thisRoot={buildHttpThis(draft)}
                     addLabel={t('httpClient.addParam')}
                     emptyTitle={t('httpClient.noParamsTitle')}

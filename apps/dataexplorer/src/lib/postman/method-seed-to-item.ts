@@ -96,6 +96,18 @@ export function methodSeedToPostmanItem(
     query.push({ key: '$params', value: JSON.stringify(params) })
   }
 
+  for (const pair of seed.queryParams ?? []) {
+    if (!pair.enabled) continue
+    const key = pair.key.trim()
+    if (!key) continue
+    const existing = query.findIndex((item) => item.key === key)
+    if (existing >= 0) {
+      query[existing] = { key, value: pair.value }
+    } else {
+      query.push({ key, value: pair.value })
+    }
+  }
+
   const path = `/rest${restPathForSeed(seed)}`
   const url = buildPostmanUrl({
     pathWithQuery: path,
@@ -104,6 +116,17 @@ export function methodSeedToPostmanItem(
   })
 
   const headers = method === 'POST' ? [{ key: 'Content-Type', value: 'application/json' }] : []
+  for (const pair of seed.headers ?? []) {
+    if (!pair.enabled) continue
+    const key = pair.key.trim()
+    if (!key) continue
+    const existing = headers.findIndex((item) => item.key.toLowerCase() === key.toLowerCase())
+    if (existing >= 0) {
+      headers[existing] = { key, value: pair.value }
+    } else {
+      headers.push({ key, value: pair.value })
+    }
+  }
 
   let body: PostmanBody | undefined
   if (method === 'POST') {

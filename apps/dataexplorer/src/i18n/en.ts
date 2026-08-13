@@ -705,6 +705,7 @@ export const en = {
     positionalOrder: 'Positional order is preserved.',
     wrapper: 'Wrapper',
     wrapperHint: 'Extra fields sent with params in the POST body.',
+    advanced: 'Advanced',
     invalidWrapperError: 'Wrapper must be a valid JSON object.',
     wrapperRequiresPost: 'Wrapper requires a POST request — turn off Execute with GET.',
     snippets: {
@@ -828,6 +829,10 @@ export const en = {
     noFieldsDescription: 'Add form fields to include in the request body.',
     noParamsTitle: 'No query params',
     noParamsDescription: 'Add REST query parameters such as $filter or $top.',
+    useTextParamValue: 'Switch to text input',
+    useSmartParamValue: 'Switch to suggested input',
+    paramValueNumber: 'Number value for {key}',
+    paramValueList: 'List value for {key}',
     noHeadersRequestTitle: 'No request headers',
     noHeadersRequestDescription: 'Add headers when you need custom Content-Type, Accept, or auth.',
     text: 'Text',

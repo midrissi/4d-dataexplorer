@@ -22,6 +22,13 @@ export interface FunctionCallOptions {
   /** AbortSignal to cancel the in-flight function call. */
   signal?: AbortSignal
   timeout?: number
+  /** Extra request headers merged into the REST call. */
+  headers?: Record<string, string>
+  /**
+   * Extra query params merged after built-in `$method` / `$filter` / `$orderby` / `$params`.
+   * Later keys from this map override built-ins when names collide.
+   */
+  query?: Record<string, string | number | boolean | undefined>
 }
 
 function buildFunctionQuery(
@@ -54,10 +61,14 @@ async function invokeFunction<T>(
   options: FunctionCallOptions
 ): Promise<FunctionCallResult<T>> {
   const method = options.method ?? 'POST'
-  const query = buildFunctionQuery(params, options)
+  const query = {
+    ...buildFunctionQuery(params, options),
+    ...options.query,
+  }
   const requestOptions = {
     signal: options.signal,
     timeout: options.timeout,
+    headers: options.headers,
   }
   const meta =
     method === 'GET'

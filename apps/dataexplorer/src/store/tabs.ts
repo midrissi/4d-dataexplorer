@@ -597,6 +597,7 @@ type TabsState = {
   setEnvironmentsScope: (tabId: string, scope: EnvironmentsScope) => void
   /** Persist the live HTTP Client draft onto the tab so it survives reload. */
   setHttpClientTabSeed: (tabId: string, seed: HttpClientSeed) => void
+  setMethodExecutorTabSeed: (tabId: string, seed: MethodExecutorSeed) => void
 
   // Apply default settings to all existing dataclass tabs
   applyDefaultViewModeToAllTabs: (viewMode: ViewMode) => void
@@ -651,6 +652,18 @@ const updateHttpClientTab = (
 ): Tab[] =>
   tabs.map((tab) => {
     if (tab.id === tabId && isHttpClientTab(tab)) {
+      return { ...tab, ...updates }
+    }
+    return tab
+  })
+
+const updateMethodExecutorTab = (
+  tabs: Tab[],
+  tabId: string,
+  updates: Partial<Omit<MethodExecutorTab, 'id' | 'type'>>
+): Tab[] =>
+  tabs.map((tab) => {
+    if (tab.id === tabId && isMethodExecutorTab(tab)) {
       return { ...tab, ...updates }
     }
     return tab
@@ -932,14 +945,20 @@ export const useTabsStore = create<TabsState>()(
         },
 
         openMethodExecutorTab: (seed) => {
-          const { tabs, activeTabId } = get()
+          const { tabs, activeTabId, tabActivationOrder } = get()
           if (!seed) {
-            const existingBlankTab = tabs.find(
-              (tab) => isMethodExecutorTab(tab) && tab.seed === undefined
-            )
-            if (existingBlankTab) {
-              set({ activeTabId: existingBlankTab.id })
-              return existingBlankTab.id
+            const methodTabs = tabs.filter(isMethodExecutorTab)
+            const existingBlankTab = methodTabs.find((tab) => tab.seed === undefined)
+            // Drafts are persisted onto `seed`; still reuse a workspace tab from the menu.
+            const existing =
+              existingBlankTab ??
+              tabActivationOrder
+                .map((id) => methodTabs.find((tab) => tab.id === id))
+                .find((tab): tab is MethodExecutorTab => Boolean(tab)) ??
+              methodTabs[0]
+            if (existing) {
+              set({ activeTabId: existing.id })
+              return existing.id
             }
           }
 
@@ -1364,6 +1383,10 @@ export const useTabsStore = create<TabsState>()(
 
         setHttpClientTabSeed: (tabId, seed) => {
           set({ tabs: updateHttpClientTab(get().tabs, tabId, { seed }) })
+        },
+
+        setMethodExecutorTabSeed: (tabId, seed) => {
+          set({ tabs: updateMethodExecutorTab(get().tabs, tabId, { seed }) })
         },
 
         // Apply default view mode to all existing dataclass tabs

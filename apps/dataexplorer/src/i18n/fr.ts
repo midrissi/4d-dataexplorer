@@ -718,6 +718,7 @@ export const fr = {
     positionalOrder: "L'ordre positionnel est conservé.",
     wrapper: 'Wrapper',
     wrapperHint: 'Champs supplémentaires envoyés avec params dans le corps POST.',
+    advanced: 'Avancé',
     invalidWrapperError: 'Le wrapper doit être un objet JSON valide.',
     wrapperRequiresPost: 'Le wrapper nécessite une requête POST — désactivez Exécuter avec GET.',
     snippets: {
@@ -841,6 +842,10 @@ export const fr = {
     noFieldsDescription: 'Ajoutez des champs de formulaire à inclure dans le corps de la requête.',
     noParamsTitle: 'Aucun paramètre de requête',
     noParamsDescription: 'Ajoutez des paramètres REST tels que $filter ou $top.',
+    useTextParamValue: 'Passer en saisie texte',
+    useSmartParamValue: 'Passer à la saisie suggérée',
+    paramValueNumber: 'Valeur numérique pour {key}',
+    paramValueList: 'Liste de valeurs pour {key}',
     noHeadersRequestTitle: 'Aucun en-tête de requête',
     noHeadersRequestDescription:
       'Ajoutez des en-têtes pour un Content-Type, Accept ou une authentification personnalisés.',

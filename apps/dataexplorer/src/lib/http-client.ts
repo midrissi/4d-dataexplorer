@@ -1,3 +1,4 @@
+import { keyValuePairsToRecord } from '~/lib/key-value-pairs'
 import {
   createHttpId,
   type HttpBodyState,
@@ -556,17 +557,74 @@ const REST_QUERY_PARAM_VALUES: Record<string, readonly string[]> = {
   $params: ["'[]'", '\'["value"]\''],
 }
 
+/** Discrete enum-style REST params (autocomplete pick list). */
+const REST_ENUM_PARAM_KEYS = new Set([
+  '$method',
+  '$compute',
+  '$imageformat',
+  '$asArray',
+  '$atomic',
+  '$atOnce',
+  '$binary',
+  '$rawPict',
+  '$clean',
+  '$distinct',
+  '$querypath',
+  '$queryplan',
+  '$lock',
+  '$format',
+  '$version',
+])
+
+/** Numeric REST params. */
+const REST_NUMBER_PARAM_KEYS = new Set(['$top', '$limit', '$skip', '$timeout'])
+
+/** Comma-separated list REST params (tags input). */
+const REST_LIST_PARAM_KEYS = new Set(['$attributes', '$expand'])
+
+export type RestParamValueKind = 'enum' | 'number' | 'list' | 'text'
+
+function normalizeRestParamKey(key: string): string {
+  const trimmed = key.trim()
+  if (!trimmed) return ''
+  if (trimmed.startsWith('$')) return trimmed
+  // Allow matching without `$` for convenience.
+  return `$${trimmed}`
+}
+
+function resolveRestParamKey(key: string): string {
+  const trimmed = key.trim()
+  if (!trimmed) return ''
+  const direct = REST_QUERY_PARAM_VALUES[trimmed] ? trimmed : ''
+  if (direct) return direct
+  const withDollar = normalizeRestParamKey(trimmed)
+  if (REST_QUERY_PARAM_VALUES[withDollar]) return withDollar
+  const lower = trimmed.toLowerCase()
+  for (const name of Object.keys(REST_QUERY_PARAM_VALUES)) {
+    if (name.toLowerCase() === lower) return name
+  }
+  const lowerDollar = withDollar.toLowerCase()
+  for (const name of Object.keys(REST_QUERY_PARAM_VALUES)) {
+    if (name.toLowerCase() === lowerDollar) return name
+  }
+  return trimmed.startsWith('$') ? trimmed : withDollar || trimmed
+}
+
+/** How the Params editor should present a value field for a given query key. */
+export function restParamValueKind(key: string): RestParamValueKind {
+  const resolved = resolveRestParamKey(key)
+  if (!resolved) return 'text'
+  if (REST_NUMBER_PARAM_KEYS.has(resolved)) return 'number'
+  if (REST_LIST_PARAM_KEYS.has(resolved)) return 'list'
+  if (REST_ENUM_PARAM_KEYS.has(resolved)) return 'enum'
+  return 'text'
+}
+
 /** Value suggestions for a REST query param key (case-insensitive `$` names). */
 export function restParamValueSuggestions(key: string): readonly string[] {
-  const trimmed = key.trim()
-  if (!trimmed) return []
-  const direct = REST_QUERY_PARAM_VALUES[trimmed]
-  if (direct) return direct
-  const lower = trimmed.toLowerCase()
-  for (const [name, values] of Object.entries(REST_QUERY_PARAM_VALUES)) {
-    if (name.toLowerCase() === lower) return values
-  }
-  return []
+  const resolved = resolveRestParamKey(key)
+  if (!resolved) return []
+  return REST_QUERY_PARAM_VALUES[resolved] ?? []
 }
 
 export function createEmptyHttpDraft(seed?: HttpClientSeed): HttpClientRequestDraft {
@@ -690,14 +748,6 @@ export function syncParamsFromPath(path: string): HttpKeyValuePair[] {
 
 function enabledPairs(pairs: HttpKeyValuePair[]): HttpKeyValuePair[] {
   return pairs.filter((pair) => pair.enabled && pair.key.trim())
-}
-
-function pairsToRecord(pairs: HttpKeyValuePair[]): Record<string, string> {
-  const result: Record<string, string> = {}
-  for (const pair of enabledPairs(pairs)) {
-    result[pair.key.trim()] = pair.value
-  }
-  return result
 }
 
 function findHeader(
@@ -1175,7 +1225,7 @@ export function buildHttpRequest(
   const disabledBuiltIns = normalizeDisabledBuiltInHeaders(resolvedDraft.disabledBuiltInHeaders)
   const desktop = isDesktop()
 
-  let headers = pairsToRecord(resolvedDraft.headers)
+  let headers = keyValuePairsToRecord(resolvedDraft.headers)
 
   // Current-connection custom headers only for the connected origin.
   if (isCurrentServer) {

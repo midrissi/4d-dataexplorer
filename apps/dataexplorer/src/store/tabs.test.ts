@@ -70,6 +70,27 @@ describe('http client tabs', () => {
     const tab = useTabsStore.getState().tabs.find((item) => item.id === tabId)
     expect(tab && isHttpClientTab(tab) ? tab.seed?.path : undefined).toBe('/rest/{{key}}')
   })
+
+  it('persists method executor draft seed and reuses the workspace tab from the menu', () => {
+    const store = useTabsStore.getState()
+    const tabId = store.openMethodExecutorTab()
+    store.setMethodExecutorTabSeed(tabId, {
+      scope: 'catalog',
+      methodName: 'justATest',
+      wrapperEnabled: true,
+      wrapperText: '{ "foo": 1 }',
+      queryParams: [{ id: '1', key: '$top', value: '10', enabled: true }],
+      headers: [{ id: '2', key: 'X-Test', value: '1', enabled: true }],
+    })
+    expect(store.openMethodExecutorTab()).toBe(tabId)
+    const tab = useTabsStore.getState().tabs.find((item) => item.id === tabId)
+    expect(tab && isMethodExecutorTab(tab) ? tab.seed?.methodName : undefined).toBe('justATest')
+    expect(tab && isMethodExecutorTab(tab) ? tab.seed?.wrapperEnabled : undefined).toBe(true)
+    expect(tab && isMethodExecutorTab(tab) ? tab.seed?.queryParams?.[0]?.key : undefined).toBe(
+      '$top'
+    )
+    expect(tab && isMethodExecutorTab(tab) ? tab.seed?.headers?.[0]?.key : undefined).toBe('X-Test')
+  })
 })
 
 describe('store/tabs', () => {

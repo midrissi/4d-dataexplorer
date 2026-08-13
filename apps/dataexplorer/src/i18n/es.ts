@@ -717,6 +717,7 @@ export const es = {
     positionalOrder: 'Se conserva el orden posicional.',
     wrapper: 'Wrapper',
     wrapperHint: 'Campos extra enviados con params en el cuerpo POST.',
+    advanced: 'Avanzado',
     invalidWrapperError: 'El wrapper debe ser un objeto JSON válido.',
     wrapperRequiresPost: 'El wrapper requiere una petición POST — desactive Ejecutar con GET.',
     snippets: {
@@ -840,6 +841,10 @@ export const es = {
     noFieldsDescription: 'Añada campos de formulario para incluir en el cuerpo de la solicitud.',
     noParamsTitle: 'Sin parámetros de consulta',
     noParamsDescription: 'Añada parámetros REST como $filter o $top.',
+    useTextParamValue: 'Cambiar a entrada de texto',
+    useSmartParamValue: 'Cambiar a entrada sugerida',
+    paramValueNumber: 'Valor numérico para {key}',
+    paramValueList: 'Lista de valores para {key}',
     noHeadersRequestTitle: 'Sin cabeceras de solicitud',
     noHeadersRequestDescription:
       'Añada cabeceras cuando necesite Content-Type, Accept o autenticación personalizados.',
