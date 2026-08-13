@@ -1071,7 +1071,7 @@ export const api = {
    * Optional `wrapper` is merged into the POST body as `{ params: [...], ...wrapper }`.
    */
   callMethod: async (
-    input: MethodToolInvokeInput & { wrapper?: Record<string, unknown> }
+    input: MethodToolInvokeInput & { wrapper?: Record<string, unknown>; signal?: AbortSignal }
   ): Promise<FunctionCallResult> => {
     const http = client.getHttpClient()
     const params = input.params ?? []
@@ -1081,6 +1081,7 @@ export const api = {
       orderby: input.orderby,
       entitySetId: input.entitySetId,
       wrapper: input.wrapper,
+      signal: input.signal,
     }
 
     switch (input.scope) {

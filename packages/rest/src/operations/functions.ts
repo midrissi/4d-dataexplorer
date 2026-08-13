@@ -19,6 +19,9 @@ export interface FunctionCallOptions {
    * Ignored for GET (params stay in `?$params=`).
    */
   wrapper?: Record<string, unknown>
+  /** AbortSignal to cancel the in-flight function call. */
+  signal?: AbortSignal
+  timeout?: number
 }
 
 function buildFunctionQuery(
@@ -52,13 +55,18 @@ async function invokeFunction<T>(
 ): Promise<FunctionCallResult<T>> {
   const method = options.method ?? 'POST'
   const query = buildFunctionQuery(params, options)
+  const requestOptions = {
+    signal: options.signal,
+    timeout: options.timeout,
+  }
   const meta =
     method === 'GET'
-      ? await http.getWithMeta<FunctionResponse<T> | T>(path, query)
+      ? await http.getWithMeta<FunctionResponse<T> | T>(path, query, requestOptions)
       : await http.postWithMeta<FunctionResponse<T> | T>(
           path,
           buildFunctionBody(params, options.wrapper),
-          query
+          query,
+          requestOptions
         )
   return FunctionCallResult.fromHttp<T>(meta)
 }

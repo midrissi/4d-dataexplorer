@@ -16,6 +16,10 @@ export type NetworkDetails = {
   requestBody?: unknown
   responseBody?: unknown
   error?: unknown
+  /** True while the fetch is in flight. */
+  pending?: boolean
+  /** True when the request was aborted by the user (not a transport error). */
+  cancelled?: boolean
 }
 
 export type ConsoleEntry = {
@@ -36,6 +40,7 @@ type ConsoleState = {
   /** When true, network row paths show percent-decoded query strings. */
   showDecodedUrls: boolean
   append: (entry: NewConsoleEntry) => void
+  updateNetwork: (id: string, patch: Partial<NetworkDetails>) => void
   clear: () => void
   setFilter: (filter: ConsoleFilter) => void
   setShowDecodedUrls: (showDecodedUrls: boolean) => void
@@ -49,6 +54,8 @@ function createEntryId(): string {
   }
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
 }
+
+export { createEntryId }
 
 export const useConsoleStore = create<ConsoleState>()(
   persist(
@@ -66,6 +73,18 @@ export const useConsoleStore = create<ConsoleState>()(
               timestamp: entry.timestamp ?? Date.now(),
             },
           ].slice(-MAX_CONSOLE_ENTRIES),
+        })),
+      updateNetwork: (id, patch) =>
+        set((state) => ({
+          entries: state.entries.map((entry) => {
+            if (entry.id !== id || !entry.network) return entry
+            const network = { ...entry.network, ...patch }
+            return {
+              ...entry,
+              network,
+              message: `${network.method} ${network.url}`,
+            }
+          }),
         })),
       clear: () => set({ entries: [] }),
       setFilter: (filter) => set({ filter }),

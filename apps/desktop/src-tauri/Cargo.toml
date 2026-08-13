@@ -33,6 +33,8 @@ reqwest = { version = "0.12", default-features = false, features = [
     "rustls-tls",
     "charset",
 ] }
+# Used to cancel mid-flight `desktop_http_request` work from the webview.
+tokio = { version = "1", default-features = false, features = ["sync", "macros"] }
 
 [target.'cfg(any(target_os = "macos", target_os = "windows", target_os = "linux"))'.dependencies]
 tauri-plugin-updater = "2"

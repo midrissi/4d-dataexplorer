@@ -1,5 +1,7 @@
 import { consoleService } from '~/lib/console'
+import { registerNetworkAbort, unregisterNetworkAbort } from '~/lib/network-abort'
 import type { PlatformFetchInit } from '~/lib/platform'
+import type { NetworkDetails } from '~/store/console'
 
 const MAX_BODY_BYTES = 64 * 1024
 const REDACTED = '[REDACTED]'
@@ -124,6 +126,13 @@ function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
 
+function isAbortError(error: unknown): boolean {
+  return (
+    (error instanceof DOMException && error.name === 'AbortError') ||
+    (error instanceof Error && error.name === 'AbortError')
+  )
+}
+
 /**
  * `new Request(input, init)` only keeps Fetch `RequestInit` fields. Desktop
  * options (`skipSsl`, timeouts, cookie policy) must be forwarded separately.
@@ -139,20 +148,51 @@ function platformFetchInit(init?: RequestInit): PlatformFetchInit | undefined {
   return Object.keys(next).length > 0 ? next : undefined
 }
 
+function resolveExternalSignal(
+  input: RequestInfo | URL,
+  init?: RequestInit
+): AbortSignal | undefined {
+  if (init?.signal) return init.signal
+  if (input instanceof Request) return input.signal
+  return undefined
+}
+
 export function createLoggingFetch(inner: typeof fetch): typeof fetch {
   const existing = wrappers.get(inner)
   if (existing) return existing
 
   const loggingFetch = (async (input, init) => {
     const startedAt = performance.now()
+    const externalSignal = resolveExternalSignal(input, init)
+    const controller = new AbortController()
+    if (externalSignal) {
+      if (externalSignal.aborted) controller.abort(externalSignal.reason)
+      else {
+        externalSignal.addEventListener('abort', () => controller.abort(externalSignal.reason), {
+          once: true,
+        })
+      }
+    }
+
     let request: Request
-    const forwarded = platformFetchInit(init)
+    const platformOptions = platformFetchInit(init)
+    const forwarded: PlatformFetchInit = {
+      ...platformOptions,
+      signal: controller.signal,
+    }
 
     try {
-      request = new Request(input, init)
+      request = new Request(input, { ...init, signal: controller.signal })
     } catch {
       return inner(input, init)
     }
+
+    const entryId = consoleService.networkStart({
+      method: request.method,
+      url: request.url,
+      requestHeaders: headersToRecord(request.headers),
+    })
+    registerNetworkAbort(entryId, () => controller.abort())
 
     const requestContentType = request.headers.get('content-type') ?? ''
     // Fetch with `request`, not `input`: new Request(existingRequest) consumes its body.
@@ -165,25 +205,40 @@ export function createLoggingFetch(inner: typeof fetch): typeof fetch {
         } as { body: unknown | undefined; sizeBytes?: number })
       : readBody(request.clone(), requestContentType)
 
+    const settle = (patch: Partial<NetworkDetails>) => {
+      unregisterNetworkAbort(entryId)
+      consoleService.networkUpdate(entryId, {
+        pending: false,
+        durationMs: performance.now() - startedAt,
+        ...patch,
+      })
+    }
+
+    const patchBodies = (patch: Partial<NetworkDetails>) => {
+      consoleService.networkUpdate(entryId, patch)
+    }
+
     try {
       const response = await inner(request, forwarded)
       const durationMs = performance.now() - startedAt
       const responseContentType = response.headers.get('content-type') ?? ''
       const responseSizeHint = contentLengthBytes(response.headers)
 
+      // Leave pending as soon as headers arrive so Cancel disappears; bodies fill in async.
+      settle({
+        status: response.status,
+        statusText: response.statusText,
+        durationMs,
+        responseSizeBytes: responseSizeHint,
+        responseHeaders: headersToRecord(response.headers),
+        cancelled: false,
+      })
+
       // Critical: do not clone binary responses. An unread tee side blocks the
       // consumer (e.g. HTTP Client body read) and freezes the desktop app.
       if (shouldSkipBodyLogging(responseContentType)) {
         void requestBodyPromise.then((requestResult) => {
-          consoleService.network({
-            method: request.method,
-            url: request.url,
-            status: response.status,
-            statusText: response.statusText,
-            durationMs,
-            responseSizeBytes: responseSizeHint,
-            requestHeaders: headersToRecord(request.headers),
-            responseHeaders: headersToRecord(response.headers),
+          patchBodies({
             requestBody: requestResult.body,
             responseBody: `[${responseContentType || 'binary'} body]`,
           })
@@ -195,15 +250,8 @@ export function createLoggingFetch(inner: typeof fetch): typeof fetch {
 
       void Promise.all([requestBodyPromise, readBody(responseClone, responseContentType)]).then(
         ([requestResult, responseResult]) => {
-          consoleService.network({
-            method: request.method,
-            url: request.url,
-            status: response.status,
-            statusText: response.statusText,
-            durationMs,
+          patchBodies({
             responseSizeBytes: responseSizeHint ?? responseResult.sizeBytes,
-            requestHeaders: headersToRecord(request.headers),
-            responseHeaders: headersToRecord(response.headers),
             requestBody: requestResult.body,
             responseBody: responseResult.body,
           })
@@ -212,13 +260,24 @@ export function createLoggingFetch(inner: typeof fetch): typeof fetch {
 
       return response
     } catch (error) {
-      consoleService.network({
-        method: request.method,
-        url: request.url,
-        durationMs: performance.now() - startedAt,
+      const requestBody = (await requestBodyPromise).body
+      if (controller.signal.aborted || isAbortError(error)) {
+        settle({
+          requestHeaders: headersToRecord(request.headers),
+          requestBody,
+          cancelled: true,
+          error: undefined,
+        })
+        throw error instanceof Error
+          ? error
+          : new DOMException('The operation was aborted.', 'AbortError')
+      }
+
+      settle({
         requestHeaders: headersToRecord(request.headers),
-        requestBody: (await requestBodyPromise).body,
+        requestBody,
         error: redactValue(error),
+        cancelled: false,
       })
       consoleService.error('Network request failed', {
         method: request.method,

@@ -1,4 +1,4 @@
 [[permission]]
 identifier = "allow-desktop-http-request"
-description = "Allow the desktop HTTP helper used for skip-SSL / self-signed certificate requests"
-commands.allow = ["desktop_http_request"]
+description = "Allow the desktop HTTP helper used for skip-SSL / self-signed certificate requests, including mid-flight cancel"
+commands.allow = ["desktop_http_request", "desktop_http_cancel"]

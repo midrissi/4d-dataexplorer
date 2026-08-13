@@ -224,6 +224,9 @@ export const en = {
     responseBody: 'Response Body',
     errorDetails: 'Error',
     openInHttpClient: 'Open in HTTP Client',
+    cancelRequest: 'Cancel request',
+    pending: 'Pending',
+    cancelled: 'Cancelled',
     showDecodedUrl: 'Show decoded URL',
     showEncodedUrl: 'Show encoded URL',
     loadImage: 'Load image',
@@ -734,6 +737,7 @@ export const en = {
     executeWithGet: 'Execute with GET',
     postRequest: 'POST request',
     execute: 'Execute',
+    executionCancelled: 'Execution cancelled',
     result: 'Result',
     resultHint:
       'Entity, entity-selection, and private binary responses get specialized views automatically.',

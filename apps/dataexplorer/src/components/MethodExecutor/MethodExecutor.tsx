@@ -1,5 +1,5 @@
 import { Button, Checkbox, cn, Label } from '@4d/ui'
-import { ChevronLeft, Clock3, Download, Loader2, Play, Star } from 'lucide-react'
+import { ChevronLeft, Clock3, Download, Play, Square, Star } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { EnvThisProvider } from '~/components/Environments/env-this-context'
 import { MobileFullscreenSheet } from '~/components/MobileFullscreenSheet'
@@ -102,6 +102,7 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
   const [responseMeta, setResponseMeta] = useState<MethodResponseMeta | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [executing, setExecuting] = useState(false)
+  const abortRef = useRef<AbortController | null>(null)
   const [sidePanel, setSidePanel] = useState<SidePanel>('none')
   const [exportOpen, setExportOpen] = useState(false)
   /** Favourite opened or last saved from this editor — enables update when the request changes. */
@@ -427,7 +428,11 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
     const useGetRequest = useGet && wrapper === undefined
 
     try {
+      abortRef.current?.abort()
+      const controller = new AbortController()
+      abortRef.current = controller
       setExecuting(true)
+      setError(null)
       const response = await api.callMethod({
         scope,
         methodName,
@@ -440,7 +445,9 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
         allowedOnHTTPGET: useGetRequest,
         params: serializeRuntimeParams(resolvedArgs.argumentsList),
         wrapper,
+        signal: controller.signal,
       })
+      if (controller.signal.aborted) return
       const detected = detectMethodResult(response.unwrap(), { webform: response.webform() })
       setResult(detected)
       setRawBody(response.body)
@@ -457,11 +464,25 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
       )
       if (mobile) setMobileStep('result')
     } catch (reason) {
+      if (reason instanceof Error && reason.name === 'AbortError') {
+        setError(t('methodExecutor.executionCancelled'))
+        return
+      }
       setError(reason instanceof Error ? reason.message : t('methodExecutor.executionFailed'))
     } finally {
       setExecuting(false)
     }
   }
+
+  const cancelExecution = () => {
+    abortRef.current?.abort()
+  }
+
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort()
+    }
+  }, [])
 
   canExecuteRef.current = canExecute
   executingRef.current = executing
@@ -678,19 +699,27 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
                   >
                     <Download className="h-4 w-4" />
                   </Button>
-                  <Button
-                    size="sm"
-                    className="h-11 px-4"
-                    onClick={() => void execute()}
-                    disabled={executing || !canExecute}
-                  >
-                    {executing ? (
-                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                    ) : (
+                  {executing ? (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className="h-11 px-4"
+                      onClick={cancelExecution}
+                    >
+                      <Square className="mr-1.5 h-3.5 w-3.5" />
+                      {t('methodExecutor.cancel')}
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      className="h-11 px-4"
+                      onClick={() => void execute()}
+                      disabled={!canExecute}
+                    >
                       <Play className="mr-1.5 h-3.5 w-3.5" />
-                    )}
-                    {t('methodExecutor.execute')}
-                  </Button>
+                      {t('methodExecutor.execute')}
+                    </Button>
+                  )}
                 </div>
               </>
             ) : null}
@@ -915,20 +944,28 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
                   >
                     <Download className="h-3.5 w-3.5" />
                   </Button>
-                  <Button
-                    size="sm"
-                    className={cn(mobile ? 'h-11 px-4' : 'h-8')}
-                    onClick={() => void execute()}
-                    disabled={executing || !canExecute}
-                    title={`${t('methodExecutor.execute')} (⌘/Ctrl+Enter)`}
-                  >
-                    {executing ? (
-                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                    ) : (
+                  {executing ? (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      className={cn(mobile ? 'h-11 px-4' : 'h-8')}
+                      onClick={cancelExecution}
+                    >
+                      <Square className="mr-1.5 h-3.5 w-3.5" />
+                      {t('methodExecutor.cancel')}
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      className={cn(mobile ? 'h-11 px-4' : 'h-8')}
+                      onClick={() => void execute()}
+                      disabled={!canExecute}
+                      title={`${t('methodExecutor.execute')} (⌘/Ctrl+Enter)`}
+                    >
                       <Play className="mr-1.5 h-3.5 w-3.5" />
-                    )}
-                    {t('methodExecutor.execute')}
-                  </Button>
+                      {t('methodExecutor.execute')}
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>

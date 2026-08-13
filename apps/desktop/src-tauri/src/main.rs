@@ -1,9 +1,61 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use std::sync::Mutex;
 use std::time::Duration;
 use tauri::Manager;
 use tauri_plugin_window_state::StateFlags;
+use tokio::sync::oneshot;
+
+/// Tracks in-flight `desktop_http_request` calls so the webview can abort them.
+#[derive(Default)]
+struct PendingHttpCancels {
+    pending: Mutex<HashMap<String, oneshot::Sender<()>>>,
+    /// Cancel arrived before the matching request registered its oneshot.
+    cancelled: Mutex<HashSet<String>>,
+}
+
+impl PendingHttpCancels {
+    fn register(&self, request_id: &str) -> Option<oneshot::Receiver<()>> {
+        if self
+            .cancelled
+            .lock()
+            .map(|mut set| set.remove(request_id))
+            .unwrap_or(false)
+        {
+            return None;
+        }
+        let (tx, rx) = oneshot::channel();
+        if let Ok(mut pending) = self.pending.lock() {
+            pending.insert(request_id.to_string(), tx);
+        }
+        Some(rx)
+    }
+
+    fn finish(&self, request_id: &str) {
+        if let Ok(mut pending) = self.pending.lock() {
+            pending.remove(request_id);
+        }
+        if let Ok(mut cancelled) = self.cancelled.lock() {
+            cancelled.remove(request_id);
+        }
+    }
+
+    fn cancel(&self, request_id: &str) {
+        let sender = self
+            .pending
+            .lock()
+            .ok()
+            .and_then(|mut pending| pending.remove(request_id));
+        if let Some(tx) = sender {
+            let _ = tx.send(());
+            return;
+        }
+        if let Ok(mut cancelled) = self.cancelled.lock() {
+            cancelled.insert(request_id.to_string());
+        }
+    }
+}
 
 /// Read cookies from tauri-plugin-http's on-disk jar (app cache `.cookies`)
 /// that would apply to `url`, as name → value.
@@ -107,6 +159,8 @@ struct DesktopHttpRequest {
     connect_timeout: Option<u64>,
     /// When true, accept invalid / self-signed certificates (and host mismatches).
     skip_ssl: bool,
+    /// Correlates with `desktop_http_cancel` so mid-flight requests can abort.
+    request_id: Option<String>,
 }
 
 #[derive(Debug, serde::Serialize)]
@@ -179,10 +233,9 @@ async fn check_desktop_update_for_tag<R: tauri::Runtime>(
     }))
 }
 
-/// Desktop HTTP helper used when skip-SSL is required. Returns the full TLS/error
-/// chain instead of the opaque "error sending request for url" plugin message.
-#[tauri::command]
-async fn desktop_http_request(request: DesktopHttpRequest) -> Result<DesktopHttpResponse, String> {
+const HTTP_CANCELLED: &str = "Request cancelled";
+
+async fn send_desktop_http(request: DesktopHttpRequest) -> Result<DesktopHttpResponse, String> {
     let DesktopHttpRequest {
         method,
         url,
@@ -190,6 +243,7 @@ async fn desktop_http_request(request: DesktopHttpRequest) -> Result<DesktopHttp
         body,
         connect_timeout,
         skip_ssl,
+        request_id: _,
     } = request;
 
     let parsed_url = url::Url::parse(&url).map_err(|e| format!("invalid url: {e}"))?;
@@ -268,6 +322,50 @@ async fn desktop_http_request(request: DesktopHttpRequest) -> Result<DesktopHttp
     })
 }
 
+/// Desktop HTTP helper used when skip-SSL is required. Returns the full TLS/error
+/// chain instead of the opaque "error sending request for url" plugin message.
+#[tauri::command]
+async fn desktop_http_request(
+    cancels: tauri::State<'_, PendingHttpCancels>,
+    request: DesktopHttpRequest,
+) -> Result<DesktopHttpResponse, String> {
+    let request_id = request.request_id.clone();
+    let cancel_rx = request_id
+        .as_deref()
+        .and_then(|id| cancels.register(id));
+
+    if request_id.is_some() && cancel_rx.is_none() {
+        return Err(HTTP_CANCELLED.into());
+    }
+
+    let result = if let Some(rx) = cancel_rx {
+        tokio::select! {
+            result = send_desktop_http(request) => result,
+            _ = rx => Err(HTTP_CANCELLED.into()),
+        }
+    } else {
+        send_desktop_http(request).await
+    };
+
+    if let Some(id) = request_id.as_deref() {
+        cancels.finish(id);
+    }
+    result
+}
+
+#[tauri::command]
+fn desktop_http_cancel(
+    cancels: tauri::State<'_, PendingHttpCancels>,
+    request_id: String,
+) -> Result<(), String> {
+    let trimmed = request_id.trim();
+    if trimmed.is_empty() {
+        return Err("requestId is required".into());
+    }
+    cancels.cancel(trimmed);
+    Ok(())
+}
+
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_http::init())
@@ -289,9 +387,11 @@ fn main() {
                 )
                 .build(),
         )
+        .manage(PendingHttpCancels::default())
         .invoke_handler(tauri::generate_handler![
             list_http_jar_cookies,
             desktop_http_request,
+            desktop_http_cancel,
             check_desktop_update_for_tag
         ])
         .setup(|app| {

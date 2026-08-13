@@ -100,8 +100,21 @@ export function networkMethodToneClass(method: string): string {
   }
 }
 
-export function isFailedNetwork(details: Pick<NetworkDetails, 'error' | 'status'>): boolean {
+export function isFailedNetwork(
+  details: Pick<NetworkDetails, 'error' | 'status' | 'cancelled' | 'pending'>
+): boolean {
+  if (details.pending || details.cancelled) return false
   return details.error !== undefined || (details.status !== undefined && details.status >= 400)
+}
+
+export function isCancelledNetwork(
+  details: Pick<NetworkDetails, 'cancelled'>
+): boolean {
+  return details.cancelled === true
+}
+
+export function isPendingNetwork(details: Pick<NetworkDetails, 'pending'>): boolean {
+  return details.pending === true
 }
 
 export function failedNetworkBackground(entry: ConsoleEntry): string | false {

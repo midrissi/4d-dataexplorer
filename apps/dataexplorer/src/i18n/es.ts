@@ -229,6 +229,9 @@ export const es = {
     responseBody: 'Cuerpo de la respuesta',
     errorDetails: 'Error',
     openInHttpClient: 'Abrir en el cliente HTTP',
+    cancelRequest: 'Cancelar solicitud',
+    pending: 'Pendiente',
+    cancelled: 'Cancelado',
     showDecodedUrl: 'Mostrar URL decodificada',
     showEncodedUrl: 'Mostrar URL codificada',
     loadImage: 'Cargar imagen',
@@ -746,6 +749,7 @@ export const es = {
     executeWithGet: 'Ejecutar con GET',
     postRequest: 'Solicitud POST',
     execute: 'Ejecutar',
+    executionCancelled: 'Ejecución cancelada',
     result: 'Resultado',
     resultHint:
       'Las entidades, selecciones y binarios privados usan vistas especializadas automáticamente.',

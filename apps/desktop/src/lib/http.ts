@@ -250,25 +250,47 @@ async function readRequestParts(
   }
 }
 
+function createDesktopHttpRequestId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
+  return `http-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
+}
+
+function isAbortError(error: unknown): boolean {
+  return (
+    (error instanceof DOMException && error.name === 'AbortError') ||
+    (error instanceof Error && error.name === 'AbortError')
+  )
+}
+
+function throwIfAborted(signal: AbortSignal | undefined): void {
+  if (signal?.aborted) {
+    throw new DOMException('The operation was aborted.', 'AbortError')
+  }
+}
+
 async function insecureDesktopFetch(
   input: RequestInfo | URL,
   init?: PlatformFetchInit
 ): Promise<Response> {
   const parts = await readRequestParts(input, init)
   const connectTimeout = resolveConnectTimeout(init)
+  const requestId = createDesktopHttpRequestId()
 
-  if (parts.signal?.aborted) {
-    throw new DOMException('The operation was aborted.', 'AbortError')
-  }
+  throwIfAborted(parts.signal)
 
   console.debug('[tauri-fetch:insecure] →', parts.method, parts.url, {
     headers: describeHeaders(parts.headers),
     bodyBytes: parts.body?.byteLength ?? 0,
     connectTimeout,
+    requestId,
   })
 
   const abort = () => {
-    // invoke cannot be cancelled mid-flight; best-effort signal mapping below.
+    void invoke('desktop_http_cancel', { requestId }).catch(() => {
+      // Best-effort: request may already have finished.
+    })
   }
   parts.signal?.addEventListener('abort', abort, { once: true })
 
@@ -305,12 +327,11 @@ async function insecureDesktopFetch(
         body: bodyBytes,
         connectTimeout: connectTimeout ?? null,
         skipSsl: true,
+        requestId,
       },
     })
 
-    if (parts.signal?.aborted) {
-      throw new DOMException('The operation was aborted.', 'AbortError')
-    }
+    throwIfAborted(parts.signal)
 
     const response = new Response(new Uint8Array(payload.body), {
       status: payload.status,
@@ -327,7 +348,13 @@ async function insecureDesktopFetch(
     void ingestSetCookieRawValues(rawSetCookie)
     return response
   } catch (err) {
+    if (parts.signal?.aborted || isAbortError(err)) {
+      throw new DOMException('The operation was aborted.', 'AbortError')
+    }
     const error = asError(err, 'Network request failed')
+    if (/request cancelled/i.test(error.message)) {
+      throw new DOMException('The operation was aborted.', 'AbortError')
+    }
     console.error('[tauri-fetch:insecure] ✗', parts.url, error.message)
     throw error
   } finally {

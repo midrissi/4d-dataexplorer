@@ -1,5 +1,5 @@
 import { Button, cn, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@4d/ui'
-import { ChevronRight, ChevronsDownUp, ChevronsUpDown, Minus, Send } from 'lucide-react'
+import { ChevronRight, ChevronsDownUp, ChevronsUpDown, Loader2, Minus, Send, Square } from 'lucide-react'
 import {
   type MouseEvent as ReactMouseEvent,
   useLayoutEffect,
@@ -13,11 +13,14 @@ import {
   formatByteSize,
   formatConsoleTimestamp,
   formatDecodedPathWithQuery,
+  isCancelledNetwork,
   isFailedNetwork,
+  isPendingNetwork,
   networkMethodToneClass,
   pathNeedsUrlDecode,
   splitNetworkUrl,
 } from '~/lib/console-format'
+import { abortNetworkRequest } from '~/lib/network-abort'
 import { mapNetworkDetailsToSeed } from '~/lib/network-to-http-seed'
 import { isObjectTreeTooLarge } from '~/lib/object-tree-size'
 import { parseDecodedQueryParams } from '~/lib/parse-decoded-query-params'
@@ -43,10 +46,12 @@ function isNetworkExpandAllBlocked(
 }
 
 export function NetworkEntry({
+  entryId,
   details,
   open,
   timestamp,
 }: {
+  entryId: string
   details: NetworkDetails
   open: boolean
   timestamp?: number
@@ -58,6 +63,8 @@ export function NetworkEntry({
   const showDecodedUrls = useConsoleStore((state) => state.showDecodedUrls)
   const [sectionsEpoch, setSectionsEpoch] = useState(0)
   const rootRef = useRef<HTMLDivElement>(null)
+  const pending = isPendingNetwork(details)
+  const cancelled = isCancelledNetwork(details)
   const failed = isFailedNetwork(details)
   const queryParams = open ? parseDecodedQueryParams(details.url) : null
   const expandAllBlocked = useMemo(
@@ -125,25 +132,70 @@ export function NetworkEntry({
     if (mobile) setConsoleOpen(false)
   }
 
-  const statusBadge =
-    details.status !== undefined ? (
-      <span
-        className={cn(
-          'shrink-0 rounded px-1.5 py-px font-semibold text-[10px] tabular-nums',
-          failed
-            ? 'bg-destructive/15 text-destructive'
-            : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
-        )}
-      >
-        {details.status}
-      </span>
-    ) : details.error !== undefined ? (
-      <span className="shrink-0 rounded bg-destructive/15 px-1.5 py-px font-semibold text-[10px] text-destructive">
-        ERR
-      </span>
-    ) : null
+  const cancelRequest = (event: ReactMouseEvent) => {
+    event.stopPropagation()
+    abortNetworkRequest(entryId)
+  }
 
-  const sendButton = (
+  const statusBadge = pending ? (
+    <span className="inline-flex shrink-0 items-center gap-1 rounded bg-sky-500/15 px-1.5 py-px font-semibold text-[10px] text-sky-700 dark:text-sky-300">
+      <Loader2 className="h-2.5 w-2.5 animate-spin" aria-hidden="true" />
+      {t('console.pending')}
+    </span>
+  ) : cancelled ? (
+    <span className="shrink-0 rounded bg-amber-500/15 px-1.5 py-px font-semibold text-[10px] text-amber-800 dark:text-amber-300">
+      {t('console.cancelled')}
+    </span>
+  ) : details.status !== undefined ? (
+    <span
+      className={cn(
+        'shrink-0 rounded px-1.5 py-px font-semibold text-[10px] tabular-nums',
+        failed
+          ? 'bg-destructive/15 text-destructive'
+          : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400'
+      )}
+    >
+      {details.status}
+    </span>
+  ) : details.error !== undefined ? (
+    <span className="shrink-0 rounded bg-destructive/15 px-1.5 py-px font-semibold text-[10px] text-destructive">
+      ERR
+    </span>
+  ) : null
+
+  const accentClass = pending
+    ? 'bg-sky-500/60'
+    : cancelled
+      ? 'bg-amber-500/60'
+      : failed
+        ? 'bg-destructive'
+        : 'bg-emerald-500/60'
+
+  const cancelButton = pending ? (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            data-network-cancel
+            className={cn(
+              'shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive',
+              mobile ? 'h-8 w-8' : 'h-4 w-4'
+            )}
+            onClick={cancelRequest}
+            aria-label={t('console.cancelRequest')}
+          >
+            <Square className={mobile ? 'h-3.5 w-3.5' : 'h-2.5 w-2.5'} />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="top">{t('console.cancelRequest')}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  ) : null
+
+  const sendButton = !pending ? (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
@@ -167,19 +219,13 @@ export function NetworkEntry({
         <TooltipContent side="top">{t('console.openInHttpClient')}</TooltipContent>
       </Tooltip>
     </TooltipProvider>
-  )
+  ) : null
 
   return (
     <div ref={rootRef} className="group/network min-w-0 flex-1">
       {mobile ? (
         <div className="flex w-full min-w-0 gap-2">
-          <div
-            aria-hidden="true"
-            className={cn(
-              'mt-1 h-8 w-0.5 shrink-0 rounded-full',
-              failed ? 'bg-destructive' : 'bg-emerald-500/60'
-            )}
-          />
+          <div aria-hidden="true" className={cn('mt-1 h-8 w-0.5 shrink-0 rounded-full', accentClass)} />
           <div className="min-w-0 flex-1 space-y-1">
             <div className="flex min-w-0 items-center gap-1.5">
               <ChevronRight
@@ -203,10 +249,11 @@ export function NetworkEntry({
               >
                 {displayPath}
               </span>
+              {cancelButton}
               {sendButton}
             </div>
             <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 pl-5 text-[10px] text-muted-foreground tabular-nums">
-              <span>{details.durationMs.toFixed(0)} ms</span>
+              {!pending ? <span>{details.durationMs.toFixed(0)} ms</span> : null}
               {details.responseSizeBytes !== undefined ? (
                 <span>{formatByteSize(details.responseSizeBytes)}</span>
               ) : null}
@@ -225,13 +272,7 @@ export function NetworkEntry({
         </div>
       ) : (
         <div className="flex w-full min-w-0 items-center gap-1.5">
-          <div
-            aria-hidden="true"
-            className={cn(
-              'h-3.5 w-0.5 shrink-0 rounded-full',
-              failed ? 'bg-destructive' : 'bg-emerald-500/60'
-            )}
-          />
+          <div aria-hidden="true" className={cn('h-3.5 w-0.5 shrink-0 rounded-full', accentClass)} />
 
           <span className="flex shrink-0 items-center gap-1">
             <ChevronRight
@@ -261,14 +302,17 @@ export function NetworkEntry({
             </span>
 
             <div className="flex shrink-0 items-center gap-0.5">
-              <span className="rounded bg-muted/80 px-1.5 py-px text-[10px] text-muted-foreground tabular-nums">
-                {details.durationMs.toFixed(0)} ms
-              </span>
+              {!pending ? (
+                <span className="rounded bg-muted/80 px-1.5 py-px text-[10px] text-muted-foreground tabular-nums">
+                  {details.durationMs.toFixed(0)} ms
+                </span>
+              ) : null}
               {details.responseSizeBytes !== undefined ? (
                 <span className="rounded bg-muted/80 px-1.5 py-px text-[10px] text-muted-foreground tabular-nums">
                   {formatByteSize(details.responseSizeBytes)}
                 </span>
               ) : null}
+              {cancelButton}
               {sendButton}
             </div>
 

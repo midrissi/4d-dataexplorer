@@ -53,6 +53,8 @@ export interface RequestOptions {
   body?: unknown
   params?: QueryOptions | Record<string, unknown>
   timeout?: number
+  /** When aborted, the in-flight fetch is cancelled (distinct from timeout). */
+  signal?: AbortSignal
 }
 
 /**
@@ -135,7 +137,14 @@ export class HttpClient {
     path: string,
     options: RequestOptions = {}
   ): Promise<HttpResponse<T>> {
-    const { method = 'GET', headers = {}, body, params, timeout = this.timeout } = options
+    const {
+      method = 'GET',
+      headers = {},
+      body,
+      params,
+      timeout = this.timeout,
+      signal: externalSignal,
+    } = options
 
     const url = this.buildUrl(path, params)
     const methodUpper = method.toUpperCase()
@@ -161,10 +170,27 @@ export class HttpClient {
       request = await middleware(request)
     }
 
-    // Create abort controller for timeout
+    // Create abort controller for timeout + optional external cancel
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), timeout)
+    let timedOut = false
+    const timeoutId =
+      timeout > 0
+        ? setTimeout(() => {
+            timedOut = true
+            controller.abort()
+          }, timeout)
+        : undefined
     const startedAt = performance.now()
+
+    if (externalSignal) {
+      if (externalSignal.aborted) {
+        controller.abort(externalSignal.reason)
+      } else {
+        externalSignal.addEventListener('abort', () => controller.abort(externalSignal.reason), {
+          once: true,
+        })
+      }
+    }
 
     try {
       let response = await this.fetchFn(request, {
@@ -199,13 +225,16 @@ export class HttpClient {
       }
       if (error instanceof Error) {
         if (error.name === 'AbortError') {
-          throw new RESTClientError('Request timed out', 408)
+          if (timedOut && !externalSignal?.aborted) {
+            throw new TimeoutError()
+          }
+          throw error
         }
         throw new NetworkError(error.message, error)
       }
       throw new NetworkError('Unknown network error')
     } finally {
-      clearTimeout(timeoutId)
+      if (timeoutId !== undefined) clearTimeout(timeoutId)
     }
   }
 
@@ -291,9 +320,10 @@ export class HttpClient {
    */
   async getWithMeta<T>(
     path: string,
-    params?: QueryOptions | Record<string, unknown>
+    params?: QueryOptions | Record<string, unknown>,
+    options?: Pick<RequestOptions, 'timeout' | 'signal' | 'headers'>
   ): Promise<HttpResponse<T>> {
-    return this.executeRequest<T>(path, { method: 'GET', params })
+    return this.executeRequest<T>(path, { method: 'GET', params, ...options })
   }
 
   /**
@@ -313,9 +343,10 @@ export class HttpClient {
   async postWithMeta<T>(
     path: string,
     body?: unknown,
-    params?: QueryOptions | Record<string, unknown>
+    params?: QueryOptions | Record<string, unknown>,
+    options?: Pick<RequestOptions, 'timeout' | 'signal' | 'headers'>
   ): Promise<HttpResponse<T>> {
-    return this.executeRequest<T>(path, { method: 'POST', body, params })
+    return this.executeRequest<T>(path, { method: 'POST', body, params, ...options })
   }
 
   /**

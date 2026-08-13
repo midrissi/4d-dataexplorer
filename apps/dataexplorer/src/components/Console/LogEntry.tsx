@@ -22,6 +22,7 @@ export function LogEntry({
     if (!(target instanceof Element)) return
     if (target.closest('[data-network-details]')) return
     if (target.closest('[data-network-send]')) return
+    if (target.closest('[data-network-cancel]')) return
     setNetworkOpen((current) => !current)
   }
 
@@ -50,6 +51,7 @@ export function LogEntry({
         }}
       >
         <NetworkEntry
+          entryId={entry.id}
           details={entry.network}
           open={networkOpen}
           timestamp={mobile ? entry.timestamp : undefined}
