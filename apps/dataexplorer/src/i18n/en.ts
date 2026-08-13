@@ -1945,6 +1945,7 @@ export const en = {
     copyForSupport: 'Copy for support',
     copied: 'Copied!',
     openInNewTab: 'Open in new tab',
+    openInNewTabModClickHint: '⌘/Ctrl+click to open in a new tab',
     couldntSave: "Couldn't save",
     requiresInternet: 'Requires an internet connection',
   },

@@ -1,6 +1,6 @@
 import { Button, cn, useConfirm } from '@4d/ui'
 import { Download, Star } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { type MouseEvent, useEffect, useMemo, useState } from 'react'
 import { PostmanExportModal } from '~/components/PostmanExport'
 import {
   FavouriteInlineMetaEditor,
@@ -60,7 +60,7 @@ function FavouriteRequestRow({
 }: {
   favourite: HttpRequestFavourite
   editing: boolean
-  onOpen: () => void
+  onOpen: (event: MouseEvent<HTMLButtonElement>) => void
   onRemove: () => void
   onEdit: () => void
   onDuplicate: () => void
@@ -138,7 +138,7 @@ export function HttpRequestFavourites({
   onClose,
 }: {
   favourites: HttpRequestFavourite[]
-  onOpenFavourite: (favourite: HttpRequestFavourite) => void
+  onOpenFavourite: (favourite: HttpRequestFavourite, event: MouseEvent<HTMLButtonElement>) => void
   onRemoveFavourite: (id: string) => void
   onClearFavourites: () => void
   onUpdateFavouriteMeta: (id: string, meta: { name?: string; tags?: string[] }) => void
@@ -235,7 +235,7 @@ export function HttpRequestFavourites({
               key={favourite.id}
               favourite={favourite}
               editing={editingId === favourite.id}
-              onOpen={() => onOpenFavourite(favourite)}
+              onOpen={(event) => onOpenFavourite(favourite, event)}
               onRemove={() => {
                 void confirmRemove(favourite)
               }}

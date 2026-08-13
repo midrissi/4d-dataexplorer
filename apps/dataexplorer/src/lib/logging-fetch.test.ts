@@ -25,7 +25,7 @@ describe('createLoggingFetch', () => {
     const pending = request('https://example.test/rest/items', { method: 'GET' })
     expect(useConsoleStore.getState().entries).toHaveLength(1)
     expect(useConsoleStore.getState().entries[0]?.network?.pending).toBe(true)
-    expect(hasNetworkAbort(useConsoleStore.getState().entries[0]!.id)).toBe(true)
+    expect(hasNetworkAbort(useConsoleStore.getState().entries[0]?.id)).toBe(true)
 
     resolveResponse(
       new Response(JSON.stringify({ ok: true }), {

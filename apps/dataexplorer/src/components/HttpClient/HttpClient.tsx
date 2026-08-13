@@ -40,6 +40,7 @@ import { EmptyPanel } from '~/components/EmptyPanel'
 import { useTemplatedEnvFieldProps } from '~/components/Environments/use-templated-env-field-props'
 import { MobileFullscreenSheet } from '~/components/MobileFullscreenSheet'
 import { PostmanExportModal } from '~/components/PostmanExport'
+import { KeyValueEditor } from '~/components/RequestKeyValue'
 import { RequestResponseSplit } from '~/components/RequestResponseSplit'
 import { SuggestInput } from '~/components/SuggestInput'
 import { useTranslation } from '~/i18n'
@@ -70,6 +71,7 @@ import {
   syncParamsFromPath,
   upsertBuiltInHeaderOverride,
 } from '~/lib/http-client'
+import { isModClick } from '~/lib/mod-click'
 import { getBaseUrl, isDesktop, isMobileShell, onConnectionChange } from '~/lib/platform'
 import {
   httpSeedExportLabel,
@@ -98,7 +100,6 @@ import { HttpRequestFavourites } from './HttpRequestFavourites'
 import { HttpRequestHistory } from './HttpRequestHistory'
 import { HttpResponsePanel } from './HttpResponsePanel'
 import { httpMethodTone, httpRequestLabel } from './http-request-display'
-import { KeyValueEditor } from '~/components/RequestKeyValue'
 
 type RequestTab = 'params' | 'headers' | 'body' | 'settings'
 type SidePanel = 'none' | 'history' | 'favourites'
@@ -291,6 +292,20 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
     setResponse(null)
     setLinkedFavouriteId(favouriteId)
     if (mobile) setMobilePane('request')
+  }
+
+  const openSeededRequest = (
+    nextSeed: HttpClientSeed,
+    favouriteId: string | null,
+    event: { metaKey: boolean; ctrlKey: boolean }
+  ) => {
+    if (isModClick(event)) {
+      useTabsStore.getState().openHttpClientTab(nextSeed)
+      setSidePanel('none')
+      return
+    }
+    applySeed(nextSeed, favouriteId)
+    setSidePanel('none')
   }
 
   const currentOrigin = getBaseUrl().replace(/\/$/, '') || window.location.origin
@@ -676,9 +691,8 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
             {sidePanel === 'favourites' && !mobile ? (
               <HttpRequestFavourites
                 favourites={favourites}
-                onOpenFavourite={(favourite) => {
-                  applySeed(favourite.seed, favourite.id)
-                  setSidePanel('none')
+                onOpenFavourite={(favourite, event) => {
+                  openSeededRequest(favourite.seed, favourite.id, event)
                 }}
                 onRemoveFavourite={removeFavourite}
                 onClearFavourites={clearFavourites}
@@ -692,10 +706,9 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
               <HttpRequestHistory
                 requests={historyRequests}
                 maxCount={historyMaxCount}
-                onOpenRequest={(nextSeed) => {
+                onOpenRequest={(nextSeed, event) => {
                   const match = favourites.find((item) => sameHttpSeed(item.seed, nextSeed))
-                  applySeed(nextSeed, match?.id ?? null)
-                  setSidePanel('none')
+                  openSeededRequest(nextSeed, match?.id ?? null, event)
                 }}
                 onRemoveRequest={removeHistoryRequest}
                 onClearRequests={clearHistoryRequests}
@@ -708,9 +721,8 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
               <MobileFullscreenSheet open labelledBy="http-request-favourites-title">
                 <HttpRequestFavourites
                   favourites={favourites}
-                  onOpenFavourite={(favourite) => {
-                    applySeed(favourite.seed, favourite.id)
-                    setSidePanel('none')
+                  onOpenFavourite={(favourite, event) => {
+                    openSeededRequest(favourite.seed, favourite.id, event)
                   }}
                   onRemoveFavourite={removeFavourite}
                   onClearFavourites={clearFavourites}
@@ -726,10 +738,9 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
                 <HttpRequestHistory
                   requests={historyRequests}
                   maxCount={historyMaxCount}
-                  onOpenRequest={(nextSeed) => {
+                  onOpenRequest={(nextSeed, event) => {
                     const match = favourites.find((item) => sameHttpSeed(item.seed, nextSeed))
-                    applySeed(nextSeed, match?.id ?? null)
-                    setSidePanel('none')
+                    openSeededRequest(nextSeed, match?.id ?? null, event)
                   }}
                   onRemoveRequest={removeHistoryRequest}
                   onClearRequests={clearHistoryRequests}

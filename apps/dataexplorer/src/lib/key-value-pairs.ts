@@ -1,6 +1,6 @@
-import type { HttpKeyValuePair } from '~/store/http-client-types'
 import { resolveEnvTemplates } from '~/lib/env'
 import { mergeUnresolved } from '~/lib/env/runtime'
+import type { HttpKeyValuePair } from '~/store/http-client-types'
 
 /** Enabled pairs with a non-empty key → plain record (last key wins). */
 export function keyValuePairsToRecord(pairs: HttpKeyValuePair[]): Record<string, string> {

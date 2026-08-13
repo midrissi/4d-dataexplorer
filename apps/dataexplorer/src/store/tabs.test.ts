@@ -38,6 +38,14 @@ describe('method executor tabs', () => {
     const tab = useTabsStore.getState().tabs.find((item) => item.id === seeded)
     expect(tab && isMethodExecutorTab(tab) ? tab.seed?.methodName : undefined).toBe('calculate')
   })
+
+  it('forceNew opens another method executor tab instead of reusing', () => {
+    const store = useTabsStore.getState()
+    const first = store.openMethodExecutorTab()
+    const second = store.openMethodExecutorTab(undefined, { forceNew: true })
+    expect(second).not.toBe(first)
+    expect(useTabsStore.getState().tabs.filter(isMethodExecutorTab)).toHaveLength(2)
+  })
 })
 
 describe('http client tabs', () => {
@@ -60,6 +68,14 @@ describe('http client tabs', () => {
     const tab = useTabsStore.getState().tabs.find((item) => item.id === seeded)
     expect(tab && isHttpClientTab(tab) ? tab.seed?.method : undefined).toBe('POST')
     expect(tab && isHttpClientTab(tab) ? tab.seed?.path : undefined).toBe('/rest/Car')
+  })
+
+  it('forceNew opens another http client tab instead of reusing', () => {
+    const store = useTabsStore.getState()
+    const first = store.openHttpClientTab()
+    const second = store.openHttpClientTab(undefined, { forceNew: true })
+    expect(second).not.toBe(first)
+    expect(useTabsStore.getState().tabs.filter(isHttpClientTab)).toHaveLength(2)
   })
 
   it('persists draft seed and still reuses the workspace tab from the menu', () => {

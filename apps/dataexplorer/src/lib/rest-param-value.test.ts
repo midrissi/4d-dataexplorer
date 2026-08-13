@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'bun:test'
-import { restParamValueKind, restParamValueSuggestions } from './http-client'
 import {
   parseListParamTags,
   serializeListParamTags,
 } from '~/components/RequestKeyValue/ListTagsInput'
+import { restParamValueKind, restParamValueSuggestions } from './http-client'
 
 describe('restParamValueKind', () => {
   it('classifies enum, number, list, and text params', () => {

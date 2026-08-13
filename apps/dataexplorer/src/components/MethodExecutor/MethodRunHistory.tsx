@@ -1,5 +1,6 @@
 import { cn } from '@4d/ui'
 import { History } from 'lucide-react'
+import type { MouseEvent } from 'react'
 import {
   formatRelativeTime,
   SavedListBadge,
@@ -25,7 +26,7 @@ function HistoryRunRow({
   onRemove,
 }: {
   run: MethodRunHistoryItem
-  onOpen: () => void
+  onOpen: (event: MouseEvent<HTMLButtonElement>) => void
   onRemove: () => void
 }) {
   const { t } = useTranslation()
@@ -81,7 +82,7 @@ export function MethodRunHistory({
   onClose,
 }: {
   runs: MethodRunHistoryItem[]
-  onOpenRun: (config: MethodExecutorSeed) => void
+  onOpenRun: (config: MethodExecutorSeed, event: MouseEvent<HTMLButtonElement>) => void
   onRemoveRun: (id: string) => void
   onClearRuns: () => void
   onClose: () => void
@@ -111,7 +112,7 @@ export function MethodRunHistory({
         <HistoryRunRow
           key={run.id}
           run={run}
-          onOpen={() => onOpenRun(run.config)}
+          onOpen={(event) => onOpenRun(run.config, event)}
           onRemove={() => onRemoveRun(run.id)}
         />
       ))}

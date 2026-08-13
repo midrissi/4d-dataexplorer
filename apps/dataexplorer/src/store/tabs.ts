@@ -550,12 +550,12 @@ type TabsState = {
   openSettingsTab: (options?: OpenSettingsTabOptions) => void
   openGraphTab: () => Promise<void>
   openStaticTab: (staticId: string) => void
-  openSchemaBuilderTab: () => void
-  openAssistantMetadataTab: () => void
-  openMethodExecutorTab: (seed?: MethodExecutorSeed) => string
-  openHttpClientTab: (seed?: HttpClientSeed) => string
-  openRestExportBuilderTab: () => void
-  openEnvironmentsTab: () => void
+  openSchemaBuilderTab: (options?: { forceNew?: boolean }) => void
+  openAssistantMetadataTab: (options?: { forceNew?: boolean }) => void
+  openMethodExecutorTab: (seed?: MethodExecutorSeed, options?: { forceNew?: boolean }) => string
+  openHttpClientTab: (seed?: HttpClientSeed, options?: { forceNew?: boolean }) => string
+  openRestExportBuilderTab: (options?: { forceNew?: boolean }) => void
+  openEnvironmentsTab: (options?: { forceNew?: boolean }) => void
   /** Called by DataclassGraph when mounted and ready to receive highlight events */
   notifyGraphTabReady: () => void
   closeTab: (tabId: string) => void
@@ -910,15 +910,18 @@ export const useTabsStore = create<TabsState>()(
         },
 
         /**
-         * Opens the Schema Builder tab. If a schema builder tab already exists, activates it.
+         * Opens the Schema Builder tab. If a schema builder tab already exists, activates it
+         * unless `forceNew` is set.
          */
-        openSchemaBuilderTab: () => {
+        openSchemaBuilderTab: (options) => {
           if (isMobileShell()) return
           const { tabs } = get()
-          const existingTab = tabs.find((t) => t.type === 'schema-builder')
-          if (existingTab) {
-            set({ activeTabId: existingTab.id })
-            return
+          if (!options?.forceNew) {
+            const existingTab = tabs.find((t) => t.type === 'schema-builder')
+            if (existingTab) {
+              set({ activeTabId: existingTab.id })
+              return
+            }
           }
 
           const newTab = createSchemaBuilderTab()
@@ -928,14 +931,17 @@ export const useTabsStore = create<TabsState>()(
         },
 
         /**
-         * Opens the Assistant Metadata tab. If one already exists, activates it.
+         * Opens the Assistant Metadata tab. If one already exists, activates it
+         * unless `forceNew` is set.
          */
-        openAssistantMetadataTab: () => {
+        openAssistantMetadataTab: (options) => {
           const { tabs } = get()
-          const existingTab = tabs.find((t) => t.type === 'assistant-metadata')
-          if (existingTab) {
-            set({ activeTabId: existingTab.id })
-            return
+          if (!options?.forceNew) {
+            const existingTab = tabs.find((t) => t.type === 'assistant-metadata')
+            if (existingTab) {
+              set({ activeTabId: existingTab.id })
+              return
+            }
           }
 
           const newTab = createAssistantMetadataTab()
@@ -944,9 +950,9 @@ export const useTabsStore = create<TabsState>()(
           set({ tabs: newTabs, activeTabId: newTab.id })
         },
 
-        openMethodExecutorTab: (seed) => {
+        openMethodExecutorTab: (seed, options) => {
           const { tabs, activeTabId, tabActivationOrder } = get()
-          if (!seed) {
+          if (!seed && !options?.forceNew) {
             const methodTabs = tabs.filter(isMethodExecutorTab)
             const existingBlankTab = methodTabs.find((tab) => tab.seed === undefined)
             // Drafts are persisted onto `seed`; still reuse a workspace tab from the menu.
@@ -971,9 +977,9 @@ export const useTabsStore = create<TabsState>()(
           return newTab.id
         },
 
-        openHttpClientTab: (seed) => {
+        openHttpClientTab: (seed, options) => {
           const { tabs, activeTabId, tabActivationOrder } = get()
-          if (!seed) {
+          if (!seed && !options?.forceNew) {
             const httpTabs = tabs.filter(isHttpClientTab)
             const existingBlankTab = httpTabs.find((tab) => tab.seed === undefined)
             // Drafts are persisted onto `seed`; still reuse a workspace tab from the menu.
@@ -998,12 +1004,14 @@ export const useTabsStore = create<TabsState>()(
           return newTab.id
         },
 
-        openRestExportBuilderTab: () => {
+        openRestExportBuilderTab: (options) => {
           const { tabs } = get()
-          const existingTab = tabs.find((t) => t.type === 'rest-export-builder')
-          if (existingTab) {
-            set({ activeTabId: existingTab.id })
-            return
+          if (!options?.forceNew) {
+            const existingTab = tabs.find((t) => t.type === 'rest-export-builder')
+            if (existingTab) {
+              set({ activeTabId: existingTab.id })
+              return
+            }
           }
 
           const newTab = createRestExportBuilderTab()
@@ -1012,12 +1020,14 @@ export const useTabsStore = create<TabsState>()(
           set({ tabs: newTabs, activeTabId: newTab.id })
         },
 
-        openEnvironmentsTab: () => {
+        openEnvironmentsTab: (options) => {
           const { tabs } = get()
-          const existingTab = tabs.find((t) => t.type === 'environments')
-          if (existingTab) {
-            set({ activeTabId: existingTab.id })
-            return
+          if (!options?.forceNew) {
+            const existingTab = tabs.find((t) => t.type === 'environments')
+            if (existingTab) {
+              set({ activeTabId: existingTab.id })
+              return
+            }
           }
 
           const newTab = createEnvironmentsTab()

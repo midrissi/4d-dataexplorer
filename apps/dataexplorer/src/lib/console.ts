@@ -27,9 +27,11 @@ export const consoleService = {
       network: details,
     }),
   /** Create a pending network row as soon as the request is sent. Returns the entry id. */
-  networkStart: (details: Omit<NetworkDetails, 'pending' | 'cancelled' | 'durationMs'> & {
-    durationMs?: number
-  }): string => {
+  networkStart: (
+    details: Omit<NetworkDetails, 'pending' | 'cancelled' | 'durationMs'> & {
+      durationMs?: number
+    }
+  ): string => {
     const id = createEntryId()
     useConsoleStore.getState().append({
       id,

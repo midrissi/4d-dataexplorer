@@ -3,6 +3,7 @@ import type { LucideIcon } from 'lucide-react'
 import { X } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { EmptyPanel } from '~/components/EmptyPanel'
+import { OpenInNewTabHint } from '~/components/OpenInNewTabHint'
 import { useTranslation } from '~/i18n'
 import { isMobileShell } from '~/lib/platform'
 
@@ -137,14 +138,17 @@ export function SavedListPanel({
           />
         </div>
       ) : (
-        <div
-          className={cn(
-            'overflow-y-auto overscroll-contain bg-background/40',
-            mobile ? 'min-h-0 flex-1' : 'max-h-56'
-          )}
-        >
-          {children}
-        </div>
+        <>
+          <div
+            className={cn(
+              'overflow-y-auto overscroll-contain bg-background/40',
+              mobile ? 'min-h-0 flex-1' : 'max-h-56'
+            )}
+          >
+            {children}
+          </div>
+          <OpenInNewTabHint className="border-border/50 border-t bg-muted/15 px-2 py-1" />
+        </>
       )}
     </div>
   )

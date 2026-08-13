@@ -1,5 +1,13 @@
 import { Button, cn, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@4d/ui'
-import { ChevronRight, ChevronsDownUp, ChevronsUpDown, Loader2, Minus, Send, Square } from 'lucide-react'
+import {
+  ChevronRight,
+  ChevronsDownUp,
+  ChevronsUpDown,
+  Loader2,
+  Minus,
+  Send,
+  Square,
+} from 'lucide-react'
 import {
   type MouseEvent as ReactMouseEvent,
   useLayoutEffect,
@@ -225,7 +233,10 @@ export function NetworkEntry({
     <div ref={rootRef} className="group/network min-w-0 flex-1">
       {mobile ? (
         <div className="flex w-full min-w-0 gap-2">
-          <div aria-hidden="true" className={cn('mt-1 h-8 w-0.5 shrink-0 rounded-full', accentClass)} />
+          <div
+            aria-hidden="true"
+            className={cn('mt-1 h-8 w-0.5 shrink-0 rounded-full', accentClass)}
+          />
           <div className="min-w-0 flex-1 space-y-1">
             <div className="flex min-w-0 items-center gap-1.5">
               <ChevronRight
@@ -272,7 +283,10 @@ export function NetworkEntry({
         </div>
       ) : (
         <div className="flex w-full min-w-0 items-center gap-1.5">
-          <div aria-hidden="true" className={cn('h-3.5 w-0.5 shrink-0 rounded-full', accentClass)} />
+          <div
+            aria-hidden="true"
+            className={cn('h-3.5 w-0.5 shrink-0 rounded-full', accentClass)}
+          />
 
           <span className="flex shrink-0 items-center gap-1">
             <ChevronRight

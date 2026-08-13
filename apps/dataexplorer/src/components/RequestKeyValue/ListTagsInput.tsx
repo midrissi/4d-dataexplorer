@@ -1,5 +1,5 @@
 import { cn } from '@4d/ui'
-import { useRef, useState, type KeyboardEvent } from 'react'
+import { type KeyboardEvent, useRef, useState } from 'react'
 import { TagChip } from '~/components/Tags'
 import { useTranslation } from '~/i18n'
 
@@ -87,7 +87,7 @@ export function ListTagsInput({
     >
       {tags.map((tag, index) => (
         <TagChip
-          key={`${tag.toLowerCase()}-${index}`}
+          key={tag.toLowerCase()}
           tag={tag}
           size="md"
           tone="muted"

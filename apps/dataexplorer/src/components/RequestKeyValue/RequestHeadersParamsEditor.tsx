@@ -47,55 +47,78 @@ export function RequestHeadersParamsEditor({
   ]
 
   return (
-    <div className={cn('space-y-2', className)}>
-      <div className="flex items-center gap-1 overflow-x-auto border-b">
-        {tabs.map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            className={cn(
-              'shrink-0 cursor-pointer whitespace-nowrap border-b-2 text-xs transition-colors',
-              mobile ? 'min-h-11 px-3 py-2.5' : 'px-3 py-1.5',
-              tab === item.id
-                ? 'border-primary font-medium text-foreground'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            )}
-            onClick={() => setTab(item.id)}
-          >
-            {item.label}
-            {item.count > 0 ? ` (${item.count})` : null}
-          </button>
-        ))}
+    <div className={cn('flex flex-col', className)}>
+      <div
+        className={cn(
+          'flex items-center gap-1 overflow-x-auto bg-muted/20 px-1.5',
+          mobile ? 'py-1.5' : 'py-1'
+        )}
+        role="tablist"
+        aria-label={`${t('httpClient.params')} / ${t('httpClient.headers')}`}
+      >
+        {tabs.map((item) => {
+          const active = tab === item.id
+          return (
+            <button
+              key={item.id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              className={cn(
+                'inline-flex shrink-0 items-center gap-1.5 rounded-md px-2.5 font-medium text-[11px] transition-colors',
+                mobile ? 'min-h-9' : 'h-7',
+                active
+                  ? 'bg-background text-foreground shadow-xs ring-1 ring-border/60'
+                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+              )}
+              onClick={() => setTab(item.id)}
+            >
+              {item.label}
+              {item.count > 0 ? (
+                <span
+                  className={cn(
+                    'rounded-full px-1.5 py-px font-mono text-[10px] tabular-nums',
+                    active ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
+                  )}
+                >
+                  {item.count}
+                </span>
+              ) : null}
+            </button>
+          )
+        })}
       </div>
 
-      {tab === 'params' ? (
-        <KeyValueEditor
-          pairs={params}
-          onChange={onParamsChange}
-          keyPlaceholder={t('httpClient.key')}
-          valuePlaceholder={t('httpClient.value')}
-          keySuggestions={REST_QUERY_PARAMS}
-          getValueSuggestions={restParamValueSuggestions}
-          smartParamValues
-          thisRoot={thisRoot}
-          addLabel={t('httpClient.addParam')}
-          emptyTitle={t('httpClient.noParamsTitle')}
-          emptyDescription={t('httpClient.noParamsDescription')}
-        />
-      ) : (
-        <KeyValueEditor
-          pairs={headers}
-          onChange={onHeadersChange}
-          keyPlaceholder={t('httpClient.key')}
-          valuePlaceholder={t('httpClient.value')}
-          keySuggestions={COMMON_REQUEST_HEADERS}
-          valueSuggestions={COMMON_CONTENT_TYPES}
-          thisRoot={thisRoot}
-          addLabel={t('httpClient.addHeader')}
-          emptyTitle={t('httpClient.noHeadersRequestTitle')}
-          emptyDescription={t('httpClient.noHeadersRequestDescription')}
-        />
-      )}
+      <div className="p-2">
+        {tab === 'params' ? (
+          <KeyValueEditor
+            pairs={params}
+            onChange={onParamsChange}
+            keyPlaceholder={t('httpClient.key')}
+            valuePlaceholder={t('httpClient.value')}
+            keySuggestions={REST_QUERY_PARAMS}
+            getValueSuggestions={restParamValueSuggestions}
+            smartParamValues
+            thisRoot={thisRoot}
+            addLabel={t('httpClient.addParam')}
+            emptyTitle={t('httpClient.noParamsTitle')}
+            emptyDescription={t('httpClient.noParamsDescription')}
+          />
+        ) : (
+          <KeyValueEditor
+            pairs={headers}
+            onChange={onHeadersChange}
+            keyPlaceholder={t('httpClient.key')}
+            valuePlaceholder={t('httpClient.value')}
+            keySuggestions={COMMON_REQUEST_HEADERS}
+            valueSuggestions={COMMON_CONTENT_TYPES}
+            thisRoot={thisRoot}
+            addLabel={t('httpClient.addHeader')}
+            emptyTitle={t('httpClient.noHeadersRequestTitle')}
+            emptyDescription={t('httpClient.noHeadersRequestDescription')}
+          />
+        )}
+      </div>
     </div>
   )
 }

@@ -1,5 +1,6 @@
 import { cn, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@4d/ui'
 import { History } from 'lucide-react'
+import type { MouseEvent } from 'react'
 import {
   formatRelativeTime,
   SavedListBadge,
@@ -28,7 +29,7 @@ function HistoryRequestRow({
   onRemove,
 }: {
   item: HttpRequestHistoryItem
-  onOpen: () => void
+  onOpen: (event: MouseEvent<HTMLButtonElement>) => void
   onRemove: () => void
 }) {
   const { t } = useTranslation()
@@ -99,7 +100,7 @@ export function HttpRequestHistory({
 }: {
   requests: HttpRequestHistoryItem[]
   maxCount: number
-  onOpenRequest: (seed: HttpClientSeed) => void
+  onOpenRequest: (seed: HttpClientSeed, event: MouseEvent<HTMLButtonElement>) => void
   onRemoveRequest: (id: string) => void
   onClearRequests: () => void
   onMaxCountChange: (count: number) => void
@@ -152,7 +153,7 @@ export function HttpRequestHistory({
         <HistoryRequestRow
           key={item.id}
           item={item}
-          onOpen={() => onOpenRequest(item.seed)}
+          onOpen={(event) => onOpenRequest(item.seed, event)}
           onRemove={() => onRemoveRequest(item.id)}
         />
       ))}

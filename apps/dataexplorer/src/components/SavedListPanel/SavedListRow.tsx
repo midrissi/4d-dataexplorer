@@ -1,6 +1,6 @@
 import { Button, cn } from '@4d/ui'
 import { Copy, Pencil, Star, Trash2 } from 'lucide-react'
-import type { ReactNode } from 'react'
+import type { MouseEvent, ReactNode } from 'react'
 import { isMobileShell } from '~/lib/platform'
 
 /**
@@ -44,7 +44,7 @@ export function SavedListRow({
   removeLabel?: string
   /** Favourites lists use a filled star; history uses trash. */
   removeMode?: 'trash' | 'star'
-  onOpen: () => void
+  onOpen: (event: MouseEvent<HTMLButtonElement>) => void
 }) {
   const mobile = isMobileShell()
   const hasActions = Boolean(onEdit || onDuplicate || favourite || onRemove)
@@ -163,7 +163,7 @@ export function SavedListRow({
           accentClassName ? 'pl-1.5' : 'pl-0.5',
           mobile && 'min-h-11'
         )}
-        onClick={onOpen}
+        onClick={(event) => onOpen(event)}
         title={primaryTitle}
       >
         {badge}

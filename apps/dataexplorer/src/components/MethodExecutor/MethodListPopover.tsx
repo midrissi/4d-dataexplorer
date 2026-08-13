@@ -14,6 +14,7 @@ import {
 } from '@4d/ui'
 import { ChevronDown, Code2, Play } from 'lucide-react'
 import { EmptyPanel } from '~/components/EmptyPanel'
+import { OpenInNewTabHint } from '~/components/OpenInNewTabHint'
 import { useTranslation } from '~/i18n'
 import {
   mobileMenuCollisionProps,
@@ -21,6 +22,7 @@ import {
   mobileMenuHeaderClass,
   mobileMenuItemClass,
 } from '~/lib/mobile-menu'
+import { isModClick } from '~/lib/mod-click'
 import { isMobileShell } from '~/lib/platform'
 import type { MethodScope } from '~/store/method-executor-types'
 import { useTabsStore } from '~/store/tabs'
@@ -107,17 +109,20 @@ export function MethodListPopover({
                 key={method.id}
                 className={mobile ? mobileMenuItemClass('items-start') : undefined}
                 disabled={needsEntity && !entityKey}
-                onClick={() =>
-                  openMethodExecutorTab({
-                    scope: method.scope,
-                    methodName: method.methodName,
-                    dataClass,
-                    key: method.scope === 'entity' ? (entityKey ?? undefined) : undefined,
-                    entitySetId:
-                      method.scope === 'entitySelection' ? (entitySetId ?? undefined) : undefined,
-                    paramsText: method.paramsText,
-                    allowedOnHTTPGET: method.allowedOnHTTPGET,
-                  })
+                onClick={(event) =>
+                  openMethodExecutorTab(
+                    {
+                      scope: method.scope,
+                      methodName: method.methodName,
+                      dataClass,
+                      key: method.scope === 'entity' ? (entityKey ?? undefined) : undefined,
+                      entitySetId:
+                        method.scope === 'entitySelection' ? (entitySetId ?? undefined) : undefined,
+                      paramsText: method.paramsText,
+                      allowedOnHTTPGET: method.allowedOnHTTPGET,
+                    },
+                    { forceNew: isModClick(event) }
+                  )
                 }
               >
                 <div className="min-w-0">
@@ -131,6 +136,9 @@ export function MethodListPopover({
             )
           })
         )}
+        {visible.length > 0 ? (
+          <OpenInNewTabHint className="border-border/50 border-t px-2 py-1.5" />
+        ) : null}
       </DropdownMenuContent>
     </DropdownMenu>
   )

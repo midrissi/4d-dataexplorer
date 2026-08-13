@@ -1974,6 +1974,7 @@ export const es = {
     copyForSupport: 'Copiar para soporte',
     copied: '¡Copiado!',
     openInNewTab: 'Abrir en una pestaña nueva',
+    openInNewTabModClickHint: '⌘/Ctrl+clic para abrir en una pestaña nueva',
     couldntSave: 'No se pudo guardar',
     requiresInternet: 'Requiere una conexión a Internet',
   },

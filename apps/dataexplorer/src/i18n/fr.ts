@@ -1983,6 +1983,7 @@ export const fr = {
     copyForSupport: 'Copier pour le support',
     copied: 'Copié !',
     openInNewTab: 'Ouvrir dans un nouvel onglet',
+    openInNewTabModClickHint: '⌘/Ctrl+clic pour ouvrir dans un nouvel onglet',
     couldntSave: 'Enregistrement impossible',
     requiresInternet: 'Nécessite une connexion Internet',
   },

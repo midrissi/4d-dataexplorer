@@ -12,6 +12,7 @@ import {
   Variable,
 } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { methodExecutorTabLabel } from '~/components/MethodExecutor/method-list-display'
 import {
   isAssistantMetadataTab,
   isDataclassTab,
@@ -40,9 +41,7 @@ export function getTabDisplayName(tab: Tab, t: TFunction): string {
   if (isSchemaBuilderTab(tab)) return t('tabs.schemaBuilder')
   if (isAssistantMetadataTab(tab)) return t('tabs.assistantMetadata')
   if (isMethodExecutorTab(tab)) {
-    return tab.seed
-      ? `${tab.seed.dataClass ? `${tab.seed.dataClass}.` : ''}${tab.seed.methodName}`
-      : t('tabs.methodExecutor')
+    return methodExecutorTabLabel(tab.seed, t('tabs.methodExecutor'))
   }
   if (isHttpClientTab(tab)) {
     if (tab.seed?.label) return tab.seed.label

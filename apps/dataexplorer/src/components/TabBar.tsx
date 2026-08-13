@@ -31,6 +31,7 @@ import {
   X,
 } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { methodExecutorTabLabel } from '~/components/MethodExecutor/method-list-display'
 import { useTranslation } from '~/i18n'
 import { eventBus } from '~/lib/eventBus'
 import {
@@ -118,11 +119,8 @@ export function TabBar() {
       if (isSchemaBuilderTab(tab)) return t('tabs.schemaBuilder')
       if (isAssistantMetadataTab(tab)) return t('tabs.assistantMetadata')
       if (isMethodExecutorTab(tab)) {
-        if (tab.seed) {
-          return `${tab.seed.dataClass ? `${tab.seed.dataClass}.` : ''}${tab.seed.methodName}`
-        }
-        // Shorter chip label on mobile so more tabs fit in the strip
-        return mobile ? t('tabs.methodExecutorShort') : t('tabs.methodExecutor')
+        const fallback = mobile ? t('tabs.methodExecutorShort') : t('tabs.methodExecutor')
+        return methodExecutorTabLabel(tab.seed, fallback)
       }
       if (isHttpClientTab(tab)) {
         if (tab.seed?.label) return tab.seed.label

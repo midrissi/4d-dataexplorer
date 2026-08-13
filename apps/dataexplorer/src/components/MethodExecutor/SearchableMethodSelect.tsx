@@ -12,14 +12,16 @@ import {
 import { Check, ChevronDown, CircleAlert, Code2, Search } from 'lucide-react'
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { EmptyPanel } from '~/components/EmptyPanel'
+import { OpenInNewTabHint } from '~/components/OpenInNewTabHint'
 import { useTranslation } from '~/i18n'
+import { isModClick } from '~/lib/mod-click'
 import { denseParamsText } from './method-list-display'
 import type { MethodCatalogItem } from './useMethodCatalog'
 
 type SearchableMethodSelectProps = {
   value: string
   methods: MethodCatalogItem[]
-  onChange: (item: MethodCatalogItem) => void
+  onChange: (item: MethodCatalogItem, options?: { forceNew?: boolean }) => void
   /** When true, skip the missing-method error state (catalog still loading). */
   loading?: boolean
 }
@@ -58,8 +60,8 @@ export function SearchableMethodSelect({
       ?.scrollIntoView({ block: 'nearest' })
   }, [activeIndex, filteredMethods.length, listboxId, open])
 
-  const selectMethod = (method: MethodCatalogItem) => {
-    onChange(method)
+  const selectMethod = (method: MethodCatalogItem, options?: { forceNew?: boolean }) => {
+    onChange(method, options)
     setOpen(false)
     setSearch('')
   }
@@ -188,7 +190,7 @@ export function SearchableMethodSelect({
                       role="option"
                       aria-selected={selected}
                       onMouseEnter={() => setActiveIndex(index)}
-                      onClick={() => selectMethod(method)}
+                      onClick={(event) => selectMethod(method, { forceNew: isModClick(event) })}
                       className={cn(
                         'flex h-7 w-full min-w-0 items-center gap-1.5 border-border/60 border-b px-1.5 text-left text-xs last:border-b-0',
                         'hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
@@ -215,6 +217,7 @@ export function SearchableMethodSelect({
                 })
               )}
             </div>
+            <OpenInNewTabHint className="px-1 pt-1.5" />
           </PopoverContent>
         </Popover>
         <TooltipContent side="top" className="w-fit max-w-64 px-2.5 py-1.5">

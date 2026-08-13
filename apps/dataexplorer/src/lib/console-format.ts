@@ -107,9 +107,7 @@ export function isFailedNetwork(
   return details.error !== undefined || (details.status !== undefined && details.status >= 400)
 }
 
-export function isCancelledNetwork(
-  details: Pick<NetworkDetails, 'cancelled'>
-): boolean {
+export function isCancelledNetwork(details: Pick<NetworkDetails, 'cancelled'>): boolean {
   return details.cancelled === true
 }
 

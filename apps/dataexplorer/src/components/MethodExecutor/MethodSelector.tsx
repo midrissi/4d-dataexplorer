@@ -13,7 +13,9 @@ import {
 import { useEffect, useId, useMemo, useState } from 'react'
 import { getDataclassColorClasses } from '~/components/DataclassCustomizeModal'
 import { EmptyPanel } from '~/components/EmptyPanel'
+import { OpenInNewTabHint } from '~/components/OpenInNewTabHint'
 import { useTranslation } from '~/i18n'
+import { isModClick } from '~/lib/mod-click'
 import { isMobileShell } from '~/lib/platform'
 import type { MethodScope } from '~/store/method-executor-types'
 import { useDataclassCustomizations } from '~/store/settings'
@@ -78,7 +80,7 @@ export function MethodSelector({
   catalogLoading: boolean
   catalogError: string | null
   onScopeChange: (scope: MethodScope) => void
-  onChooseMethod: (item: MethodCatalogItem) => void
+  onChooseMethod: (item: MethodCatalogItem, options?: { forceNew?: boolean }) => void
   onClearMethod: () => void
   onDataClassChange: (value: string) => void
   onSingletonNameChange: (value: string) => void
@@ -271,8 +273,8 @@ export function MethodSelector({
                     <button
                       key={method.id}
                       type="button"
-                      onClick={() => {
-                        onChooseMethod(method)
+                      onClick={(event) => {
+                        onChooseMethod(method, { forceNew: isModClick(event) })
                         setSearch('')
                       }}
                       style={colorClasses.style}
@@ -311,6 +313,7 @@ export function MethodSelector({
                 })
               )}
             </div>
+            <OpenInNewTabHint className="px-0.5 pt-1" />
           </>
         ) : (
           <div

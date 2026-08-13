@@ -1,5 +1,5 @@
 import { cn } from '@4d/ui'
-import type { MethodScope } from '~/store/method-executor-types'
+import type { MethodExecutorSeed, MethodScope } from '~/store/method-executor-types'
 import type { MethodResultKind } from '~/store/method-run-history'
 
 export function methodScopeTone(scope: MethodScope): { text: string; bg: string } {
@@ -64,6 +64,20 @@ export function methodArgCountMeta(
 export function cnMethodScopeBadge(scope: MethodScope): string {
   const tone = methodScopeTone(scope)
   return cn(tone.bg, tone.text)
+}
+
+/**
+ * Tab / palette label for a Method Executor tab.
+ * Draft seeds persist with an empty `methodName` — fall back so the chip is never blank.
+ */
+export function methodExecutorTabLabel(
+  seed: MethodExecutorSeed | undefined,
+  fallback: string
+): string {
+  const methodName = seed?.methodName?.trim()
+  if (!methodName) return fallback
+  const target = seed?.scope === 'singleton' ? seed.singletonName?.trim() : seed?.dataClass?.trim()
+  return target ? `${target}.${methodName}` : methodName
 }
 
 /**

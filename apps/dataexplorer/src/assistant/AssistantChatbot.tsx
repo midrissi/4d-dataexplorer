@@ -2,6 +2,7 @@ import { Button, cn, useEscapeToDismiss } from '@4d/ui'
 import { BookText, GripHorizontal, Maximize2, Minimize2, X } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from '~/i18n'
+import { isModClick } from '~/lib/mod-click'
 import { isMobileShell } from '~/lib/platform'
 import { useTabsStore } from '~/store/tabs'
 import './assistant-chatbot.css'
@@ -271,7 +272,7 @@ export function AssistantChatbot({ open, onOpenChange, onLoadingChange }: Assist
               variant="ghost"
               size="icon"
               className="assistant-chatbot__action"
-              onClick={openAssistantMetadataTab}
+              onClick={(event) => openAssistantMetadataTab({ forceNew: isModClick(event) })}
               aria-label={t('layout.assistantMetadataAria')}
             >
               <BookText className="h-3.5 w-3.5" />

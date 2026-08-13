@@ -61,6 +61,7 @@ import {
   mobileMenuContentClass,
   mobileMenuItemClass,
 } from '~/lib/mobile-menu'
+import { isModClick } from '~/lib/mod-click'
 import { isDesktop, isMobileShell } from '~/lib/platform'
 import { getConsoleHeight, setConsoleHeight as saveConsoleHeight } from '~/lib/storage'
 import { useKeyboardShortcutsContext } from '~/providers/KeyboardShortcutsProvider'
@@ -92,6 +93,7 @@ import { KeyboardShortcutsModal } from './KeyboardShortcutsModal'
 import { MobileAppFooter } from './MobileAppFooter'
 import { useMobileCatalog } from './MobileCatalogContext'
 import { OnlineStatusFooterControl } from './OnlineStatusFooterControl'
+import { OpenInNewTabHint } from './OpenInNewTabHint'
 import { ResizableVerticalHandle } from './ResizablePanel'
 import { ViewportWarningFooterControl } from './ViewportWarningFooterControl'
 
@@ -928,26 +930,39 @@ export function Layout({
                 </Tooltip>
               </TooltipProvider>
               <DropdownMenuContent align="end" side="top" className="w-48" collisionPadding={12}>
-                <DropdownMenuItem onClick={openSchemaBuilderTab}>
+                <DropdownMenuItem
+                  onClick={(event) => openSchemaBuilderTab({ forceNew: isModClick(event) })}
+                >
                   <Braces className="mr-2 h-4 w-4" />
                   {t('tabs.schemaBuilder')}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={openAssistantMetadataTab}>
+                <DropdownMenuItem
+                  onClick={(event) => openAssistantMetadataTab({ forceNew: isModClick(event) })}
+                >
                   <BookText className="mr-2 h-4 w-4" />
                   {t('tabs.assistantMetadata')}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => openMethodExecutorTab()}>
+                <DropdownMenuItem
+                  onClick={(event) =>
+                    openMethodExecutorTab(undefined, { forceNew: isModClick(event) })
+                  }
+                >
                   <Play className="mr-2 h-4 w-4" />
                   {t('tabs.methodExecutor')}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => openHttpClientTab()}>
+                <DropdownMenuItem
+                  onClick={(event) => openHttpClientTab(undefined, { forceNew: isModClick(event) })}
+                >
                   <Send className="mr-2 h-4 w-4" />
                   {t('tabs.httpClient')}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={openRestExportBuilderTab}>
+                <DropdownMenuItem
+                  onClick={(event) => openRestExportBuilderTab({ forceNew: isModClick(event) })}
+                >
                   <FileDown className="mr-2 h-4 w-4" />
                   {t('tabs.restExport')}
                 </DropdownMenuItem>
+                <OpenInNewTabHint className="px-2 py-1.5" />
               </DropdownMenuContent>
             </DropdownMenu>
 

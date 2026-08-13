@@ -108,9 +108,7 @@ export function ParamValueField({
                 )}
                 aria-pressed={forceText}
                 aria-label={
-                  forceText
-                    ? t('httpClient.useSmartParamValue')
-                    : t('httpClient.useTextParamValue')
+                  forceText ? t('httpClient.useSmartParamValue') : t('httpClient.useTextParamValue')
                 }
                 onClick={() => onForceTextChange(!forceText)}
               >

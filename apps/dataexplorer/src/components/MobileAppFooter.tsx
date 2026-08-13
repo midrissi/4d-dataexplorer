@@ -33,6 +33,7 @@ import {
   mobileMenuHeaderClass,
   mobileMenuItemClass,
 } from '~/lib/mobile-menu'
+import { isModClick } from '~/lib/mod-click'
 import { useConsoleStore } from '~/store/console'
 import { useSettingsStore } from '~/store/settings'
 import { RELEASE_NOTES_STATIC_ID, useTabsStore } from '~/store/tabs'
@@ -126,22 +127,30 @@ export function MobileAppFooter() {
             </DropdownMenuLabel>
             <DropdownMenuItem
               className={mobileMenuItemClass()}
-              onClick={() => openMethodExecutorTab()}
+              onClick={(event) => openMethodExecutorTab(undefined, { forceNew: isModClick(event) })}
             >
               <Play className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
               {t('tabs.methodExecutor')}
             </DropdownMenuItem>
-            <DropdownMenuItem className={mobileMenuItemClass()} onClick={() => openHttpClientTab()}>
+            <DropdownMenuItem
+              className={mobileMenuItemClass()}
+              onClick={(event) => openHttpClientTab(undefined, { forceNew: isModClick(event) })}
+            >
               <Send className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
               {t('tabs.httpClient')}
             </DropdownMenuItem>
-            <DropdownMenuItem className={mobileMenuItemClass()} onClick={openRestExportBuilderTab}>
+            <DropdownMenuItem
+              className={mobileMenuItemClass()}
+              onClick={(event) => openRestExportBuilderTab({ forceNew: isModClick(event) })}
+            >
               <FileDown className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
               {t('tabs.restExport')}
             </DropdownMenuItem>
             <DropdownMenuItem
               className={mobileMenuItemClass()}
-              onClick={() => useTabsStore.getState().openEnvironmentsTab()}
+              onClick={(event) =>
+                useTabsStore.getState().openEnvironmentsTab({ forceNew: isModClick(event) })
+              }
             >
               <Variable className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
               {t('tabs.environments')}

@@ -17,6 +17,7 @@ import {
   nonemptyKeyValuePairs,
   resolveKeyValuePairs,
 } from '~/lib/key-value-pairs'
+import { isModClick } from '~/lib/mod-click'
 import { isMobileShell } from '~/lib/platform'
 import {
   methodSeedExportLabel,
@@ -33,8 +34,8 @@ import { useMethodFavouritesStore } from '~/store/method-favourites'
 import { useMethodRunHistoryStore } from '~/store/method-run-history'
 import { sameMethodConfig } from '~/store/same-method-config'
 import { useTabsStore } from '~/store/tabs'
-import { MethodAdvancedSection } from './MethodAdvancedSection'
 import { type DetectedMethodResult, detectMethodResult } from './detect-method-result'
+import { MethodAdvancedSection } from './MethodAdvancedSection'
 import { MethodFavourites } from './MethodFavourites'
 import { MethodRunHistory } from './MethodRunHistory'
 import { MethodSelector } from './MethodSelector'
@@ -168,7 +169,21 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
     if (mobile) setMobileStep(config.methodName ? 'args' : 'method')
   }
 
-  const chooseMethod = (item: MethodCatalogItem) => {
+  const chooseMethod = (item: MethodCatalogItem, options?: { forceNew?: boolean }) => {
+    if (options?.forceNew) {
+      useTabsStore.getState().openMethodExecutorTab({
+        scope: item.scope,
+        methodName: item.methodName,
+        dataClass: item.dataClass,
+        singletonName: item.singletonName,
+        key: item.scope === 'entity' ? key || undefined : undefined,
+        entitySetId: item.scope === 'entitySelection' ? entitySetId || undefined : undefined,
+        paramsText: item.paramsText,
+        allowedOnHTTPGET: item.allowedOnHTTPGET,
+        arguments: withPositionalNames(parseParamsText(item.paramsText)),
+      })
+      return
+    }
     const sameTarget =
       item.scope === scope &&
       (item.scope === 'catalog' ||
@@ -196,6 +211,20 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
     setError(null)
     setLinkedFavouriteId(null)
     if (mobile) setMobileStep('args')
+  }
+
+  const openSeededConfig = (
+    config: MethodExecutorSeed,
+    favouriteId: string | null,
+    event: { metaKey: boolean; ctrlKey: boolean }
+  ) => {
+    if (isModClick(event)) {
+      useTabsStore.getState().openMethodExecutorTab(config)
+      setSidePanel('none')
+      return
+    }
+    applyConfig(config, favouriteId)
+    setSidePanel('none')
   }
 
   const clearMethod = () => {
@@ -849,10 +878,9 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
             <MobileFullscreenSheet open labelledBy="method-run-history-title">
               <MethodRunHistory
                 runs={runs}
-                onOpenRun={(config) => {
+                onOpenRun={(config, event) => {
                   const match = favourites.find((item) => sameMethodConfig(item.config, config))
-                  applyConfig(config, match?.id ?? null)
-                  setSidePanel('none')
+                  openSeededConfig(config, match?.id ?? null, event)
                 }}
                 onRemoveRun={removeRun}
                 onClearRuns={clearRuns}
@@ -865,9 +893,8 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
             <MobileFullscreenSheet open labelledBy="method-favourites-title">
               <MethodFavourites
                 favourites={favourites}
-                onOpenFavourite={(favourite) => {
-                  applyConfig(favourite.config, favourite.id)
-                  setSidePanel('none')
+                onOpenFavourite={(favourite, event) => {
+                  openSeededConfig(favourite.config, favourite.id, event)
                 }}
                 onRemoveFavourite={removeFavourite}
                 onClearFavourites={clearFavourites}
@@ -924,9 +951,8 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
             {sidePanel === 'favourites' ? (
               <MethodFavourites
                 favourites={favourites}
-                onOpenFavourite={(favourite) => {
-                  applyConfig(favourite.config, favourite.id)
-                  setSidePanel('none')
+                onOpenFavourite={(favourite, event) => {
+                  openSeededConfig(favourite.config, favourite.id, event)
                 }}
                 onRemoveFavourite={removeFavourite}
                 onClearFavourites={clearFavourites}
@@ -939,10 +965,9 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
             {sidePanel === 'history' ? (
               <MethodRunHistory
                 runs={runs}
-                onOpenRun={(config) => {
+                onOpenRun={(config, event) => {
                   const match = favourites.find((item) => sameMethodConfig(item.config, config))
-                  applyConfig(config, match?.id ?? null)
-                  setSidePanel('none')
+                  openSeededConfig(config, match?.id ?? null, event)
                 }}
                 onRemoveRun={removeRun}
                 onClearRuns={clearRuns}
