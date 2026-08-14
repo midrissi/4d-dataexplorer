@@ -24,7 +24,7 @@ import {
   methodSeedToPostmanItem,
   type PostmanExportItemInput,
 } from '~/lib/postman'
-import type { HttpKeyValuePair } from '~/store/http-client-types'
+import type { HttpClientResponse, HttpKeyValuePair } from '~/store/http-client-types'
 import type {
   MethodExecutorSeed,
   MethodScope,
@@ -34,12 +34,18 @@ import { useMethodFavouritesStore } from '~/store/method-favourites'
 import { useMethodRunHistoryStore } from '~/store/method-run-history'
 import { sameMethodConfig } from '~/store/same-method-config'
 import { useTabsStore } from '~/store/tabs'
+import {
+  createDefaultMethodQueryParams,
+  hasExtraMethodQueryParams,
+  resolveMethodQueryParams,
+} from './default-method-query-params'
 import { type DetectedMethodResult, detectMethodResult } from './detect-method-result'
 import { MethodAdvancedSection } from './MethodAdvancedSection'
 import { MethodFavourites } from './MethodFavourites'
 import { MethodRunHistory } from './MethodRunHistory'
 import { MethodSelector } from './MethodSelector'
 import { flushPendingWrapperText, MethodWrapperEditor } from './MethodWrapperEditor'
+import { methodExecutionErrorResponse, methodRequestUrl } from './method-execution-error'
 import { DEFAULT_METHOD_WRAPPER_TEXT } from './method-json-snippets'
 import { cnMethodScopeBadge, methodScopeShortLabel } from './method-list-display'
 import { type MethodResponseMeta, methodResponseMetaFromCall } from './method-response-meta'
@@ -98,12 +104,14 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
     seed?.wrapperEnabled ?? Boolean(seed?.wrapperText?.trim())
   )
   const [wrapperText, setWrapperText] = useState(seed?.wrapperText ?? DEFAULT_METHOD_WRAPPER_TEXT)
-  const [queryParams, setQueryParams] = useState<HttpKeyValuePair[]>(() => seed?.queryParams ?? [])
+  const [queryParams, setQueryParams] = useState<HttpKeyValuePair[]>(() =>
+    resolveMethodQueryParams(seed?.queryParams)
+  )
   const [headers, setHeaders] = useState<HttpKeyValuePair[]>(() => seed?.headers ?? [])
   const [advancedOpen, setAdvancedOpen] = useState(
     () =>
       Boolean(seed?.wrapperEnabled) ||
-      Boolean(seed?.queryParams?.length) ||
+      hasExtraMethodQueryParams(seed?.queryParams) ||
       Boolean(seed?.headers?.length)
   )
   const [argumentsList, setArgumentsListState] = useState<RuntimeArgument[]>(() =>
@@ -117,7 +125,10 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
   const [result, setResult] = useState<DetectedMethodResult | null>(null)
   const [rawBody, setRawBody] = useState<unknown>(undefined)
   const [responseMeta, setResponseMeta] = useState<MethodResponseMeta | null>(null)
+  /** Pre-flight validation messages under the composer (not execution failures). */
   const [error, setError] = useState<string | null>(null)
+  /** Execution / network failures shown in the result panel (like HTTP Client). */
+  const [errorResponse, setErrorResponse] = useState<HttpClientResponse | null>(null)
   const [executing, setExecuting] = useState(false)
   const abortRef = useRef<AbortController | null>(null)
   const [sidePanel, setSidePanel] = useState<SidePanel>('none')
@@ -153,11 +164,11 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
     setUseGet(config.useGet ?? false)
     setWrapperEnabled(config.wrapperEnabled ?? Boolean(config.wrapperText?.trim()))
     setWrapperText(config.wrapperText ?? DEFAULT_METHOD_WRAPPER_TEXT)
-    setQueryParams(config.queryParams ?? [])
+    setQueryParams(resolveMethodQueryParams(config.queryParams))
     setHeaders(config.headers ?? [])
     setAdvancedOpen(
       Boolean(config.wrapperEnabled) ||
-        Boolean(config.queryParams?.length) ||
+        hasExtraMethodQueryParams(config.queryParams) ||
         Boolean(config.headers?.length)
     )
     setArgumentsList(initialArguments(config))
@@ -165,6 +176,7 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
     setRawBody(undefined)
     setResponseMeta(null)
     setError(null)
+    setErrorResponse(null)
     setLinkedFavouriteId(favouriteId)
     if (mobile) setMobileStep(config.methodName ? 'args' : 'method')
   }
@@ -209,6 +221,7 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
     setRawBody(undefined)
     setResponseMeta(null)
     setError(null)
+    setErrorResponse(null)
     setLinkedFavouriteId(null)
     if (mobile) setMobileStep('args')
   }
@@ -232,6 +245,8 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
     setArgumentsList([])
     setWrapperEnabled(false)
     setWrapperText(DEFAULT_METHOD_WRAPPER_TEXT)
+    setQueryParams(createDefaultMethodQueryParams())
+    setHeaders([])
     setKey('')
     setEntitySetId('')
     setFilter('')
@@ -240,6 +255,7 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
     setRawBody(undefined)
     setResponseMeta(null)
     setError(null)
+    setErrorResponse(null)
     setLinkedFavouriteId(null)
   }
 
@@ -579,46 +595,73 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
       abortRef.current = controller
       setExecuting(true)
       setError(null)
-      const response = await api.callMethod({
-        scope,
-        methodName,
-        dataClass: scope === 'singleton' ? undefined : dataClass || undefined,
-        singletonName: scope === 'singleton' ? singletonName || undefined : undefined,
-        key: resolvedKey.text || undefined,
-        entitySetId: resolvedEntitySetId.text || undefined,
-        filter: resolvedEntitySetId.text.trim() ? undefined : resolvedFilter.text || undefined,
-        orderby: resolvedEntitySetId.text.trim() ? undefined : resolvedOrderby.text || undefined,
-        allowedOnHTTPGET: useGetRequest,
-        params: serializeRuntimeParams(resolvedArgs.argumentsList),
-        wrapper,
-        signal: controller.signal,
-        headers: Object.keys(requestHeaders).length > 0 ? requestHeaders : undefined,
-        query: Object.keys(requestQuery).length > 0 ? requestQuery : undefined,
-      })
-      if (controller.signal.aborted) return
-      const detected = detectMethodResult(response.unwrap(), { webform: response.webform() })
-      setResult(detected)
-      setRawBody(response.body)
-      setResponseMeta(methodResponseMetaFromCall(response))
-      addRun(
+      setErrorResponse(null)
+      setResult(null)
+      setRawBody(undefined)
+      setResponseMeta(null)
+      const startedAt = performance.now()
+      const requestUrl = methodRequestUrl(
         {
-          ...currentConfig(),
-          arguments: args,
-          useGet: useGetRequest,
-          wrapperEnabled: wrapperEnabled || undefined,
-          wrapperText: wrapperEnabled && liveWrapperText.trim() ? liveWrapperText : undefined,
-          queryParams: nonemptyKeyValuePairs(queryParams),
-          headers: nonemptyKeyValuePairs(headers),
+          scope,
+          methodName,
+          dataClass: scope === 'singleton' ? undefined : dataClass || undefined,
+          singletonName: scope === 'singleton' ? singletonName || undefined : undefined,
+          key: resolvedKey.text || undefined,
+          entitySetId: resolvedEntitySetId.text || undefined,
         },
-        detected.kind
+        requestQuery
       )
-      if (mobile) setMobileStep('result')
-    } catch (reason) {
-      if (reason instanceof Error && reason.name === 'AbortError') {
-        setError(t('methodExecutor.executionCancelled'))
-        return
+      try {
+        const response = await api.callMethod({
+          scope,
+          methodName,
+          dataClass: scope === 'singleton' ? undefined : dataClass || undefined,
+          singletonName: scope === 'singleton' ? singletonName || undefined : undefined,
+          key: resolvedKey.text || undefined,
+          entitySetId: resolvedEntitySetId.text || undefined,
+          filter: resolvedEntitySetId.text.trim() ? undefined : resolvedFilter.text || undefined,
+          orderby: resolvedEntitySetId.text.trim() ? undefined : resolvedOrderby.text || undefined,
+          allowedOnHTTPGET: useGetRequest,
+          params: serializeRuntimeParams(resolvedArgs.argumentsList),
+          wrapper,
+          signal: controller.signal,
+          // `$method` lives in Advanced → Params (default entityset); do not re-inject.
+          createEntitySet: false,
+          headers: Object.keys(requestHeaders).length > 0 ? requestHeaders : undefined,
+          query: Object.keys(requestQuery).length > 0 ? requestQuery : undefined,
+        })
+        if (controller.signal.aborted) return
+        const detected = detectMethodResult(response.unwrap(), { webform: response.webform() })
+        setResult(detected)
+        setRawBody(response.body)
+        setResponseMeta(methodResponseMetaFromCall(response))
+        setErrorResponse(null)
+        addRun(
+          {
+            ...currentConfig(),
+            arguments: args,
+            useGet: useGetRequest,
+            wrapperEnabled: wrapperEnabled || undefined,
+            wrapperText: wrapperEnabled && liveWrapperText.trim() ? liveWrapperText : undefined,
+            queryParams: nonemptyKeyValuePairs(queryParams),
+            headers: nonemptyKeyValuePairs(headers),
+          },
+          detected.kind
+        )
+        if (mobile) setMobileStep('result')
+      } catch (reason) {
+        const durationMs = performance.now() - startedAt
+        setResult(null)
+        setRawBody(undefined)
+        setResponseMeta(null)
+        setErrorResponse(
+          methodExecutionErrorResponse(reason, {
+            url: requestUrl,
+            durationMs,
+          })
+        )
+        if (mobile) setMobileStep('result')
       }
-      setError(reason instanceof Error ? reason.message : t('methodExecutor.executionFailed'))
     } finally {
       setExecuting(false)
     }
@@ -764,7 +807,12 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
 
             {mobileStep === 'result' ? (
               <div className="flex h-full min-h-0 flex-col">
-                <ResultPanel result={result} rawBody={rawBody} responseMeta={responseMeta} />
+                <ResultPanel
+                  result={result}
+                  rawBody={rawBody}
+                  responseMeta={responseMeta}
+                  errorResponse={errorResponse}
+                />
               </div>
             ) : null}
           </div>
@@ -1102,7 +1150,12 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
               <p className="text-muted-foreground text-xs">{t('methodExecutor.resultHint')}</p>
             </div>
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-              <ResultPanel result={result} rawBody={rawBody} responseMeta={responseMeta} />
+              <ResultPanel
+                result={result}
+                rawBody={rawBody}
+                responseMeta={responseMeta}
+                errorResponse={errorResponse}
+              />
             </div>
           </>
         }

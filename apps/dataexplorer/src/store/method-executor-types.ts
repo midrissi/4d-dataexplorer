@@ -95,7 +95,10 @@ export type MethodExecutorSeed = {
    * (e.g. `{ "foo": "test" }` → `{ "params": [...], "foo": "test" }`).
    */
   wrapperText?: string
-  /** Extra URL query pairs (same editor as HTTP Client Params). */
+  /**
+   * URL query pairs (same editor as HTTP Client Params).
+   * Defaults to `$method=entityset` when omitted so selection results get an entity set.
+   */
   queryParams?: HttpKeyValuePair[]
   /** Per-request HTTP headers (same editor as HTTP Client custom Headers). */
   headers?: HttpKeyValuePair[]

@@ -31,7 +31,7 @@ export function methodSeedExportLabel(seed: MethodExecutorSeed): string {
   return `ds.${dataClass}.sel(${selKey}).${method}`
 }
 
-function restPathForSeed(seed: MethodExecutorSeed): string {
+export function restPathForSeed(seed: MethodExecutorSeed): string {
   const fn = seed.methodName
   switch (seed.scope) {
     case 'catalog':
@@ -83,8 +83,13 @@ export function methodSeedToPostmanItem(
   const params = serializeParams(seed)
 
   const query: PostmanQueryParam[] = []
-  // Match @4d/rest function callers: create an entity set for selection results by default.
-  query.push({ key: '$method', value: 'entityset' })
+  const seedQueryParams = seed.queryParams ?? []
+  // Legacy seeds without queryParams: match @4d/rest `createEntitySet` default.
+  // When `$method` is present in Params (even disabled), the UI is the source of truth.
+  const hasMethodParam = seedQueryParams.some((pair) => pair.key.trim() === '$method')
+  if (!hasMethodParam) {
+    query.push({ key: '$method', value: 'entityset' })
+  }
 
   const hasEntitySet = Boolean(seed.entitySetId?.trim())
   if (!hasEntitySet) {
@@ -96,7 +101,7 @@ export function methodSeedToPostmanItem(
     query.push({ key: '$params', value: JSON.stringify(params) })
   }
 
-  for (const pair of seed.queryParams ?? []) {
+  for (const pair of seedQueryParams) {
     if (!pair.enabled) continue
     const key = pair.key.trim()
     if (!key) continue

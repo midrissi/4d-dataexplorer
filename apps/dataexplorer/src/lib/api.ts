@@ -1076,6 +1076,11 @@ export const api = {
       signal?: AbortSignal
       headers?: Record<string, string>
       query?: Record<string, string>
+      /**
+       * When false, skip the built-in `$method=entityset` query flag
+       * (Method Executor sends `$method` via Advanced → Params instead).
+       */
+      createEntitySet?: boolean
     }
   ): Promise<FunctionCallResult> => {
     const http = client.getHttpClient()
@@ -1089,6 +1094,7 @@ export const api = {
       signal: input.signal,
       headers: input.headers,
       query: input.query,
+      createEntitySet: input.createEntitySet,
     }
 
     switch (input.scope) {

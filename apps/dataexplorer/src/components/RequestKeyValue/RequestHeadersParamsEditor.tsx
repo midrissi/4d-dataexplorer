@@ -41,18 +41,23 @@ export function RequestHeadersParamsEditor({
   const enabledParams = params.filter((pair) => pair.enabled && pair.key.trim()).length
   const enabledHeaders = headers.filter((pair) => pair.enabled && pair.key.trim()).length
 
-  const tabs: { id: RequestKeyValueTab; label: string; count: number }[] = [
-    { id: 'params', label: t('httpClient.params'), count: enabledParams },
-    { id: 'headers', label: t('httpClient.headers'), count: enabledHeaders },
+  const tabs: { id: RequestKeyValueTab; label: string; count?: number }[] = [
+    {
+      id: 'params',
+      label: t('httpClient.params'),
+      count: enabledParams || undefined,
+    },
+    {
+      id: 'headers',
+      label: t('httpClient.headers'),
+      count: enabledHeaders || undefined,
+    },
   ]
 
   return (
     <div className={cn('flex flex-col', className)}>
       <div
-        className={cn(
-          'flex items-center gap-1 overflow-x-auto bg-muted/20 px-1.5',
-          mobile ? 'py-1.5' : 'py-1'
-        )}
+        className="flex items-center gap-1 overflow-x-auto border-b"
         role="tablist"
         aria-label={`${t('httpClient.params')} / ${t('httpClient.headers')}`}
       >
@@ -65,25 +70,16 @@ export function RequestHeadersParamsEditor({
               role="tab"
               aria-selected={active}
               className={cn(
-                'inline-flex shrink-0 items-center gap-1.5 rounded-md px-2.5 font-medium text-[11px] transition-colors',
-                mobile ? 'min-h-9' : 'h-7',
+                'shrink-0 cursor-pointer whitespace-nowrap border-b-2 text-xs transition-colors',
+                mobile ? 'min-h-11 px-3 py-2.5' : 'px-3 py-1.5',
                 active
-                  ? 'bg-background text-foreground shadow-xs ring-1 ring-border/60'
-                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                  ? 'border-primary font-medium text-foreground'
+                  : 'border-transparent text-muted-foreground hover:text-foreground'
               )}
               onClick={() => setTab(item.id)}
             >
               {item.label}
-              {item.count > 0 ? (
-                <span
-                  className={cn(
-                    'rounded-full px-1.5 py-px font-mono text-[10px] tabular-nums',
-                    active ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'
-                  )}
-                >
-                  {item.count}
-                </span>
-              ) : null}
+              {item.count ? ` (${item.count})` : null}
             </button>
           )
         })}

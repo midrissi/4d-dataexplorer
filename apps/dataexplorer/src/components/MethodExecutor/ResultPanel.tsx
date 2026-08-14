@@ -2,9 +2,12 @@ import { cn } from '@4d/ui'
 import { CodeEditor } from '@4d/ui/code-editor'
 import { FlaskConical, Play, TableProperties } from 'lucide-react'
 import { EmptyPanel } from '~/components/EmptyPanel'
+import { HttpResponseErrorBody } from '~/components/HttpClient/HttpResponseErrorBody'
 import { HttpResponseKeyValueList } from '~/components/HttpClient/HttpResponseKeyValueList'
+import { HttpResponseStatusBar } from '~/components/HttpClient/HttpResponseStatusBar'
 import { useTranslation } from '~/i18n'
 import { isMobileShell } from '~/lib/platform'
+import type { HttpClientResponse } from '~/store/http-client-types'
 import type { DetectedMethodResult } from './detect-method-result'
 import { MethodResponseStatusBar } from './MethodResponseStatusBar'
 import { headerEntriesFromMeta, type MethodResponseMeta } from './method-response-meta'
@@ -16,16 +19,100 @@ export function ResultPanel({
   result,
   rawBody,
   responseMeta,
+  errorResponse,
   selectionTabTitle,
 }: {
   result: DetectedMethodResult | null
   rawBody?: unknown
   responseMeta?: MethodResponseMeta | null
+  /** When set, replaces the success result (same error UI as HTTP Client). */
+  errorResponse?: HttpClientResponse | null
   selectionTabTitle?: string
 }) {
   const { t } = useTranslation()
   const mobile = isMobileShell()
-  const { tab, setTab, bodyView, setBodyView } = useResultPanelView(result)
+  const { tab, setTab, bodyView, setBodyView } = useResultPanelView(result, errorResponse)
+
+  if (errorResponse) {
+    const headerEntries = Object.entries(errorResponse.headers).map(([key, value]) => ({
+      key,
+      value,
+    }))
+    const tabItems = [
+      { id: 'body' as const, label: t('httpClient.responseBody') },
+      {
+        id: 'headers' as const,
+        label: `${t('httpClient.responseHeaders')} (${headerEntries.length})`,
+      },
+    ]
+
+    return (
+      <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden">
+        <div className={cn('shrink-0', mobile ? 'mb-2' : 'mb-3')}>
+          <HttpResponseStatusBar response={errorResponse} />
+        </div>
+        <div
+          className={cn(
+            'mb-2 flex min-h-8 items-end gap-1 border-b',
+            mobile ? 'border-border/60 pb-px' : 'pr-1'
+          )}
+        >
+          <div
+            className={cn(
+              'flex min-w-0 flex-1',
+              mobile ? 'gap-0.5 overflow-x-auto overscroll-x-contain' : ''
+            )}
+            role="tablist"
+            aria-label={t('httpClient.responseTabsAria')}
+          >
+            {tabItems.map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                role="tab"
+                aria-selected={tab === item.id}
+                className={cn(
+                  'cursor-pointer border-b-2 font-medium text-xs transition-colors',
+                  mobile ? 'min-h-9 shrink-0 px-2.5' : '-mb-px px-3 py-1.5',
+                  tab === item.id
+                    ? 'border-primary text-foreground'
+                    : 'border-transparent text-muted-foreground hover:text-foreground'
+                )}
+                onClick={() => setTab(item.id)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          {tab === 'body' ? (
+            <HttpResponseErrorBody response={errorResponse} className="h-full" />
+          ) : (
+            <HttpResponseKeyValueList
+              entries={headerEntries}
+              keyLabel={t('httpClient.key')}
+              valueLabel={t('httpClient.value')}
+              empty={
+                <EmptyPanel
+                  icon={TableProperties}
+                  badgeLabel="0"
+                  badgeTone="muted"
+                  title={t('httpClient.noHeadersTitle')}
+                  description={t('httpClient.noHeaders')}
+                  ghost="rows"
+                  bordered
+                  size="sm"
+                  className="h-full"
+                />
+              }
+            />
+          )}
+        </div>
+      </div>
+    )
+  }
 
   if (!result) {
     return (

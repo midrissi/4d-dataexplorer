@@ -230,6 +230,30 @@ describe('methodSeedToPostmanItem', () => {
     }
   })
 
+  it('uses Advanced Params for $method when present (including disabled)', () => {
+    const withOverride = methodSeedToPostmanItem(
+      {
+        scope: 'catalog',
+        methodName: 'hello',
+        queryParams: [{ id: '1', key: '$method', value: 'release', enabled: true }],
+      },
+      { name: 'hello' }
+    )
+    expect(withOverride.request.url.query?.filter((q) => q.key === '$method')).toEqual([
+      { key: '$method', value: 'release' },
+    ])
+
+    const disabled = methodSeedToPostmanItem(
+      {
+        scope: 'catalog',
+        methodName: 'hello',
+        queryParams: [{ id: '1', key: '$method', value: 'entityset', enabled: false }],
+      },
+      { name: 'hello' }
+    )
+    expect(disabled.request.url.query?.some((q) => q.key === '$method') ?? false).toBe(false)
+  })
+
   it('maps entity GET with $params', () => {
     const item = methodSeedToPostmanItem(
       {
