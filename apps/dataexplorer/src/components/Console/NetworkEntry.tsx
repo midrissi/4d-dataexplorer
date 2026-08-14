@@ -203,7 +203,7 @@ export function NetworkEntry({
     </TooltipProvider>
   ) : null
 
-  const sendButton = !pending ? (
+  const sendButton = (
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
@@ -227,7 +227,7 @@ export function NetworkEntry({
         <TooltipContent side="top">{t('console.openInHttpClient')}</TooltipContent>
       </Tooltip>
     </TooltipProvider>
-  ) : null
+  )
 
   return (
     <div ref={rootRef} className="group/network min-w-0 flex-1">

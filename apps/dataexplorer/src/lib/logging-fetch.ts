@@ -205,6 +205,12 @@ export function createLoggingFetch(inner: typeof fetch): typeof fetch {
         } as { body: unknown | undefined; sizeBytes?: number })
       : readBody(request.clone(), requestContentType)
 
+    // Publish the request payload as soon as its clone is read so pending
+    // entries can inspect and replay the complete request before it settles.
+    void requestBodyPromise.then((requestResult) => {
+      consoleService.networkUpdate(entryId, { requestBody: requestResult.body })
+    })
+
     const settle = (patch: Partial<NetworkDetails>) => {
       unregisterNetworkAbort(entryId)
       consoleService.networkUpdate(entryId, {

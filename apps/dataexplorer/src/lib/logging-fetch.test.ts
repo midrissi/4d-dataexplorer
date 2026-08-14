@@ -45,6 +45,33 @@ describe('createLoggingFetch', () => {
     expect(hasNetworkAbort(entry.id)).toBe(false)
   })
 
+  it('publishes the request body while the request is pending', async () => {
+    let resolveResponse!: (value: Response) => void
+    const inner = mock(
+      () =>
+        new Promise<Response>((resolve) => {
+          resolveResponse = resolve
+        })
+    ) as unknown as typeof fetch
+    const request = createLoggingFetch(inner)
+
+    const pending = request('https://example.test/rest/$catalog/slowMethod', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ params: ['visible while pending'] }),
+    })
+    await flushBodyLogging()
+
+    const network = useConsoleStore.getState().entries[0]?.network
+    expect(network?.pending).toBe(true)
+    expect(network?.requestBody).toEqual({ params: ['visible while pending'] })
+
+    resolveResponse(
+      new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } })
+    )
+    await pending
+  })
+
   it('logs requests, responses, bodies, and redacted headers', async () => {
     const inner = mock(() =>
       Promise.resolve(
