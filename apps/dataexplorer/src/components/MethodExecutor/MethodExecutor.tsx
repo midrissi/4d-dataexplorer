@@ -1,6 +1,16 @@
 import { Button, Checkbox, cn, Label } from '@4d/ui'
-import { ChevronLeft, Clock3, Download, Play, Square, Star } from 'lucide-react'
+import {
+  ChevronLeft,
+  Clock3,
+  Code2,
+  Download,
+  MousePointerClick,
+  Play,
+  Square,
+  Star,
+} from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { EmptyPanel } from '~/components/EmptyPanel'
 import { EnvThisProvider } from '~/components/Environments/env-this-context'
 import { MobileFullscreenSheet } from '~/components/MobileFullscreenSheet'
 import { PostmanExportModal } from '~/components/PostmanExport'
@@ -812,6 +822,7 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
                   rawBody={rawBody}
                   responseMeta={responseMeta}
                   errorResponse={errorResponse}
+                  methodSelected={Boolean(methodName)}
                 />
               </div>
             ) : null}
@@ -1056,20 +1067,42 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
                 onEntitySetIdChange={setEntitySetId}
               />
 
-              <RuntimeArgumentsEditor
-                argumentsList={argumentsList}
-                dataClasses={dataClasses}
-                onChange={setArgumentsList}
-              />
+              {methodName ? (
+                <>
+                  <RuntimeArgumentsEditor
+                    argumentsList={argumentsList}
+                    dataClasses={dataClasses}
+                    onChange={setArgumentsList}
+                  />
 
-              {advancedEditors}
+                  {advancedEditors}
 
-              {error ? (
-                <p className="rounded-md bg-destructive/10 p-3 text-destructive text-sm">{error}</p>
-              ) : null}
+                  {error ? (
+                    <p className="rounded-md bg-destructive/10 p-3 text-destructive text-sm">
+                      {error}
+                    </p>
+                  ) : null}
+                </>
+              ) : (
+                <EmptyPanel
+                  icon={Code2}
+                  badgeIcon={MousePointerClick}
+                  badgeTone="primary"
+                  title={t('methodExecutor.selectMethodTitle')}
+                  description={t('methodExecutor.selectMethodDescription')}
+                  ghost="none"
+                  bordered
+                  size="sm"
+                  className="min-h-0"
+                />
+              )}
 
               <div className="sticky bottom-0 flex items-center justify-between gap-3 border-t bg-background/95 py-2 backdrop-blur">
-                {allowedOnHTTPGET ? (
+                {!methodName ? (
+                  <span className="text-muted-foreground text-xs">
+                    {t('methodExecutor.chooseMethodFirst')}
+                  </span>
+                ) : allowedOnHTTPGET ? (
                   <Label
                     className="flex items-center gap-2 text-xs"
                     title={wrapperEnabled ? t('methodExecutor.wrapperRequiresPost') : undefined}
@@ -1129,10 +1162,15 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
                   ) : (
                     <Button
                       size="sm"
+                      variant={canExecute ? 'default' : 'outline'}
                       className={cn(mobile ? 'h-11 px-4' : 'h-8')}
                       onClick={() => void execute()}
                       disabled={!canExecute}
-                      title={`${t('methodExecutor.execute')} (⌘/Ctrl+Enter)`}
+                      title={
+                        methodName
+                          ? `${t('methodExecutor.execute')} (⌘/Ctrl+Enter)`
+                          : t('methodExecutor.chooseMethodFirst')
+                      }
                     >
                       <Play className="mr-1.5 h-3.5 w-3.5" />
                       {t('methodExecutor.execute')}
@@ -1147,7 +1185,11 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
           <>
             <div className="mb-2 shrink-0">
               <h2 className="font-medium text-sm">{t('methodExecutor.result')}</h2>
-              <p className="text-muted-foreground text-xs">{t('methodExecutor.resultHint')}</p>
+              <p className="text-muted-foreground text-xs">
+                {methodName
+                  ? t('methodExecutor.resultHint')
+                  : t('methodExecutor.chooseMethodFirst')}
+              </p>
             </div>
             <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
               <ResultPanel
@@ -1155,6 +1197,7 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
                 rawBody={rawBody}
                 responseMeta={responseMeta}
                 errorResponse={errorResponse}
+                methodSelected={Boolean(methodName)}
               />
             </div>
           </>

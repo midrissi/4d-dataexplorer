@@ -1,6 +1,6 @@
 import { cn } from '@4d/ui'
 import { CodeEditor } from '@4d/ui/code-editor'
-import { FlaskConical, Play, TableProperties } from 'lucide-react'
+import { Code2, FlaskConical, MousePointerClick, Play, TableProperties } from 'lucide-react'
 import { EmptyPanel } from '~/components/EmptyPanel'
 import { HttpResponseErrorBody } from '~/components/HttpClient/HttpResponseErrorBody'
 import { HttpResponseKeyValueList } from '~/components/HttpClient/HttpResponseKeyValueList'
@@ -20,6 +20,7 @@ export function ResultPanel({
   rawBody,
   responseMeta,
   errorResponse,
+  methodSelected = true,
   selectionTabTitle,
 }: {
   result: DetectedMethodResult | null
@@ -27,6 +28,8 @@ export function ResultPanel({
   responseMeta?: MethodResponseMeta | null
   /** When set, replaces the success result (same error UI as HTTP Client). */
   errorResponse?: HttpClientResponse | null
+  /** False until the user picks a method — changes the empty-state copy. */
+  methodSelected?: boolean
   selectionTabTitle?: string
 }) {
   const { t } = useTranslation()
@@ -115,6 +118,20 @@ export function ResultPanel({
   }
 
   if (!result) {
+    if (!methodSelected) {
+      return (
+        <EmptyPanel
+          icon={Code2}
+          badgeIcon={MousePointerClick}
+          badgeTone="primary"
+          title={t('methodExecutor.emptyResultSelectMethodTitle')}
+          description={t('methodExecutor.emptyResultSelectMethodDescription')}
+          ghost="rows"
+          size="lg"
+          className="h-full min-h-0"
+        />
+      )
+    }
     return (
       <EmptyPanel
         icon={FlaskConical}

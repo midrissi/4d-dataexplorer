@@ -758,6 +758,12 @@ export const fr = {
     emptyResultTitle: 'En attente d’un résultat',
     emptyResultDescription:
       'Exécutez une méthode pour inspecter entités, sélections ou valeurs brutes ici.',
+    selectMethodTitle: 'Sélectionnez une méthode',
+    selectMethodDescription:
+      'Choisissez une méthode dans la liste ci-dessus pour configurer les arguments et l’exécuter.',
+    emptyResultSelectMethodTitle: 'Sélectionnez d’abord une méthode',
+    emptyResultSelectMethodDescription:
+      'Choisissez une méthode dans le panneau de configuration, puis exécutez-la pour voir le résultat ici.',
     notification: 'Notification',
     privilegeStamp: 'Tampon de privilège',
     chooseMethodFirst: "Choisissez d'abord une méthode.",

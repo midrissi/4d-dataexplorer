@@ -758,6 +758,12 @@ export const es = {
     emptyResultTitle: 'Esperando un resultado',
     emptyResultDescription:
       'Ejecute un método para inspeccionar entidades, selecciones o valores en bruto aquí.',
+    selectMethodTitle: 'Seleccione un método',
+    selectMethodDescription:
+      'Elija un método de la lista superior para configurar los argumentos y ejecutarlo.',
+    emptyResultSelectMethodTitle: 'Seleccione primero un método',
+    emptyResultSelectMethodDescription:
+      'Elija un método en el panel de configuración y luego ejecútelo para ver el resultado aquí.',
     notification: 'Notificación',
     privilegeStamp: 'Sello de privilegio',
     chooseMethodFirst: 'Elija primero un método.',

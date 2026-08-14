@@ -746,6 +746,12 @@ export const en = {
     emptyResultTitle: 'Waiting for a result',
     emptyResultDescription:
       'Run a method to inspect entities, selections, or raw values in this panel.',
+    selectMethodTitle: 'Select a method',
+    selectMethodDescription:
+      'Choose a method from the list above to configure arguments and run it.',
+    emptyResultSelectMethodTitle: 'Select a method first',
+    emptyResultSelectMethodDescription:
+      'Pick a method in the configuration panel, then execute it to see the result here.',
     notification: 'Notification',
     privilegeStamp: 'Privilege stamp',
     chooseMethodFirst: 'Choose a method first.',
