@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { syncScreenshotsToDocsPublic } from '../../../scripts/doc-screenshots'
+import { escapeVueMustaches } from './escape-vue-mustaches'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const docsRoot = join(__dirname, '..')
@@ -18,11 +19,6 @@ const RELEASE_NOTES = [
   { file: 'release-notes.fr.md', out: 'fr.md', title: 'Notes de version' },
   { file: 'release-notes.es.md', out: 'es.md', title: 'Notas de la versión' },
 ]
-
-/** Escape `{{…}}` so VitePress/Vue does not treat them as interpolations. */
-function escapeVueMustaches(md: string): string {
-  return md.replaceAll('{{', '&#123;&#123;').replaceAll('}}', '&#125;&#125;')
-}
 
 for (const { file, out, title } of RELEASE_NOTES) {
   const src = join(contentDir, file)

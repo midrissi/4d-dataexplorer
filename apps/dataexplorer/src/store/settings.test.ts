@@ -8,7 +8,9 @@ import {
   formatShortcut,
   getPresetShortcuts,
   getShortcutById,
+  isMacOS,
   mergeShortcutsWithDefaults,
+  platformModLabel,
   SHORTCUT_PRESETS,
   useSettingsStore,
 } from './settings'
@@ -32,6 +34,10 @@ describe('store/settings', () => {
   describe('constants', () => {
     it('DEFAULT_PROFILE_ID is "default"', () => {
       expect(DEFAULT_PROFILE_ID).toBe('default')
+    })
+
+    it('platformModLabel matches isMacOS', () => {
+      expect(platformModLabel()).toBe(isMacOS() ? '⌘' : 'Ctrl')
     })
 
     it('COLOR_PRESETS has expected keys', () => {

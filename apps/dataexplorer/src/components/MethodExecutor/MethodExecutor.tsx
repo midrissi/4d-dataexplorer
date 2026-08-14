@@ -44,6 +44,7 @@ import type {
 import { useMethodFavouritesStore } from '~/store/method-favourites'
 import { useMethodRunHistoryStore } from '~/store/method-run-history'
 import { sameMethodConfig } from '~/store/same-method-config'
+import { platformModLabel } from '~/store/settings'
 import { useTabsStore } from '~/store/tabs'
 import {
   createDefaultMethodQueryParams,
@@ -1182,7 +1183,7 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
                       disabled={!canExecute}
                       title={
                         methodName
-                          ? `${t('methodExecutor.execute')} (⌘/Ctrl+Enter)`
+                          ? `${t('methodExecutor.execute')} (${platformModLabel()}+Enter)`
                           : t('methodExecutor.chooseMethodFirst')
                       }
                     >

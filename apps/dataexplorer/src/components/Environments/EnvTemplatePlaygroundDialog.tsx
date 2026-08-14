@@ -35,6 +35,7 @@ import { useTemplatedEnvFieldProps } from '~/components/Environments/use-templat
 import { useTranslation } from '~/i18n'
 import { resolveEnvString } from '~/lib/env/runtime'
 import { isMobileShell } from '~/lib/platform'
+import { platformModLabel } from '~/store/settings'
 
 type EvalResult = {
   text: string
@@ -180,7 +181,7 @@ export function EnvTemplatePlaygroundDialog({
                   {...envField}
                 />
                 <p className="mt-1.5 px-0.5 text-[10px] text-muted-foreground">
-                  {t('environments.testTemplatesShortcut')}
+                  {t('environments.testTemplatesShortcut', { mod: platformModLabel() })}
                 </p>
               </PlaygroundSection>
 

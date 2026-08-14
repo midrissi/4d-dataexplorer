@@ -90,7 +90,7 @@ import {
 import { useHttpRequestFavouritesStore } from '~/store/http-request-favourites'
 import { useHttpRequestHistoryStore } from '~/store/http-request-history'
 import { sameHttpSeed } from '~/store/same-http-seed'
-import { useCodeEditorPrefs, useUpdateCodeEditorPrefs } from '~/store/settings'
+import { platformModLabel, useCodeEditorPrefs, useUpdateCodeEditorPrefs } from '~/store/settings'
 import { useTabsStore } from '~/store/tabs'
 import { BuiltInHeadersEditor } from './BuiltInHeadersEditor'
 import { CookieJarEditor } from './CookieJarEditor'
@@ -905,7 +905,7 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
                           mobile ? 'h-8 px-3' : 'h-5 px-2'
                         )}
                         disabled={!canSend}
-                        title={`${t('httpClient.send')} (⌘/Ctrl+Enter)`}
+                        title={`${t('httpClient.send')} (${platformModLabel()}+Enter)`}
                         onClick={() => void send()}
                       >
                         <Send className="h-3 w-3" />

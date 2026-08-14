@@ -36,6 +36,11 @@ export function isMacOS(): boolean {
   return /Mac|iPhone|iPod|iPad/i.test(navigator.platform) || /Mac/i.test(navigator.userAgent)
 }
 
+/** Primary chord modifier label for UI hints: ⌘ on Apple, Ctrl elsewhere. */
+export function platformModLabel(): string {
+  return isMacOS() ? '⌘' : 'Ctrl'
+}
+
 /**
  * Get platform-appropriate modifier key
  * Returns { meta: true } for macOS, { ctrl: true } for Windows/Linux
