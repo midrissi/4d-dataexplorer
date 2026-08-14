@@ -16,13 +16,13 @@ import { ChevronDown, Code2, Play } from 'lucide-react'
 import { EmptyPanel } from '~/components/EmptyPanel'
 import { OpenInNewTabHint } from '~/components/OpenInNewTabHint'
 import { useTranslation } from '~/i18n'
+import { methodSeedToHttpSeed } from '~/lib/method-seed-to-http-seed'
 import {
   mobileMenuCollisionProps,
   mobileMenuContentClass,
   mobileMenuHeaderClass,
   mobileMenuItemClass,
 } from '~/lib/mobile-menu'
-import { methodSeedToHttpSeed } from '~/lib/method-seed-to-http-seed'
 import { isModClick, isModShiftClick } from '~/lib/mod-click'
 import { isMobileShell } from '~/lib/platform'
 import type { MethodScope } from '~/store/method-executor-types'

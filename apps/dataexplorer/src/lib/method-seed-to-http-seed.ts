@@ -37,7 +37,11 @@ function resolveWrapper(seed: MethodExecutorSeed): Record<string, unknown> | und
   }
 }
 
-function buildQueryParams(seed: MethodExecutorSeed, useGet: boolean, params: unknown[]): HttpKeyValuePair[] {
+function buildQueryParams(
+  seed: MethodExecutorSeed,
+  useGet: boolean,
+  params: unknown[]
+): HttpKeyValuePair[] {
   const pairs: HttpKeyValuePair[] = []
   const seedQueryParams = seed.queryParams ?? []
   const hasMethodParam = seedQueryParams.some((pair) => pair.key.trim() === '$method')
@@ -56,9 +60,7 @@ function buildQueryParams(seed: MethodExecutorSeed, useGet: boolean, params: unk
   }
 
   if (useGet && params.length > 0) {
-    pairs.push(
-      createKeyValuePair({ key: '$params', value: JSON.stringify(params), enabled: true })
-    )
+    pairs.push(createKeyValuePair({ key: '$params', value: JSON.stringify(params), enabled: true }))
   }
 
   for (const pair of seedQueryParams) {
