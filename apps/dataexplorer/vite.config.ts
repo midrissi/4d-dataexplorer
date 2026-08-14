@@ -9,8 +9,12 @@ const pkg = JSON.parse(readFileSync(path.join(__dirname, 'package.json'), 'utf-8
   version: string
 }
 const backendTarget = process.env.BACKEND_URL || 'http://localhost:7080'
+/** 4D WebFolder that serves HTTP Client sample files (text.txt, PDF.pdf, …). */
+const webFolderTarget = process.env.WEBFOLDER_URL || 'http://localhost'
 
 const proxyPaths = ['/rest', '/login.html', '/js', '/css', '/img', '/api']
+
+type ViteProxyTarget = { target: string; changeOrigin: boolean; secure: boolean }
 
 const proxy = proxyPaths.reduce(
   (acc, proxyPath) => {
@@ -21,8 +25,32 @@ const proxy = proxyPaths.reduce(
     }
     return acc
   },
-  {} as Record<string, { target: string; changeOrigin: boolean; secure: boolean }>
+  {} as Record<string, ViteProxyTarget>
 )
+
+// Docs / e2e HTTP Client response shots GET these via the connected (proxied) origin
+// so they do not depend on a separate custom-origin fetch to the WebFolder host.
+const webFolderSamplePaths = [
+  '/text.txt',
+  '/markdown.md',
+  '/html.html',
+  '/csv.csv',
+  '/CSV.csv',
+  '/pdf.pdf',
+  '/PDF.pdf',
+  '/jpg.png',
+  '/JPG.png',
+  '/rtf.rtf',
+  '/png.png',
+  '/video.mp4',
+]
+for (const samplePath of webFolderSamplePaths) {
+  proxy[samplePath] = {
+    target: webFolderTarget,
+    changeOrigin: true,
+    secure: false,
+  }
+}
 
 export default defineConfig({
   plugins: [react()],

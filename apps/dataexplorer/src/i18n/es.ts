@@ -1981,6 +1981,8 @@ export const es = {
     copied: '¡Copiado!',
     openInNewTab: 'Abrir en una pestaña nueva',
     openInNewTabModClickHint: '⌘/Ctrl+clic para abrir en una pestaña nueva',
+    openInBackgroundModClickHint:
+      '⌘/Ctrl+clic abre en segundo plano · ⌘/Ctrl+Mayús+clic abre en el cliente HTTP',
     couldntSave: 'No se pudo guardar',
     requiresInternet: 'Requiere una conexión a Internet',
   },

@@ -1990,6 +1990,8 @@ export const fr = {
     copied: 'Copié !',
     openInNewTab: 'Ouvrir dans un nouvel onglet',
     openInNewTabModClickHint: '⌘/Ctrl+clic pour ouvrir dans un nouvel onglet',
+    openInBackgroundModClickHint:
+      '⌘/Ctrl+clic ouvre en arrière-plan · ⌘/Ctrl+Maj+clic ouvre dans le client HTTP',
     couldntSave: 'Enregistrement impossible',
     requiresInternet: 'Nécessite une connexion Internet',
   },

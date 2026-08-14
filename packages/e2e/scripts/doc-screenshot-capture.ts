@@ -606,11 +606,7 @@ export async function captureHttpClientScreenshots(
       await app.screenshot('28-http-client-settings')
     }
     // Leave Settings so later response shots show Params (not leftover settings UI).
-    await ctx.page
-      .getByRole('main')
-      .getByRole('button', { name: /^Params$/i })
-      .click()
-    await ctx.page.waitForTimeout(200)
+    await http.openParamsTab()
   }
 
   if (isSelected('29-http-client-response-text')) {

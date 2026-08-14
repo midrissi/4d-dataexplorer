@@ -3,8 +3,9 @@
  * Usage: DATAEXPLORER_URL=http://localhost:3002 bun run ./scripts/capture-http-client-screenshot.ts
  *        bun run ./scripts/capture-http-client-screenshot.ts --mode light 27
  *
- * Response-format screenshots GET sample files from the 4D WebFolder at http://localhost/
- * (e.g. /text.txt, /markdown.md, /PDF.pdf — see apps/base/WebFolder).
+ * Response-format screenshots GET sample files from the connected server.
+ * Vite proxies WebFolder samples (text.txt, markdown.md, …) via WEBFOLDER_URL
+ * (default http://localhost — see apps/base/WebFolder and apps/dataexplorer/vite.config.ts).
  */
 
 import {

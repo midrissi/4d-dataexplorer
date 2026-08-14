@@ -1952,6 +1952,8 @@ export const en = {
     copied: 'Copied!',
     openInNewTab: 'Open in new tab',
     openInNewTabModClickHint: '⌘/Ctrl+click to open in a new tab',
+    openInBackgroundModClickHint:
+      '⌘/Ctrl+click opens in background · ⌘/Ctrl+Shift+click opens in HTTP Client',
     couldntSave: "Couldn't save",
     requiresInternet: 'Requires an internet connection',
   },

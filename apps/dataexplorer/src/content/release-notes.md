@@ -6,7 +6,7 @@
 
 ### Overview
 
-Version `1.4.x` adds **environment variables** (globals, profile, and database layers with `{{templates}}`, pipe filters, and Faker-powered dynamics); adds the **ORDA Terminal** (REPL and Code modes with snippet files) in a shared bottom dock with the Console; adds **REST Export** (Collection v2.1 and OpenAPI 3.1 from the catalog, HTTP Client, and Method Executor); adds **favourites** for HTTP Client and Method Executor; ships **iOS and Android** mobile apps; improves console network previews and image share/save; and polishes mobile HTTP Client and dock UX.
+Version `1.4.x` adds **environment variables** (globals, profile, and database layers with `{{templates}}`, pipe filters, and Faker-powered dynamics); adds the **ORDA Terminal** (REPL and Code modes with snippet files) in a shared bottom dock with the Console; adds **REST Export** (Collection v2.1 and OpenAPI 3.1 from the catalog, HTTP Client, and Method Executor); adds **favourites** for HTTP Client and Method Executor; ships **iOS and Android** mobile apps; improves Method Executor (Advanced params/headers, default `$method=entityset`, result-panel errors, empty states, and mod-click tab shortcuts); improves console network logging (pending request body, open while pending, cancel); and polishes mobile HTTP Client and dock UX.
 
 ### Features
 
@@ -45,9 +45,18 @@ Version `1.4.x` adds **environment variables** (globals, profile, and database l
 - **Touch dock** — Console/Terminal as overlays with larger hit targets; share sheet / Downloads for exports.
 - **Mobile CI** — GitHub Actions builds and uploads mobile release artifacts (including Android signing support).
 
+#### Method Executor
+
+- **Advanced params & headers** — Params and Headers use the same underline tab editor as the HTTP Client; default query param `$method=entityset` is seeded for new method runs (UI is the source of truth for `$method`).
+- **Result-panel errors** — Execution, network, and cancel errors appear in the result panel (status + error body), matching HTTP Client behaviour; validation messages stay under the config pane.
+- **Empty states** — Clear “select a method” guidance in the config and result panes until a method is chosen; Execute stays outline-disabled until then.
+- **Mod-click shortcuts** — `⌘/Ctrl+click` opens a Method Executor tab in the background; `⌘/Ctrl+Shift+click` opens the call in the HTTP Client (method list, favourites, history, and method picker).
+
 #### Console & media
 
 - **Network image preview** — Inline preview for image responses in the console network log.
+- **Pending requests** — Request body is published as soon as the call starts; **Open in HTTP Client** is available while the entry is still pending.
+- **Cancel in-flight requests** — Abort pending network calls from the console when supported.
 - **Share / save** — Share or download binary objects and images via platform-native paths (fixes iOS WKWebView download failures).
 
 #### Favourites & create flows
@@ -61,8 +70,10 @@ Version `1.4.x` adds **environment variables** (globals, profile, and database l
 - **About dialog** — App about information from mobile/desktop chrome.
 - **Panel heights** — Entity list and request panes remember height; console height clamps safely when the viewport size is unknown.
 - **HTTP Client (mobile)** — Responsive request/response summary for narrow screens.
+- **HTTP Client notifications** — Responses containing `__WEBFORM.__NOTIFICATION` display the same typed notification alert and privilege stamp as Method Executor results.
 - **Console URL decoding** — Optional toggle to decode percent-encoded URLs in the network log for easier reading.
 - **Environment switcher** — Footer control refined for clearer active profile / database selection and Manage access.
+- **Shared request editors** — HTTP Client and Method Executor share the Params/Headers key-value editor for consistent Advanced editing.
 
 ### Docs
 
@@ -79,6 +90,8 @@ Version `1.4.x` adds **environment variables** (globals, profile, and database l
 - **Request Docs tab** — Request documentation includes the official 4D REST page markdown, not only a short summary.
 - **Dynamic name / range filters** — Gender and numeric / date bounds on `$faker.*` templates resolve through Faker options.
 - **Docs templates** — Environment guide and home copy render `{{…}}` examples without breaking the VitePress Vue compiler.
+- **Method Executor stale results** — Failed or cancelled runs no longer leave a previous success visible under the config pane; errors replace the result view.
+- **Pending network body** — Console network entries no longer wait for completion before showing the outgoing request body.
 
 ## 1.3.x
 

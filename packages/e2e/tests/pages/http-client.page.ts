@@ -1,7 +1,11 @@
 import { BasePage } from './base.page'
 import { openCommandPaletteShortcut } from './command-palette.page'
 
-/** Sample files served from the connected 4D WebFolder (http://localhost/…). */
+/**
+ * Optional custom origin for WebFolder samples.
+ * Prefer the connected server: Vite proxies sample paths (see apps/dataexplorer/vite.config.ts)
+ * so docs/e2e shots stay same-origin and avoid CORS/custom-host flakes.
+ */
 export const HTTP_CLIENT_SAMPLE_ORIGIN = 'http://localhost'
 
 export class HttpClientPage extends BasePage {
@@ -17,9 +21,14 @@ export class HttpClientPage extends BasePage {
 
   readonly settingsTab = this.page.getByRole('main').getByRole('button', { name: /^Settings$/i })
 
+  readonly paramsTab = this.page.getByRole('main').getByRole('button', { name: /^Params$/i })
+
   readonly historyButton = this.page.getByRole('button', { name: /^History$/i })
 
   readonly responseHeading = this.page.getByRole('heading', { name: /^Response$/i })
+
+  /** Response status chips (status / timing / size / content-type). */
+  readonly responseStatus = this.page.getByRole('status').first()
 
   async openFromToolsMenu(): Promise<void> {
     const tools = this.page.getByRole('button', { name: 'Tools' })
@@ -82,6 +91,12 @@ export class HttpClientPage extends BasePage {
       })
   }
 
+  /** Leave Settings (or any other request tab) and show Params. */
+  async openParamsTab(): Promise<void> {
+    await this.paramsTab.click()
+    await this.pause(300)
+  }
+
   async openHistory(): Promise<void> {
     await this.historyButton.click()
     await this.page
@@ -95,22 +110,35 @@ export class HttpClientPage extends BasePage {
    * Send the current request and wait until the empty response state is gone.
    */
   async send(): Promise<void> {
+    // Close SuggestInput listboxes so they do not intercept the Send click.
+    await this.page.keyboard.press('Escape')
+    await this.pause(100)
     await this.sendButton.waitFor({ state: 'visible', timeout: 5000 })
     if (await this.sendButton.isDisabled()) {
       throw new Error('Send button is disabled — request may be incomplete')
     }
     await this.sendButton.click()
     await this.pause(300)
-    const empty = this.page.getByText(/Waiting for a response|Send a request to see/i)
-    await empty.waitFor({ state: 'hidden', timeout: 30000 })
+    // Title only — the empty description also contains “Send a request to see…”.
+    await this.page
+      .getByText(/^Waiting for a response$/i)
+      .waitFor({ state: 'hidden', timeout: 30000 })
     await this.pause(500)
   }
 
-  /** GET a WebFolder sample from a custom origin (default http://localhost). */
-  async requestSample(path: string, origin = HTTP_CLIENT_SAMPLE_ORIGIN): Promise<void> {
+  /**
+   * GET a WebFolder sample.
+   * Default: connected server (Vite proxies sample paths to WEBFOLDER_URL).
+   * Pass `origin` only when you need a true custom-origin request.
+   */
+  async requestSample(path: string, origin?: string): Promise<void> {
     await this.setMethod('GET')
-    await this.setServer(origin)
+    if (origin) {
+      await this.setServer(origin)
+    }
     await this.setPath(path)
+    await this.page.keyboard.press('Escape')
+    await this.pause(150)
     await this.send()
   }
 
@@ -132,17 +160,19 @@ export class HttpClientPage extends BasePage {
   }
 
   async waitForResponseStatus(status: number | string): Promise<void> {
-    await this.page
+    await this.responseStatus
       .getByText(new RegExp(`^${status}\\b`))
       .first()
       .waitFor({ state: 'visible', timeout: 10000 })
   }
 
   async waitForContentType(fragment: string): Promise<void> {
-    await this.page
+    // Scope to the response status bar so hidden suggestion lists / docs text
+    // containing the same MIME fragment cannot steal `.first()`.
+    await this.responseStatus
       .getByText(new RegExp(fragment, 'i'))
       .first()
-      .waitFor({ state: 'visible', timeout: 10000 })
+      .waitFor({ state: 'visible', timeout: 15000 })
   }
 
   /**

@@ -107,6 +107,7 @@ export function MethodRunHistory({
       emptyTitle={t('methodExecutor.noRunsTitle')}
       emptyDescription={t('methodExecutor.noRunsDescription')}
       onClose={onClose}
+      modClickHintKey="common.openInBackgroundModClickHint"
     >
       {runs.map((run) => (
         <HistoryRunRow

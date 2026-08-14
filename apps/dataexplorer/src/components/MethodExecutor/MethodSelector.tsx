@@ -15,7 +15,7 @@ import { getDataclassColorClasses } from '~/components/DataclassCustomizeModal'
 import { EmptyPanel } from '~/components/EmptyPanel'
 import { OpenInNewTabHint } from '~/components/OpenInNewTabHint'
 import { useTranslation } from '~/i18n'
-import { isModClick } from '~/lib/mod-click'
+import { isModClick, isModShiftClick } from '~/lib/mod-click'
 import { isMobileShell } from '~/lib/platform'
 import type { MethodScope } from '~/store/method-executor-types'
 import { useDataclassCustomizations } from '~/store/settings'
@@ -80,7 +80,10 @@ export function MethodSelector({
   catalogLoading: boolean
   catalogError: string | null
   onScopeChange: (scope: MethodScope) => void
-  onChooseMethod: (item: MethodCatalogItem, options?: { forceNew?: boolean }) => void
+  onChooseMethod: (
+    item: MethodCatalogItem,
+    options?: { forceNew?: boolean; openInHttpClient?: boolean }
+  ) => void
   onClearMethod: () => void
   onDataClassChange: (value: string) => void
   onSingletonNameChange: (value: string) => void
@@ -274,7 +277,10 @@ export function MethodSelector({
                       key={method.id}
                       type="button"
                       onClick={(event) => {
-                        onChooseMethod(method, { forceNew: isModClick(event) })
+                        onChooseMethod(method, {
+                          forceNew: isModClick(event) && !event.shiftKey,
+                          openInHttpClient: isModShiftClick(event),
+                        })
                         setSearch('')
                       }}
                       style={colorClasses.style}
@@ -313,7 +319,10 @@ export function MethodSelector({
                 })
               )}
             </div>
-            <OpenInNewTabHint className="px-0.5 pt-1" />
+            <OpenInNewTabHint
+              className="px-0.5 pt-1"
+              labelKey="common.openInBackgroundModClickHint"
+            />
           </>
         ) : (
           <div

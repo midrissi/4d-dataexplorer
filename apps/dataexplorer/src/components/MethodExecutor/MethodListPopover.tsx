@@ -22,10 +22,13 @@ import {
   mobileMenuHeaderClass,
   mobileMenuItemClass,
 } from '~/lib/mobile-menu'
-import { isModClick } from '~/lib/mod-click'
+import { methodSeedToHttpSeed } from '~/lib/method-seed-to-http-seed'
+import { isModClick, isModShiftClick } from '~/lib/mod-click'
 import { isMobileShell } from '~/lib/platform'
 import type { MethodScope } from '~/store/method-executor-types'
 import { useTabsStore } from '~/store/tabs'
+import { parseParamsText } from './parse-params-text'
+import { withPositionalNames } from './RuntimeArgumentsEditor'
 import { useMethodCatalog } from './useMethodCatalog'
 
 export function MethodListPopover({
@@ -45,6 +48,7 @@ export function MethodListPopover({
   const mobile = isMobileShell()
   const { methods, loading } = useMethodCatalog()
   const openMethodExecutorTab = useTabsStore((state) => state.openMethodExecutorTab)
+  const openHttpClientTab = useTabsStore((state) => state.openHttpClientTab)
   const methodsLabel = t('methodExecutor.methods')
   const visible = methods.filter(
     (method) => method.dataClass === dataClass && scopes.includes(method.scope)
@@ -109,21 +113,27 @@ export function MethodListPopover({
                 key={method.id}
                 className={mobile ? mobileMenuItemClass('items-start') : undefined}
                 disabled={needsEntity && !entityKey}
-                onClick={(event) =>
-                  openMethodExecutorTab(
-                    {
-                      scope: method.scope,
-                      methodName: method.methodName,
-                      dataClass,
-                      key: method.scope === 'entity' ? (entityKey ?? undefined) : undefined,
-                      entitySetId:
-                        method.scope === 'entitySelection' ? (entitySetId ?? undefined) : undefined,
-                      paramsText: method.paramsText,
-                      allowedOnHTTPGET: method.allowedOnHTTPGET,
-                    },
-                    { forceNew: isModClick(event) }
-                  )
-                }
+                onClick={(event) => {
+                  const seed = {
+                    scope: method.scope,
+                    methodName: method.methodName,
+                    dataClass,
+                    key: method.scope === 'entity' ? (entityKey ?? undefined) : undefined,
+                    entitySetId:
+                      method.scope === 'entitySelection' ? (entitySetId ?? undefined) : undefined,
+                    paramsText: method.paramsText,
+                    allowedOnHTTPGET: method.allowedOnHTTPGET,
+                    arguments: withPositionalNames(parseParamsText(method.paramsText)),
+                  }
+                  if (isModShiftClick(event)) {
+                    openHttpClientTab(methodSeedToHttpSeed(seed), { forceNew: true })
+                    return
+                  }
+                  openMethodExecutorTab(seed, {
+                    forceNew: isModClick(event),
+                    activate: !isModClick(event),
+                  })
+                }}
               >
                 <div className="min-w-0">
                   <div className="truncate font-medium">{method.methodName}</div>
@@ -137,7 +147,10 @@ export function MethodListPopover({
           })
         )}
         {visible.length > 0 ? (
-          <OpenInNewTabHint className="border-border/50 border-t px-2 py-1.5" />
+          <OpenInNewTabHint
+            className="border-border/50 border-t px-2 py-1.5"
+            labelKey="common.openInBackgroundModClickHint"
+          />
         ) : null}
       </DropdownMenuContent>
     </DropdownMenu>

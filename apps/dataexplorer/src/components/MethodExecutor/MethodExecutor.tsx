@@ -27,7 +27,8 @@ import {
   nonemptyKeyValuePairs,
   resolveKeyValuePairs,
 } from '~/lib/key-value-pairs'
-import { isModClick } from '~/lib/mod-click'
+import { methodSeedToHttpSeed } from '~/lib/method-seed-to-http-seed'
+import { isModClick, isModShiftClick } from '~/lib/mod-click'
 import { isMobileShell } from '~/lib/platform'
 import {
   methodSeedExportLabel,
@@ -191,19 +192,27 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
     if (mobile) setMobileStep(config.methodName ? 'args' : 'method')
   }
 
-  const chooseMethod = (item: MethodCatalogItem, options?: { forceNew?: boolean }) => {
+  const chooseMethod = (
+    item: MethodCatalogItem,
+    options?: { forceNew?: boolean; openInHttpClient?: boolean }
+  ) => {
+    const seed = {
+      scope: item.scope,
+      methodName: item.methodName,
+      dataClass: item.dataClass,
+      singletonName: item.singletonName,
+      key: item.scope === 'entity' ? key || undefined : undefined,
+      entitySetId: item.scope === 'entitySelection' ? entitySetId || undefined : undefined,
+      paramsText: item.paramsText,
+      allowedOnHTTPGET: item.allowedOnHTTPGET,
+      arguments: withPositionalNames(parseParamsText(item.paramsText)),
+    }
+    if (options?.openInHttpClient) {
+      useTabsStore.getState().openHttpClientTab(methodSeedToHttpSeed(seed), { forceNew: true })
+      return
+    }
     if (options?.forceNew) {
-      useTabsStore.getState().openMethodExecutorTab({
-        scope: item.scope,
-        methodName: item.methodName,
-        dataClass: item.dataClass,
-        singletonName: item.singletonName,
-        key: item.scope === 'entity' ? key || undefined : undefined,
-        entitySetId: item.scope === 'entitySelection' ? entitySetId || undefined : undefined,
-        paramsText: item.paramsText,
-        allowedOnHTTPGET: item.allowedOnHTTPGET,
-        arguments: withPositionalNames(parseParamsText(item.paramsText)),
-      })
+      useTabsStore.getState().openMethodExecutorTab(seed, { forceNew: true, activate: false })
       return
     }
     const sameTarget =
@@ -239,10 +248,15 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
   const openSeededConfig = (
     config: MethodExecutorSeed,
     favouriteId: string | null,
-    event: { metaKey: boolean; ctrlKey: boolean }
+    event: { metaKey: boolean; ctrlKey: boolean; shiftKey: boolean }
   ) => {
+    if (isModShiftClick(event)) {
+      useTabsStore.getState().openHttpClientTab(methodSeedToHttpSeed(config), { forceNew: true })
+      setSidePanel('none')
+      return
+    }
     if (isModClick(event)) {
-      useTabsStore.getState().openMethodExecutorTab(config)
+      useTabsStore.getState().openMethodExecutorTab(config, { forceNew: true, activate: false })
       setSidePanel('none')
       return
     }

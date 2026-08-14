@@ -552,8 +552,14 @@ type TabsState = {
   openStaticTab: (staticId: string) => void
   openSchemaBuilderTab: (options?: { forceNew?: boolean }) => void
   openAssistantMetadataTab: (options?: { forceNew?: boolean }) => void
-  openMethodExecutorTab: (seed?: MethodExecutorSeed, options?: { forceNew?: boolean }) => string
-  openHttpClientTab: (seed?: HttpClientSeed, options?: { forceNew?: boolean }) => string
+  openMethodExecutorTab: (
+    seed?: MethodExecutorSeed,
+    options?: { forceNew?: boolean; activate?: boolean }
+  ) => string
+  openHttpClientTab: (
+    seed?: HttpClientSeed,
+    options?: { forceNew?: boolean; activate?: boolean }
+  ) => string
   openRestExportBuilderTab: (options?: { forceNew?: boolean }) => void
   openEnvironmentsTab: (options?: { forceNew?: boolean }) => void
   /** Called by DataclassGraph when mounted and ready to receive highlight events */
@@ -952,6 +958,7 @@ export const useTabsStore = create<TabsState>()(
 
         openMethodExecutorTab: (seed, options) => {
           const { tabs, activeTabId, tabActivationOrder } = get()
+          const activate = options?.activate !== false
           if (!seed && !options?.forceNew) {
             const methodTabs = tabs.filter(isMethodExecutorTab)
             const existingBlankTab = methodTabs.find((tab) => tab.seed === undefined)
@@ -963,7 +970,7 @@ export const useTabsStore = create<TabsState>()(
                 .find((tab): tab is MethodExecutorTab => Boolean(tab)) ??
               methodTabs[0]
             if (existing) {
-              set({ activeTabId: existing.id })
+              if (activate) set({ activeTabId: existing.id })
               return existing.id
             }
           }
@@ -973,12 +980,13 @@ export const useTabsStore = create<TabsState>()(
           const activeIndex = tabs.findIndex((tab) => tab.id === activeTabId)
           const insertAt = activeIndex >= 0 ? Math.max(activeIndex + 1, pinnedCount) : pinnedCount
           const newTabs = [...tabs.slice(0, insertAt), newTab, ...tabs.slice(insertAt)]
-          set({ tabs: newTabs, activeTabId: newTab.id })
+          set(activate ? { tabs: newTabs, activeTabId: newTab.id } : { tabs: newTabs })
           return newTab.id
         },
 
         openHttpClientTab: (seed, options) => {
           const { tabs, activeTabId, tabActivationOrder } = get()
+          const activate = options?.activate !== false
           if (!seed && !options?.forceNew) {
             const httpTabs = tabs.filter(isHttpClientTab)
             const existingBlankTab = httpTabs.find((tab) => tab.seed === undefined)
@@ -990,7 +998,7 @@ export const useTabsStore = create<TabsState>()(
                 .find((tab): tab is HttpClientTab => Boolean(tab)) ??
               httpTabs[0]
             if (existing) {
-              set({ activeTabId: existing.id })
+              if (activate) set({ activeTabId: existing.id })
               return existing.id
             }
           }
@@ -1000,7 +1008,7 @@ export const useTabsStore = create<TabsState>()(
           const activeIndex = tabs.findIndex((tab) => tab.id === activeTabId)
           const insertAt = activeIndex >= 0 ? Math.max(activeIndex + 1, pinnedCount) : pinnedCount
           const newTabs = [...tabs.slice(0, insertAt), newTab, ...tabs.slice(insertAt)]
-          set({ tabs: newTabs, activeTabId: newTab.id })
+          set(activate ? { tabs: newTabs, activeTabId: newTab.id } : { tabs: newTabs })
           return newTab.id
         },
 

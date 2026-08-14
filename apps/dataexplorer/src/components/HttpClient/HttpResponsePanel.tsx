@@ -276,7 +276,7 @@ export function HttpResponsePanel({ response }: { response: HttpClientResponse |
             <HttpResponseErrorBody response={response} className="h-full" />
           ) : isBinaryBody ? (
             <HttpResponseBinaryBody response={response} className="h-full p-1" />
-          ) : isEntityBody && bodyView === 'preview' && detected ? (
+          ) : (isEntityBody || detected?.webform) && bodyView === 'preview' && detected ? (
             <div className="flex h-full min-h-0 flex-col">
               <ResultPanel result={detected} selectionTabTitle={selectionTabTitle} />
             </div>

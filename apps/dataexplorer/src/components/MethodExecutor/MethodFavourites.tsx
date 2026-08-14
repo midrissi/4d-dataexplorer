@@ -230,6 +230,7 @@ export function MethodFavourites({
         emptyTitle={t('methodExecutor.noFavouritesTitle')}
         emptyDescription={t('methodExecutor.noFavouritesDescription')}
         onClose={onClose}
+        modClickHintKey="common.openInBackgroundModClickHint"
       >
         <FavouriteTagFilterBar tags={allTags} activeTag={activeTag} onChange={setActiveTag} />
         {visible.length === 0 && favourites.length > 0 ? (

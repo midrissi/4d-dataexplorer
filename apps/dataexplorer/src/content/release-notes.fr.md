@@ -6,7 +6,7 @@
 
 ### Aperçu
 
-La version `1.4.x` ajoute les **variables d'environnement** (couches globales, profil et base avec `{{templates}}`, filtres pipe et dynamiques Faker) ; ajoute le **terminal ORDA** (modes REPL et Code avec fichiers snippets) dans un dock bas partagé avec la Console ; ajoute **l’export REST** (collection v2.1 et OpenAPI 3.1 depuis le catalogue, le Client HTTP et l’Exécuteur de méthodes) ; ajoute les **favoris** pour le Client HTTP et l’Exécuteur de méthodes ; publie les applications **iOS et Android** ; améliore les aperçus réseau de la console et le partage/enregistrement d'images ; et peaufine l'expérience mobile (Client HTTP et dock).
+La version `1.4.x` ajoute les **variables d'environnement** (couches globales, profil et base avec `{{templates}}`, filtres pipe et dynamiques Faker) ; ajoute le **terminal ORDA** (modes REPL et Code avec fichiers snippets) dans un dock bas partagé avec la Console ; ajoute **l’export REST** (collection v2.1 et OpenAPI 3.1 depuis le catalogue, le Client HTTP et l’Exécuteur de méthodes) ; ajoute les **favoris** pour le Client HTTP et l’Exécuteur de méthodes ; publie les applications **iOS et Android** ; améliore l’Exécuteur de méthodes (params/en-têtes Advanced, `$method=entityset` par défaut, erreurs dans le panneau résultat, états vides, raccourcis mod-clic) ; améliore le journal réseau de la console (corps pendant le pending, ouverture pendant le pending, annulation) ; et peaufine l'expérience mobile (Client HTTP et dock).
 
 ### Fonctionnalités
 
@@ -45,9 +45,18 @@ La version `1.4.x` ajoute les **variables d'environnement** (couches globales, p
 - **Dock tactile** — Console/Terminal en overlay avec cibles plus grandes ; feuille de partage / Téléchargements pour les exports.
 - **CI mobile** — GitHub Actions construit et publie les artefacts mobile (signature Android incluse).
 
+#### Exécuteur de méthodes
+
+- **Params et en-têtes Advanced** — Les onglets Params et Headers reprennent l’éditeur souligné du Client HTTP ; le paramètre de requête `$method=entityset` est prérempli pour les nouveaux appels (l’UI fait foi pour `$method`).
+- **Erreurs dans le panneau résultat** — Les erreurs d’exécution, réseau et annulation s’affichent dans le panneau résultat (statut + corps d’erreur), comme dans le Client HTTP ; les messages de validation restent sous la configuration.
+- **États vides** — Messages « sélectionnez une méthode » clairs dans les volets configuration et résultat tant qu’aucune méthode n’est choisie ; Exécuter reste désactivé (style outline) jusque-là.
+- **Raccourcis mod-clic** — `⌘/Ctrl+clic` ouvre un onglet Exécuteur de méthodes en arrière-plan ; `⌘/Ctrl+Maj+clic` ouvre l’appel dans le Client HTTP (liste, favoris, historique et sélecteur de méthodes).
+
 #### Console et médias
 
 - **Aperçu d'image réseau** — Prévisualisation inline des réponses image dans le journal réseau.
+- **Requêtes en cours** — Le corps de la requête est publié dès le démarrage de l’appel ; **Ouvrir dans le Client HTTP** est disponible tant que l’entrée est encore pending.
+- **Annulation des requêtes** — Interrompez les appels réseau en cours depuis la console lorsque c’est pris en charge.
 - **Partage / enregistrement** — Partage ou téléchargement des objets binaires et images via les chemins natifs (corrige les échecs de téléchargement WKWebView iOS).
 
 #### Favoris et création
@@ -61,8 +70,10 @@ La version `1.4.x` ajoute les **variables d'environnement** (couches globales, p
 - **À propos** — Dialogue d'informations depuis le chrome mobile/desktop.
 - **Hauteurs de panneaux** — Liste d'entités et volets de requête mémorisent la hauteur ; hauteur console bornée si le viewport est inconnu.
 - **Client HTTP (mobile)** — Résumé requête/réponse adapté aux écrans étroits.
+- **Notifications du Client HTTP** — Les réponses contenant `__WEBFORM.__NOTIFICATION` affichent la même alerte typée et le même stamp de privilège que les résultats de l’Exécuteur de méthodes.
 - **Décodage d'URL console** — Option pour décoder les URL percent-encoded dans le journal réseau.
 - **Sélecteur d'environnement** — Contrôle du pied de page affiné pour le profil / la base actifs et l'accès à Gérer.
+- **Éditeurs de requête partagés** — Le Client HTTP et l’Exécuteur de méthodes partagent l’éditeur clé/valeur Params/Headers pour une édition Advanced cohérente.
 
 ### Documentation
 
@@ -79,6 +90,8 @@ La version `1.4.x` ajoute les **variables d'environnement** (couches globales, p
 - **Onglet Docs de la collection** — La documentation de chaque requête reprend le markdown officiel 4D REST, pas seulement un résumé.
 - **Filtres dynamiques** — Genre et bornes numériques / dates sur `$faker.*` passent par les options Faker.
 - **Templates docs** — Le guide Environnements et l'accueil affichent les exemples `{{…}}` sans casser le compilateur Vue de VitePress.
+- **Résultats obsolètes Exécuteur** — Un échec ou une annulation ne laisse plus un succès précédent sous la configuration ; les erreurs remplacent la vue résultat.
+- **Corps réseau pending** — Les entrées console n’attendent plus la fin de l’appel pour afficher le corps de requête sortant.
 
 ## 1.3.x
 

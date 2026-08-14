@@ -46,6 +46,18 @@ describe('method executor tabs', () => {
     expect(second).not.toBe(first)
     expect(useTabsStore.getState().tabs.filter(isMethodExecutorTab)).toHaveLength(2)
   })
+
+  it('can open a seeded method tab without activating it', () => {
+    const store = useTabsStore.getState()
+    const current = store.openMethodExecutorTab()
+    const background = store.openMethodExecutorTab(
+      { scope: 'catalog', methodName: 'justATest' },
+      { forceNew: true, activate: false }
+    )
+    expect(background).not.toBe(current)
+    expect(useTabsStore.getState().activeTabId).toBe(current)
+    expect(useTabsStore.getState().tabs.some((tab) => tab.id === background)).toBe(true)
+  })
 })
 
 describe('http client tabs', () => {

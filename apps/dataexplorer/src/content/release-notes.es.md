@@ -6,7 +6,7 @@
 
 ### Resumen
 
-La versión `1.4.x` añade **variables de entorno** (capas globales, perfil y base con `{{templates}}`, filtros pipe y dinámicas Faker); añade el **terminal ORDA** (modos REPL y Código con archivos snippet) en un dock inferior compartido con la Consola; añade **exportación REST** (colección v2.1 y OpenAPI 3.1 desde el catálogo, el Cliente HTTP y el Ejecutor de métodos); añade **favoritos** para el Cliente HTTP y el Ejecutor de métodos; publica las apps **iOS y Android**; mejora las vistas previas de red en la consola y el compartir/guardar imágenes; y pule la UX móvil (Cliente HTTP y dock).
+La versión `1.4.x` añade **variables de entorno** (capas globales, perfil y base con `{{templates}}`, filtros pipe y dinámicas Faker); añade el **terminal ORDA** (modos REPL y Código con archivos snippet) en un dock inferior compartido con la Consola; añade **exportación REST** (colección v2.1 y OpenAPI 3.1 desde el catálogo, el Cliente HTTP y el Ejecutor de métodos); añade **favoritos** para el Cliente HTTP y el Ejecutor de métodos; publica las apps **iOS y Android**; mejora el Ejecutor de métodos (params/cabeceras Advanced, `$method=entityset` por defecto, errores en el panel de resultado, estados vacíos y atajos mod-clic); mejora el registro de red de la consola (cuerpo en pending, abrir mientras pending, cancelar); y pule la UX móvil (Cliente HTTP y dock).
 
 ### Funciones
 
@@ -45,9 +45,18 @@ La versión `1.4.x` añade **variables de entorno** (capas globales, perfil y ba
 - **Dock táctil** — Consola/Terminal como overlay con objetivos más grandes; hoja de compartir / Descargas para exportaciones.
 - **CI móvil** — GitHub Actions construye y publica artefactos móviles (incluida la firma Android).
 
+#### Ejecutor de métodos
+
+- **Params y cabeceras Advanced** — Params y Headers usan el mismo editor con pestañas subrayadas que el Cliente HTTP; el parámetro de consulta `$method=entityset` se rellena por defecto en nuevas ejecuciones (la UI es la fuente de verdad para `$method`).
+- **Errores en el panel de resultado** — Errores de ejecución, red y cancelación aparecen en el panel de resultado (estado + cuerpo de error), como en el Cliente HTTP; los mensajes de validación permanecen bajo la configuración.
+- **Estados vacíos** — Indicaciones claras de «seleccione un método» en los paneles de configuración y resultado hasta elegir un método; Ejecutar permanece deshabilitado (estilo outline) hasta entonces.
+- **Atajos mod-clic** — `⌘/Ctrl+clic` abre una pestaña del Ejecutor de métodos en segundo plano; `⌘/Ctrl+Mayús+clic` abre la llamada en el Cliente HTTP (lista, favoritos, historial y selector de métodos).
+
 #### Consola y medios
 
 - **Vista previa de imagen de red** — Vista previa en línea de respuestas de imagen en el registro de red.
+- **Peticiones en curso** — El cuerpo de la petición se publica en cuanto arranca la llamada; **Abrir en Cliente HTTP** está disponible mientras la entrada sigue pending.
+- **Cancelar peticiones** — Aborte llamadas de red en curso desde la consola cuando esté admitido.
 - **Compartir / guardar** — Comparta o descargue objetos binarios e imágenes por rutas nativas (corrige fallos de descarga WKWebView en iOS).
 
 #### Favoritos y creación
@@ -61,8 +70,10 @@ La versión `1.4.x` añade **variables de entorno** (capas globales, perfil y ba
 - **Acerca de** — Diálogo de información desde el chrome móvil/escritorio.
 - **Alturas de paneles** — La lista de entidades y paneles de petición recuerdan la altura; la altura de la consola se limita si el viewport es desconocido.
 - **Cliente HTTP (móvil)** — Resumen de petición/respuesta adaptado a pantallas estrechas.
+- **Notificaciones del Cliente HTTP** — Las respuestas que contienen `__WEBFORM.__NOTIFICATION` muestran la misma alerta tipada y el mismo sello de privilegio que los resultados del Ejecutor de métodos.
 - **Decodificación de URL en consola** — Opción para decodificar URLs percent-encoded en el registro de red.
 - **Conmutador de entorno** — Control del pie refinado para el perfil / base activos y el acceso a Gestionar.
+- **Editores de petición compartidos** — El Cliente HTTP y el Ejecutor de métodos comparten el editor clave/valor Params/Headers para una edición Advanced coherente.
 
 ### Documentación
 
@@ -79,6 +90,8 @@ La versión `1.4.x` añade **variables de entorno** (capas globales, perfil y ba
 - **Pestaña Docs de la colección** — La documentación de cada petición incluye el markdown oficial de 4D REST, no solo un resumen.
 - **Filtros dinámicos** — Género y rangos numéricos / de fecha en `$faker.*` se resuelven con opciones Faker.
 - **Plantillas en docs** — La guía de entornos y la portada muestran ejemplos `{{…}}` sin romper el compilador Vue de VitePress.
+- **Resultados obsoletos del Ejecutor** — Un fallo o cancelación ya no deja un éxito anterior bajo la configuración; los errores sustituyen la vista de resultado.
+- **Cuerpo de red en pending** — Las entradas de consola ya no esperan a que termine la llamada para mostrar el cuerpo de petición saliente.
 
 ## 1.3.x
 

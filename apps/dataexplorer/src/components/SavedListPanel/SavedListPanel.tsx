@@ -34,6 +34,7 @@ export function SavedListPanel({
   onClose,
   children,
   className,
+  modClickHintKey,
 }: {
   icon: LucideIcon
   title: string
@@ -50,6 +51,8 @@ export function SavedListPanel({
   onClose: () => void
   children: ReactNode
   className?: string
+  /** Override footer mod-click hint (e.g. Method Executor background + HTTP Client). */
+  modClickHintKey?: string
 }) {
   const { t } = useTranslation()
   const { confirm, ConfirmDialog } = useConfirm()
@@ -147,7 +150,10 @@ export function SavedListPanel({
           >
             {children}
           </div>
-          <OpenInNewTabHint className="border-border/50 border-t bg-muted/15 px-2 py-1" />
+          <OpenInNewTabHint
+            className="border-border/50 border-t bg-muted/15 px-2 py-1"
+            labelKey={modClickHintKey}
+          />
         </>
       )}
     </div>
