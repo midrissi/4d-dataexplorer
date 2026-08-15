@@ -52,7 +52,7 @@ Supported parsers match the export registry where implemented (JSON family, CSV/
 
 **Anonymize** replaces mapped fields with synthetic data (or fixed values) using the same template engine as [Create entity](./browsing#create-entity) and [Environment variables](./environments):
 
-- **Field mapping** — add, change, or remove rows; per attribute: **Faker** (`{{$faker… | filters}}`), **Fixed value**, **Keep**, or **Empty**. **Restore defaults** rebuilds the plan from the dataclass schema
+- **Field mapping** — add, change, or remove rows; per attribute: **Faker** (<code>&#123;&#123;$faker… | filters&#125;&#125;</code>), **Fixed value**, **Keep**, or **Empty**. **Restore defaults** rebuilds the plan from the dataclass schema
 - **Remove fields** — drop a row from the mapping so that attribute is **not** included in download, import-as-new, or in-place update payloads
 - **Seed** — optional Faker seed for reproducible dumps
 - **Preview** — same multi-mode viewer as the HTTP Client (Code / HTML / Markdown / JSON / CSV), with auto-detected default from the chosen export format
@@ -65,4 +65,4 @@ Actions:
 | **Import as new** | Create new records from the anonymized mapping |
 | **Anonymize existing** | Overwrite mapped fields on the **current entity set** (confirmation required; sends `__KEY` / `__STAMP` plus changed fields only) |
 
-Templates support pipe filters (for example `{{$faker.internet.username | lower}}`) and autocomplete, consistent with create-entity templating.
+Templates support pipe filters (for example <code>&#123;&#123;$faker.internet.username | lower&#125;&#125;</code>) and autocomplete, consistent with create-entity templating.
