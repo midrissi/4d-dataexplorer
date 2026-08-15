@@ -99,6 +99,3 @@ export function format(urlObject: UrlObject | string): string {
   const hash = urlObject.hash || ''
   return `${protocol}//${auth}${host}${pathname}${search}${hash}`
 }
-
-const url = { parse, format }
-export default url

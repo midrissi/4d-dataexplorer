@@ -3,6 +3,11 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
+import {
+  copyAsNodeShimsAliases,
+  httpsnippetOptimizeDeps,
+  httpsnippetWebkitPlugin,
+} from './vite.copy-as'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const pkg = JSON.parse(readFileSync(path.join(__dirname, 'package.json'), 'utf-8')) as {
@@ -53,7 +58,7 @@ for (const samplePath of webFolderSamplePaths) {
 }
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), httpsnippetWebkitPlugin()],
   envPrefix: ['VITE_'],
   base: '/dataexplorer/',
   define: {
@@ -91,26 +96,7 @@ export default defineConfig({
         replacement: path.resolve(__dirname, '../../packages/base64-decoder/src/index.ts'),
       },
       { find: '~', replacement: path.resolve(__dirname, './src') },
-      {
-        find: 'event-stream',
-        replacement: path.resolve(__dirname, './src/lib/copy-as/shims/event-stream.ts'),
-      },
-      {
-        find: /^url$/,
-        replacement: path.resolve(__dirname, './src/lib/copy-as/shims/url.ts'),
-      },
-      {
-        find: /^querystring$/,
-        replacement: path.resolve(__dirname, './src/lib/copy-as/shims/querystring.ts'),
-      },
-      {
-        find: 'form-data/lib/form_data',
-        replacement: path.resolve(__dirname, './src/lib/copy-as/shims/form-data.ts'),
-      },
-      {
-        find: /^form-data$/,
-        replacement: path.resolve(__dirname, './src/lib/copy-as/shims/form-data.ts'),
-      },
+      ...copyAsNodeShimsAliases(),
     ],
   },
   // Patched packages — do not serve a stale prebundle that ignores
@@ -119,8 +105,10 @@ export default defineConfig({
   // Pre-bundle monaco-editor so opening Terminal does not trigger a mid-session
   // optimizeDeps reload (can OOM / Aw-Snap the tab).
   optimizeDeps: {
-    include: ['monaco-editor', 'httpsnippet'],
+    include: ['monaco-editor', ...httpsnippetOptimizeDeps.include],
     exclude: ['@monaco-editor/react', '@4d/base64-decoder'],
+    needsInterop: httpsnippetOptimizeDeps.needsInterop,
+    rolldownOptions: httpsnippetOptimizeDeps.rolldownOptions,
   },
   assetsInclude: ['**/*.wasm'],
   server: {

@@ -31,6 +31,3 @@ export function parse(input: string): Record<string, string | string[]> {
   })
   return query
 }
-
-const querystring = { stringify, parse }
-export default querystring

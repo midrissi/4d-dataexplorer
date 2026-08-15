@@ -3,6 +3,11 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
+import {
+  copyAsNodeShimsAliases,
+  httpsnippetOptimizeDeps,
+  httpsnippetWebkitPlugin,
+} from '../dataexplorer/vite.copy-as'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const pkg = JSON.parse(readFileSync(path.join(__dirname, 'package.json'), 'utf-8')) as {
@@ -12,7 +17,7 @@ const pkg = JSON.parse(readFileSync(path.join(__dirname, 'package.json'), 'utf-8
 const host = process.env.TAURI_DEV_HOST
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), httpsnippetWebkitPlugin()],
   envPrefix: ['VITE_', 'TAURI_'],
   base: '/',
   define: {
@@ -57,12 +62,15 @@ export default defineConfig({
       { find: '~desktop', replacement: path.resolve(__dirname, '../desktop/src') },
       { find: '~mobile', replacement: path.resolve(__dirname, './src') },
       { find: '~', replacement: path.resolve(__dirname, '../dataexplorer/src') },
+      ...copyAsNodeShimsAliases(),
     ],
   },
   clearScreen: false,
   optimizeDeps: {
-    include: ['monaco-editor'],
+    include: ['monaco-editor', ...httpsnippetOptimizeDeps.include],
     exclude: ['@monaco-editor/react', '@4d/base64-decoder'],
+    needsInterop: httpsnippetOptimizeDeps.needsInterop,
+    rolldownOptions: httpsnippetOptimizeDeps.rolldownOptions,
   },
   assetsInclude: ['**/*.wasm'],
   server: {
