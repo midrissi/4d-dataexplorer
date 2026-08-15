@@ -196,6 +196,7 @@ export const en = {
     close: 'Close console',
     done: 'Done',
     clear: 'Clear console',
+    removeEntry: 'Remove entry',
     collapseAll: 'Collapse all',
     expandAll: 'Expand all',
     expandAllTooLarge: 'Too large to expand',

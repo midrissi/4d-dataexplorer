@@ -41,6 +41,7 @@ type ConsoleState = {
   showDecodedUrls: boolean
   append: (entry: NewConsoleEntry) => void
   updateNetwork: (id: string, patch: Partial<NetworkDetails>) => void
+  remove: (id: string) => void
   clear: () => void
   setFilter: (filter: ConsoleFilter) => void
   setShowDecodedUrls: (showDecodedUrls: boolean) => void
@@ -85,6 +86,10 @@ export const useConsoleStore = create<ConsoleState>()(
               message: `${network.method} ${network.url}`,
             }
           }),
+        })),
+      remove: (id) =>
+        set((state) => ({
+          entries: state.entries.filter((entry) => entry.id !== id),
         })),
       clear: () => set({ entries: [] }),
       setFilter: (filter) => set({ filter }),

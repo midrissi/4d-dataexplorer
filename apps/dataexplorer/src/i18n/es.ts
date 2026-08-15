@@ -201,6 +201,7 @@ export const es = {
     close: 'Cerrar consola',
     done: 'Listo',
     clear: 'Limpiar consola',
+    removeEntry: 'Quitar entrada',
     collapseAll: 'Contraer todo',
     expandAll: 'Expandir todo',
     expandAllTooLarge: 'Demasiado grande para expandir',

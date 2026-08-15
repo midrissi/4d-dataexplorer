@@ -28,6 +28,17 @@ describe('consoleService', () => {
     expect(useConsoleStore.getState().entries).toEqual([])
   })
 
+  it('removes a single entry by id', () => {
+    consoleService.log('keep')
+    consoleService.warn('drop')
+    const entries = useConsoleStore.getState().entries
+    expect(entries).toHaveLength(2)
+    const dropId = entries.find((entry) => entry.message === 'drop')?.id
+    expect(dropId).toBeDefined()
+    if (dropId) useConsoleStore.getState().remove(dropId)
+    expect(useConsoleStore.getState().entries.map((entry) => entry.message)).toEqual(['keep'])
+  })
+
   it('caps the in-memory log buffer', () => {
     for (let index = 0; index <= MAX_CONSOLE_ENTRIES; index += 1) {
       consoleService.log(index)

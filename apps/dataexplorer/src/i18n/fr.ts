@@ -201,6 +201,7 @@ export const fr = {
     close: 'Fermer la console',
     done: 'Terminé',
     clear: 'Effacer la console',
+    removeEntry: 'Supprimer l’entrée',
     collapseAll: 'Tout réduire',
     expandAll: 'Tout développer',
     expandAllTooLarge: 'Trop volumineux pour tout développer',
