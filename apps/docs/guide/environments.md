@@ -127,6 +127,7 @@ Ergonomic keys for picking from lists, building arrays, and constructing JSON ob
 
 ```text
 {{$pick | from:draft,published,archived}}
+{{$pick | from:$lists.companyKeys}}
 {{$sample | from:a,b,c,d | count:2}}
 {{$sample | from:a,b,c,d | count:2,4}}
 {{$unique | from:a,b,c,d | count:>=2}}
@@ -137,6 +138,14 @@ Ergonomic keys for picking from lists, building arrays, and constructing JSON ob
 {{$vector | dims:8}}
 {{$vector | dims:384 | normalize | min:-1 | max:1}}
 ```
+
+`from` accepts either a **literal** comma-separated list (`from:a,b,c`) or a **named list** (`from:$lists.<name>`).
+
+### Pick lists (this database)
+
+Under **Environments → This database**, declare named `$lists` sources (dataclass + attribute). Declarations persist with the connected database; distinct values are **not** stored — they load on demand the first time Anonymize (or another caller) references `{{$pick | from:$lists.name}}`. Use **Refresh** in the pick-lists panel to reload a source.
+
+Missing or empty `$lists.<name>` leaves the helper unresolved.
 
 `count` accepts a fixed length (`count:3`), an inclusive range (`count:2,5`), or a one-sided bound (`count:>=2`, `count:>2`, `count:<=4`, `count:<5`). Open lower bounds default the upper end to 10; open upper bounds start at 1. For `$sample` / `$unique`, the range is clamped to the `from` list length.
 `$vector` builds a float array for embedding-style fields (`dims:n` or `count:n`, max 8192). Optional `normalize` L2-normalizes the vector; `min` / `max` bound each component (default `-1`…`1`).

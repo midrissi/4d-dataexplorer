@@ -61,6 +61,20 @@ describe('applyEnvTemplateCompletion', () => {
       cursor: 19,
     })
   })
+
+  it('completes a $lists arg after | from:', () => {
+    expect(applyEnvTemplateCompletion('{{$pick|from:$list.', 19, '$lists.empIds')).toEqual({
+      value: '{{$pick|from:$lists.empIds}}',
+      cursor: 26,
+    })
+  })
+
+  it('completes a $lists arg with spaces after | from:', () => {
+    expect(applyEnvTemplateCompletion('{{$pick | from:$lists.', 22, '$lists.companyKeys')).toEqual({
+      value: '{{$pick | from:$lists.companyKeys}}',
+      cursor: 33,
+    })
+  })
 })
 
 describe('filterEnvTemplateSuggestions', () => {
@@ -71,6 +85,8 @@ describe('filterEnvTemplateSuggestions', () => {
     { key: '$faker.person.lastName', group: 'dynamic' },
     { key: '$timestamp', group: 'dynamic' },
     { key: '$isoTimestamp', group: 'dynamic' },
+    { key: '$lists.empIds', group: 'context', detail: '1000 values' },
+    { key: '$lists.companyKeys', group: 'context', detail: 'Pick list' },
   ]
 
   it('filters by prefix first, then substring contains', () => {
@@ -87,6 +103,8 @@ describe('filterEnvTemplateSuggestions', () => {
       '$faker.person.lastName',
       '$timestamp',
       '$isoTimestamp',
+      '$lists.empIds',
+      '$lists.companyKeys',
     ])
   })
 
@@ -98,7 +116,25 @@ describe('filterEnvTemplateSuggestions', () => {
     expect(filterEnvTemplateSuggestions(items, 'name|').map((i) => i.key)).toContain('female')
   })
 
-  it('hides filter suggestions while typing args', () => {
+  it('hides filter suggestions while typing non-list args', () => {
     expect(filterEnvTemplateSuggestions(items, '$faker.number.int|between:1')).toEqual([])
+  })
+
+  it('suggests $lists names while typing | from:$lists…', () => {
+    expect(filterEnvTemplateSuggestions(items, '$pick|from:').map((i) => i.key)).toEqual([
+      '$lists.empIds',
+      '$lists.companyKeys',
+    ])
+    expect(filterEnvTemplateSuggestions(items, '$pick|from:$list.').map((i) => i.key)).toEqual([
+      '$lists.empIds',
+      '$lists.companyKeys',
+    ])
+    expect(
+      filterEnvTemplateSuggestions(items, '$pick | from:$lists.emp').map((i) => i.key)
+    ).toEqual(['$lists.empIds'])
+  })
+
+  it('does not suggest $lists for literal from: values', () => {
+    expect(filterEnvTemplateSuggestions(items, '$pick|from:a,b')).toEqual([])
   })
 })

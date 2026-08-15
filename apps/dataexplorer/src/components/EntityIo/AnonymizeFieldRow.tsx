@@ -14,6 +14,8 @@ export const AnonymizeFieldRow = memo(function AnonymizeFieldRow({
   modeLabel,
   removeLabel,
   thisRoot,
+  lists,
+  listNames,
   onFieldNameChange,
   onChange,
   onRemove,
@@ -25,6 +27,8 @@ export const AnonymizeFieldRow = memo(function AnonymizeFieldRow({
   modeLabel: string
   removeLabel: string
   thisRoot?: EnvTemplateThis
+  lists?: Record<string, readonly string[]>
+  listNames?: readonly string[]
   onFieldNameChange: (from: string, to: string) => void
   onChange: (name: string, patch: Partial<AnonymizeFieldPlan>) => void
   onRemove: (name: string) => void
@@ -33,7 +37,12 @@ export const AnonymizeFieldRow = memo(function AnonymizeFieldRow({
     () => ({ name: field.name, type: field.type }),
     [field.name, field.type]
   )
-  const envField = useTemplatedEnvFieldProps({ field: fieldHint, thisRoot })
+  const envField = useTemplatedEnvFieldProps({
+    field: fieldHint,
+    thisRoot,
+    lists,
+    listNames,
+  })
 
   return (
     <div className="grid min-h-8 grid-cols-[minmax(7rem,1fr)_7rem_minmax(9rem,1.2fr)_1.75rem] items-center gap-1.5 border-border/50 border-b px-2 py-1 text-xs transition-colors last:border-b-0 hover:bg-muted/35">

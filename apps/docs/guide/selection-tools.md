@@ -54,6 +54,7 @@ Supported parsers match the export registry where implemented (JSON family, CSV/
 
 - **Field mapping** — add, change, or remove rows; per attribute: **Faker** (<code>&#123;&#123;$faker… | filters&#125;&#125;</code>), **Fixed value**, **Keep**, or **Empty**. **Restore defaults** rebuilds the plan from the dataclass schema
 - **Remove fields** — drop a row from the mapping so that attribute is **not** included in download, import-as-new, or in-place update payloads
+- **Pick lists** — declare named value pools under [Environments → This database](./environments#pick-lists-this-database) (dataclass + attribute). Anonymize loads `$distinct` values on demand when a Faker template references <code>&#123;&#123;$pick | from:$lists.&lt;name&gt;&#125;&#125;</code> (also `$sample` / `$unique`)
 - **Seed** — optional Faker seed for reproducible dumps
 - **Preview** — same multi-mode viewer as the HTTP Client (Code / HTML / Markdown / JSON / CSV), with auto-detected default from the chosen export format
 

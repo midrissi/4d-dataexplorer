@@ -6,8 +6,12 @@ import {
   resolveEnvTemplatesDeepWithThis,
 } from './resolve'
 import {
+  isListsRefKey,
   isThisTemplateKey,
+  listListsSuggestionKeys,
   listThisSuggestionKeys,
+  parseListsRefName,
+  resolveListsRef,
   resolveThisPath,
   stringifyThisValue,
 } from './this-context'
@@ -25,6 +29,22 @@ describe('isThisTemplateKey', () => {
     expect(isThisTemplateKey('$this.headers.Authorization')).toBe(true)
     expect(isThisTemplateKey('$timestamp')).toBe(false)
     expect(isThisTemplateKey('this')).toBe(false)
+  })
+})
+
+describe('$lists refs', () => {
+  it('parses and resolves named lists', () => {
+    expect(isListsRefKey('$lists.companyKeys')).toBe(true)
+    expect(isListsRefKey('$lists.')).toBe(false)
+    expect(parseListsRefName('$lists.roleNames')).toBe('roleNames')
+    expect(resolveListsRef({ companyKeys: ['1', '2'] }, '$lists.companyKeys')).toEqual({
+      values: ['1', '2'],
+      found: true,
+    })
+    expect(resolveListsRef({ empty: [] }, '$lists.empty').found).toBe(false)
+    expect(listListsSuggestionKeys({ companyKeys: ['1'], skip: [] })).toEqual([
+      '$lists.companyKeys',
+    ])
   })
 })
 

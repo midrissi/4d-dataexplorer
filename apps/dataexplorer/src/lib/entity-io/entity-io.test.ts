@@ -169,6 +169,45 @@ describe('anonymize', () => {
     expect(entity?.email).toBe('anonymous')
   })
 
+  it('picks FK and attribute values from prepared $lists', () => {
+    const [entity] = anonymizeEntities([{ comp_id: 1, role: 'secret' }], {
+      plan: [
+        {
+          name: 'comp_id',
+          type: 'long',
+          mode: 'faker',
+          fakerKey: '{{$pick | from:$lists.companyKeys}}',
+        },
+        {
+          name: 'role',
+          mode: 'faker',
+          fakerKey: '{{$pick | from:$lists.roleNames}}',
+        },
+      ],
+      lists: {
+        companyKeys: ['100'],
+        roleNames: ['admin'],
+      },
+    })
+
+    expect(entity?.comp_id).toBe(100)
+    expect(entity?.role).toBe('admin')
+  })
+
+  it('nulls fields when $lists is missing', () => {
+    const [entity] = anonymizeEntities([{ comp_id: 1 }], {
+      plan: [
+        {
+          name: 'comp_id',
+          mode: 'faker',
+          fakerKey: '{{$pick | from:$lists.companyKeys}}',
+        },
+      ],
+    })
+
+    expect(entity?.comp_id).toBeNull()
+  })
+
   it('prepares in-place updates with lock keys and changed fields only', () => {
     const update = prepareAnonymizedUpdate(
       {

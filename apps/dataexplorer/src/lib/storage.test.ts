@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
 import {
   clearProfilesCache,
   DEFAULT_PROFILE_PREFS,
+  getBasePickLists,
   getBaseSettings,
   getConsoleHeight,
   getCurrentBaseId,
@@ -20,6 +21,7 @@ import {
   getTheme,
   getThemeName,
   readDataclassCustomizationsForRehydrate,
+  saveBasePickLists,
   saveBaseSettings,
   saveDataclassCustomizations,
   saveGraphEditorState,
@@ -334,6 +336,37 @@ describe('storage', () => {
       saveGraphEditorState({ zoom: 1.5, relationFilter: 'all' })
       expect(getGraphEditorState().zoom).toBe(1.5)
       expect(getGraphEditorState().relationFilter).toBe('all')
+      setCurrentBaseId('')
+    })
+  })
+
+  describe('base pick lists', () => {
+    it('defaults to empty when settings omit pickLists', () => {
+      setCurrentBaseId('base-pick-legacy')
+      saveBaseSettings({ activeTabId: null })
+      expect(getBasePickLists()).toEqual([])
+      expect(getBaseSettings().pickLists).toBeUndefined()
+      setCurrentBaseId('')
+    })
+
+    it('persists declarations per base and scopes them by BASEID', () => {
+      setCurrentBaseId('base-pick-a')
+      saveBasePickLists([{ id: '1', name: 'companyKeys', dataclass: 'Company', attribute: 'ID' }])
+      expect(getBasePickLists()).toEqual([
+        { id: '1', name: 'companyKeys', dataclass: 'Company', attribute: 'ID' },
+      ])
+
+      setCurrentBaseId('base-pick-b')
+      expect(getBasePickLists()).toEqual([])
+      saveBasePickLists([{ id: '2', name: 'roleNames', dataclass: 'Role', attribute: 'name' }])
+      expect(getBasePickLists()).toEqual([
+        { id: '2', name: 'roleNames', dataclass: 'Role', attribute: 'name' },
+      ])
+
+      setCurrentBaseId('base-pick-a')
+      expect(getBasePickLists()).toEqual([
+        { id: '1', name: 'companyKeys', dataclass: 'Company', attribute: 'ID' },
+      ])
       setCurrentBaseId('')
     })
   })

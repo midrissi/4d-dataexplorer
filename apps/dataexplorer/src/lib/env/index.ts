@@ -42,6 +42,25 @@ export {
   parseEnvironmentsImport,
   resetVariablesToInitial,
 } from './normalize'
+export {
+  buildPickListsResolveMap,
+  collectPickListNamesFromPlan,
+  collectReferencedPickListNames,
+  createEmptyPickListDeclaration,
+  createPickListId,
+  createPickListValuesCache,
+  isValidPickListName,
+  listDeclaredPickListNames,
+  normalizePickListDeclaration,
+  normalizePickListDeclarations,
+  PICK_LIST_TOP,
+  type PickListDeclaration,
+  type PickListDistinctLoader,
+  type PickListLoaderResult,
+  type PickListValuesState,
+  stringifyDistinctValue,
+} from './pick-lists'
+export { ensureCurrentPickLists, loadPickListDistinctValues } from './pick-lists-runtime'
 export type { EnvTemplateSegment } from './resolve'
 export {
   collectEnvTemplateKeys,
@@ -80,9 +99,13 @@ export {
 } from './template-helpers'
 export {
   type EnvTemplateThis,
+  isListsRefKey,
   isThisTemplateKey,
+  listListsSuggestionKeys,
   listThisSuggestionKeys,
+  parseListsRefName,
   type ResolveEnvOptions,
+  resolveListsRef,
   resolveThisPath,
   stringifyThisValue,
 } from './this-context'

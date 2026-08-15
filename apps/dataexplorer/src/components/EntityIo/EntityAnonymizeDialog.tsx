@@ -1,5 +1,6 @@
 import {
   Button,
+  ClickToCopy,
   Dialog,
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +12,7 @@ import {
   DropdownMenuTrigger,
   Input,
   Label,
+  SegmentedControl,
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -19,7 +21,9 @@ import {
   useToast,
 } from '@4d/ui'
 import {
+  Braces,
   ChevronDown,
+  Copy,
   Download,
   Eye,
   Info,
@@ -53,12 +57,48 @@ import {
   prepareAnonymizedUpdate,
   stripForCreate,
 } from '~/lib/entity-io'
+import { collectPickListNamesFromPlan, ensureCurrentPickLists } from '~/lib/env'
 import type { EntityIoTarget } from '~/lib/eventBus'
 import { eventBus } from '~/lib/eventBus'
+import { useEnvironmentsStore } from '~/store/environments'
 import { AnonymizeFieldRow } from './AnonymizeFieldRow'
+import { EntityIoCodePreview } from './EntityIoCodePreview'
 import { EntityIoDialogFrame } from './EntityIoDialogFrame'
 import { EntityIoPanel } from './EntityIoPanel'
 import { EntityIoSelect, type EntityIoSelectOption } from './EntityIoSelect'
+
+/** Keep the previous object identity when no new list values arrived. */
+/** Keep one in-flight sample fetch per selection (covers Strict Mode remount). */
+const anonymizeSampleInflight = new Map<string, Promise<Record<string, unknown>[]>>()
+
+function fetchAnonymizeSampleRows(
+  dataclassName: string,
+  entitySetId: string
+): Promise<Record<string, unknown>[]> {
+  const key = `${dataclassName}\0${entitySetId}`
+  const existing = anonymizeSampleInflight.get(key)
+  if (existing) return existing
+  const promise = api
+    .getEntities(dataclassName, { entitySetId, top: 5, page: 1 })
+    .then((page) => page.entities as Record<string, unknown>[])
+    .finally(() => {
+      if (anonymizeSampleInflight.get(key) === promise) {
+        anonymizeSampleInflight.delete(key)
+      }
+    })
+  anonymizeSampleInflight.set(key, promise)
+  return promise
+}
+
+function mergeReadyLists(
+  prev: Record<string, readonly string[]>,
+  next: Record<string, readonly string[]>
+): Record<string, readonly string[]> {
+  for (const [name, values] of Object.entries(next)) {
+    if (prev[name] !== values) return { ...prev, ...next }
+  }
+  return prev
+}
 
 function previewModeForFormat(formatId: EntityIoFormatId): TextPreviewMode {
   switch (formatId) {
@@ -95,9 +135,26 @@ export function EntityAnonymizeDialog({
   const [primaryKey, setPrimaryKey] = useState<string | undefined>()
   const [seed, setSeed] = useState('')
   const [formatId, setFormatId] = useState<EntityIoFormatId>('json')
+  const [planView, setPlanView] = useState<'form' | 'json'>('form')
   const [sampleRows, setSampleRows] = useState<Record<string, unknown>[]>([])
   const [busy, setBusy] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [listsReady, setListsReady] = useState<Record<string, readonly string[]>>({})
+
+  const envRevision = useEnvironmentsStore((s) => s.revision)
+  const getPickListNames = useEnvironmentsStore((s) => s.getPickListNames)
+  const getPickListsResolveMap = useEnvironmentsStore((s) => s.getPickListsResolveMap)
+  // Both read base settings from localStorage, so keep them memoized per revision:
+  // fresh arrays/objects on every render would also invalidate the row suggestion caches.
+  const anonymizeListNames = useMemo(() => {
+    void envRevision
+    return getPickListNames()
+  }, [getPickListNames, envRevision])
+  const anonymizeLists = useMemo(() => {
+    void envRevision
+    const fromStore = getPickListsResolveMap()
+    return { ...fromStore, ...listsReady }
+  }, [getPickListsResolveMap, listsReady, envRevision])
 
   const modeOptions = useMemo(
     (): EntityIoSelectOption<AnonymizeFieldMode>[] => [
@@ -117,6 +174,7 @@ export function EntityAnonymizeDialog({
     () => mappableAttributes.filter((attr) => !plannedNames.has(attr.name)),
     [mappableAttributes, plannedNames]
   )
+  const planJson = useMemo(() => JSON.stringify(plan, null, 2), [plan])
   const anonymizeThisRoot = useMemo(
     () => ({
       ...Object.fromEntries(mappableAttributes.map((attr) => [attr.name, undefined])),
@@ -137,11 +195,61 @@ export function EntityAnonymizeDialog({
       setPrimaryKey(schema.key)
       setMappableAttributes(attrs)
       setPlan(buildDefaultAnonymizePlan(schema.attributes as EntityIoAttribute[], schema.key))
+      setListsReady({})
     })
     return () => {
       cancelled = true
     }
   }, [open, dataclassName])
+
+  const ensureReferencedLists = useCallback(async () => {
+    const names = collectPickListNamesFromPlan(plan)
+    if (names.length === 0) {
+      return { lists: getPickListsResolveMap(), ok: true as const }
+    }
+    const result = await ensureCurrentPickLists(names)
+    setListsReady((prev) => mergeReadyLists(prev, result.lists))
+    if (result.errors.length > 0) {
+      const first = result.errors[0]
+      return {
+        lists: result.lists,
+        ok: false as const,
+        message: t('environments.pickListsLoadFailed', { name: first?.name ?? '' }),
+        detail: first?.message,
+      }
+    }
+    if (result.missing.length > 0) {
+      return {
+        lists: result.lists,
+        ok: false as const,
+        message: t('environments.pickListsMissing', { name: result.missing[0] ?? '' }),
+      }
+    }
+    return { lists: result.lists, ok: true as const }
+  }, [plan, getPickListsResolveMap, t])
+
+  // Referenced `$lists` names as a stable key so typing inside a template that
+  // already references the same lists does not re-trigger loading.
+  const referencedListsKey = useMemo(
+    () => collectPickListNamesFromPlan(plan).join('\u0000'),
+    [plan]
+  )
+
+  // Lazily ensure referenced pick lists.
+  // envRevision: re-run when Environments declarations or cached values change.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: envRevision intentionally invalidates this effect
+  useEffect(() => {
+    if (!open || !referencedListsKey) return
+    const names = referencedListsKey.split('\u0000')
+    let cancelled = false
+    void ensureCurrentPickLists(names).then((result) => {
+      if (cancelled) return
+      setListsReady((prev) => mergeReadyLists(prev, result.lists))
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [open, referencedListsKey, envRevision])
 
   const updateField = useCallback((name: string, patch: Partial<AnonymizeFieldPlan>) => {
     setPlan((prev) => prev.map((f) => (f.name === name ? { ...f, ...patch } : f)))
@@ -194,17 +302,13 @@ export function EntityAnonymizeDialog({
     [mappableAttributes, plannedNames]
   )
   // Sample rows are fetched once per selection; editing the plan re-anonymizes them locally.
+  const sampleEntitySetId = target?.entitySetId?.trim() ?? ''
   const loadSample = useCallback(async () => {
-    const entitySetId = target?.entitySetId?.trim()
-    if (!target || !entitySetId) return
+    if (!dataclassName || !sampleEntitySetId) return
     setLoading(true)
     try {
-      const page = await api.getEntities(target.dataclassName, {
-        entitySetId,
-        top: 5,
-        page: 1,
-      })
-      setSampleRows(page.entities as Record<string, unknown>[])
+      const rows = await fetchAnonymizeSampleRows(dataclassName, sampleEntitySetId)
+      setSampleRows(rows)
     } catch (err) {
       toast({
         title: t('entity.io.anonymizePreviewFailed'),
@@ -214,11 +318,32 @@ export function EntityAnonymizeDialog({
     } finally {
       setLoading(false)
     }
-  }, [t, target?.dataclassName, target?.entitySetId, toast, target])
+  }, [dataclassName, sampleEntitySetId, t, toast])
 
   useEffect(() => {
-    if (open && hasEntitySet) void loadSample()
-  }, [open, hasEntitySet, loadSample])
+    if (!open || !hasEntitySet || !dataclassName || !sampleEntitySetId) return
+    let cancelled = false
+    setLoading(true)
+    void fetchAnonymizeSampleRows(dataclassName, sampleEntitySetId)
+      .then((rows) => {
+        if (cancelled) return
+        setSampleRows(rows)
+      })
+      .catch((err) => {
+        if (cancelled) return
+        toast({
+          title: t('entity.io.anonymizePreviewFailed'),
+          description: err instanceof Error ? err.message : String(err),
+          variant: 'destructive',
+        })
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [open, hasEntitySet, dataclassName, sampleEntitySetId, t, toast])
 
   const preview = useMemo(() => {
     if (sampleRows.length === 0 || plan.length === 0) return []
@@ -226,8 +351,9 @@ export function EntityAnonymizeDialog({
     return anonymizeEntities(sampleRows, {
       plan,
       seed: Number.isFinite(seedNum) ? seedNum : undefined,
+      lists: anonymizeLists,
     })
-  }, [sampleRows, plan, seed])
+  }, [sampleRows, plan, seed, anonymizeLists])
 
   // Preview mirrors the download payload so the chosen format is what gets highlighted.
   const previewText = useMemo(() => {
@@ -244,6 +370,14 @@ export function EntityAnonymizeDialog({
 
   const fetchAnonymized = async () => {
     if (!target?.entitySetId?.trim()) throw new Error(t('entity.deleteManySelectionUnavailable'))
+    const ensured = await ensureReferencedLists()
+    if (!ensured.ok) {
+      throw new Error(
+        [ensured.message, 'detail' in ensured ? ensured.detail : undefined]
+          .filter(Boolean)
+          .join(': ')
+      )
+    }
     const fetched = await api.fetchAllEntities({
       dataclass: target.dataclassName,
       entitySetId: target.entitySetId,
@@ -252,6 +386,7 @@ export function EntityAnonymizeDialog({
     return anonymizeEntities(fetched.entities as Record<string, unknown>[], {
       plan,
       seed: Number.isFinite(seedNum) ? seedNum : undefined,
+      lists: ensured.lists,
     })
   }
 
@@ -517,58 +652,105 @@ export function EntityAnonymizeDialog({
             contentClassName="max-h-64 overflow-auto overscroll-contain p-0"
             action={
               <div className="flex items-center gap-0.5">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 px-2 text-[11px] text-muted-foreground"
-                  disabled={plan.length === 0}
-                  onClick={clearPlan}
-                >
-                  <Trash2 className="h-3 w-3" />
-                  {t('entity.io.removeAllFields')}
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 px-2 text-[11px] text-muted-foreground"
-                  disabled={mappableAttributes.length === 0}
-                  onClick={resetPlan}
-                >
-                  <RotateCcw className="h-3 w-3" />
-                  {t('entity.io.resetFieldPlan')}
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 px-2 text-[11px] text-muted-foreground"
-                      disabled={availableToAdd.length === 0}
+                <TooltipProvider delayDuration={250}>
+                  {planView === 'form' ? (
+                    <>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 text-muted-foreground"
+                            disabled={plan.length === 0}
+                            aria-label={t('entity.io.removeAllFields')}
+                            onClick={clearPlan}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" aria-hidden />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          {t('entity.io.removeAllFields')}
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 text-muted-foreground"
+                            disabled={mappableAttributes.length === 0}
+                            aria-label={t('entity.io.resetFieldPlan')}
+                            onClick={resetPlan}
+                          >
+                            <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent side="bottom">
+                          {t('entity.io.resetFieldPlan')}
+                        </TooltipContent>
+                      </Tooltip>
+                      <DropdownMenu>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 text-muted-foreground"
+                                disabled={availableToAdd.length === 0}
+                                aria-label={t('entity.io.addField')}
+                              >
+                                <Plus className="h-3.5 w-3.5" aria-hidden />
+                              </Button>
+                            </DropdownMenuTrigger>
+                          </TooltipTrigger>
+                          <TooltipContent side="bottom">{t('entity.io.addField')}</TooltipContent>
+                        </Tooltip>
+                        <DropdownMenuContent align="end" className="max-h-64 overflow-auto">
+                          {availableToAdd.map((attr) => (
+                            <DropdownMenuItem
+                              key={attr.name}
+                              className="font-mono text-xs"
+                              onSelect={() => addField(attr.name)}
+                            >
+                              {attr.name}
+                              <span className="ml-2 text-muted-foreground">{attr.type}</span>
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </>
+                  ) : (
+                    <ClickToCopy
+                      value={planJson}
+                      tooltipLabel={t('entity.io.copyFieldPlan')}
+                      tooltipCopiedLabel={t('common.copied')}
+                      className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+                      aria-label={t('entity.io.copyFieldPlan')}
                     >
-                      <Plus className="h-3 w-3" />
-                      {t('entity.io.addField')}
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="max-h-64 overflow-auto">
-                    {availableToAdd.map((attr) => (
-                      <DropdownMenuItem
-                        key={attr.name}
-                        className="font-mono text-xs"
-                        onSelect={() => addField(attr.name)}
-                      >
-                        {attr.name}
-                        <span className="ml-2 text-muted-foreground">{attr.type}</span>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                      <Copy className="h-3.5 w-3.5" aria-hidden />
+                    </ClickToCopy>
+                  )}
+                </TooltipProvider>
+                <SegmentedControl
+                  value={planView}
+                  onValueChange={setPlanView}
+                  aria-label={t('entity.io.fieldPlanView')}
+                  className="ml-1 shrink-0"
+                  options={[
+                    { value: 'form', label: t('entity.io.fieldPlanForm'), icon: ListChecks },
+                    { value: 'json', label: t('entity.io.fieldPlanJson'), icon: Braces },
+                  ]}
+                />
               </div>
             }
           >
-            {plan.length === 0 ? (
+            {planView === 'json' ? (
+              <EntityIoCodePreview value={planJson} language="json" height={220} />
+            ) : plan.length === 0 ? (
               <p className="p-2 text-muted-foreground text-xs">{t('entity.io.fieldPlanEmpty')}</p>
             ) : (
               plan.map((field) => (
@@ -581,6 +763,8 @@ export function EntityAnonymizeDialog({
                   modeLabel={t('entity.io.importMode')}
                   removeLabel={t('entity.io.removeField')}
                   thisRoot={anonymizeThisRoot}
+                  lists={anonymizeLists}
+                  listNames={anonymizeListNames}
                   onFieldNameChange={replaceField}
                   onChange={updateField}
                   onRemove={removeField}

@@ -2,25 +2,33 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import {
   type ActiveEnvLayers,
+  buildPickListsResolveMap,
   cloneEnvironment,
   createEmptyEnvironment,
   createEmptyVariable,
+  createPickListValuesCache,
   type Environment,
   type EnvScope,
   type EnvVariable,
   type EnvVarLookup,
   findEnvironmentById,
   findEnvironmentByName,
+  listDeclaredPickListNames,
   lookupEnvVariable,
   mergeActiveEnvMap,
   normalizeEnvironmentsBlock,
+  type PickListDeclaration,
+  type PickListDistinctLoader,
+  type PickListValuesState,
   resetVariablesToInitial,
 } from '~/lib/env'
 import {
   getBaseEnvironmentsBlock,
+  getBasePickLists,
   getCurrentBaseId,
   getProfileEnvironmentsBlock,
   saveBaseEnvironmentsBlock,
+  saveBasePickLists,
   saveProfileEnvironmentsBlock,
 } from '~/lib/storage'
 
@@ -74,6 +82,28 @@ type EnvironmentsState = {
 
   resetActiveEnvironmentToInitial: (scope: 'profile' | 'base') => void
   activateEnvironmentByName: (name: string, scope?: 'profile' | 'base') => boolean
+
+  /** Current-database `$lists` declarations (persisted; no values). */
+  getPickLists: () => PickListDeclaration[]
+  setPickLists: (pickLists: readonly PickListDeclaration[]) => void
+  /** Declared valid names for chips / autocomplete. */
+  getPickListNames: () => string[]
+  /** Loaded value map for sync resolve (ready lists only). */
+  getPickListsResolveMap: () => Record<string, readonly string[]>
+  getPickListValuesState: (dataclass: string, attribute: string) => PickListValuesState
+  invalidatePickListValues: (dataclass: string, attribute: string) => void
+  /**
+   * Ensure named lists are loaded. Inject `loader` to avoid an api↔store cycle.
+   * Returns the resolve map for successfully loaded lists.
+   */
+  ensurePickLists: (
+    names: readonly string[],
+    loader: PickListDistinctLoader
+  ) => Promise<{
+    lists: Record<string, readonly string[]>
+    missing: string[]
+    errors: Array<{ name: string; message: string }>
+  }>
 }
 
 const DEFAULT_SCOPE_LABELS = {
@@ -82,6 +112,8 @@ const DEFAULT_SCOPE_LABELS = {
   base: 'Base',
   dynamic: 'Dynamic',
 }
+
+const pickListValuesCache = createPickListValuesCache()
 
 function upsertVariable(
   variables: EnvVariable[],
@@ -344,6 +376,109 @@ export const useEnvironmentsStore = create<EnvironmentsState>()(
           return true
         }
         return false
+      },
+
+      getPickLists: () => getBasePickLists(),
+
+      setPickLists: (pickLists) => {
+        if (!getCurrentBaseId()) return
+        const prev = getBasePickLists()
+        saveBasePickLists(pickLists)
+        // Invalidate caches when source dataclass/attribute changes for an id.
+        const prevById = new Map(prev.map((d) => [d.id, d]))
+        const baseId = getCurrentBaseId()
+        for (const next of pickLists) {
+          const before = prevById.get(next.id)
+          if (
+            baseId &&
+            before &&
+            (before.dataclass !== next.dataclass || before.attribute !== next.attribute)
+          ) {
+            pickListValuesCache.invalidate(baseId, before.dataclass, before.attribute)
+          }
+        }
+        set((state) => ({ revision: state.revision + 1 }))
+      },
+
+      getPickListNames: () => listDeclaredPickListNames(getBasePickLists()),
+
+      getPickListsResolveMap: () => {
+        const baseId = getCurrentBaseId()
+        if (!baseId) return {}
+        const valuesByName: Record<string, readonly string[]> = {}
+        for (const decl of getBasePickLists()) {
+          const name = decl.name.trim()
+          if (!name || !decl.dataclass || !decl.attribute) continue
+          const state = pickListValuesCache.getCached(baseId, decl.dataclass, decl.attribute)
+          if (state.status === 'ready') valuesByName[name] = state.values
+        }
+        return buildPickListsResolveMap(valuesByName)
+      },
+
+      getPickListValuesState: (dataclass, attribute) => {
+        const baseId = getCurrentBaseId()
+        if (!baseId || !dataclass || !attribute) return { status: 'idle' }
+        return pickListValuesCache.getCached(baseId, dataclass, attribute)
+      },
+
+      invalidatePickListValues: (dataclass, attribute) => {
+        const baseId = getCurrentBaseId()
+        if (!baseId || !dataclass || !attribute) return
+        pickListValuesCache.invalidate(baseId, dataclass, attribute)
+        set((state) => ({ revision: state.revision + 1 }))
+      },
+
+      ensurePickLists: async (names, loader) => {
+        const baseId = getCurrentBaseId()
+        if (!baseId) {
+          return { lists: {}, missing: [...names], errors: [] }
+        }
+        const decls = getBasePickLists()
+        const byName = new Map(
+          decls.filter((d) => d.name.trim()).map((d) => [d.name.trim(), d] as const)
+        )
+        const missing: string[] = []
+        const errors: Array<{ name: string; message: string }> = []
+        const toLoad: PickListDeclaration[] = []
+        const wanted = new Set(names.map((n) => n.trim()).filter(Boolean))
+
+        for (const name of wanted) {
+          const decl = byName.get(name)
+          if (!decl?.dataclass || !decl.attribute) {
+            missing.push(name)
+            continue
+          }
+          toLoad.push(decl)
+        }
+
+        let changed = false
+        await Promise.all(
+          toLoad.map(async (decl) => {
+            const before = pickListValuesCache.getCached(baseId, decl.dataclass, decl.attribute)
+            try {
+              await pickListValuesCache.ensure(baseId, decl.dataclass, decl.attribute, loader)
+            } catch (err) {
+              errors.push({
+                name: decl.name.trim(),
+                message: err instanceof Error ? err.message : String(err),
+              })
+            }
+            const after = pickListValuesCache.getCached(baseId, decl.dataclass, decl.attribute)
+            if (before.status !== after.status) changed = true
+          })
+        )
+
+        // Only notify subscribers on real cache transitions: callers that re-run on
+        // `revision` would otherwise loop forever on already-cached lists.
+        if (changed) set((state) => ({ revision: state.revision + 1 }))
+
+        const lists = get().getPickListsResolveMap()
+        for (const name of wanted) {
+          if (missing.includes(name) || errors.some((e) => e.name === name)) continue
+          if (!lists[name] || lists[name].length === 0) missing.push(name)
+        }
+
+        return { lists, missing, errors }
       },
     }),
     {

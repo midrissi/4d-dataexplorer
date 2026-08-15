@@ -247,4 +247,49 @@ describe('resolveHelperTemplate', () => {
       ])
     ).toBeNull()
   })
+
+  it('picks from a named $lists ref', () => {
+    const result = resolveHelperTemplate(
+      '$pick',
+      [{ name: 'from', args: ['$lists.companyKeys'] }],
+      { lists: { companyKeys: ['10', '20', '30'] } }
+    )
+    expect(result).not.toBeNull()
+    if (!result) return
+    expect(['10', '20', '30']).toContain(result.text)
+  })
+
+  it('rejects missing or empty $lists refs', () => {
+    expect(
+      resolveHelperTemplate('$pick', [{ name: 'from', args: ['$lists.missing'] }], {
+        lists: { companyKeys: ['1'] },
+      })
+    ).toBeNull()
+    expect(
+      resolveHelperTemplate('$pick', [{ name: 'from', args: ['$lists.empty'] }], {
+        lists: { empty: [] },
+      })
+    ).toBeNull()
+    expect(
+      resolveHelperTemplate('$pick', [{ name: 'from', args: ['$lists.companyKeys'] }])
+    ).toBeNull()
+  })
+
+  it('samples from a named $lists ref', () => {
+    const result = resolveHelperTemplate(
+      '$unique',
+      [
+        { name: 'from', args: ['$lists.roleNames'] },
+        { name: 'count', args: ['2'] },
+      ],
+      { lists: { roleNames: ['admin', 'user', 'guest'] } }
+    )
+    expect(result).not.toBeNull()
+    expect(Array.isArray(result?.structured)).toBe(true)
+    const arr = result?.structured as string[]
+    expect(arr).toHaveLength(2)
+    for (const item of arr) {
+      expect(['admin', 'user', 'guest']).toContain(item)
+    }
+  })
 })

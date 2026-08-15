@@ -100,6 +100,23 @@ describe('resolveEnvTemplates', () => {
     expect(result).toEqual({ text: 'only', unresolved: [] })
   })
 
+  it('resolves $pick from $lists context', () => {
+    const result = resolveEnvTemplates(
+      '{{$pick | from:$lists.companyKeys}}',
+      {},
+      {
+        lists: { companyKeys: ['42'] },
+      }
+    )
+    expect(result).toEqual({ text: '42', unresolved: [] })
+  })
+
+  it('leaves $pick with missing $lists unresolved', () => {
+    const result = resolveEnvTemplates('{{$pick | from:$lists.companyKeys}}', {})
+    expect(result.text).toBe('{{$pick | from:$lists.companyKeys}}')
+    expect(result.unresolved).toEqual(['$pick | from:$lists.companyKeys'])
+  })
+
   it('resolves $repeat as a JSON array string', () => {
     const result = resolveEnvTemplates(
       '{{$repeat | of:$faker.number.int | count:3 | min:2 | max:2}}',

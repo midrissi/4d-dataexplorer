@@ -6,6 +6,7 @@ import {
   nextEnvironmentColor,
   nextNewEnvironmentName,
   normalizeEnvironmentsBlock,
+  parseEnvironmentsImport,
 } from './normalize'
 
 describe('nextEnvironmentColor', () => {
@@ -65,5 +66,33 @@ describe('normalizeEnvironmentsBlock', () => {
       activeEnvironmentId: 'a',
     })
     expect(block.environments[0]?.color).toBe(ENVIRONMENT_COLORS[0])
+  })
+})
+
+describe('parseEnvironmentsImport', () => {
+  it('accepts legacy exports without pickLists', () => {
+    const parsed = parseEnvironmentsImport({
+      version: 1,
+      environments: [{ id: 'a', name: 'Dev', variables: [] }],
+      activeEnvironmentId: 'a',
+    })
+    expect(parsed?.environments).toHaveLength(1)
+    expect(parsed?.pickLists).toBeUndefined()
+  })
+
+  it('accepts pickLists-only payloads and normalizes declarations', () => {
+    const parsed = parseEnvironmentsImport({
+      version: 1,
+      scope: 'base',
+      pickLists: [{ id: '1', name: ' companyKeys ', dataclass: 'Company', attribute: 'ID' }],
+    })
+    expect(parsed).toEqual({
+      version: 1,
+      scope: 'base',
+      environments: undefined,
+      globals: undefined,
+      activeEnvironmentId: null,
+      pickLists: [{ id: '1', name: 'companyKeys', dataclass: 'Company', attribute: 'ID' }],
+    })
   })
 })

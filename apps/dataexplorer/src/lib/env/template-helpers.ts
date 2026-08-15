@@ -8,6 +8,7 @@
 import type { EnvTemplateFilter } from '@4d/ui'
 import { type DynamicGenerateOptions, getEnvFaker, resolveDynamicEnvVar } from './dynamic'
 import { TRANSFORM_FILTER_NAMES } from './template-filters'
+import { isListsRefKey, type ResolveEnvOptions, resolveListsRef } from './this-context'
 
 export type HelperTemplateResult = {
   /** String form for text substitution (JSON for arrays/objects). */
@@ -45,7 +46,10 @@ const MAX_VECTOR_DIMS = 8192
 
 /** Completions for ergonomic helper keys (not `$faker.helpers.*`). */
 export const HELPER_TEMPLATE_DEFS: readonly HelperTemplateDef[] = [
-  { key: '$pick', description: 'Random item from a list (`| from:a,b,c`)' },
+  {
+    key: '$pick',
+    description: 'Random item from a list (`| from:a,b,c` or `| from:$lists.name`)',
+  },
   {
     key: '$sample',
     description: 'Random subset as JSON array (`| from:… | count:n` or `count:2,5`)',
@@ -187,9 +191,22 @@ function resolveCountNumber(spec: HelperCountSpec, faker: ReturnType<typeof getE
   return faker.number.int({ min: spec.min, max: spec.max })
 }
 
-function parseFromList(filters: readonly EnvTemplateFilter[]): string[] | null {
+/**
+ * Parse `| from:…` into a string list.
+ * - Literals: `from:a,b,c`
+ * - Named lists: single arg `$lists.<name>` resolved from `options.lists`
+ */
+function parseFromList(
+  filters: readonly EnvTemplateFilter[],
+  options?: ResolveEnvOptions
+): string[] | null {
   const filter = filters.find((f) => f.name.toLowerCase() === 'from')
   if (!filter || filter.args.length === 0) return null
+  if (filter.args.length === 1 && isListsRefKey(filter.args[0] ?? '')) {
+    const hit = resolveListsRef(options?.lists, filter.args[0] ?? '')
+    if (!hit.found) return null
+    return [...hit.values]
+  }
   return [...filter.args]
 }
 
@@ -435,7 +452,8 @@ function validateHelperFilters(kind: HelperKind, filters: readonly EnvTemplateFi
  */
 export function resolveHelperTemplate(
   key: string,
-  filters: readonly EnvTemplateFilter[]
+  filters: readonly EnvTemplateFilter[],
+  resolveOptions?: ResolveEnvOptions
 ): HelperTemplateResult | null {
   const kind = helperKindForKey(key)
   if (!kind) return null
@@ -476,13 +494,13 @@ export function resolveHelperTemplate(
     }
 
     if (kind === 'pick') {
-      const from = parseFromList(filters)
+      const from = parseFromList(filters, resolveOptions)
       if (!from) return null
       return okScalar(faker.helpers.arrayElement(from))
     }
 
     if (kind === 'weighted') {
-      const from = parseFromList(filters)
+      const from = parseFromList(filters, resolveOptions)
       if (!from) return null
       const weighted = parseWeighted(from)
       if (!weighted) return null
@@ -490,7 +508,7 @@ export function resolveHelperTemplate(
     }
 
     if (kind === 'sample' || kind === 'unique') {
-      const from = parseFromList(filters)
+      const from = parseFromList(filters, resolveOptions)
       if (!from) return null
       const rawCount = parseCount(filters) ?? (kind === 'unique' ? from.length : 1)
       const count = clampCountToList(rawCount, from.length)

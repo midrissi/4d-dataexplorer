@@ -34,6 +34,7 @@ import {
 } from 'lucide-react'
 import { type KeyboardEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { EmptyPanel as AppEmptyPanel, EmptyPanelAction } from '~/components/EmptyPanel'
+import { PickListsPanel } from '~/components/Environments/PickListsPanel'
 import { SavedListBadge } from '~/components/SavedListPanel'
 import { useTranslation } from '~/i18n'
 import {
@@ -751,11 +752,14 @@ export function EnvironmentsPage() {
   const setProfileBlock = useEnvironmentsStore((s) => s.setProfileBlock)
   const getBaseBlock = useEnvironmentsStore((s) => s.getBaseBlock)
   const setBaseBlock = useEnvironmentsStore((s) => s.setBaseBlock)
+  const getPickLists = useEnvironmentsStore((s) => s.getPickLists)
+  const setPickLists = useEnvironmentsStore((s) => s.setPickLists)
   void revision
 
   const profileBlock = getProfileBlock()
   const baseBlock = getBaseBlock()
   const hasBase = Boolean(getCurrentBaseId())
+  const pickLists = hasBase ? getPickLists() : []
 
   const storedScope: ScopeTab =
     tab?.scope === 'profile' || tab?.scope === 'base' || tab?.scope === 'globals'
@@ -786,7 +790,12 @@ export function EnvironmentsPage() {
       version: 1,
       globals,
       profile: profileBlock,
-      base: hasBase ? baseBlock : undefined,
+      base: hasBase
+        ? {
+            ...baseBlock,
+            pickLists,
+          }
+        : undefined,
     })
   }
 
@@ -832,6 +841,7 @@ export function EnvironmentsPage() {
         const b = record.base as {
           environments?: unknown
           activeEnvironmentId?: string | null
+          pickLists?: unknown
         }
         if (Array.isArray(b.environments)) {
           setBaseBlock({
@@ -842,6 +852,16 @@ export function EnvironmentsPage() {
             activeEnvironmentId: b.activeEnvironmentId ?? null,
           })
         }
+        if (Array.isArray(b.pickLists)) {
+          const imported = parseEnvironmentsImport({
+            version: 1,
+            pickLists: b.pickLists,
+          })
+          if (imported?.pickLists) setPickLists(imported.pickLists)
+        }
+      }
+      if (hasBase && asExport?.pickLists?.length) {
+        setPickLists(asExport.pickLists)
       }
     } catch {
       // ignore invalid files
@@ -934,12 +954,17 @@ export function EnvironmentsPage() {
             />
           ) : null}
           {scope === 'base' && hasBase ? (
-            <EnvironmentsEditor
-              environments={baseBlock.environments}
-              activeEnvironmentId={baseBlock.activeEnvironmentId}
-              onChange={setBaseBlock}
-              emptyHint={t('environments.emptyBase')}
-            />
+            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+              <div className="min-h-0 flex-1 overflow-hidden">
+                <EnvironmentsEditor
+                  environments={baseBlock.environments}
+                  activeEnvironmentId={baseBlock.activeEnvironmentId}
+                  onChange={setBaseBlock}
+                  emptyHint={t('environments.emptyBase')}
+                />
+              </div>
+              <PickListsPanel />
+            </div>
           ) : null}
         </div>
       </div>

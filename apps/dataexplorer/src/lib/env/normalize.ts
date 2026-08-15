@@ -1,3 +1,4 @@
+import { normalizePickListDeclarations, type PickListDeclaration } from './pick-lists'
 import type { Environment, EnvironmentsBlock, EnvVariable } from './types'
 
 /** Preset swatches for environment color chips (~30). */
@@ -190,6 +191,8 @@ export type EnvironmentsExport = {
   environments?: Environment[]
   globals?: EnvVariable[]
   activeEnvironmentId?: string | null
+  /** Base-scoped `$lists` declarations (optional; ignored for profile/globals). */
+  pickLists?: PickListDeclaration[]
 }
 
 export function parseEnvironmentsImport(raw: unknown): EnvironmentsExport | null {
@@ -209,6 +212,9 @@ export function parseEnvironmentsImport(raw: unknown): EnvironmentsExport | null
     : undefined
   const activeEnvironmentId =
     typeof raw.activeEnvironmentId === 'string' ? raw.activeEnvironmentId : null
-  if (!environments?.length && !globals?.length) return null
-  return { version, scope, environments, globals, activeEnvironmentId }
+  const pickLists = Array.isArray(raw.pickLists)
+    ? normalizePickListDeclarations(raw.pickLists)
+    : undefined
+  if (!environments?.length && !globals?.length && !pickLists?.length) return null
+  return { version, scope, environments, globals, activeEnvironmentId, pickLists }
 }

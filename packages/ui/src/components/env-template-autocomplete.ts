@@ -66,11 +66,44 @@ export function isEnvTemplateFilterPrefix(prefix: string): boolean {
   return !after.includes(':')
 }
 
+/**
+ * When typing `|filter:arg` (or `|filter:a,b,<partial>`), return the filter name
+ * and the current arg segment under the cursor.
+ */
+export function getEnvTemplateFilterArgContext(
+  prefix: string
+): { filterName: string; argQuery: string; argStartInPrefix: number } | null {
+  const pipe = prefix.lastIndexOf('|')
+  if (pipe === -1) return null
+  const after = prefix.slice(pipe + 1)
+  const colon = after.indexOf(':')
+  if (colon === -1) return null
+  const filterName = after.slice(0, colon).trim().toLowerCase()
+  if (!filterName) return null
+  const argsRaw = after.slice(colon + 1)
+  const lastComma = argsRaw.lastIndexOf(',')
+  const segmentOffset = lastComma === -1 ? 0 : lastComma + 1
+  const argQuery = argsRaw.slice(segmentOffset).trimStart()
+  const leadingWs = argsRaw.slice(segmentOffset).length - argQuery.length
+  return {
+    filterName,
+    argQuery,
+    argStartInPrefix: pipe + 1 + colon + 1 + segmentOffset + leadingWs,
+  }
+}
+
+/** Filters whose args commonly accept `$lists.<name>` (or `$…` refs). */
+function filterAcceptsListsRef(filterName: string): boolean {
+  return filterName === 'from' || filterName === 'of'
+}
+
 function rankSuggestions(
   suggestions: readonly EnvTemplateSuggestion[],
   query: string
 ): EnvTemplateSuggestion[] {
-  const q = query.trim().toLowerCase()
+  // Trailing dots are common while typing paths (`$lists.`); strip so `$list.` still
+  // matches `$lists.empIds`.
+  const q = query.trim().toLowerCase().replace(/\.+$/, '')
   if (!q) return [...suggestions]
 
   const starts: EnvTemplateSuggestion[] = []
@@ -83,16 +116,28 @@ function rankSuggestions(
   return [...starts, ...contains]
 }
 
-/** Filter suggestions by the in-progress `{{query` (variables or `| filters`). */
+/** Filter suggestions by the in-progress `{{query` (variables, `| filters`, or `$lists` args). */
 export function filterEnvTemplateSuggestions(
   suggestions: readonly EnvTemplateSuggestion[],
   prefix: string
 ): EnvTemplateSuggestion[] {
   const pipe = prefix.lastIndexOf('|')
   if (pipe !== -1) {
-    if (!isEnvTemplateFilterPrefix(prefix)) return []
-    const query = prefix.slice(pipe + 1)
-    return rankSuggestions(ENV_TEMPLATE_FILTER_SUGGESTIONS, query)
+    if (isEnvTemplateFilterPrefix(prefix)) {
+      const query = prefix.slice(pipe + 1)
+      return rankSuggestions(ENV_TEMPLATE_FILTER_SUGGESTIONS, query)
+    }
+
+    const argCtx = getEnvTemplateFilterArgContext(prefix)
+    if (argCtx && filterAcceptsListsRef(argCtx.filterName)) {
+      const q = argCtx.argQuery.toLowerCase()
+      // Empty or `$…` → offer declared/loaded `$lists.*` names.
+      if (q === '' || q.startsWith('$')) {
+        const listSuggestions = suggestions.filter((item) => item.key.startsWith('$lists.'))
+        return rankSuggestions(listSuggestions, q)
+      }
+    }
+    return []
   }
 
   return rankSuggestions(suggestions, prefix)
@@ -100,7 +145,7 @@ export function filterEnvTemplateSuggestions(
 
 /**
  * Replace the unfinished `{{prefix` at the cursor with `{{key}}`,
- * or complete the filter after `|` when in filter mode.
+ * or complete the filter / `$lists` arg after `|` when in those modes.
  * If `}}` already follows the cursor, it is consumed.
  * Cursor is left just before the closing `}}` so the user can keep typing (e.g. filters).
  */
@@ -125,6 +170,14 @@ export function applyEnvTemplateCompletion(
     const pipeAbs = match.braceStart + 2 + pipe
     const value = `${text.slice(0, pipeAbs + 1)}${key}}}${text.slice(match.cursor + closeLen)}`
     return { value, cursor: pipeAbs + 1 + key.length }
+  }
+
+  const argCtx = pipe !== -1 ? getEnvTemplateFilterArgContext(match.prefix) : null
+  if (argCtx && (key.startsWith('$lists.') || key.startsWith('$'))) {
+    // Complete only the current filter arg (`| from:$lists.name`).
+    const argAbs = match.braceStart + 2 + argCtx.argStartInPrefix
+    const value = `${text.slice(0, argAbs)}${key}}}${text.slice(match.cursor + closeLen)}`
+    return { value, cursor: argAbs + key.length }
   }
 
   const insert = `{{${key}}}`

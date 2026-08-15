@@ -91,6 +91,7 @@ export {
   type EnvTemplateMatch,
   type EnvTemplateSuggestion,
   filterEnvTemplateSuggestions,
+  getEnvTemplateFilterArgContext,
   getEnvTemplateMatch,
   isEnvTemplateFilterPrefix,
 } from './components/env-template-autocomplete'

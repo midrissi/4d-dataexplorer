@@ -1,4 +1,5 @@
 import type { AssistantMetadataSchema } from './assistant-metadata-schema'
+import { normalizePickListDeclarations, type PickListDeclaration } from './env/pick-lists'
 import type { Environment } from './env/types'
 import { eventBus } from './eventBus'
 
@@ -113,6 +114,11 @@ export type BaseSettings = {
   environments?: Environment[]
   /** Active environment id within `environments`, or null. */
   activeEnvironmentId?: string | null
+  /**
+   * Named `$lists` declarations for anonymize / `$pick` (values loaded on demand).
+   * Persists source only: name + dataclass + attribute.
+   */
+  pickLists?: PickListDeclaration[]
 }
 
 // =============================================================================
@@ -341,6 +347,22 @@ export function saveBaseEnvironmentsBlock(block: {
     environments: block.environments,
     activeEnvironmentId: block.activeEnvironmentId,
   })
+}
+
+/**
+ * Read `$lists` pick-list declarations from the current base settings.
+ */
+export function getBasePickLists(): PickListDeclaration[] {
+  if (!getCurrentBaseId()) return []
+  return normalizePickListDeclarations(getBaseSettings().pickLists)
+}
+
+/**
+ * Persist `$lists` pick-list declarations on the current base.
+ */
+export function saveBasePickLists(pickLists: readonly PickListDeclaration[]): void {
+  if (!getCurrentBaseId()) return
+  saveBaseSettings({ pickLists: normalizePickListDeclarations(pickLists) })
 }
 
 // =============================================================================

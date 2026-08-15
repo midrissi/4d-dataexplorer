@@ -1,6 +1,6 @@
 /**
- * `$this` call-site context for environment templates.
- * Paths use dotted segments: `$this`, `$this.firstName`, `$this.headers.Authorization`.
+ * `$this` / `$lists` call-site context for environment templates.
+ * Paths use dotted segments: `$this`, `$this.firstName`, `$lists.companyKeys`.
  */
 
 import { stringHasEnvTemplate } from './coerce-entity-data'
@@ -10,6 +10,52 @@ export type EnvTemplateThis = unknown
 export type ResolveEnvOptions = {
   /** Root object exposed as `$this` / `$this.*`. */
   this?: EnvTemplateThis
+  /** Named string lists for `$pick` / `$sample` / `$unique` (`$lists.<name>`). */
+  lists?: Record<string, readonly string[]>
+}
+
+const LISTS_KEY_RE = /^\$lists\.([A-Za-z_][A-Za-z0-9_]*)$/
+
+/** True when the template / filter arg is `$lists.<name>`. */
+export function isListsRefKey(key: string): boolean {
+  return LISTS_KEY_RE.test(key.trim())
+}
+
+/** Extract the list name from `$lists.<name>`, or `null` when invalid. */
+export function parseListsRefName(key: string): string | null {
+  const match = LISTS_KEY_RE.exec(key.trim())
+  return match?.[1] ?? null
+}
+
+/**
+ * Resolve `$lists.<name>` from `options.lists`.
+ * Returns `found: false` when the name is missing or the list is empty.
+ */
+export function resolveListsRef(
+  lists: Record<string, readonly string[]> | undefined,
+  key: string
+): { values: readonly string[]; found: boolean } {
+  const name = parseListsRefName(key)
+  if (!name || !lists) return { values: [], found: false }
+  const values = lists[name]
+  if (!values || values.length === 0) return { values: [], found: false }
+  return { values, found: true }
+}
+
+/** Flatten `$lists.<name>` keys for autocomplete. */
+export function listListsSuggestionKeys(
+  lists: Record<string, readonly string[]> | undefined,
+  maxKeys = 80
+): string[] {
+  if (!lists) return []
+  const out: string[] = []
+  for (const name of Object.keys(lists)) {
+    if (out.length >= maxKeys) break
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) continue
+    if (!lists[name] || lists[name].length === 0) continue
+    out.push(`$lists.${name}`)
+  }
+  return out
 }
 
 const THIS_KEY_RE = /^\$this(?:\.(.+))?$/

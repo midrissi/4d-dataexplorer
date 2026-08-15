@@ -106,7 +106,7 @@ export function resolveEnvTemplates(
 
     // Ergonomic helpers (`$pick`, `$object`, `$faker.helpers.*`, …) before generic filters.
     if (isHelperTemplateKey(key)) {
-      const helper = resolveHelperTemplate(key, filters)
+      const helper = resolveHelperTemplate(key, filters, options)
       if (!helper) {
         pushUnresolved(seen, unresolved, label)
         return raw
@@ -233,7 +233,7 @@ function resolveExactStructuredLeaf(
   }
 
   if (!isStructuredHelperKey(expr.key)) return null
-  const helper = resolveHelperTemplate(expr.key, expr.filters)
+  const helper = resolveHelperTemplate(expr.key, expr.filters, options)
   if (!helper) return { value: text, unresolved: true }
   if (!helper.rehydrate) return null
   return { value: helper.structured, unresolved: false }

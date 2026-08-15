@@ -1,17 +1,26 @@
-import type { EnvTemplateSuggestion, EnvWriteTarget } from '@4d/ui'
+import type { EnvTemplateFilter, EnvTemplateSuggestion, EnvWriteTarget } from '@4d/ui'
 import { parseTemplateExpression } from '@4d/ui'
 import { useCallback, useMemo } from 'react'
 import { useEnvThisRoot } from '~/components/Environments/env-this-context'
 import { useTranslation } from '~/i18n'
-import { HELPER_TEMPLATE_DEFS, listAllDynamicEnvVarDefs, resolveEnvTemplates } from '~/lib/env'
+import {
+  HELPER_TEMPLATE_DEFS,
+  isHelperTemplateKey,
+  listAllDynamicEnvVarDefs,
+  resolveEnvTemplates,
+} from '~/lib/env'
 import {
   type FieldTemplateHint,
   mergeFieldTemplateSuggestions,
 } from '~/lib/env/suggest-field-templates'
 import {
   type EnvTemplateThis,
+  isListsRefKey,
   isThisTemplateKey,
+  listListsSuggestionKeys,
   listThisSuggestionKeys,
+  parseListsRefName,
+  resolveListsRef,
   resolveThisPath,
   stringifyThisValue,
 } from '~/lib/env/this-context'
@@ -34,9 +43,33 @@ function isEnvScope(value: string | undefined): value is EnvScope {
   return value === 'global' || value === 'profile' || value === 'base'
 }
 
+function isKnownListName(
+  name: string | null,
+  lists: Record<string, readonly string[]> | undefined,
+  listNames: readonly string[] | undefined
+): boolean {
+  if (!name) return false
+  if (lists && Object.hasOwn(lists, name)) return true
+  return listNames?.includes(name) ?? false
+}
+
+/** `$lists.<name>` from a single-arg `| from:$lists…` helper filter. */
+function listsRefNameFromFilters(filters: readonly EnvTemplateFilter[]): string | null {
+  const from = filters.find((f) => f.name.toLowerCase() === 'from')
+  if (from?.args.length !== 1) return null
+  return parseListsRefName(from.args[0] ?? '')
+}
+
 export type TemplatedEnvFieldOptions = {
   /** Live `$this` root for completions and chip previews (overrides context provider). */
   thisRoot?: EnvTemplateThis
+  /** Named pick-lists with values for `$lists.<name>` resolve / preview. */
+  lists?: Record<string, readonly string[]>
+  /**
+   * Declared pick-list names (may be empty / not loaded yet).
+   * Chips that reference `$lists.<name>` stay valid so templates are not painted as typos.
+   */
+  listNames?: readonly string[]
   /**
    * When set, prepend a “For this field” suggestion group ranked from the
    * attribute name / type (entity forms, typed args, …).
@@ -49,6 +82,8 @@ export function useTemplatedEnvFieldProps(options?: TemplatedEnvFieldOptions) {
   const { t } = useTranslation()
   const contextThis = useEnvThisRoot()
   const thisRoot = options?.thisRoot !== undefined ? options.thisRoot : contextThis
+  const lists = options?.lists
+  const listNames = options?.listNames
   // Re-render when env data changes so chip lookups / suggestions stay fresh.
   const revision = useEnvironmentsStore((s) => s.revision)
 
@@ -98,6 +133,37 @@ export function useTemplatedEnvFieldProps(options?: TemplatedEnvFieldOptions) {
             dynamic: true,
           }
         }
+      } else if (isListsRefKey(key)) {
+        const name = parseListsRefName(key)
+        const hit = resolveListsRef(lists, key)
+        if (hit.found) {
+          const preview = hit.values.slice(0, 5).join(', ')
+          const suffix = hit.values.length > 5 ? `, …(+${hit.values.length - 5})` : ''
+          base = {
+            value: `${preview}${suffix}`,
+            scope: 'dynamic',
+            scopeLabel: labels.context,
+            unresolved: false,
+            dynamic: true,
+          }
+        } else if (isKnownListName(name, lists, listNames)) {
+          // Declared but not loaded yet — still a valid `$lists` ref for chips.
+          base = {
+            value: '…',
+            scope: 'dynamic',
+            scopeLabel: labels.context,
+            unresolved: false,
+            dynamic: true,
+          }
+        } else {
+          base = {
+            value: '',
+            scope: 'dynamic',
+            scopeLabel: labels.context,
+            unresolved: true,
+            dynamic: true,
+          }
+        }
       } else {
         base = useEnvironmentsStore.getState().lookup(key, labels)
       }
@@ -105,14 +171,25 @@ export function useTemplatedEnvFieldProps(options?: TemplatedEnvFieldOptions) {
       // Evaluate the whole expression (dynamic generators + `|` filters) for chip previews.
       if (token) {
         const map = useEnvironmentsStore.getState().getActiveMap()
-        const { text, unresolved } = resolveEnvTemplates(token, map, { this: thisRoot })
+        const { text, unresolved } = resolveEnvTemplates(token, map, { this: thisRoot, lists })
         if (unresolved.length > 0) {
           // `$this.field` can point at another templated value (`{{$faker…}}`). The path is
           // valid — it resolves at send time — so don't paint the chip as an error typo.
-          if (isThisTemplateKey(key) && !base.unresolved) {
+          if ((isThisTemplateKey(key) || isListsRefKey(key)) && !base.unresolved) {
             return {
               ...base,
               value: base.value || '…',
+              unresolved: false,
+              dynamic: true,
+            }
+          }
+          // `{{$pick | from:$lists.empIds}}` — declared list name is intentional, not a typo.
+          const listsName = listsRefNameFromFilters(parsed?.filters ?? [])
+          if (isHelperTemplateKey(key) && isKnownListName(listsName, lists, listNames)) {
+            return {
+              value: '…',
+              scope: 'dynamic',
+              scopeLabel: labels.context,
               unresolved: false,
               dynamic: true,
             }
@@ -136,7 +213,7 @@ export function useTemplatedEnvFieldProps(options?: TemplatedEnvFieldOptions) {
 
       return base
     },
-    [labels, thisRoot, revision]
+    [labels, thisRoot, lists, listNames, revision]
   )
 
   const writeTargets = useMemo((): EnvWriteTarget[] => {
@@ -187,6 +264,29 @@ export function useTemplatedEnvFieldProps(options?: TemplatedEnvFieldOptions) {
         group: 'context',
       })
     }
+    for (const key of listListsSuggestionKeys(lists)) {
+      if (seen.has(key)) continue
+      seen.add(key)
+      const hit = resolveListsRef(lists, key)
+      const detail = hit.found
+        ? `${hit.values.length} value${hit.values.length === 1 ? '' : 's'}`
+        : 'Pick list'
+      contextItems.push({
+        key,
+        detail,
+        group: 'context',
+      })
+    }
+    for (const name of listNames ?? []) {
+      const key = `$lists.${name}`
+      if (seen.has(key)) continue
+      seen.add(key)
+      contextItems.push({
+        key,
+        detail: 'Pick list',
+        group: 'context',
+      })
+    }
 
     const helperItems: EnvTemplateSuggestion[] = []
     for (const item of HELPER_TEMPLATE_DEFS) {
@@ -209,7 +309,7 @@ export function useTemplatedEnvFieldProps(options?: TemplatedEnvFieldOptions) {
     }
     const catalog = [...envItems, ...contextItems, ...helperItems, ...dynamicItems]
     return mergeFieldTemplateSuggestions(catalog, options?.field)
-  }, [revision, thisRoot, options?.field])
+  }, [revision, thisRoot, lists, listNames, options?.field])
 
   const variableGroupLabels = useMemo(
     () => ({
