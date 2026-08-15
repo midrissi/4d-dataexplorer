@@ -138,14 +138,17 @@ export function EntityAnonymizeDialog({
     setPlan((prev) => prev.filter((f) => f.name !== name))
   }, [])
 
-  const addField = useCallback((attrName: string) => {
-    setPlan((prev) => {
-      if (prev.some((field) => field.name === attrName)) return prev
-      const attr = mappableAttributes.find((item) => item.name === attrName)
-      if (!attr) return prev
-      return [...prev, buildAnonymizeFieldPlan(attr)]
-    })
-  }, [mappableAttributes])
+  const addField = useCallback(
+    (attrName: string) => {
+      setPlan((prev) => {
+        if (prev.some((field) => field.name === attrName)) return prev
+        const attr = mappableAttributes.find((item) => item.name === attrName)
+        if (!attr) return prev
+        return [...prev, buildAnonymizeFieldPlan(attr)]
+      })
+    },
+    [mappableAttributes]
+  )
 
   const replaceField = useCallback(
     (from: string, to: string) => {
