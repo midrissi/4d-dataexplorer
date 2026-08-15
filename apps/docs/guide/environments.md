@@ -143,7 +143,7 @@ Ergonomic keys for picking from lists, building arrays, and constructing JSON ob
 
 ### Pick lists (this database)
 
-Under **Environments → This database**, declare named `$lists` sources (dataclass + attribute). Declarations persist with the connected database; distinct values are **not** stored — they load on demand the first time Anonymize (or another caller) references `{{$pick | from:$lists.name}}`. Use **Refresh** in the pick-lists panel to reload a source.
+Under **Environments → This database**, declare named `$lists` sources (dataclass + attribute). Declarations persist with the connected database; distinct values are **not** stored — they load on demand the first time Anonymize (or another caller) references <code>&#123;&#123;$pick | from:$lists.name&#125;&#125;</code>. Use **Refresh** in the pick-lists panel to reload a source.
 
 Missing or empty `$lists.<name>` leaves the helper unresolved.
 
