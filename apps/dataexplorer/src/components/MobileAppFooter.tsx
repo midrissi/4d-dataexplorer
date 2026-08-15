@@ -11,6 +11,7 @@ import {
   FileDown,
   FileText,
   Info,
+  List,
   MoreHorizontal,
   PanelBottom,
   Play,
@@ -154,6 +155,15 @@ export function MobileAppFooter() {
             >
               <Variable className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
               {t('tabs.environments')}
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              className={mobileMenuItemClass()}
+              onClick={(event) =>
+                useTabsStore.getState().openListsTab({ forceNew: isModClick(event) })
+              }
+            >
+              <List className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+              {t('tabs.lists')}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className={mobileMenuItemClass()} onClick={() => openSettingsTab()}>

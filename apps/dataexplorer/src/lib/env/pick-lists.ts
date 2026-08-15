@@ -1,21 +1,59 @@
 /**
- * Named pick-list declarations for `$pick | from:$lists.<name>`.
- * Values are loaded asynchronously from `$distinct` and are not persisted.
+ * Named `$lists.<name>` declarations for `$pick` / `$sample` / `$unique`.
+ *
+ * Two kinds:
+ * - `dataclass`: values loaded asynchronously via `$distinct` (not persisted)
+ * - `hardcoded`: values persisted with the declaration
+ *
+ * Declarations are scoped (globals / profile / base) and merged with
+ * base > profile > globals precedence at resolve time.
  */
 
 import { parseTemplateExpression } from '@4d/ui'
 import { ENV_TEMPLATE_RE } from './resolve'
-import { parseListsRefName } from './this-context'
+import {
+  type InlineListRefSpec,
+  isInlineListRef,
+  parseInlineListRef,
+  parseListsRefName,
+} from './this-context'
 
 /** Soft cap so huge dataclasses do not freeze anonymize / `$pick`. */
 export const PICK_LIST_TOP = 5000
 
-/** Persisted declaration (no values). */
-export type PickListDeclaration = {
+/** Default limit for new dataclass list declarations in the UI. */
+export const PICK_LIST_DEFAULT_LIMIT = 500
+
+export type PickListScope = 'globals' | 'profile' | 'base'
+
+export type PickListKind = 'dataclass' | 'hardcoded'
+
+type PickListDeclarationBase = {
   id: string
   name: string
+}
+
+/** Dataclass-backed list: values come from `$distinct` on the connected database. */
+export type DataclassPickListDeclaration = PickListDeclarationBase & {
+  type: 'dataclass'
   dataclass: string
   attribute: string
+}
+
+/** Hardcoded list: values are persisted with the declaration. */
+export type HardcodedPickListDeclaration = PickListDeclarationBase & {
+  type: 'hardcoded'
+  values: string[]
+}
+
+/** Persisted declaration. Legacy entries without `type` migrate to `dataclass`. */
+export type PickListDeclaration = DataclassPickListDeclaration | HardcodedPickListDeclaration
+
+/** All three scopes for export / layered merge. */
+export type ScopedPickLists = {
+  globals: PickListDeclaration[]
+  profile: PickListDeclaration[]
+  base: PickListDeclaration[]
 }
 
 const NAME_RE = /^[A-Za-z_][A-Za-z0-9_]*$/
@@ -28,32 +66,99 @@ export function createPickListId(): string {
   return `list-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
 }
 
-export function createEmptyPickListDeclaration(): PickListDeclaration {
+export function createEmptyDataclassPickList(): DataclassPickListDeclaration {
   return {
     id: createPickListId(),
     name: '',
+    type: 'dataclass',
     dataclass: '',
     attribute: '',
   }
+}
+
+export function createEmptyHardcodedPickList(): HardcodedPickListDeclaration {
+  return {
+    id: createPickListId(),
+    name: '',
+    type: 'hardcoded',
+    values: [],
+  }
+}
+
+/** @deprecated Prefer createEmptyDataclassPickList / createEmptyHardcodedPickList. */
+export function createEmptyPickListDeclaration(): DataclassPickListDeclaration {
+  return createEmptyDataclassPickList()
+}
+
+export function isDataclassPickList(
+  entry: PickListDeclaration
+): entry is DataclassPickListDeclaration {
+  return entry.type === 'dataclass'
+}
+
+export function isHardcodedPickList(
+  entry: PickListDeclaration
+): entry is HardcodedPickListDeclaration {
+  return entry.type === 'hardcoded'
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
 
+/** Parse `x,y,z` / whitespace-separated pasted tags into ordered unique values. */
+export function parseHardcodedListValues(raw: string): string[] {
+  return normalizeHardcodedValues(
+    raw
+      .split(/[\n,]/)
+      .map((part) => part.trim())
+      .filter(Boolean)
+  )
+}
+
+/** Preserve first-seen order; dedupe case-insensitively. */
+export function normalizeHardcodedValues(values: readonly string[]): string[] {
+  const out: string[] = []
+  const seen = new Set<string>()
+  for (const value of values) {
+    const trimmed = value.trim()
+    if (!trimmed) continue
+    const key = trimmed.toLowerCase()
+    if (seen.has(key)) continue
+    seen.add(key)
+    out.push(trimmed)
+  }
+  return out
+}
+
 export function normalizePickListDeclaration(raw: unknown): PickListDeclaration | null {
   if (!isRecord(raw)) return null
   const id = typeof raw.id === 'string' && raw.id.trim() ? raw.id.trim() : createPickListId()
   const name = typeof raw.name === 'string' ? raw.name.trim() : ''
+
+  const explicitType = raw.type === 'hardcoded' || raw.type === 'dataclass' ? raw.type : null
+  const looksHardcoded =
+    explicitType === 'hardcoded' ||
+    (explicitType == null && Array.isArray(raw.values) && !('dataclass' in raw))
+
+  if (looksHardcoded) {
+    const values = Array.isArray(raw.values)
+      ? normalizeHardcodedValues(raw.values.map((v) => (typeof v === 'string' ? v : String(v))))
+      : []
+    return { id, name, type: 'hardcoded', values }
+  }
+
+  // Legacy entries without `type` (and with dataclass/attribute) → dataclass.
   const dataclass = typeof raw.dataclass === 'string' ? raw.dataclass.trim() : ''
   const attribute = typeof raw.attribute === 'string' ? raw.attribute.trim() : ''
-  return { id, name, dataclass, attribute }
+  return { id, name, type: 'dataclass', dataclass, attribute }
 }
 
 export function normalizePickListDeclarations(raw: unknown): PickListDeclaration[] {
   if (!Array.isArray(raw)) return []
   const out: PickListDeclaration[] = []
   const seenIds = new Set<string>()
+  const seenNames = new Set<string>()
   for (const item of raw) {
     const decl = normalizePickListDeclaration(item)
     if (!decl) continue
@@ -61,6 +166,12 @@ export function normalizePickListDeclarations(raw: unknown): PickListDeclaration
       decl.id = createPickListId()
     }
     seenIds.add(decl.id)
+    // Drop duplicate valid names within one scope (keep first).
+    const name = decl.name.trim()
+    if (name && isValidPickListName(name)) {
+      if (seenNames.has(name)) continue
+      seenNames.add(name)
+    }
     out.push(decl)
   }
   return out
@@ -76,6 +187,23 @@ export function listDeclaredPickListNames(entries: readonly PickListDeclaration[
     if (seen.has(name)) continue
     seen.add(name)
     out.push(name)
+  }
+  return out
+}
+
+/**
+ * Merge scoped declarations with base > profile > globals precedence.
+ * First-seen name wins when iterating in that order.
+ */
+export function mergeScopedPickLists(scopes: ScopedPickLists): PickListDeclaration[] {
+  const out: PickListDeclaration[] = []
+  const seen = new Set<string>()
+  for (const entry of [...scopes.base, ...scopes.profile, ...scopes.globals]) {
+    const name = entry.name.trim()
+    if (!name || !isValidPickListName(name)) continue
+    if (seen.has(name)) continue
+    seen.add(name)
+    out.push(entry)
   }
   return out
 }
@@ -168,14 +296,15 @@ export type PickListDistinctLoader = (params: {
   dataclass: string
   attribute: string
   top: number
+  entitySetId?: string
 }) => Promise<PickListLoaderResult>
 
-function cacheKey(baseId: string, dataclass: string, attribute: string): string {
-  return `${baseId}\0${dataclass}\0${attribute}`
+function cacheKey(baseId: string, declId: string): string {
+  return `${baseId}\0${declId}`
 }
 
 /**
- * Session cache for distinct values keyed by base + dataclass + attribute.
+ * Session cache for distinct values keyed by baseId + declarationId.
  * In-flight promises are deduplicated.
  */
 export function createPickListValuesCache() {
@@ -183,8 +312,8 @@ export function createPickListValuesCache() {
   const inflight = new Map<string, Promise<PickListLoaderResult>>()
   const errors = new Map<string, string>()
 
-  const invalidate = (baseId: string, dataclass: string, attribute: string) => {
-    const key = cacheKey(baseId, dataclass, attribute)
+  const invalidate = (baseId: string, declId: string) => {
+    const key = cacheKey(baseId, declId)
     ready.delete(key)
     inflight.delete(key)
     errors.delete(key)
@@ -203,8 +332,8 @@ export function createPickListValuesCache() {
     }
   }
 
-  const getCached = (baseId: string, dataclass: string, attribute: string): PickListValuesState => {
-    const key = cacheKey(baseId, dataclass, attribute)
+  const getCached = (baseId: string, declId: string): PickListValuesState => {
+    const key = cacheKey(baseId, declId)
     if (inflight.has(key)) return { status: 'loading' }
     const err = errors.get(key)
     if (err != null) return { status: 'error', message: err }
@@ -216,11 +345,11 @@ export function createPickListValuesCache() {
 
   const ensure = async (
     baseId: string,
-    dataclass: string,
-    attribute: string,
+    declId: string,
+    loaderParams: { dataclass: string; attribute: string; top: number; entitySetId?: string },
     loader: PickListDistinctLoader
   ): Promise<PickListLoaderResult> => {
-    const key = cacheKey(baseId, dataclass, attribute)
+    const key = cacheKey(baseId, declId)
     const cached = ready.get(key)
     if (cached) return { values: [...cached.values], truncated: cached.truncated }
 
@@ -229,7 +358,7 @@ export function createPickListValuesCache() {
 
     const promise = (async () => {
       try {
-        const result = await loader({ dataclass, attribute, top: PICK_LIST_TOP })
+        const result = await loader(loaderParams)
         ready.set(key, { values: result.values, truncated: result.truncated })
         errors.delete(key)
         return result
@@ -247,4 +376,74 @@ export function createPickListValuesCache() {
   }
 
   return { getCached, ensure, invalidate, invalidateBase }
+}
+
+/** Versioned Lists export/import payload. */
+export type ListsExport = {
+  version: 1
+  globals?: PickListDeclaration[]
+  profile?: PickListDeclaration[]
+  base?: PickListDeclaration[]
+}
+
+export function parseListsExport(raw: unknown): ListsExport | null {
+  if (!isRecord(raw)) return null
+  if (raw.version !== 1) return null
+  const out: ListsExport = { version: 1 }
+  if (Array.isArray(raw.globals)) out.globals = normalizePickListDeclarations(raw.globals)
+  if (Array.isArray(raw.profile)) out.profile = normalizePickListDeclarations(raw.profile)
+  if (Array.isArray(raw.base)) out.base = normalizePickListDeclarations(raw.base)
+  // Legacy Environments export may nest pickLists under base or top-level.
+  if (!out.base && Array.isArray(raw.pickLists)) {
+    out.base = normalizePickListDeclarations(raw.pickLists)
+  }
+  return out
+}
+
+/**
+ * Scan template text(s) for `from:ds.Dataclass.Attribute` inline list references.
+ * Also captures optional `| top:N` and `| entityset:ID` filters.
+ * Returns deduplicated specs (first occurrence for each `ds.Dataclass.Attribute` wins).
+ */
+export function collectInlineListRefs(texts: readonly string[]): InlineListRefSpec[] {
+  const byKey = new Map<string, InlineListRefSpec>()
+
+  const re = new RegExp(ENV_TEMPLATE_RE.source, 'g')
+  for (const text of texts) {
+    if (!text?.includes('{{')) continue
+    for (const match of text.matchAll(re)) {
+      const expr = parseTemplateExpression(match[1] ?? '')
+      if (!expr) continue
+      const fromFilter = expr.filters.find((f) => f.name.toLowerCase() === 'from')
+      if (fromFilter?.args.length !== 1) continue
+      const arg = fromFilter.args[0] ?? ''
+      if (!isInlineListRef(arg)) continue
+      if (byKey.has(arg)) continue // already collected, first occurrence wins
+
+      const topFilter = expr.filters.find((f) => f.name.toLowerCase() === 'top')
+      // Fall back to a plain numeric `count:N` so `{{$pick | from:ds.X.Y | count:10}}`
+      // only fetches the values it needs (a lone `count` is otherwise ignored by $pick).
+      const countFilter = expr.filters.find((f) => f.name.toLowerCase() === 'count')
+      const rawTopArg =
+        topFilter?.args[0] ?? (countFilter?.args.length === 1 ? countFilter.args[0] : undefined)
+      const rawTop =
+        rawTopArg != null && /^\d+$/.test(rawTopArg.trim()) ? parseInt(rawTopArg, 10) : undefined
+      const top = rawTop != null && Number.isFinite(rawTop) && rawTop > 0 ? rawTop : undefined
+
+      const entitySetFilter = expr.filters.find((f) => f.name.toLowerCase() === 'entityset')
+      const entitySetId = entitySetFilter?.args[0]?.trim() || undefined
+
+      const parts = parseInlineListRef(arg)
+      if (!parts) continue
+      byKey.set(arg, {
+        key: arg,
+        dataclass: parts.dataclass,
+        attribute: parts.attribute,
+        ...(top != null ? { top } : {}),
+        ...(entitySetId ? { entitySetId } : {}),
+      })
+    }
+  }
+
+  return [...byKey.values()]
 }

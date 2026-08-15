@@ -57,7 +57,12 @@ import {
   prepareAnonymizedUpdate,
   stripForCreate,
 } from '~/lib/entity-io'
-import { collectPickListNamesFromPlan, ensureCurrentPickLists } from '~/lib/env'
+import {
+  collectInlineListRefs,
+  collectPickListNamesFromPlan,
+  ensureCurrentPickLists,
+  loadInlineListRefs,
+} from '~/lib/env'
 import type { EntityIoTarget } from '~/lib/eventBus'
 import { eventBus } from '~/lib/eventBus'
 import { useEnvironmentsStore } from '~/store/environments'
@@ -202,17 +207,34 @@ export function EntityAnonymizeDialog({
     }
   }, [open, dataclassName])
 
+  // Faker templates from the plan (source for inline `ds.Class.Attr` refs).
+  const planFakerTemplates = useMemo(
+    () =>
+      plan
+        .filter((field) => field.mode === 'faker' && field.fakerKey)
+        .map((field) => field.fakerKey as string),
+    [plan]
+  )
+
   const ensureReferencedLists = useCallback(async () => {
+    // Inline `ds.Dataclass.Attribute` refs load their distinct values on demand.
+    const templates = planFakerTemplates
+    const inlineLists = await loadInlineListRefs(templates)
+    if (Object.keys(inlineLists).length > 0) {
+      setListsReady((prev) => mergeReadyLists(prev, inlineLists))
+    }
+
     const names = collectPickListNamesFromPlan(plan)
     if (names.length === 0) {
-      return { lists: getPickListsResolveMap(), ok: true as const }
+      return { lists: { ...getPickListsResolveMap(), ...inlineLists }, ok: true as const }
     }
     const result = await ensureCurrentPickLists(names)
     setListsReady((prev) => mergeReadyLists(prev, result.lists))
+    const mergedLists = { ...result.lists, ...inlineLists }
     if (result.errors.length > 0) {
       const first = result.errors[0]
       return {
-        lists: result.lists,
+        lists: mergedLists,
         ok: false as const,
         message: t('environments.pickListsLoadFailed', { name: first?.name ?? '' }),
         detail: first?.message,
@@ -220,13 +242,13 @@ export function EntityAnonymizeDialog({
     }
     if (result.missing.length > 0) {
       return {
-        lists: result.lists,
+        lists: mergedLists,
         ok: false as const,
         message: t('environments.pickListsMissing', { name: result.missing[0] ?? '' }),
       }
     }
-    return { lists: result.lists, ok: true as const }
-  }, [plan, getPickListsResolveMap, t])
+    return { lists: mergedLists, ok: true as const }
+  }, [plan, planFakerTemplates, getPickListsResolveMap, t])
 
   // Referenced `$lists` names as a stable key so typing inside a template that
   // already references the same lists does not re-trigger loading.
@@ -234,6 +256,32 @@ export function EntityAnonymizeDialog({
     () => collectPickListNamesFromPlan(plan).join('\u0000'),
     [plan]
   )
+
+  // Stable key of inline `ds.Class.Attr` refs so preview loading only re-runs
+  // when the referenced dataclass attributes actually change.
+  const referencedInlineKey = useMemo(
+    () =>
+      collectInlineListRefs(planFakerTemplates)
+        .map((ref) => ref.key)
+        .sort()
+        .join('\u0000'),
+    [planFakerTemplates]
+  )
+
+  // Lazily load inline `ds.Class.Attr` distinct values so the preview resolves
+  // (and mirrors what the download will generate).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: referencedInlineKey gates on the meaningful ref change
+  useEffect(() => {
+    if (!open || !referencedInlineKey) return
+    let cancelled = false
+    void loadInlineListRefs(planFakerTemplates).then((map) => {
+      if (cancelled) return
+      if (Object.keys(map).length > 0) setListsReady((prev) => mergeReadyLists(prev, map))
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [open, referencedInlineKey, envRevision])
 
   // Lazily ensure referenced pick lists.
   // envRevision: re-run when Environments declarations or cached values change.

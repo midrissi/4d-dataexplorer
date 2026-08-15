@@ -28,6 +28,37 @@ export function parseListsRefName(key: string): string | null {
 }
 
 /**
+ * Inline direct-load reference: `ds.Dataclass.Attribute` in a `from:` filter.
+ * Values are fetched via `$distinct` and stored in `options.lists` under
+ * key `"ds.Dataclass.Attribute"` before template resolution.
+ * Supports `| entityset:ID` and `| top:N` filters.
+ */
+const INLINE_LIST_RE = /^ds\.([A-Za-z_][A-Za-z0-9_]*)\.([A-Za-z_][A-Za-z0-9_]*)$/
+
+/** True when the filter arg is an inline `ds.Dataclass.Attribute` reference. */
+export function isInlineListRef(key: string): boolean {
+  return INLINE_LIST_RE.test(key.trim())
+}
+
+export type InlineListRefSpec = {
+  /** The full key used in `options.lists`, e.g. `"ds.Employee.firstName"`. */
+  key: string
+  dataclass: string
+  attribute: string
+  /** Max distinct values to fetch (from `| top:N` filter). */
+  top?: number
+  /** Entity set ID to scope the $distinct query (from `| entityset:ID` filter). */
+  entitySetId?: string
+}
+
+/** Parse `ds.Dataclass.Attribute` into its parts, or `null` if invalid. */
+export function parseInlineListRef(key: string): { dataclass: string; attribute: string } | null {
+  const match = INLINE_LIST_RE.exec(key.trim())
+  if (!match) return null
+  return { dataclass: match[1] ?? '', attribute: match[2] ?? '' }
+}
+
+/**
  * Resolve `$lists.<name>` from `options.lists`.
  * Returns `found: false` when the name is missing or the list is empty.
  */

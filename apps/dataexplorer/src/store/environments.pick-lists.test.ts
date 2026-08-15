@@ -2,7 +2,9 @@ import { beforeEach, describe, expect, it } from 'bun:test'
 import { saveBasePickLists, setCurrentBaseId } from '~/lib/storage'
 import { useEnvironmentsStore } from './environments'
 
-const declarations = [{ id: '1', name: 'empIds', dataclass: 'Employee', attribute: 'ID' }]
+const declarations = [
+  { id: '1', name: 'empIds', type: 'dataclass' as const, dataclass: 'Employee', attribute: 'ID' },
+]
 
 describe('environments store pick lists', () => {
   beforeEach(() => {

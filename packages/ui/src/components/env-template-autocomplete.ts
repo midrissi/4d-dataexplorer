@@ -34,7 +34,7 @@ export const ENV_TEMPLATE_FILTER_SUGGESTIONS: readonly EnvTemplateSuggestion[] =
   { key: 'between', detail: 'between:a,b (number or date)', group: 'filter' },
   { key: 'after', detail: 'after:YYYY-MM-DD (date dynamics)', group: 'filter' },
   { key: 'before', detail: 'before:YYYY-MM-DD (date dynamics)', group: 'filter' },
-  { key: 'from', detail: 'from:a,b,c (pick/sample/unique)', group: 'filter' },
+  { key: 'from', detail: 'from:a,b,c | $lists.name | ds.Class.Attr', group: 'filter' },
   { key: 'of', detail: 'of:$faker.path (repeat/uniqueArray)', group: 'filter' },
   { key: 'count', detail: 'count:n | count:min,max | count:>=n | count:<=n', group: 'filter' },
   { key: 'dims', detail: 'dims:n (vector dimensions)', group: 'filter' },
@@ -131,6 +131,11 @@ export function filterEnvTemplateSuggestions(
     const argCtx = getEnvTemplateFilterArgContext(prefix)
     if (argCtx && filterAcceptsListsRef(argCtx.filterName)) {
       const q = argCtx.argQuery.toLowerCase()
+      // `ds.…` → inline `ds.Dataclass.Attribute` direct-load refs.
+      if (q.startsWith('ds')) {
+        const dsSuggestions = suggestions.filter((item) => item.key.startsWith('ds.'))
+        return rankSuggestions(dsSuggestions, q)
+      }
       // Empty or `$…` → offer declared/loaded `$lists.*` names.
       if (q === '' || q.startsWith('$')) {
         const listSuggestions = suggestions.filter((item) => item.key.startsWith('$lists.'))
@@ -140,7 +145,11 @@ export function filterEnvTemplateSuggestions(
     return []
   }
 
-  return rankSuggestions(suggestions, prefix)
+  // Top level: inline `ds.*` refs only resolve inside `from:` / `of:` args — hide them here.
+  return rankSuggestions(
+    suggestions.filter((item) => !item.key.startsWith('ds.')),
+    prefix
+  )
 }
 
 /**
@@ -173,8 +182,8 @@ export function applyEnvTemplateCompletion(
   }
 
   const argCtx = pipe !== -1 ? getEnvTemplateFilterArgContext(match.prefix) : null
-  if (argCtx && (key.startsWith('$lists.') || key.startsWith('$'))) {
-    // Complete only the current filter arg (`| from:$lists.name`).
+  if (argCtx && (key.startsWith('$lists.') || key.startsWith('ds.') || key.startsWith('$'))) {
+    // Complete only the current filter arg (`| from:$lists.name` or `| from:ds.Class.Attr`).
     const argAbs = match.braceStart + 2 + argCtx.argStartInPrefix
     const value = `${text.slice(0, argAbs)}${key}}}${text.slice(match.cursor + closeLen)}`
     return { value, cursor: argAbs + key.length }

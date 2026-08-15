@@ -249,6 +249,17 @@ export type EnvironmentsTab = BaseTab & {
 }
 
 /**
+ * Lists tab — manage scoped `$lists` (dataclass + hardcoded).
+ */
+export type ListsScope = 'globals' | 'profile' | 'base'
+
+export type ListsTab = BaseTab & {
+  type: 'lists'
+  /** Selected scope segment (Globals / Profile / This database). */
+  scope?: ListsScope
+}
+
+/**
  * Union type for all tab types.
  * Use type guards (isHomeTab, isDataclassTab, isSettingsTab, isGraphTab, isStaticTab, isSchemaBuilderTab, isAssistantMetadataTab) to narrow the type.
  */
@@ -264,6 +275,7 @@ export type Tab =
   | HttpClientTab
   | RestExportBuilderTab
   | EnvironmentsTab
+  | ListsTab
 
 // =============================================================================
 // Type Guards
@@ -332,6 +344,10 @@ export function isRestExportBuilderTab(tab: Tab): tab is RestExportBuilderTab {
 
 export function isEnvironmentsTab(tab: Tab): tab is EnvironmentsTab {
   return tab.type === 'environments'
+}
+
+export function isListsTab(tab: Tab): tab is ListsTab {
+  return tab.type === 'lists'
 }
 
 // =============================================================================
@@ -524,6 +540,13 @@ const createEnvironmentsTab = (scope: EnvironmentsScope = 'globals'): Environmen
   scope,
 })
 
+const createListsTab = (scope: ListsScope = 'globals'): ListsTab => ({
+  id: generateTabId(),
+  type: 'lists',
+  isPinned: false,
+  scope,
+})
+
 // =============================================================================
 // Store Types
 // =============================================================================
@@ -569,6 +592,7 @@ type TabsState = {
   ) => string
   openRestExportBuilderTab: (options?: { forceNew?: boolean }) => void
   openEnvironmentsTab: (options?: { forceNew?: boolean }) => void
+  openListsTab: (options?: { forceNew?: boolean; scope?: ListsScope }) => void
   /** Called by DataclassGraph when mounted and ready to receive highlight events */
   notifyGraphTabReady: () => void
   closeTab: (tabId: string) => void
@@ -609,6 +633,8 @@ type TabsState = {
 
   /** Persist which Environments scope segment is selected. */
   setEnvironmentsScope: (tabId: string, scope: EnvironmentsScope) => void
+  /** Persist which Lists scope segment is selected. */
+  setListsScope: (tabId: string, scope: ListsScope) => void
   /** Persist the live HTTP Client draft onto the tab so it survives reload. */
   setHttpClientTabSeed: (tabId: string, seed: HttpClientSeed) => void
   setMethodExecutorTabSeed: (tabId: string, seed: MethodExecutorSeed) => void
@@ -654,6 +680,18 @@ const updateEnvironmentsTab = (
 ): Tab[] =>
   tabs.map((tab) => {
     if (tab.id === tabId && isEnvironmentsTab(tab)) {
+      return { ...tab, ...updates }
+    }
+    return tab
+  })
+
+const updateListsTab = (
+  tabs: Tab[],
+  tabId: string,
+  updates: Partial<Omit<ListsTab, 'id' | 'type'>>
+): Tab[] =>
+  tabs.map((tab) => {
+    if (tab.id === tabId && isListsTab(tab)) {
       return { ...tab, ...updates }
     }
     return tab
@@ -1052,6 +1090,33 @@ export const useTabsStore = create<TabsState>()(
           set({ tabs: newTabs, activeTabId: newTab.id })
         },
 
+        openListsTab: (options) => {
+          const { tabs } = get()
+          if (!options?.forceNew) {
+            const existingTab = tabs.find((t) => t.type === 'lists')
+            if (existingTab) {
+              if (
+                options?.scope &&
+                isListsTab(existingTab) &&
+                existingTab.scope !== options.scope
+              ) {
+                set({
+                  tabs: updateListsTab(tabs, existingTab.id, { scope: options.scope }),
+                  activeTabId: existingTab.id,
+                })
+                return
+              }
+              set({ activeTabId: existingTab.id })
+              return
+            }
+          }
+
+          const newTab = createListsTab(options?.scope ?? 'globals')
+          const pinnedCount = tabs.filter((t) => t.isPinned).length
+          const newTabs = [...tabs.slice(0, pinnedCount), newTab, ...tabs.slice(pinnedCount)]
+          set({ tabs: newTabs, activeTabId: newTab.id })
+        },
+
         notifyGraphTabReady: () => {
           const pending = graphTabReadyResolvers.splice(0, graphTabReadyResolvers.length)
           for (const resolve of pending) resolve()
@@ -1411,6 +1476,10 @@ export const useTabsStore = create<TabsState>()(
           set({ tabs: updateEnvironmentsTab(get().tabs, tabId, { scope }) })
         },
 
+        setListsScope: (tabId, scope) => {
+          set({ tabs: updateListsTab(get().tabs, tabId, { scope }) })
+        },
+
         setHttpClientTabSeed: (tabId, seed) => {
           set({ tabs: updateHttpClientTab(get().tabs, tabId, { seed }) })
         },
@@ -1687,4 +1756,14 @@ export const useIsEnvironmentsTabActive = () => {
 export const useActiveEnvironmentsTab = () => {
   const activeTab = useActiveTab()
   return activeTab && isEnvironmentsTab(activeTab) ? activeTab : null
+}
+
+export const useIsListsTabActive = () => {
+  const activeTab = useActiveTab()
+  return activeTab ? isListsTab(activeTab) : false
+}
+
+export const useActiveListsTab = () => {
+  const activeTab = useActiveTab()
+  return activeTab && isListsTab(activeTab) ? activeTab : null
 }

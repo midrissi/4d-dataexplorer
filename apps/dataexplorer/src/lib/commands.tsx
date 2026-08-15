@@ -17,6 +17,7 @@ import {
   Keyboard,
   Layers,
   LayoutGrid,
+  List,
   Lock,
   Moon,
   Palette,
@@ -105,6 +106,7 @@ export type CommandContext = {
   openHttpClientTab: () => string
   openRestExportBuilderTab: () => void
   openEnvironmentsTab: () => void
+  openListsTab: () => void
   // Entities
   entities: Entity[]
   selectedEntityId: string | null
@@ -484,6 +486,18 @@ function buildNavigationCommandsContinued(ctx: CommandContext): Command[] {
       category: 'Navigation',
       action: () => {
         ctx.openEnvironmentsTab()
+        ctx.onClose()
+      },
+    },
+    {
+      id: 'open-lists',
+      label: ctx.t('command.openLists'),
+      description: ctx.t('commandDesc.openLists'),
+      keywords: ['list', 'lists', 'pick', 'sample', 'unique', 'hardcoded', '$lists'],
+      icon: <List className="h-4 w-4" />,
+      category: 'Navigation',
+      action: () => {
+        ctx.openListsTab()
         ctx.onClose()
       },
     },

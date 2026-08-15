@@ -109,22 +109,28 @@ function settingsWithoutBaseOnlyFields(
 }
 
 /**
- * Environments are written by the environments store into profile settings.
+ * Environments and pick lists are written by their own stores into profile settings.
  * The settings persist adapter rebuilds settings from Zustand state (which does
- * not track environments), so merge them back from existing storage on write.
+ * not track them), so merge them back from existing storage on write.
  */
 function withPreservedEnvironments(
   settings: Record<string, unknown>,
   existing?: Record<string, unknown>
 ): Record<string, unknown> {
   const source = existing ?? {}
-  if (!Array.isArray(source.environments)) return settings
-  const activeRaw = source.activeEnvironmentId
-  return {
-    ...settings,
-    environments: source.environments,
-    activeEnvironmentId: typeof activeRaw === 'string' || activeRaw === null ? activeRaw : null,
+  let next = settings
+  if (Array.isArray(source.environments)) {
+    const activeRaw = source.activeEnvironmentId
+    next = {
+      ...next,
+      environments: source.environments,
+      activeEnvironmentId: typeof activeRaw === 'string' || activeRaw === null ? activeRaw : null,
+    }
   }
+  if (Array.isArray(source.pickLists)) {
+    next = { ...next, pickLists: source.pickLists }
+  }
+  return next
 }
 
 /**
@@ -2740,8 +2746,9 @@ export const useSettingsStore = create<SettingsState>()(
           saveProfilesStorage(data)
           useTabsStore.getState().applyDefaultViewModeToAllTabs(profile.settings.defaultViewMode)
           useTabsStore.getState().applyDefaultPageSizeToAllTabs(profile.settings.pageSize)
-          // Profile environments live in profile settings — refresh env selectors.
+          // Profile environments / pick lists live in profile settings — refresh selectors.
           void import('~/store/environments').then((m) => m.useEnvironmentsStore.getState().touch())
+          void import('~/store/lists').then((m) => m.useListsStore.getState().touch())
         },
 
         exportSettings: () => {

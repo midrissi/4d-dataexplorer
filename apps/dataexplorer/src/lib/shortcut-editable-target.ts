@@ -39,7 +39,7 @@ export function isEditableKeyboardTarget(event: KeyboardEvent): boolean {
     }
     if (
       candidate.closest(
-        'textarea, input, select, [contenteditable="true"], [role="textbox"], [data-code-editor], [data-allow-typing], .monaco-editor, .ace_editor, .nokey'
+        'textarea, input, select, [contenteditable="true"], [role="textbox"], [role="combobox"], [role="listbox"], [role="option"], [data-code-editor], [data-allow-typing], .monaco-editor, .ace_editor, .nokey'
       )
     ) {
       return true

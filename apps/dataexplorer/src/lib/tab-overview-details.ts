@@ -7,6 +7,7 @@ import {
   isGraphTab,
   isHomeTab,
   isHttpClientTab,
+  isListsTab,
   isMethodExecutorTab,
   isRestExportBuilderTab,
   isSchemaBuilderTab,
@@ -98,6 +99,9 @@ export function getTabOverviewDetails(
   }
   if (isEnvironmentsTab(tab)) {
     return { subtitle: t('tabs.environments'), chips: [] }
+  }
+  if (isListsTab(tab)) {
+    return { subtitle: t('tabs.lists'), chips: [] }
   }
   if (isStaticTab(tab)) {
     return { subtitle: t('tabs.releaseNotes'), chips: [] }

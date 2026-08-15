@@ -8,7 +8,12 @@
 import type { EnvTemplateFilter } from '@4d/ui'
 import { type DynamicGenerateOptions, getEnvFaker, resolveDynamicEnvVar } from './dynamic'
 import { TRANSFORM_FILTER_NAMES } from './template-filters'
-import { isListsRefKey, type ResolveEnvOptions, resolveListsRef } from './this-context'
+import {
+  isInlineListRef,
+  isListsRefKey,
+  type ResolveEnvOptions,
+  resolveListsRef,
+} from './this-context'
 
 export type HelperTemplateResult = {
   /** String form for text substitution (JSON for arrays/objects). */
@@ -202,10 +207,19 @@ function parseFromList(
 ): string[] | null {
   const filter = filters.find((f) => f.name.toLowerCase() === 'from')
   if (!filter || filter.args.length === 0) return null
-  if (filter.args.length === 1 && isListsRefKey(filter.args[0] ?? '')) {
-    const hit = resolveListsRef(options?.lists, filter.args[0] ?? '')
-    if (!hit.found) return null
-    return [...hit.values]
+  if (filter.args.length === 1) {
+    const arg = filter.args[0] ?? ''
+    if (isListsRefKey(arg)) {
+      const hit = resolveListsRef(options?.lists, arg)
+      if (!hit.found) return null
+      return [...hit.values]
+    }
+    // Inline `Dataclass.Attribute` reference — values pre-loaded into options.lists.
+    if (isInlineListRef(arg)) {
+      const values = options?.lists?.[arg]
+      if (!values || values.length === 0) return null
+      return [...values]
+    }
   }
   return [...filter.args]
 }

@@ -17,6 +17,7 @@ const SelectTrigger = React.forwardRef<
       'flex h-7 w-full cursor-pointer items-center justify-between gap-1.5 rounded-sm border border-input bg-background px-2.5 py-1 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-inset disabled:cursor-not-allowed disabled:opacity-50 data-[placeholder]:text-muted-foreground [&>span]:line-clamp-1',
       className
     )}
+    tabIndex={0}
     {...props}
   >
     {children}

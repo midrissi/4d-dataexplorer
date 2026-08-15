@@ -75,6 +75,13 @@ describe('applyEnvTemplateCompletion', () => {
       cursor: 33,
     })
   })
+
+  it('completes an inline ds.* arg after | from:', () => {
+    expect(applyEnvTemplateCompletion('{{$pick|from:ds.Emp', 19, 'ds.Employee.ID')).toEqual({
+      value: '{{$pick|from:ds.Employee.ID}}',
+      cursor: 27,
+    })
+  })
 })
 
 describe('filterEnvTemplateSuggestions', () => {
@@ -87,6 +94,9 @@ describe('filterEnvTemplateSuggestions', () => {
     { key: '$isoTimestamp', group: 'dynamic' },
     { key: '$lists.empIds', group: 'context', detail: '1000 values' },
     { key: '$lists.companyKeys', group: 'context', detail: 'Pick list' },
+    { key: 'ds.Employee.ID', group: 'context', detail: 'number' },
+    { key: 'ds.Employee.firstName', group: 'context', detail: 'string' },
+    { key: 'ds.Company.name', group: 'context', detail: 'string' },
   ]
 
   it('filters by prefix first, then substring contains', () => {
@@ -136,5 +146,28 @@ describe('filterEnvTemplateSuggestions', () => {
 
   it('does not suggest $lists for literal from: values', () => {
     expect(filterEnvTemplateSuggestions(items, '$pick|from:a,b')).toEqual([])
+  })
+
+  it('suggests inline ds.* refs while typing | from:ds…', () => {
+    expect(filterEnvTemplateSuggestions(items, '$pick|from:ds').map((i) => i.key)).toEqual([
+      'ds.Employee.ID',
+      'ds.Employee.firstName',
+      'ds.Company.name',
+    ])
+    expect(
+      filterEnvTemplateSuggestions(items, '$pick | from:ds.Employee.').map((i) => i.key)
+    ).toEqual(['ds.Employee.ID', 'ds.Employee.firstName'])
+    expect(
+      filterEnvTemplateSuggestions(items, '$pick | from:ds.Company').map((i) => i.key)
+    ).toEqual(['ds.Company.name'])
+  })
+
+  it('hides inline ds.* refs from the top-level variable list', () => {
+    expect(filterEnvTemplateSuggestions(items, 'ds').map((i) => i.key)).not.toContain(
+      'ds.Employee.ID'
+    )
+    expect(filterEnvTemplateSuggestions(items, '').map((i) => i.key)).not.toContain(
+      'ds.Employee.ID'
+    )
   })
 })

@@ -115,8 +115,8 @@ export type BaseSettings = {
   /** Active environment id within `environments`, or null. */
   activeEnvironmentId?: string | null
   /**
-   * Named `$lists` declarations for anonymize / `$pick` (values loaded on demand).
-   * Persists source only: name + dataclass + attribute.
+   * Named `$lists` declarations for anonymize / `$pick`.
+   * Dataclass lists persist source only; hardcoded lists persist values.
    */
   pickLists?: PickListDeclaration[]
 }
@@ -363,6 +363,64 @@ export function getBasePickLists(): PickListDeclaration[] {
 export function saveBasePickLists(pickLists: readonly PickListDeclaration[]): void {
   if (!getCurrentBaseId()) return
   saveBaseSettings({ pickLists: normalizePickListDeclarations(pickLists) })
+}
+
+const PROFILE_PICK_LISTS_KEY = 'pickLists'
+const GLOBAL_PICK_LISTS_KEY = 'dataexplorer-lists-globals-v1'
+
+/**
+ * Read `$lists` declarations from the current profile's settings.
+ */
+export function getProfilePickLists(): PickListDeclaration[] {
+  const data = getProfilesStorage()
+  const entry = data.profiles[data.current]
+  return normalizePickListDeclarations(entry?.settings?.[PROFILE_PICK_LISTS_KEY])
+}
+
+/**
+ * Persist `$lists` declarations on the current profile.
+ */
+export function saveProfilePickLists(pickLists: readonly PickListDeclaration[]): void {
+  const data = getProfilesStorage()
+  const currentId = data.current
+  const entry = data.profiles[currentId]
+  if (!entry) return
+  const updated: ProfileEntry = {
+    ...entry,
+    settings: {
+      ...entry.settings,
+      [PROFILE_PICK_LISTS_KEY]: normalizePickListDeclarations(pickLists),
+    },
+  }
+  data.profiles = { ...data.profiles, [currentId]: updated }
+  saveProfilesStorage(data)
+}
+
+/**
+ * Read global `$lists` declarations (device-wide, not profile/base).
+ */
+export function getGlobalPickLists(): PickListDeclaration[] {
+  try {
+    const raw = localStorage.getItem(GLOBAL_PICK_LISTS_KEY)
+    if (!raw) return []
+    return normalizePickListDeclarations(JSON.parse(raw))
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Persist global `$lists` declarations.
+ */
+export function saveGlobalPickLists(pickLists: readonly PickListDeclaration[]): void {
+  try {
+    localStorage.setItem(
+      GLOBAL_PICK_LISTS_KEY,
+      JSON.stringify(normalizePickListDeclarations(pickLists))
+    )
+  } catch {
+    // ignore quota / private mode
+  }
 }
 
 // =============================================================================

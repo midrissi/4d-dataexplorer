@@ -252,3 +252,10 @@ button:focus-visible,
   background: color-mix(in oklab, var(--destructive) 10%, transparent);
   color: var(--destructive);
 }
+
+/* Wrapper for focusable controls whose triggers don't surface a visible ring */
+.focus-ring-wrap:focus-within {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--ring);
+  border-radius: var(--radius-sm, 0.125rem);
+}

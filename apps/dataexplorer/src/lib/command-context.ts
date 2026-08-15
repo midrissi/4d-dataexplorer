@@ -80,6 +80,7 @@ export function createCommandContext(overrides: CommandContextOverrides = {}): C
     openHttpClientTab: () => tabsState.openHttpClientTab(),
     openRestExportBuilderTab: () => tabsState.openRestExportBuilderTab(),
     openEnvironmentsTab: () => tabsState.openEnvironmentsTab(),
+    openListsTab: () => tabsState.openListsTab(),
     entities: dataState.entities,
     selectedEntityId: dataState.selectedEntityId,
     isEditing: dataState.isEditing,

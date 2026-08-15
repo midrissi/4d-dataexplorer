@@ -1,8 +1,9 @@
 import type { EnvTemplateFilter, EnvTemplateSuggestion, EnvWriteTarget } from '@4d/ui'
 import { parseTemplateExpression } from '@4d/ui'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useEnvThisRoot } from '~/components/Environments/env-this-context'
 import { useTranslation } from '~/i18n'
+import { api } from '~/lib/api'
 import {
   HELPER_TEMPLATE_DEFS,
   isHelperTemplateKey,
@@ -15,6 +16,7 @@ import {
 } from '~/lib/env/suggest-field-templates'
 import {
   type EnvTemplateThis,
+  isInlineListRef,
   isListsRefKey,
   isThisTemplateKey,
   listListsSuggestionKeys,
@@ -28,6 +30,63 @@ import type { EnvScope, EnvVarLookup } from '~/lib/env/types'
 import { getCurrentBaseId } from '~/lib/storage'
 import { setEnvVarCurrentValue, useEnvironmentsStore } from '~/store/environments'
 import { useTabsStore } from '~/store/tabs'
+
+/**
+ * Inline `ds.Dataclass.Attribute` suggestions built from the cached catalog.
+ * Shared module-level cache (keyed by base) so many templated rows don't each
+ * rebuild the (potentially large) list. Only storage attributes are offered
+ * since `$distinct` resolves against real columns.
+ */
+type InlineRefCache = { baseId: string | null; items: EnvTemplateSuggestion[] }
+let inlineRefCache: InlineRefCache | null = null
+let inlineRefPromise: Promise<void> | null = null
+
+function loadInlineRefSuggestions(baseId: string | null): Promise<void> {
+  if (inlineRefCache?.baseId === baseId) return Promise.resolve()
+  if (!inlineRefPromise) {
+    inlineRefPromise = api
+      .getCatalog()
+      .then((catalog) => {
+        const items: EnvTemplateSuggestion[] = []
+        for (const dc of catalog.dataClasses ?? []) {
+          if (!dc?.name) continue
+          for (const attr of dc.attributes ?? []) {
+            if (!attr?.name) continue
+            if (attr.kind && attr.kind !== 'storage') continue
+            items.push({
+              key: `ds.${dc.name}.${attr.name}`,
+              detail: attr.type ?? 'attribute',
+              group: 'context',
+            })
+          }
+        }
+        inlineRefCache = { baseId, items }
+      })
+      .catch(() => {
+        inlineRefCache = { baseId, items: [] }
+      })
+      .finally(() => {
+        inlineRefPromise = null
+      })
+  }
+  return inlineRefPromise
+}
+
+/** Live inline `ds.*` suggestions for the current base (loads once, cached). */
+function useInlineListRefSuggestions(): readonly EnvTemplateSuggestion[] {
+  const baseId = getCurrentBaseId()
+  const [, force] = useState(0)
+  useEffect(() => {
+    let cancelled = false
+    void loadInlineRefSuggestions(baseId).then(() => {
+      if (!cancelled) force((n) => n + 1)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [baseId])
+  return inlineRefCache?.baseId === baseId ? inlineRefCache.items : []
+}
 
 /** Normalize chip lookup arg to a full `{{…}}` token when possible. */
 function toTemplateToken(keyOrExpression: string): string | null {
@@ -60,6 +119,13 @@ function listsRefNameFromFilters(filters: readonly EnvTemplateFilter[]): string 
   return parseListsRefName(from.args[0] ?? '')
 }
 
+/** Single-arg `| from:<arg>` value (any form), or `null`. */
+function fromRefArg(filters: readonly EnvTemplateFilter[]): string | null {
+  const from = filters.find((f) => f.name.toLowerCase() === 'from')
+  if (from?.args.length !== 1) return null
+  return from.args[0] ?? null
+}
+
 export type TemplatedEnvFieldOptions = {
   /** Live `$this` root for completions and chip previews (overrides context provider). */
   thisRoot?: EnvTemplateThis
@@ -86,8 +152,11 @@ export function useTemplatedEnvFieldProps(options?: TemplatedEnvFieldOptions) {
   const listNames = options?.listNames
   // Re-render when env data changes so chip lookups / suggestions stay fresh.
   const revision = useEnvironmentsStore((s) => s.revision)
+  // Inline `ds.Dataclass.Attribute` completions from the cached catalog.
+  const inlineRefSuggestions = useInlineListRefSuggestions()
 
   const openEnvironmentsTab = useTabsStore((s) => s.openEnvironmentsTab)
+  const openListsTab = useTabsStore((s) => s.openListsTab)
 
   const labels = useMemo(
     () => ({
@@ -186,6 +255,18 @@ export function useTemplatedEnvFieldProps(options?: TemplatedEnvFieldOptions) {
           // `{{$pick | from:$lists.empIds}}` — declared list name is intentional, not a typo.
           const listsName = listsRefNameFromFilters(parsed?.filters ?? [])
           if (isHelperTemplateKey(key) && isKnownListName(listsName, lists, listNames)) {
+            return {
+              value: '…',
+              scope: 'dynamic',
+              scopeLabel: labels.context,
+              unresolved: false,
+              dynamic: true,
+            }
+          }
+          // `{{$pick | from:ds.Dataclass.Attribute}}` — inline dataclass ref; values are
+          // fetched at generate time, so a valid ref must not be painted as a typo.
+          const inlineArg = fromRefArg(parsed?.filters ?? [])
+          if (isHelperTemplateKey(key) && inlineArg && isInlineListRef(inlineArg)) {
             return {
               value: '…',
               scope: 'dynamic',
@@ -307,9 +388,15 @@ export function useTemplatedEnvFieldProps(options?: TemplatedEnvFieldOptions) {
         group: 'dynamic',
       })
     }
-    const catalog = [...envItems, ...contextItems, ...helperItems, ...dynamicItems]
+    const catalog = [
+      ...envItems,
+      ...contextItems,
+      ...helperItems,
+      ...dynamicItems,
+      ...inlineRefSuggestions,
+    ]
     return mergeFieldTemplateSuggestions(catalog, options?.field)
-  }, [revision, thisRoot, lists, listNames, options?.field])
+  }, [revision, thisRoot, lists, listNames, options?.field, inlineRefSuggestions])
 
   const variableGroupLabels = useMemo(
     () => ({
@@ -331,6 +418,8 @@ export function useTemplatedEnvFieldProps(options?: TemplatedEnvFieldOptions) {
     onVariableChange,
     onManageVariables: openEnvironmentsTab,
     manageVariablesLabel: t('environments.manageVariables'),
+    onManageLists: openListsTab,
+    manageListsLabel: t('lists.manageLists'),
     writeTargets,
     addToLabel: t('environments.addTo'),
     unresolvedLabel: t('environments.unresolved'),

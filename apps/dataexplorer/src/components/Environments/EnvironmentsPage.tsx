@@ -34,7 +34,6 @@ import {
 } from 'lucide-react'
 import { type KeyboardEvent, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { EmptyPanel as AppEmptyPanel, EmptyPanelAction } from '~/components/EmptyPanel'
-import { PickListsPanel } from '~/components/Environments/PickListsPanel'
 import { SavedListBadge } from '~/components/SavedListPanel'
 import { useTranslation } from '~/i18n'
 import {
@@ -954,17 +953,12 @@ export function EnvironmentsPage() {
             />
           ) : null}
           {scope === 'base' && hasBase ? (
-            <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-              <div className="min-h-0 flex-1 overflow-hidden">
-                <EnvironmentsEditor
-                  environments={baseBlock.environments}
-                  activeEnvironmentId={baseBlock.activeEnvironmentId}
-                  onChange={setBaseBlock}
-                  emptyHint={t('environments.emptyBase')}
-                />
-              </div>
-              <PickListsPanel />
-            </div>
+            <EnvironmentsEditor
+              environments={baseBlock.environments}
+              activeEnvironmentId={baseBlock.activeEnvironmentId}
+              onChange={setBaseBlock}
+              emptyHint={t('environments.emptyBase')}
+            />
           ) : null}
         </div>
       </div>

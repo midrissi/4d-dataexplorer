@@ -292,4 +292,20 @@ describe('resolveHelperTemplate', () => {
       expect(['admin', 'user', 'guest']).toContain(item)
     }
   })
+
+  it('picks from an inline Dataclass.Attribute ref pre-loaded into lists', () => {
+    const result = resolveHelperTemplate('$pick', [{ name: 'from', args: ['ds.Employee.ID'] }], {
+      lists: { 'ds.Employee.ID': ['1', '2', '3'] },
+    })
+    expect(result).not.toBeNull()
+    if (!result) return
+    expect(['1', '2', '3']).toContain(result.text)
+  })
+
+  it('rejects inline ref when not pre-loaded', () => {
+    expect(resolveHelperTemplate('$pick', [{ name: 'from', args: ['ds.Employee.ID'] }])).toBeNull()
+    expect(
+      resolveHelperTemplate('$pick', [{ name: 'from', args: ['ds.Employee.ID'] }], { lists: {} })
+    ).toBeNull()
+  })
 })

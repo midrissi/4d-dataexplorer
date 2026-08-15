@@ -43,6 +43,7 @@ import {
   Settings,
   Terminal,
   UserCircle,
+  Variable,
   Wrench,
 } from 'lucide-react'
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
@@ -92,6 +93,7 @@ import { DesktopUpdateFooterControl } from './DesktopUpdateFooterControl'
 import { EntityIoHost } from './EntityIo'
 import { EnvSwitcher } from './Environments/EnvSwitcher'
 import { KeyboardShortcutsModal } from './KeyboardShortcutsModal'
+import { ListsSwitcher } from './Lists/ListsSwitcher'
 import { MobileAppFooter } from './MobileAppFooter'
 import { useMobileCatalog } from './MobileCatalogContext'
 import { OnlineStatusFooterControl } from './OnlineStatusFooterControl'
@@ -135,6 +137,8 @@ export function Layout({
   const openMethodExecutorTab = useTabsStore((state) => state.openMethodExecutorTab)
   const openHttpClientTab = useTabsStore((state) => state.openHttpClientTab)
   const openRestExportBuilderTab = useTabsStore((state) => state.openRestExportBuilderTab)
+  const openEnvironmentsTab = useTabsStore((state) => state.openEnvironmentsTab)
+  const openListsTab = useTabsStore((state) => state.openListsTab)
   const closeTab = useTabsStore((state) => state.closeTab)
   const togglePinTab = useTabsStore((state) => state.togglePinTab)
   const setActiveTab = useTabsStore((state) => state.setActiveTab)
@@ -730,6 +734,7 @@ export function Layout({
             </TooltipProvider>
 
             <EnvSwitcher side="top" align="start" size="sm" />
+            <ListsSwitcher side="top" align="start" size="sm" />
 
             <AiTasksFooterControl />
             <OnlineStatusFooterControl />
@@ -975,6 +980,18 @@ export function Layout({
                 >
                   <FileDown className="mr-2 h-4 w-4" />
                   {t('tabs.restExport')}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(event) => openEnvironmentsTab({ forceNew: isModClick(event) })}
+                >
+                  <Variable className="mr-2 h-4 w-4" />
+                  {t('tabs.environments')}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(event) => openListsTab({ forceNew: isModClick(event) })}
+                >
+                  <List className="mr-2 h-4 w-4" />
+                  {t('tabs.lists')}
                 </DropdownMenuItem>
                 <OpenInNewTabHint className="px-2 py-1.5" />
               </DropdownMenuContent>

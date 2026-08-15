@@ -351,21 +351,37 @@ describe('storage', () => {
 
     it('persists declarations per base and scopes them by BASEID', () => {
       setCurrentBaseId('base-pick-a')
-      saveBasePickLists([{ id: '1', name: 'companyKeys', dataclass: 'Company', attribute: 'ID' }])
+      saveBasePickLists([
+        {
+          id: '1',
+          name: 'companyKeys',
+          type: 'dataclass' as const,
+          dataclass: 'Company',
+          attribute: 'ID',
+        },
+      ])
       expect(getBasePickLists()).toEqual([
-        { id: '1', name: 'companyKeys', dataclass: 'Company', attribute: 'ID' },
+        { id: '1', name: 'companyKeys', type: 'dataclass', dataclass: 'Company', attribute: 'ID' },
       ])
 
       setCurrentBaseId('base-pick-b')
       expect(getBasePickLists()).toEqual([])
-      saveBasePickLists([{ id: '2', name: 'roleNames', dataclass: 'Role', attribute: 'name' }])
+      saveBasePickLists([
+        {
+          id: '2',
+          name: 'roleNames',
+          type: 'dataclass' as const,
+          dataclass: 'Role',
+          attribute: 'name',
+        },
+      ])
       expect(getBasePickLists()).toEqual([
-        { id: '2', name: 'roleNames', dataclass: 'Role', attribute: 'name' },
+        { id: '2', name: 'roleNames', type: 'dataclass', dataclass: 'Role', attribute: 'name' },
       ])
 
       setCurrentBaseId('base-pick-a')
       expect(getBasePickLists()).toEqual([
-        { id: '1', name: 'companyKeys', dataclass: 'Company', attribute: 'ID' },
+        { id: '1', name: 'companyKeys', type: 'dataclass', dataclass: 'Company', attribute: 'ID' },
       ])
       setCurrentBaseId('')
     })

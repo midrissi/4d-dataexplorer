@@ -21,6 +21,7 @@ import {
   useIsEnvironmentsTabActive,
   useIsGraphTabActive,
   useIsHomeTabActive,
+  useIsListsTabActive,
   useIsRestExportBuilderTabActive,
   useIsSchemaBuilderTabActive,
   useIsSettingsTabActive,
@@ -64,6 +65,11 @@ const RestExportBuilderTabView = lazy(() =>
 const EnvironmentsTabView = lazy(() =>
   import('./Environments/EnvironmentsTabView').then((m) => ({
     default: m.EnvironmentsTabView,
+  }))
+)
+const ListsTabView = lazy(() =>
+  import('./Lists/ListsTabView').then((m) => ({
+    default: m.ListsTabView,
   }))
 )
 
@@ -207,6 +213,7 @@ export function DataclassView() {
   const isAssistantMetadataTabActive = useIsAssistantMetadataTabActive()
   const isRestExportBuilderTabActive = useIsRestExportBuilderTabActive()
   const isEnvironmentsTabActive = useIsEnvironmentsTabActive()
+  const isListsTabActive = useIsListsTabActive()
 
   const activeDataclassTabId = useMemo(() => {
     const tab = tabs.find((t) => t.id === activeTabId)
@@ -388,6 +395,12 @@ export function DataclassView() {
     overlay = (
       <Suspense fallback={<OverlayFallback label={loadingLabel} />}>
         <EnvironmentsTabView />
+      </Suspense>
+    )
+  } else if (isListsTabActive) {
+    overlay = (
+      <Suspense fallback={<OverlayFallback label={loadingLabel} />}>
+        <ListsTabView />
       </Suspense>
     )
   } else if (!activeDataclassTabId && !activeMethodExecutorTabId && !activeHttpClientTabId) {

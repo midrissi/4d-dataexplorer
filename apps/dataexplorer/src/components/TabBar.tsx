@@ -22,6 +22,7 @@ import {
   FileDown,
   FileText,
   Home,
+  List,
   Network,
   Pin,
   Play,
@@ -57,6 +58,7 @@ import {
   isGraphTab,
   isHomeTab,
   isHttpClientTab,
+  isListsTab,
   isMethodExecutorTab,
   isRestExportBuilderTab,
   isSchemaBuilderTab,
@@ -140,6 +142,9 @@ export function TabBar() {
       }
       if (isEnvironmentsTab(tab)) {
         return mobile ? t('tabs.environmentsShort') : t('tabs.environments')
+      }
+      if (isListsTab(tab)) {
+        return mobile ? t('tabs.listsShort') : t('tabs.lists')
       }
       if (isStaticTab(tab)) return t(STATIC_TAB_TITLE_KEYS[tab.staticId] ?? 'tabs.releaseNotes')
       if (isDataclassTab(tab) && tab.customTitle) {
@@ -396,7 +401,8 @@ export function TabBar() {
         isMethodExecutorTab(tab) ||
         isHttpClientTab(tab) ||
         isRestExportBuilderTab(tab) ||
-        isEnvironmentsTab(tab)
+        isEnvironmentsTab(tab) ||
+        isListsTab(tab)
       ) {
         return 0
       }
@@ -479,6 +485,7 @@ export function TabBar() {
       if (isHttpClientTab(tab)) return <Send className={className} />
       if (isRestExportBuilderTab(tab)) return <FileDown className={className} />
       if (isEnvironmentsTab(tab)) return <Variable className={className} />
+      if (isListsTab(tab)) return <List className={className} />
       if (isStaticTab(tab)) return <FileText className={className} />
       if (isDataclassTab(tab)) {
         return (
@@ -539,6 +546,7 @@ export function TabBar() {
               const isHttpClient = isHttpClientTab(tab)
               const isRestExport = isRestExportBuilderTab(tab)
               const isEnvironments = isEnvironmentsTab(tab)
+              const isLists = isListsTab(tab)
               const isDataclass = isDataclassTab(tab)
               const showCount =
                 !isHome &&
@@ -550,7 +558,8 @@ export function TabBar() {
                 !isMethodExecutor &&
                 !isHttpClient &&
                 !isRestExport &&
-                !isEnvironments
+                !isEnvironments &&
+                !isLists
 
               // Get customization for dataclass tabs
               const customization = isDataclass

@@ -92,7 +92,9 @@ describe('parseEnvironmentsImport', () => {
       environments: undefined,
       globals: undefined,
       activeEnvironmentId: null,
-      pickLists: [{ id: '1', name: 'companyKeys', dataclass: 'Company', attribute: 'ID' }],
+      pickLists: [
+        { id: '1', name: 'companyKeys', type: 'dataclass', dataclass: 'Company', attribute: 'ID' },
+      ],
     })
   })
 })

@@ -1,5 +1,5 @@
 import { cn } from '@4d/ui'
-import { type KeyboardEvent, useRef, useState } from 'react'
+import { type ClipboardEvent, type KeyboardEvent, useRef, useState } from 'react'
 import { TagChip } from '~/components/Tags'
 import { useTranslation } from '~/i18n'
 
@@ -58,16 +58,40 @@ export function ListTagsInput({
   }
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter' || event.key === ',' || event.key === 'Tab') {
-      if (event.key === 'Tab' && !draft.trim()) return
+    if (event.key === 'Enter' || event.key === ',') {
       event.preventDefault()
       if (draft.trim()) commit(draft)
+      return
+    }
+    // Tab with a pending draft: commit via onBlur (fired automatically) and let
+    // the browser move focus to the next element without preventDefault.
+    if (event.key === 'Tab' && draft.trim()) {
+      commit(draft)
       return
     }
     if (event.key === 'Backspace' && !draft && tags.length > 0) {
       event.preventDefault()
       removeAt(tags.length - 1)
     }
+  }
+
+  const onPaste = (event: ClipboardEvent<HTMLInputElement>) => {
+    const text = event.clipboardData.getData('text')
+    if (!text || (!text.includes(',') && !text.includes('\n') && !/\s{2,}/.test(text))) return
+    event.preventDefault()
+    const parts = text
+      .split(/[\n,]/)
+      .map((part) => part.trim())
+      .filter(Boolean)
+    if (parts.length === 0) return
+    let next = [...tags]
+    for (const part of parts) {
+      const exists = next.some((tag) => tag.toLowerCase() === part.toLowerCase())
+      if (!exists) next = [...next, part]
+    }
+    onChange(serializeListParamTags(next))
+    setDraft('')
+    requestAnimationFrame(() => inputRef.current?.focus())
   }
 
   return (
@@ -104,6 +128,7 @@ export function ListTagsInput({
         className="min-w-20 flex-1 bg-transparent font-mono text-xs outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed"
         onChange={(event) => setDraft(event.target.value.replace(/,/g, ''))}
         onKeyDown={onKeyDown}
+        onPaste={onPaste}
         onBlur={() => {
           if (draft.trim()) commit(draft)
         }}

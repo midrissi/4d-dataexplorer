@@ -9,6 +9,7 @@ import {
   isGraphTab,
   isHomeTab,
   isHttpClientTab,
+  isListsTab,
   isMethodExecutorTab,
   isRestExportBuilderTab,
   isSchemaBuilderTab,
@@ -326,7 +327,8 @@ export function MobileTabOverviewPreview({
     isSchemaBuilderTab(tab) ||
     isAssistantMetadataTab(tab) ||
     isRestExportBuilderTab(tab) ||
-    isEnvironmentsTab(tab)
+    isEnvironmentsTab(tab) ||
+    isListsTab(tab)
   ) {
     body = <ListPreview isActive={isActive} icon={icon} rows={isHomeTab(tab) ? 4 : 5} />
   } else {

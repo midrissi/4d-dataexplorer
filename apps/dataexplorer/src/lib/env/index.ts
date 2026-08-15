@@ -44,23 +44,43 @@ export {
 } from './normalize'
 export {
   buildPickListsResolveMap,
+  collectInlineListRefs,
   collectPickListNamesFromPlan,
   collectReferencedPickListNames,
+  createEmptyDataclassPickList,
+  createEmptyHardcodedPickList,
   createEmptyPickListDeclaration,
   createPickListId,
   createPickListValuesCache,
+  type DataclassPickListDeclaration,
+  type HardcodedPickListDeclaration,
+  isDataclassPickList,
+  isHardcodedPickList,
   isValidPickListName,
+  type ListsExport,
   listDeclaredPickListNames,
+  mergeScopedPickLists,
+  normalizeHardcodedValues,
   normalizePickListDeclaration,
   normalizePickListDeclarations,
+  PICK_LIST_DEFAULT_LIMIT,
   PICK_LIST_TOP,
   type PickListDeclaration,
   type PickListDistinctLoader,
+  type PickListKind,
   type PickListLoaderResult,
+  type PickListScope,
   type PickListValuesState,
+  parseHardcodedListValues,
+  parseListsExport,
+  type ScopedPickLists,
   stringifyDistinctValue,
 } from './pick-lists'
-export { ensureCurrentPickLists, loadPickListDistinctValues } from './pick-lists-runtime'
+export {
+  ensureCurrentPickLists,
+  loadInlineListRefs,
+  loadPickListDistinctValues,
+} from './pick-lists-runtime'
 export type { EnvTemplateSegment } from './resolve'
 export {
   collectEnvTemplateKeys,
@@ -99,10 +119,13 @@ export {
 } from './template-helpers'
 export {
   type EnvTemplateThis,
+  type InlineListRefSpec,
+  isInlineListRef,
   isListsRefKey,
   isThisTemplateKey,
   listListsSuggestionKeys,
   listThisSuggestionKeys,
+  parseInlineListRef,
   parseListsRefName,
   type ResolveEnvOptions,
   resolveListsRef,
