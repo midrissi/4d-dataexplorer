@@ -43,7 +43,7 @@ Use the toolbar to switch modes. The default mode for new tabs is set in Setting
 Relations are loaded **on demand** to keep the viewer fast:
 
 - **Related entity** — click a deferred relation to fetch and open the related entity inline.
-- **Related entity sets** — a related selection loads into the same data grid used by the [table view](./browsing#list-view-modes), with its own pagination.
+- **Related entity sets** — a related selection loads into the same data grid used by the [table view](./browsing#list-view-modes), with its own pagination. Use [Selection tools](./selection-tools) on related sets when an entity set id is available.
 
 ### Metadata panel
 

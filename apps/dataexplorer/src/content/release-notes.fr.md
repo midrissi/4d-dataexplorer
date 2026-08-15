@@ -6,7 +6,7 @@
 
 ### Aperçu
 
-La version `1.4.x` ajoute les **variables d'environnement** (couches globales, profil et base avec `{{templates}}`, filtres pipe et dynamiques Faker) ; ajoute le **terminal ORDA** (modes REPL et Code avec fichiers snippets) dans un dock bas partagé avec la Console ; ajoute **l’export REST** (collection v2.1 et OpenAPI 3.1 depuis le catalogue, le Client HTTP et l’Exécuteur de méthodes) ; ajoute les **favoris** pour le Client HTTP et l’Exécuteur de méthodes ; publie les applications **iOS et Android** ; améliore l’Exécuteur de méthodes (params/en-têtes Advanced, `$method=entityset` par défaut, erreurs dans le panneau résultat, états vides, raccourcis mod-clic) ; améliore le journal réseau de la console (corps pendant le pending, ouverture pendant le pending, annulation) ; et peaufine l'expérience mobile (Client HTTP et dock).
+La version `1.4.x` ajoute les **variables d'environnement** (couches globales, profil et base avec `{{templates}}`, filtres pipe et dynamiques Faker) ; ajoute le **terminal ORDA** (modes REPL et Code avec fichiers snippets) dans un dock bas partagé avec la Console ; ajoute **l’export REST** (collection v2.1 et OpenAPI 3.1 depuis le catalogue, le Client HTTP et l’Exécuteur de méthodes) ; ajoute les **outils de sélection** (analyse `$distinct` / `$compute`, export/import multi-formats, anonymisation Faker avec téléchargement, import comme nouveaux ou mise à jour in-place) ; ajoute les **favoris** pour le Client HTTP et l’Exécuteur de méthodes ; publie les applications **iOS et Android** ; améliore l’Exécuteur de méthodes (params/en-têtes Advanced, `$method=entityset` par défaut, erreurs dans le panneau résultat, états vides, raccourcis mod-clic) ; améliore le journal réseau de la console (corps pendant le pending, ouverture pendant le pending, annulation) ; et peaufine l'expérience mobile (Client HTTP et dock).
 
 ### Fonctionnalités
 
@@ -65,6 +65,14 @@ La version `1.4.x` ajoute les **variables d'environnement** (couches globales, p
 - **Favoris Exécuteur de méthodes** — Même flux de favoris pour les appels de méthodes.
 - **Création d'entités par lot** — Créez plusieurs entités avec des champs templated résolus depuis la carte d'environnement active.
 
+#### Outils de sélection
+
+- **Points d'entrée** — Menu Outils de sélection sur les listes de dataclass, menus contextuels d'onglets, résultats de sélection de l’Exécuteur, ensembles liés, lignes Home et palette de commandes.
+- **Analyser** — Valeurs distinctes (`$distinct`) et cartes de calcul (`$compute=$all`) pour un attribut de l’ensemble d’entités courant.
+- **Exporter / Importer** — Formats extensibles (JSON, JSON REST, JSONL, CSV, TSV, SQL, XML, YAML, Markdown, HTML) ; l’import crée ou met à jour des enregistrements dans la dataclass ouverte.
+- **Anonymiser** — Correspondance de champs avec templates Faker (filtres `|`), valeurs fixes, conserver ou vider ; retirer des champs du plan pour les omettre des payloads ; graine optionnelle ; aperçu style Client HTTP avec mode auto-détecté.
+- **Actions d’anonymisation** — Télécharger les données anonymisées, importer comme nouveaux enregistrements, ou écraser les champs mappés de l’ensemble courant (confirmation ; `__KEY` / `__STAMP` plus champs modifiés uniquement).
+
 #### UX
 
 - **À propos** — Dialogue d'informations depuis le chrome mobile/desktop.
@@ -77,7 +85,7 @@ La version `1.4.x` ajoute les **variables d'environnement** (couches globales, p
 
 ### Documentation
 
-- Pages guide [Console](https://midrissi.github.io/4d-dataexplorer/guide/console.html), [Terminal ORDA](https://midrissi.github.io/4d-dataexplorer/guide/terminal.html), [Export REST](https://midrissi.github.io/4d-dataexplorer/guide/rest-export.html), [Variables d'environnement](https://midrissi.github.io/4d-dataexplorer/guide/environments.html) et [Applications mobiles](https://midrissi.github.io/4d-dataexplorer/guide/mobile.html).
+- Pages guide [Console](https://midrissi.github.io/4d-dataexplorer/guide/console.html), [Terminal ORDA](https://midrissi.github.io/4d-dataexplorer/guide/terminal.html), [Export REST](https://midrissi.github.io/4d-dataexplorer/guide/rest-export.html), [Variables d'environnement](https://midrissi.github.io/4d-dataexplorer/guide/environments.html), [Outils de sélection](https://midrissi.github.io/4d-dataexplorer/guide/selection-tools.html) et [Applications mobiles](https://midrissi.github.io/4d-dataexplorer/guide/mobile.html).
 - La galerie d'accueil inclut l'éditeur d'environnements et des captures mises à jour (clair / sombre).
 
 ### Corrections
@@ -89,6 +97,7 @@ La version `1.4.x` ajoute les **variables d'environnement** (couches globales, p
 - **Réponses OpenAPI** — Les specs exportées listent les statuts REST 4D connus (200, 401, 402, 404, 500).
 - **Onglet Docs de la collection** — La documentation de chaque requête reprend le markdown officiel 4D REST, pas seulement un résumé.
 - **Filtres dynamiques** — Genre et bornes numériques / dates sur `$faker.*` passent par les options Faker.
+- **Alias Faker `userName`** — Les suggestions et templates acceptent le nom Faker v8 `internet.userName` comme alias de `internet.username`.
 - **Templates docs** — Le guide Environnements et l'accueil affichent les exemples `{{…}}` sans casser le compilateur Vue de VitePress.
 - **Résultats obsolètes Exécuteur** — Un échec ou une annulation ne laisse plus un succès précédent sous la configuration ; les erreurs remplacent la vue résultat.
 - **Corps réseau pending** — Les entrées console n’attendent plus la fin de l’appel pour afficher le corps de requête sortant.

@@ -477,6 +477,27 @@ describe('lib/api', () => {
       expect(result.count).toBe(2)
       expect(result.entities).toHaveLength(2)
     })
+
+    it('batches large update payloads', async () => {
+      const { CREATE_ENTITIES_BATCH_SIZE } = await import('./api')
+      const payload = Array.from({ length: CREATE_ENTITIES_BATCH_SIZE + 1 }, (_, index) => ({
+        __KEY: String(index + 1),
+        __STAMP: 1,
+        name: 'Anonymous',
+      }))
+      mockDataclassUpdateMany.mockClear()
+      mockDataclassUpdateMany.mockImplementation(
+        (async (entities: unknown[]) => entities) as typeof mockDataclassUpdateMany
+      )
+
+      const result = await api.updateManyEntities('Employee', payload)
+
+      expect(mockDataclassUpdateMany).toHaveBeenCalledTimes(2)
+      const calls = mockDataclassUpdateMany.mock.calls as unknown as Array<[unknown[]]>
+      expect(calls[0]?.[0]).toHaveLength(CREATE_ENTITIES_BATCH_SIZE)
+      expect(calls[1]?.[0]).toHaveLength(1)
+      expect(result.count).toBe(CREATE_ENTITIES_BATCH_SIZE + 1)
+    })
   })
 
   describe('uploadFile', () => {

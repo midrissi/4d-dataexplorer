@@ -4,7 +4,10 @@ export {
   type AnonymizeOptions,
   anonymizeEntities,
   anonymizeEntity,
+  buildAnonymizeFieldPlan,
   buildDefaultAnonymizePlan,
+  listAnonymizeMappableAttributes,
+  prepareAnonymizedUpdate,
   stripForCreate,
 } from './anonymize'
 export { ENTITY_IO_FORMATS } from './formats'

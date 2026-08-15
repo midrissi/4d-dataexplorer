@@ -144,13 +144,23 @@ function getFakerModule(moduleName: string): object | undefined {
   return value && typeof value === 'object' ? (value as object) : undefined
 }
 
+/** Faker v8 → v9 renames still seen in older templates / field synonyms. */
+const FAKER_METHOD_ALIASES: Readonly<Record<string, Readonly<Record<string, string>>>> = {
+  internet: { userName: 'username' },
+}
+
+function resolveFakerMethodName(moduleName: string, methodName: string): string {
+  return FAKER_METHOD_ALIASES[moduleName]?.[methodName] ?? methodName
+}
+
 function getFakerMethod(
   moduleName: string,
   methodName: string
 ): ((...args: unknown[]) => unknown) | undefined {
   const mod = getFakerModule(moduleName)
   if (!mod) return undefined
-  const fn = (mod as Record<string, unknown>)[methodName]
+  const resolvedName = resolveFakerMethodName(moduleName, methodName)
+  const fn = (mod as Record<string, unknown>)[resolvedName]
   return typeof fn === 'function' ? (fn as (...args: unknown[]) => unknown).bind(mod) : undefined
 }
 
@@ -160,21 +170,26 @@ function buildFakerCallArgs(
   options?: DynamicGenerateOptions
 ): unknown[] {
   if (!options) return []
+  const resolvedMethod = resolveFakerMethodName(moduleName, methodName)
 
   const sex = sexOf(options)
   if (sex) {
     if (moduleName === 'person') {
-      if (methodName === 'firstName' || methodName === 'middleName' || methodName === 'prefix') {
+      if (
+        resolvedMethod === 'firstName' ||
+        resolvedMethod === 'middleName' ||
+        resolvedMethod === 'prefix'
+      ) {
         return [sex]
       }
-      if (methodName === 'fullName') return [{ sex }]
+      if (resolvedMethod === 'fullName') return [{ sex }]
     }
     if (moduleName === 'internet') {
       if (
-        methodName === 'email' ||
-        methodName === 'exampleEmail' ||
-        methodName === 'username' ||
-        methodName === 'displayName'
+        resolvedMethod === 'email' ||
+        resolvedMethod === 'exampleEmail' ||
+        resolvedMethod === 'username' ||
+        resolvedMethod === 'displayName'
       ) {
         const firstName = faker.person.firstName(sex)
         return [{ firstName }]

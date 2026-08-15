@@ -6,7 +6,7 @@
 
 ### Overview
 
-Version `1.4.x` adds **environment variables** (globals, profile, and database layers with `{{templates}}`, pipe filters, and Faker-powered dynamics); adds the **ORDA Terminal** (REPL and Code modes with snippet files) in a shared bottom dock with the Console; adds **REST Export** (Collection v2.1 and OpenAPI 3.1 from the catalog, HTTP Client, and Method Executor); adds **favourites** for HTTP Client and Method Executor; ships **iOS and Android** mobile apps; improves Method Executor (Advanced params/headers, default `$method=entityset`, result-panel errors, empty states, and mod-click tab shortcuts); improves console network logging (pending request body, open while pending, cancel); and polishes mobile HTTP Client and dock UX.
+Version `1.4.x` adds **environment variables** (globals, profile, and database layers with `{{templates}}`, pipe filters, and Faker-powered dynamics); adds the **ORDA Terminal** (REPL and Code modes with snippet files) in a shared bottom dock with the Console; adds **REST Export** (Collection v2.1 and OpenAPI 3.1 from the catalog, HTTP Client, and Method Executor); adds **Selection tools** (analyze with `$distinct` / `$compute`, multi-format export/import, and Faker anonymize with download, import-as-new, or in-place update); adds **favourites** for HTTP Client and Method Executor; ships **iOS and Android** mobile apps; improves Method Executor (Advanced params/headers, default `$method=entityset`, result-panel errors, empty states, and mod-click tab shortcuts); improves console network logging (pending request body, open while pending, cancel); and polishes mobile HTTP Client and dock UX.
 
 ### Features
 
@@ -65,6 +65,14 @@ Version `1.4.x` adds **environment variables** (globals, profile, and database l
 - **Method Executor favourites** — Same favourites workflow for method calls.
 - **Batch create entity** — Create multiple entities with templated field values resolved from the active environment map.
 
+#### Selection tools
+
+- **Entry points** — Selection tools menu on dataclass lists, tab context menus, Method Executor selection results, related entity sets, Home entity-set rows, and the command palette.
+- **Analyze** — Distinct values (`$distinct`) and compute cards (`$compute=$all`) for one attribute on the current entity set.
+- **Export / Import** — Extendable formats (JSON, JSON REST, JSONL, CSV, TSV, SQL, XML, YAML, Markdown, HTML); import creates or updates records in the open dataclass.
+- **Anonymize** — Field mapping with Faker templates (including `|` filters), fixed values, keep, or empty; remove fields from the plan so they are omitted from payloads; optional seed; HTTP Client–style preview with auto-detected view mode.
+- **Anonymize actions** — Download anonymized data, import as new records, or overwrite mapped fields on the current entity set (confirmed; `__KEY` / `__STAMP` plus changed fields only).
+
 #### UX
 
 - **About dialog** — App about information from mobile/desktop chrome.
@@ -77,7 +85,7 @@ Version `1.4.x` adds **environment variables** (globals, profile, and database l
 
 ### Docs
 
-- Guide pages for [Console](https://midrissi.github.io/4d-dataexplorer/guide/console.html), [ORDA Terminal](https://midrissi.github.io/4d-dataexplorer/guide/terminal.html), [REST Export](https://midrissi.github.io/4d-dataexplorer/guide/rest-export.html), [Environment variables](https://midrissi.github.io/4d-dataexplorer/guide/environments.html), and [Mobile apps](https://midrissi.github.io/4d-dataexplorer/guide/mobile.html).
+- Guide pages for [Console](https://midrissi.github.io/4d-dataexplorer/guide/console.html), [ORDA Terminal](https://midrissi.github.io/4d-dataexplorer/guide/terminal.html), [REST Export](https://midrissi.github.io/4d-dataexplorer/guide/rest-export.html), [Environment variables](https://midrissi.github.io/4d-dataexplorer/guide/environments.html), [Selection tools](https://midrissi.github.io/4d-dataexplorer/guide/selection-tools.html), and [Mobile apps](https://midrissi.github.io/4d-dataexplorer/guide/mobile.html).
 - Home gallery includes the Environment editor and updated screenshots (including light / dark captures).
 
 ### Fixes
@@ -89,6 +97,7 @@ Version `1.4.x` adds **environment variables** (globals, profile, and database l
 - **OpenAPI responses** — Exported specs list known 4D REST statuses (200, 401, 402, 404, 500).
 - **Request Docs tab** — Request documentation includes the official 4D REST page markdown, not only a short summary.
 - **Dynamic name / range filters** — Gender and numeric / date bounds on `$faker.*` templates resolve through Faker options.
+- **Faker `userName` alias** — Field suggestions and templates accept the Faker v8 `internet.userName` name as an alias of `internet.username`.
 - **Docs templates** — Environment guide and home copy render `{{…}}` examples without breaking the VitePress Vue compiler.
 - **Method Executor stale results** — Failed or cancelled runs no longer leave a previous success visible under the config pane; errors replace the result view.
 - **Pending network body** — Console network entries no longer wait for completion before showing the outgoing request body.

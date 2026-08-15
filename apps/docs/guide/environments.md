@@ -8,7 +8,7 @@ import { dynamicEnvVarColumns, dynamicEnvVarRows } from '../.vitepress/data/dyna
 
 # Environment variables
 
-Environments hold reusable key/value pairs you can insert anywhere templated text is accepted — HTTP Client URLs and bodies, Method Executor arguments, Query Builder filters, ORDA Terminal snippets, and more.
+Environments hold reusable key/value pairs you can insert anywhere templated text is accepted — HTTP Client URLs and bodies, Method Executor arguments, Query Builder filters, ORDA Terminal snippets, [Create entity](/guide/browsing#create-entity) / [Anonymize](/guide/selection-tools#anonymize) field values, and more.
 
 Values resolve at **execution** time. Saved drafts and favourites keep the raw <code>&#123;&#123;variable&#125;&#125;</code> text.
 

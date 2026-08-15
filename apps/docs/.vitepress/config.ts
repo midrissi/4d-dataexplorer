@@ -33,6 +33,7 @@ const guideSidebar = [
       { text: 'Browsing entities', link: '/guide/browsing' },
       { text: 'Query builder', link: '/guide/query-builder' },
       { text: 'Entity viewer', link: '/guide/entity-viewer' },
+      { text: 'Selection tools', link: '/guide/selection-tools' },
       { text: 'Method Executor', link: '/guide/method-executor' },
       { text: 'Structure graph', link: '/guide/structure-graph' },
     ],

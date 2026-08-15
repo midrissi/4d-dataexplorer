@@ -70,6 +70,15 @@ describe('dynamic env vars', () => {
     expect(airline?.startsWith('{') || (airline?.length ?? 0) > 0).toBe(true)
   })
 
+  it('accepts Faker v8 userName alias for internet.username', () => {
+    expect(isFakerPathKey('$faker.internet.username')).toBe(true)
+    expect(isFakerPathKey('$faker.internet.userName')).toBe(true)
+    const modern = resolveDynamicEnvVar('$faker.internet.username')
+    const legacy = resolveDynamicEnvVar('$faker.internet.userName')
+    expect(modern?.length).toBeGreaterThan(0)
+    expect(legacy?.length).toBeGreaterThan(0)
+  })
+
   it('returns undefined for unknown dynamic keys', () => {
     expect(resolveDynamicEnvVar('$notARealDynamicVar')).toBeUndefined()
     expect(isDynamicEnvVar('timestamp')).toBe(false)

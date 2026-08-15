@@ -7,7 +7,7 @@ title: Home screen
 The Home screen is the default landing page when no dataclass tab is open. It shows:
 
 - **Database statistics** — dataclass count, total entities, largest dataclass, average size
-- **Server info** — live metrics from `/rest/$info`: cache size, sessions, privileges, active entity sets (refresh with the ↻ button)
+- **Server info** — live metrics from `/rest/$info`: cache size, sessions, privileges, active entity sets (refresh with the ↻ button). Entity-set rows expose [Selection tools](/guide/selection-tools) when a set id is available.
 - **Charts** — entity distribution (bar and pie)
 - **All dataclasses** — clickable list to open any table
 - **Tips & shortcuts** — common keyboard shortcuts

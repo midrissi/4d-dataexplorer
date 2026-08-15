@@ -30,5 +30,6 @@ Type a prefix in the palette search to switch modes:
 - **Refresh dataclasses** — reload catalog metadata
 - **Pin / unpin tab**, **close tab**, **close others**, **close to the right**, **close all**
 - **Switch tabs** — visual grid of open tabs (same as `@` mode)
+- **Selection tools** — **Analyze**, **Export**, **Import**, and **Anonymize** when a dataclass tab (or entity set context) is active; see [Selection tools](/guide/selection-tools)
 
 ---

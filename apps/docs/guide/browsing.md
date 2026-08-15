@@ -49,5 +49,15 @@ Use the **Display fields** button in the dataclass toolbar to choose and reorder
 
 Selections are kept per tab. They are applied as the query **Attributes** (`$attributes`) selection, so the list only fetches the chosen attributes. The [entity viewer](./entity-viewer) detail panel still shows every attribute.
 
+### Selection tools
+
+Use **Selection tools** on the list toolbar (or the tab / command palette) when the list is bound to an entity set:
+
+- **Analyze** — distinct values and `$compute` stats for one attribute
+- **Export / Import** — download or load selections in JSON, CSV, SQL, and other formats
+- **Anonymize** — map fields to Faker templates, fixed values, or empty; download, import as new, or overwrite the current set
+
+See [Selection tools](./selection-tools) for formats, field mapping, and in-place anonymize.
+
 ---
 

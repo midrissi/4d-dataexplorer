@@ -19,7 +19,7 @@ const FIELD_SYNONYMS: readonly SynonymRule[] = [
   { test: /^lastname$|^surname$|^lname$|^familyname$/, keys: ['$faker.person.lastName'] },
   {
     test: /^fullname$|^name$|^displayname$|^username$/,
-    keys: ['$faker.person.fullName', '$faker.internet.userName'],
+    keys: ['$faker.person.fullName', '$faker.internet.username'],
   },
   { test: /^email$|^emailaddress$|^mail$/, keys: ['$faker.internet.email'] },
   { test: /^phone$|^mobile$|^tel$|^telephone$|^phonenumber$/, keys: ['$faker.phone.number'] },

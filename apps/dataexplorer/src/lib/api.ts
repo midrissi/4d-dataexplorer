@@ -1050,11 +1050,16 @@ export const api = {
   },
 
   /**
-   * Update multiple entities in one REST request ($method=update with an array body).
+   * Update multiple entities via REST `$method=update`, in bounded batches.
    * Each item must include __KEY and __STAMP from a prior query.
    */
   updateManyEntities: async (dataclassName: string, entities: Record<string, unknown>[]) => {
-    const results = await client.dataclass(dataclassName).updateMany(entities)
+    const results = []
+    for (let offset = 0; offset < entities.length; offset += CREATE_ENTITIES_BATCH_SIZE) {
+      const chunk = entities.slice(offset, offset + CREATE_ENTITIES_BATCH_SIZE)
+      const updated = await client.dataclass(dataclassName).updateMany(chunk)
+      results.push(...updated)
+    }
     return {
       dataclass: dataclassName,
       updated: true,
