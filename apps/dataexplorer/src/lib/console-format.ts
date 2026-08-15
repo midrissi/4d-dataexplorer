@@ -80,6 +80,17 @@ export function formatDecodedPathWithQuery(url: string): string {
   }
 }
 
+/** Absolute URL with percent-decoding applied to path and query. */
+export function formatDecodedUrl(url: string): string {
+  if (!url) return url
+  try {
+    const parsed = new URL(url)
+    return `${parsed.origin}${formatDecodedPathWithQuery(url)}`
+  } catch {
+    return formatDecodedPathWithQuery(url)
+  }
+}
+
 export function networkMethodToneClass(method: string): string {
   switch (method.toUpperCase()) {
     case 'GET':

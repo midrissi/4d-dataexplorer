@@ -20,7 +20,7 @@ Each REST call appears as a compact row: method, status, path, duration, size, a
 
 - Expand a row to inspect request/response headers and bodies (secrets are redacted)
 - **Open in HTTP Client** — send icon on the row seeds the [HTTP Client](/guide/http-client) for replay
-- **Copy as** — code icon copies the request as 4D (`HTTPRequest` / `HTTP Request`), cURL, HTTP, JavaScript `fetch`, or Python `requests`
+- **Copy as** — code icon copies the request as runnable code (4D `HTTPRequest` / `HTTP Request`, cURL, HTTP, JavaScript, Python, and other languages and libraries)
 - Image responses can preview inline when the body is an image MIME type
 - Filter by level: all, log, info, warn, error, or network
 - **Collapse all** expanded rows and object trees; **Clear** empties the in-memory buffer

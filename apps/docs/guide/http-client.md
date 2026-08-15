@@ -19,7 +19,7 @@ The top bar mirrors a browser/API client URL bar:
 | **URL path** | Path and query (for example `/rest/Car` or `/rest/$catalog`) with catalog-aware suggestions |
 | **Send** | Run the request (or **Cancel** while in flight) |
 
-The full resolved URL is shown under the bar. Use **⌘/Ctrl+Enter** to send when the request is valid. **Copy as** (code icon next to Export) copies the current request as 4D, cURL, HTTP, JavaScript `fetch`, or Python `requests`.
+The full resolved URL is shown under the bar. Use **⌘/Ctrl+Enter** to send when the request is valid. **Copy as** (code icon next to Export) copies the current request as runnable code in 4D, cURL, HTTP, JavaScript, Python, and other languages and libraries.
 
 ### Request tabs
 

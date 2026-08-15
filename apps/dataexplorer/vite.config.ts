@@ -91,6 +91,26 @@ export default defineConfig({
         replacement: path.resolve(__dirname, '../../packages/base64-decoder/src/index.ts'),
       },
       { find: '~', replacement: path.resolve(__dirname, './src') },
+      {
+        find: 'event-stream',
+        replacement: path.resolve(__dirname, './src/lib/copy-as/shims/event-stream.ts'),
+      },
+      {
+        find: /^url$/,
+        replacement: path.resolve(__dirname, './src/lib/copy-as/shims/url.ts'),
+      },
+      {
+        find: /^querystring$/,
+        replacement: path.resolve(__dirname, './src/lib/copy-as/shims/querystring.ts'),
+      },
+      {
+        find: 'form-data/lib/form_data',
+        replacement: path.resolve(__dirname, './src/lib/copy-as/shims/form-data.ts'),
+      },
+      {
+        find: /^form-data$/,
+        replacement: path.resolve(__dirname, './src/lib/copy-as/shims/form-data.ts'),
+      },
     ],
   },
   // Patched packages — do not serve a stale prebundle that ignores
@@ -99,7 +119,7 @@ export default defineConfig({
   // Pre-bundle monaco-editor so opening Terminal does not trigger a mid-session
   // optimizeDeps reload (can OOM / Aw-Snap the tab).
   optimizeDeps: {
-    include: ['monaco-editor'],
+    include: ['monaco-editor', 'httpsnippet'],
     exclude: ['@monaco-editor/react', '@4d/base64-decoder'],
   },
   assetsInclude: ['**/*.wasm'],

@@ -47,6 +47,7 @@ import { RequestResponseSplit } from '~/components/RequestResponseSplit'
 import { SuggestInput } from '~/components/SuggestInput'
 import { useTranslation } from '~/i18n'
 import { api } from '~/lib/api'
+import { formatDecodedUrl } from '~/lib/console-format'
 import { copyableFromHttpDraft } from '~/lib/copy-as'
 import { applyEnvTemplateDecorations, registerEnvTemplateCompletionProvider } from '~/lib/env'
 import { buildHttpThis } from '~/lib/env/this-context-builders'
@@ -628,6 +629,11 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
     return joinOriginAndPath(origin, applyParamsToPath(resolved.path || '/', resolved.params))
   }, [currentOrigin, draft])
 
+  const decodedPreviewUrl = useMemo(
+    () => (previewUrl ? formatDecodedUrl(previewUrl) : ''),
+    [previewUrl]
+  )
+
   const formDataFields = draft.body.formData
 
   const builtInHeaders = useMemo(() => {
@@ -930,17 +936,17 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
                   <span className="shrink-0 rounded-sm bg-muted px-1 py-px font-medium text-[9px] text-muted-foreground uppercase tracking-wide">
                     {t('httpClient.fullUrl')}
                   </span>
-                  {previewUrl ? (
+                  {decodedPreviewUrl ? (
                     <>
                       <p
                         className="min-w-0 truncate font-mono text-[10px] text-muted-foreground"
-                        title={previewUrl}
+                        title={decodedPreviewUrl}
                       >
-                        {previewUrl}
+                        {decodedPreviewUrl}
                       </p>
                       <ClickToCopy
                         as="button"
-                        value={previewUrl}
+                        value={decodedPreviewUrl}
                         tooltipLabel={t('common.clickToCopy')}
                         tooltipCopiedLabel={t('common.copied')}
                         className="inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-sm text-muted-foreground opacity-0 transition-opacity hover:bg-muted hover:text-foreground focus-visible:opacity-100 group-hover/url:opacity-100"

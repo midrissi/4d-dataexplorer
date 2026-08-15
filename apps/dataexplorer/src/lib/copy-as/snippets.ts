@@ -1,14 +1,41 @@
+import { extraSnippetFor } from './extras'
 import { headersForSnippet, headerValue, looksLikeJson } from './headers'
+import { toHarRequest } from './to-har'
 import type { CopyAsFormatId, CopyableHttpRequest } from './types'
 
-function escapeSingleQuotes(value: string): string {
-  return value.replace(/'/g, `'\\''`)
-}
+type HttpSnippetClient = { target: string; client: string }
 
-function quoteShell(value: string): string {
-  if (value === '') return "''"
-  if (/^[A-Za-z0-9_./:?&=-]+$/.test(value)) return value
-  return `'${escapeSingleQuotes(value)}'`
+const HTTP_SNIPPET_CLIENTS: Partial<Record<CopyAsFormatId, HttpSnippetClient>> = {
+  csharpHttpClient: { target: 'csharp', client: 'httpclient' },
+  csharpRestSharp: { target: 'csharp', client: 'restsharp' },
+  curl: { target: 'shell', client: 'curl' },
+  goNative: { target: 'go', client: 'native' },
+  http: { target: 'http', client: 'http1.1' },
+  javaOkHttp: { target: 'java', client: 'okhttp' },
+  javaUnirest: { target: 'java', client: 'unirest' },
+  jsFetch: { target: 'javascript', client: 'fetch' },
+  jsJquery: { target: 'javascript', client: 'jquery' },
+  jsXhr: { target: 'javascript', client: 'xhr' },
+  kotlinOkHttp: { target: 'kotlin', client: 'okhttp' },
+  cLibcurl: { target: 'c', client: 'libcurl' },
+  nodeAxios: { target: 'node', client: 'axios' },
+  nodeNative: { target: 'node', client: 'native' },
+  nodeRequest: { target: 'node', client: 'request' },
+  nodeUnirest: { target: 'node', client: 'unirest' },
+  objcNsurlSession: { target: 'objc', client: 'nsurlsession' },
+  ocamlCohttp: { target: 'ocaml', client: 'cohttp' },
+  phpCurl: { target: 'php', client: 'curl' },
+  phpGuzzle: { target: 'php', client: 'guzzle' },
+  phpPeclHttp: { target: 'php', client: 'http2' },
+  powershellRestMethod: { target: 'powershell', client: 'restmethod' },
+  pythonHttpClient: { target: 'python', client: 'python3' },
+  pythonRequests: { target: 'python', client: 'requests' },
+  rHttr: { target: 'r', client: 'httr' },
+  rubyNetHttp: { target: 'ruby', client: 'native' },
+  rustReqwest: { target: 'rust', client: 'reqwest' },
+  shellHttpie: { target: 'shell', client: 'httpie' },
+  shellWget: { target: 'shell', client: 'wget' },
+  swiftUrlSession: { target: 'swift', client: 'nsurlsession' },
 }
 
 function escapeFourDString(value: string): string {
@@ -17,194 +44,6 @@ function escapeFourDString(value: string): string {
 
 function fourDQuoted(value: string): string {
   return `"${escapeFourDString(value)}"`
-}
-
-function indentBlock(text: string, indent: string): string {
-  return text
-    .split('\n')
-    .map((line) => (line.length > 0 ? `${indent}${line}` : line))
-    .join('\n')
-}
-
-function jsonForLanguage(body: string): string | null {
-  try {
-    return JSON.stringify(JSON.parse(body), null, 2)
-  } catch {
-    return null
-  }
-}
-
-function emitCurl(request: CopyableHttpRequest): string {
-  const lines = [`curl --location --request ${request.method} ${quoteShell(request.url)}`]
-  for (const header of headersForSnippet(request)) {
-    lines.push(`--header ${quoteShell(`${header.name}: ${header.value}`)}`)
-  }
-  if (request.bodyKind === 'multipart' && request.formFields?.length) {
-    for (const field of request.formFields) {
-      const part = field.fileName
-        ? `${field.key}=@${field.fileName}`
-        : `${field.key}=${field.value}`
-      lines.push(`--form ${quoteShell(part)}`)
-    }
-  } else if (request.bodyKind === 'binary') {
-    lines.push(`--data-binary ${quoteShell(request.body || '@file.bin')}`)
-  } else if (request.body) {
-    lines.push(`--data-raw ${quoteShell(request.body)}`)
-  }
-  return `${lines[0]}${lines
-    .slice(1)
-    .map((line) => ` \\\n  ${line}`)
-    .join('')}`
-}
-
-function emitHttp(request: CopyableHttpRequest): string {
-  let pathname = request.url
-  let host = ''
-  try {
-    const parsed = new URL(request.url)
-    pathname = `${parsed.pathname}${parsed.search}`
-    host = parsed.host
-  } catch {
-    // keep raw URL as the request target
-  }
-  const lines = [`${request.method} ${pathname || '/'} HTTP/1.1`]
-  if (host) lines.push(`Host: ${host}`)
-  for (const header of headersForSnippet(request)) {
-    lines.push(`${header.name}: ${header.value}`)
-  }
-  if (request.body) {
-    lines.push('')
-    lines.push(request.body)
-  }
-  return lines.join('\n')
-}
-
-function emitJsFetch(request: CopyableHttpRequest): string {
-  const headers = headersForSnippet(request)
-  const lines: string[] = []
-  const options: string[] = []
-
-  if (request.method.toUpperCase() !== 'GET') {
-    options.push(`method: ${JSON.stringify(request.method)}`)
-  }
-
-  if (request.bodyKind === 'multipart' && request.formFields?.length) {
-    lines.push('const form = new FormData()')
-    for (const field of request.formFields) {
-      if (field.fileName) {
-        lines.push(`form.append(${JSON.stringify(field.key)}, file) // ${field.fileName}`)
-      } else {
-        lines.push(`form.append(${JSON.stringify(field.key)}, ${JSON.stringify(field.value)})`)
-      }
-    }
-    lines.push('')
-    options.push('body: form')
-  } else if (
-    request.body &&
-    looksLikeJson(request.body, headerValue(request.headers, 'content-type'))
-  ) {
-    const pretty = jsonForLanguage(request.body)
-    if (pretty) {
-      options.push(`body: JSON.stringify(${pretty})`)
-    } else {
-      options.push(`body: ${JSON.stringify(request.body)}`)
-    }
-  } else if (request.bodyKind === 'binary') {
-    options.push('body: file // attach the binary payload')
-  } else if (request.body) {
-    options.push(`body: ${JSON.stringify(request.body)}`)
-  }
-
-  if (headers.length > 0 && request.bodyKind !== 'multipart') {
-    const headerLines = headers
-      .map((header, index) => {
-        const comma = index < headers.length - 1 ? ',' : ''
-        return `    ${JSON.stringify(header.name)}: ${JSON.stringify(header.value)}${comma}`
-      })
-      .join('\n')
-    options.push(`headers: {\n${headerLines}\n  }`)
-  }
-
-  const optionBlock =
-    options.length === 0 ? '' : `, {\n${options.map((option) => `  ${option}`).join(',\n')}\n}`
-  lines.push(`const response = await fetch(${JSON.stringify(request.url)}${optionBlock})`)
-  lines.push('const data = await response.json()')
-  return lines.join('\n')
-}
-
-function emitPython(request: CopyableHttpRequest): string {
-  const headers = headersForSnippet(request)
-  const lines = ['import requests', '']
-  const args = [`    ${JSON.stringify(request.url)}`]
-  if (request.method.toUpperCase() !== 'GET') {
-    // method is in requests.get/post/... or requests.request
-  }
-  if (headers.length > 0 && request.bodyKind !== 'multipart') {
-    const headerLines = headers
-      .map((header, index) => {
-        const comma = index < headers.length - 1 ? ',' : ''
-        return `        ${JSON.stringify(header.name)}: ${JSON.stringify(header.value)}${comma}`
-      })
-      .join('\n')
-    args.push(`    headers={\n${headerLines}\n    }`)
-  }
-
-  const method = request.method.toUpperCase()
-  const fn =
-    method === 'GET'
-      ? 'get'
-      : method === 'POST'
-        ? 'post'
-        : method === 'PUT'
-          ? 'put'
-          : method === 'PATCH'
-            ? 'patch'
-            : method === 'DELETE'
-              ? 'delete'
-              : method === 'HEAD'
-                ? 'head'
-                : null
-
-  if (request.bodyKind === 'multipart' && request.formFields?.length) {
-    const fields: string[] = []
-    const files: string[] = []
-    for (const field of request.formFields) {
-      if (field.fileName) {
-        files.push(
-          `        ${JSON.stringify(field.key)}: open(${JSON.stringify(field.fileName)}, "rb")`
-        )
-      } else {
-        fields.push(`        ${JSON.stringify(field.key)}: ${JSON.stringify(field.value)}`)
-      }
-    }
-    if (fields.length > 0) args.push(`    data={\n${fields.join(',\n')}\n    }`)
-    if (files.length > 0) args.push(`    files={\n${files.join(',\n')}\n    }`)
-  } else if (
-    request.body &&
-    looksLikeJson(request.body, headerValue(request.headers, 'content-type'))
-  ) {
-    const pretty = jsonForLanguage(request.body)
-    args.push(
-      pretty
-        ? `    json=${indentBlock(pretty, '    ').trimStart()}`
-        : `    data=${JSON.stringify(request.body)}`
-    )
-  } else if (request.bodyKind === 'binary') {
-    args.push('    data=open("file.bin", "rb")')
-  } else if (request.body) {
-    args.push(`    data=${JSON.stringify(request.body)}`)
-  }
-
-  if (fn) {
-    lines.push(`response = requests.${fn}(`)
-  } else {
-    args.unshift(`    ${JSON.stringify(request.method)}`)
-    lines.push('response = requests.request(')
-  }
-  lines.push(args.join(',\n'))
-  lines.push(')')
-  lines.push('print(response.text)')
-  return lines.join('\n')
 }
 
 function fourDHeadersObject(request: CopyableHttpRequest): string | null {
@@ -293,19 +132,61 @@ function emitFourDHttpRequestClassic(request: CopyableHttpRequest): string {
   return lines.join('\n')
 }
 
-export function emitCopyAsSnippet(format: CopyAsFormatId, request: CopyableHttpRequest): string {
+type HttpSnippetCtor = new (
+  input: ReturnType<typeof toHarRequest>
+) => {
+  convert: (
+    target: string,
+    client?: string,
+    options?: { indent?: string }
+  ) => string | false | string[]
+}
+
+function unwrapHTTPSnippet(mod: unknown): HttpSnippetCtor {
+  if (typeof mod === 'function') return mod as HttpSnippetCtor
+  if (mod && typeof mod === 'object') {
+    const rec = mod as { HTTPSnippet?: unknown; default?: unknown }
+    if (typeof rec.HTTPSnippet === 'function') return rec.HTTPSnippet as HttpSnippetCtor
+    if (rec.default) return unwrapHTTPSnippet(rec.default)
+  }
+  throw new Error('HTTP snippet generator is unavailable')
+}
+
+async function loadHTTPSnippet(): Promise<HttpSnippetCtor> {
+  return unwrapHTTPSnippet(await import('httpsnippet'))
+}
+
+async function emitLibrarySnippet(
+  format: CopyAsFormatId,
+  request: CopyableHttpRequest
+): Promise<string> {
+  const client = HTTP_SNIPPET_CLIENTS[format]
+  if (!client) throw new Error(`Unsupported copy-as format: ${format}`)
+  const HTTPSnippet = await loadHTTPSnippet()
+  const result = new HTTPSnippet(toHarRequest(request)).convert(client.target, client.client, {
+    indent: '  ',
+  })
+  if (typeof result !== 'string' || result.length === 0) {
+    throw new Error(`Failed to generate ${format} snippet`)
+  }
+  return result
+}
+
+export async function emitCopyAsSnippet(
+  format: CopyAsFormatId,
+  request: CopyableHttpRequest
+): Promise<string> {
   switch (format) {
     case 'fourDHttpRequest':
       return emitFourDHttpRequest(request)
     case 'fourDHttpRequestClassic':
       return emitFourDHttpRequestClassic(request)
-    case 'curl':
-      return emitCurl(request)
-    case 'http':
-      return emitHttp(request)
-    case 'jsFetch':
-      return emitJsFetch(request)
-    case 'pythonRequests':
-      return emitPython(request)
+    case 'dartDio':
+    case 'dartHttp':
+    case 'phpHttpRequest2':
+    case 'rRcurl':
+      return extraSnippetFor(format, request)
+    default:
+      return emitLibrarySnippet(format, request)
   }
 }

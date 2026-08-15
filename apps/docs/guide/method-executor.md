@@ -37,7 +37,7 @@ Enable **Query plan & path** next to Execute to add `$queryplan` and `$querypath
 
 - Defaults to a **POST** request. If the method allows HTTP GET, enable **Execute with GET**.
 - Click **Execute** when the target and arguments are complete.
-- **Copy as** copies the REST call as 4D, cURL, HTTP, JavaScript `fetch`, or Python `requests`.
+- **Copy as** copies the REST call as runnable code in 4D, cURL, HTTP, JavaScript, Python, and other languages and libraries.
 - **History** lists recent successful runs so you can reopen the same configuration. ⌘/Ctrl+click keys in history to open the related entity or selection.
 
 ### Export

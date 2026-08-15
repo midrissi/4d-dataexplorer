@@ -5,6 +5,7 @@ import {
   formatByteSize,
   formatConsoleTimestamp,
   formatDecodedPathWithQuery,
+  formatDecodedUrl,
   networkMethodToneClass,
   pathNeedsUrlDecode,
   splitNetworkUrl,
@@ -94,6 +95,16 @@ describe('formatDecodedPathWithQuery', () => {
 
   it('preserves hash and path when there is no query', () => {
     expect(formatDecodedPathWithQuery('https://example.com/rest/Car#x')).toBe('/rest/Car#x')
+  })
+})
+
+describe('formatDecodedUrl', () => {
+  it('keeps origin and decodes query keys and values', () => {
+    expect(
+      formatDecodedUrl(
+        'http://localhost:3002/rest/Agency?%24params=%5B%22A%40%22%5D&%24queryplan=true'
+      )
+    ).toBe('http://localhost:3002/rest/Agency?$params=["A@"]&$queryplan=true')
   })
 })
 

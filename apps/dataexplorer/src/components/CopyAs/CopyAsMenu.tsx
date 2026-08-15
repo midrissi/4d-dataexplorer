@@ -50,7 +50,7 @@ export function CopyAsMenu({
 
   const copyFormat = async (format: CopyAsFormatId) => {
     try {
-      const snippet = emitCopyAsSnippet(format, getRequest())
+      const snippet = await emitCopyAsSnippet(format, getRequest())
       await navigator.clipboard.writeText(snippet)
       setLastFormat(format)
       saveCopyAsFormat(format)
@@ -89,7 +89,11 @@ export function CopyAsMenu({
           <TooltipContent side="top">{t('copyAs.menu')}</TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <DropdownMenuContent align="end" className="min-w-52" {...dataProps}>
+      <DropdownMenuContent
+        align="end"
+        className="max-h-[min(24rem,70vh)] min-w-64 overflow-y-auto"
+        {...dataProps}
+      >
         <DropdownMenuLabel className="text-[10px] text-muted-foreground uppercase tracking-wide">
           {t('copyAs.menu')}
         </DropdownMenuLabel>
