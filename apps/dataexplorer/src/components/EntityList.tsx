@@ -16,6 +16,7 @@ import {
 } from '@4d/ui'
 import {
   AlertTriangle,
+  BarChart3,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -66,6 +67,7 @@ import {
 import { CreateEntityDialog } from './CreateEntityDialog'
 import { EntityCard } from './EntityCard'
 import { EntityDataGrid } from './EntityDataGrid'
+import { EntitySetActionsMenu } from './EntityIo/EntitySetActionsMenu'
 import { FieldManager } from './FieldManager'
 import { MethodListPopover } from './MethodExecutor/MethodListPopover'
 import { QueryBuilder } from './QueryBuilder/index'
@@ -1075,6 +1077,58 @@ export function EntityList({ tabId }: { tabId: string }) {
               entitySetId={activeTab?.entitySetId}
               compact
             />
+
+            {selectedDataclass ? (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className={cn(mobile ? 'h-9 w-9' : 'h-6 w-6')}
+                      onClick={() => {
+                        const q = activeTab ? normalizeQueryOptions(activeTab.queryOptions) : null
+                        eventBus.emit('open-entity-analyze', {
+                          dataclassName: selectedDataclass,
+                          entitySetId: entitySetId,
+                          filter: q?.filter || undefined,
+                          filterParams: q?.filterParams?.length
+                            ? q.filterParams.map((p) => ({ type: p.type, value: p.value }))
+                            : undefined,
+                          selectionCount,
+                          columns: fieldConfig.table,
+                        })
+                      }}
+                      aria-label={t('entity.analyze.open')}
+                    >
+                      <BarChart3 className="h-3.5 w-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{t('entity.analyze.openTooltip')}</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            ) : null}
+
+            {selectedDataclass ? (
+              <EntitySetActionsMenu
+                target={{
+                  dataclassName: selectedDataclass,
+                  entitySetId,
+                  filter: activeTab
+                    ? normalizeQueryOptions(activeTab.queryOptions).filter || undefined
+                    : undefined,
+                  filterParams: activeTab
+                    ? normalizeQueryOptions(activeTab.queryOptions).filterParams?.map((p) => ({
+                        type: p.type,
+                        value: p.value,
+                      }))
+                    : undefined,
+                  selectionCount,
+                  columns: fieldConfig.table,
+                }}
+                requireEntitySet={false}
+              />
+            ) : null}
 
             {selectedDataclass ? (
               <AiActionsMenu dataclassName={selectedDataclass} variant="icon" />

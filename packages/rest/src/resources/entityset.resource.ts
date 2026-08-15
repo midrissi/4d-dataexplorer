@@ -1,10 +1,13 @@
 import type { HttpClient } from '../core/http-client'
 import type {
+  ComputeOperation,
+  ComputeResult,
   DeleteResult,
   Entity,
   EntityCollection,
   EntitySetOperator,
   QueryOptions,
+  SimpleComputeResult,
 } from '../types'
 
 /**
@@ -146,5 +149,44 @@ export class EntitySetResource<T extends Entity = Entity> {
    */
   async except(otherEntitySetId: string): Promise<EntityCollection<T>> {
     return this.combine('EXCEPT', otherEntitySetId)
+  }
+
+  /**
+   * Path with an attribute before `$entityset` (4D REST attribute selection).
+   * e.g. `/Employee/salary/$entityset/{id}`
+   */
+  private buildAttributePath(attribute: string): string {
+    return `/${this.dataClassName}/${attribute}/$entityset/${this.entitySetId}`
+  }
+
+  /**
+   * Distinct values for an attribute within this entity set.
+   * `GET /{dataClass}/{attribute}/$entityset/{id}?$distinct=true`
+   */
+  async distinct(attribute: string, options?: QueryOptions): Promise<unknown[]> {
+    const { $attributes: _a, $expand: _e, $orderby: _o, $method: _m, ...rest } = options ?? {}
+    const params: QueryOptions = { ...rest, $distinct: true }
+    const result = await this.http.get<unknown[] | { __ENTITIES?: unknown[] }>(
+      this.buildAttributePath(attribute),
+      params
+    )
+    if (Array.isArray(result)) return result
+    if (result && typeof result === 'object' && Array.isArray(result.__ENTITIES)) {
+      return result.__ENTITIES
+    }
+    return []
+  }
+
+  /**
+   * Compute aggregation on an attribute within this entity set.
+   * `GET /{dataClass}/{attribute}/$entityset/{id}?$compute=$all`
+   */
+  async compute(
+    attribute: string,
+    operation: ComputeOperation = '$all'
+  ): Promise<ComputeResult | SimpleComputeResult> {
+    return this.http.get<ComputeResult | SimpleComputeResult>(this.buildAttributePath(attribute), {
+      $compute: operation,
+    })
   }
 }

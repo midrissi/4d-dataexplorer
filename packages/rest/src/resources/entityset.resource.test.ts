@@ -92,4 +92,19 @@ describe('EntitySetResource', () => {
     await set.except('D')
     expect(calls.map((c) => c.params.$logicOperator)).toEqual(['AND', 'OR', 'EXCEPT'])
   })
+
+  it('distinct() hits attribute-before-$entityset path', async () => {
+    const { http, calls } = makeHttp(['A', 'B'])
+    const values = await new EntitySetResource(http, 'Employee', 'ABC').distinct('firstName')
+    expect(values).toEqual(['A', 'B'])
+    expect(calls[0].path).toBe('/Employee/firstName/$entityset/ABC')
+    expect(calls[0].params.$distinct).toBe('true')
+  })
+
+  it('compute() hits attribute-before-$entityset path', async () => {
+    const { http, calls } = makeHttp({ salary: { count: 4, sum: 100 } })
+    await new EntitySetResource(http, 'Employee', 'ABC').compute('salary', '$all')
+    expect(calls[0].path).toBe('/Employee/salary/$entityset/ABC')
+    expect(calls[0].params.$compute).toBe('$all')
+  })
 })

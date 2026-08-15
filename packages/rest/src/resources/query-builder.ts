@@ -184,7 +184,8 @@ export class QueryBuilder<T extends Entity = Entity> {
   }
 
   /**
-   * Return distinct values
+   * Mark the query with `$distinct=true` for option building.
+   * To fetch distinct values for an attribute, use {@link distinctValues}.
    */
   distinct(): QueryBuilder<T> {
     const builder = this.clone()
@@ -296,6 +297,23 @@ export class QueryBuilder<T extends Entity = Entity> {
     const path = `/${this.dataClassName}/${attribute}`
     const options = { ...this.options, $compute: operation }
     return this.http.get<ComputeResult | SimpleComputeResult>(path, options)
+  }
+
+  /**
+   * Return distinct values for an attribute.
+   * Hits `GET /{dataClass}/{attribute}?$distinct=true` with current filter/params/top/skip.
+   * @example .filter('name = a*').distinctValues('name')
+   */
+  async distinctValues(attribute: string): Promise<unknown[]> {
+    const path = `/${this.dataClassName}/${attribute}`
+    const { $attributes: _a, $expand: _e, $orderby: _o, $method: _m, ...rest } = this.options
+    const options: QueryOptions = { ...rest, $distinct: true }
+    const result = await this.http.get<unknown[] | { __ENTITIES?: unknown[] }>(path, options)
+    if (Array.isArray(result)) return result
+    if (result && typeof result === 'object' && Array.isArray(result.__ENTITIES)) {
+      return result.__ENTITIES
+    }
+    return []
   }
 
   /**

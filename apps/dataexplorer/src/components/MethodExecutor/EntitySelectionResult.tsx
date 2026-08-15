@@ -1,5 +1,6 @@
 import { Button, cn } from '@4d/ui'
 import { ExternalLink, TableProperties } from 'lucide-react'
+import { EntitySetActionsMenu } from '~/components/EntityIo/EntitySetActionsMenu'
 import { useTranslation } from '~/i18n'
 import { isMobileShell } from '~/lib/platform'
 import { useTabsStore } from '~/store/tabs'
@@ -93,6 +94,15 @@ export function EntitySelectionResult({
           <ExternalLink className={mobile ? 'h-3.5 w-3.5' : 'h-4 w-4'} aria-hidden />
           {mobile ? t('methodExecutor.openAllShort') : t('methodExecutor.openAll')}
         </Button>
+        {result.dataClass && entitySetId ? (
+          <EntitySetActionsMenu
+            target={{
+              dataclassName: result.dataClass,
+              entitySetId,
+              selectionCount: result.count,
+            }}
+          />
+        ) : null}
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-md border border-border/70 bg-muted/10">

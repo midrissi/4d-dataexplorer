@@ -119,7 +119,15 @@ export type CommandContext = {
   tabs: Array<{ id: string; isPinned?: boolean }>
   activeTabId: string | null
   /** Current active tab if it is a dataclass tab (for highlighting in structure) */
-  activeDataclassTab: { dataclassName: string } | null
+  activeDataclassTab: {
+    dataclassName: string
+    entitySetId?: string | null
+    selectionCount?: number | null
+    queryOptions?: {
+      filter?: string
+      filterParams?: Array<{ type: string; value: string }>
+    }
+  } | null
   closeTab: (id: string) => void
   closeOtherTabs: (id: string) => void
   closeTabsToRight: (id: string) => void
@@ -635,6 +643,23 @@ function buildDataclassCommands(ctx: CommandContext): Command[] {
 function buildEntitiesCommands(ctx: CommandContext): Command[] {
   if (!ctx.selectedDataclass) return []
 
+  const dataclassName = ctx.selectedDataclass
+  const entitySetId = ctx.activeDataclassTab?.entitySetId ?? null
+  const selectionCount = ctx.activeDataclassTab?.selectionCount ?? null
+  const rawQuery = ctx.activeDataclassTab?.queryOptions
+  const filter = rawQuery?.filter?.trim() || undefined
+  const filterParams = rawQuery?.filterParams?.map((p) => ({
+    type: String(p.type),
+    value: String(p.value),
+  }))
+  const target = {
+    dataclassName,
+    entitySetId,
+    filter,
+    filterParams,
+    selectionCount,
+  }
+
   return [
     {
       id: 'refresh-entities',
@@ -659,6 +684,55 @@ function buildEntitiesCommands(ctx: CommandContext): Command[] {
       category: 'Entities',
       action: () => {
         eventBus.emit('new-entity')
+        ctx.onClose()
+      },
+    },
+    {
+      id: 'analyze-entities',
+      label: ctx.t('command.analyzeEntities'),
+      description: ctx.t('commandDesc.analyzeEntities'),
+      keywords: ['distinct', 'compute', 'aggregate', 'min', 'max', 'avg', 'stats'],
+      icon: <Hash className="h-4 w-4" />,
+      category: 'Entities',
+      action: () => {
+        eventBus.emit('open-entity-analyze', target)
+        ctx.onClose()
+      },
+    },
+    {
+      id: 'export-entity-set',
+      label: ctx.t('command.exportEntitySet'),
+      description: ctx.t('commandDesc.exportEntitySet'),
+      keywords: ['export', 'download', 'csv', 'json', 'sql', 'selection'],
+      icon: <FileDown className="h-4 w-4" />,
+      category: 'Entities',
+      action: () => {
+        eventBus.emit('open-entity-export', target)
+        ctx.onClose()
+      },
+    },
+    {
+      id: 'import-entities',
+      label: ctx.t('command.importEntities'),
+      description: ctx.t('commandDesc.importEntities'),
+      keywords: ['import', 'upload', 'csv', 'json'],
+      icon: <FileStack className="h-4 w-4" />,
+      category: 'Entities',
+      action: () => {
+        eventBus.emit('open-entity-import', target)
+        ctx.onClose()
+      },
+    },
+    {
+      id: 'anonymize-entity-set',
+      label: ctx.t('command.anonymizeEntitySet'),
+      description: ctx.t('commandDesc.anonymizeEntitySet'),
+      keywords: ['anonymize', 'faker', 'privacy', 'gdpr'],
+      icon: <Sparkles className="h-4 w-4" />,
+      category: 'Entities',
+      disabled: !entitySetId,
+      action: () => {
+        eventBus.emit('open-entity-anonymize', target)
         ctx.onClose()
       },
     },

@@ -10,6 +10,7 @@ import {
   RefreshCw,
 } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { EntitySetActionsMenu } from '~/components/EntityIo/EntitySetActionsMenu'
 import { ErrorList } from '~/components/ErrorList'
 import { useTranslation } from '~/i18n'
 import { api } from '~/lib/api'
@@ -190,22 +191,31 @@ export function DeferredRelation({
           {status === 'loaded' && (
             <>
               {isSet && relatedSetId && relatedModel && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6 text-muted-foreground"
-                        onClick={openInTab}
-                      >
-                        <ExternalLink className="h-3.5 w-3.5" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>{t('entity.openRelatedInTab')}</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+                <>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 text-muted-foreground"
+                          onClick={openInTab}
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>{t('entity.openRelatedInTab')}</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                  <EntitySetActionsMenu
+                    target={{
+                      dataclassName: relatedModel,
+                      entitySetId: relatedSetId,
+                      selectionCount: total,
+                    }}
+                  />
+                </>
               )}
               <TooltipProvider>
                 <Tooltip>

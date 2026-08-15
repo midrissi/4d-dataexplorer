@@ -238,6 +238,19 @@ describe('QueryBuilder terminal operations', () => {
     expect(calls[0].params.$compute).toBe('sum')
   })
 
+  it('distinctValues targets the attribute path with $distinct', async () => {
+    const { http, calls } = makeHttp(['Adobe', 'Apple'])
+    const values = await new QueryBuilder(http, 'Company')
+      .filter('name = a*')
+      .top(50)
+      .distinctValues('name')
+    expect(values).toEqual(['Adobe', 'Apple'])
+    expect(calls[0].path).toBe('/Company/name')
+    expect(calls[0].params.$distinct).toBe('true')
+    expect(calls[0].params.$filter).toBe('"name = a*"')
+    expect(calls[0].params.$top).toBe('50')
+  })
+
   it('count returns the COUNT field', async () => {
     const { http, calls } = makeHttp({ __ENTITIES: [], __COUNT: 42 })
     const total = await new QueryBuilder(http, 'Employee').count()

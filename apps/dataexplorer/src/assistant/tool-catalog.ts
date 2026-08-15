@@ -102,6 +102,16 @@ export const ASSISTANT_TOOL_CATALOG: AssistantToolMeta[] = [
     namespace: 'datastore',
     labelKey: 'assistantTool.@datastore/release-entityset',
   },
+  {
+    name: '@datastore/distinct',
+    namespace: 'datastore',
+    labelKey: 'assistantTool.@datastore/distinct',
+  },
+  {
+    name: '@datastore/compute',
+    namespace: 'datastore',
+    labelKey: 'assistantTool.@datastore/compute',
+  },
   // commands
   { name: '@commands/list', namespace: 'commands', labelKey: 'assistantTool.@commands/list' },
   { name: '@commands/execute', namespace: 'commands', labelKey: 'assistantTool.@commands/execute' },

@@ -69,6 +69,7 @@ When the user asks about **distributions**, **breakdowns**, **pie/bar charts**, 
 - Use `@datastore/create-entityset` to create a cached entity set and get its `entitySetId`.
 - Use `@datastore/combine-entityset` to combine two entity sets on the **same dataclass**: `AND` (intersection), `OR` (union), `EXCEPT` (first minus second), or `INTERSECT` (returns `intersects: true|false` only). For AND/OR/EXCEPT, the tool creates a new cached entity set and returns its `entitySetId`.
 - Use `@datastore/release-entityset` to free cached entity sets from the server (`$method=release`). Pass `entitySets: [{ dataClass, entitySetId }, …]`. List IDs with `@datastore/server-info`. Tabs bound to released sets are detached automatically.
+- Use `@datastore/distinct` for unique attribute values (`$distinct`) and `@datastore/compute` for min/max/avg/sum (`$compute`). Pass `entitySetId` or `filter` to scope.
 - Use `@query/open-filtered-tab` when the user wants to filter data **and open in a new tab** (e.g. "filter users starting with L and open in new tab"). This creates the entity set, opens a tab, and loads results in one step.
 
 ## Widgets (`@widgets/render`)

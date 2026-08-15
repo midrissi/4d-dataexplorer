@@ -557,6 +557,120 @@ export function registerNamespacedDatastoreTools(
         }
       },
     },
+    {
+      definition: {
+        name: '@datastore/distinct',
+        description:
+          'Return distinct values for one attribute via REST $distinct. Pass entitySetId to scope to a cached set, or filter (+ optional filterParams) for a query. Optional top/skip for paging.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            dataClass: { type: 'string' },
+            attribute: { type: 'string', description: 'Attribute name (path segment)' },
+            entitySetId: { type: 'string' },
+            filter: { type: 'string' },
+            filterParams: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  type: { type: 'string' },
+                  value: { type: 'string' },
+                },
+                required: ['type', 'value'],
+              },
+            },
+            top: { type: 'number' },
+            skip: { type: 'number' },
+          },
+          required: ['dataClass', 'attribute'],
+        },
+      },
+      invoke: async (args) => {
+        try {
+          const result = await api.getDistinctValues({
+            dataclass: String(args.dataClass ?? ''),
+            attribute: String(args.attribute ?? ''),
+            entitySetId:
+              typeof args.entitySetId === 'string' && args.entitySetId.trim()
+                ? args.entitySetId.trim()
+                : undefined,
+            filter: typeof args.filter === 'string' ? args.filter : undefined,
+            filterParams: Array.isArray(args.filterParams)
+              ? (args.filterParams as Array<{ type: string; value: string }>)
+              : undefined,
+            top: typeof args.top === 'number' ? args.top : undefined,
+            skip: typeof args.skip === 'number' ? args.skip : undefined,
+          })
+          return toolResultOk(result)
+        } catch (error) {
+          return toolResultErr(error instanceof Error ? error.message : String(error))
+        }
+      },
+    },
+    {
+      definition: {
+        name: '@datastore/compute',
+        description:
+          'Aggregate an attribute via REST $compute (sum, average, count, min, max, or $all). Pass entitySetId or filter to scope the selection.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            dataClass: { type: 'string' },
+            attribute: { type: 'string' },
+            operation: {
+              type: 'string',
+              enum: ['sum', 'average', 'count', 'min', 'max', '$all'],
+              description: 'Defaults to $all',
+            },
+            entitySetId: { type: 'string' },
+            filter: { type: 'string' },
+            filterParams: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  type: { type: 'string' },
+                  value: { type: 'string' },
+                },
+                required: ['type', 'value'],
+              },
+            },
+          },
+          required: ['dataClass', 'attribute'],
+        },
+      },
+      invoke: async (args) => {
+        try {
+          const op = args.operation
+          const operation =
+            op === 'sum' ||
+            op === 'average' ||
+            op === 'count' ||
+            op === 'min' ||
+            op === 'max' ||
+            op === '$all'
+              ? op
+              : '$all'
+          const result = await api.computeAttribute({
+            dataclass: String(args.dataClass ?? ''),
+            attribute: String(args.attribute ?? ''),
+            operation,
+            entitySetId:
+              typeof args.entitySetId === 'string' && args.entitySetId.trim()
+                ? args.entitySetId.trim()
+                : undefined,
+            filter: typeof args.filter === 'string' ? args.filter : undefined,
+            filterParams: Array.isArray(args.filterParams)
+              ? (args.filterParams as Array<{ type: string; value: string }>)
+              : undefined,
+          })
+          return toolResultOk(result)
+        } catch (error) {
+          return toolResultErr(error instanceof Error ? error.message : String(error))
+        }
+      },
+    },
   ]
 
   for (const handler of handlers) {

@@ -1,6 +1,8 @@
 import {
   type CatalogAllResponse,
   type CatalogWithMetadataExpanded,
+  type ComputeOperation,
+  type ComputeResult,
   callDataClassFunction,
   callDataStoreFunction,
   callEntityFunction,
@@ -12,6 +14,7 @@ import {
   normalizeOrderByExpression,
   type QueryOptions,
   RESTClient,
+  type SimpleComputeResult,
 } from '@4d/rest'
 import type { MethodToolInvokeInput } from '@4djs/assistant/tools'
 import { consoleService } from '~/lib/console'
@@ -1106,6 +1109,112 @@ export const api = {
       detachedTabs,
       results,
     }
+  },
+
+  /**
+   * Distinct values for an attribute (dataclass filter or entity set).
+   * Uses `GET /{dc}/{attr}?$distinct=true` or `GET /{dc}/{attr}/$entityset/{id}?$distinct=true`.
+   */
+  getDistinctValues: async (params: {
+    dataclass: string
+    attribute: string
+    entitySetId?: string
+    filter?: string
+    filterParams?: Array<{ type: string; value: string }>
+    top?: number
+    skip?: number
+  }): Promise<{ dataclass: string; attribute: string; values: unknown[] }> => {
+    const { dataclass, attribute, entitySetId, top, skip } = params
+    if (entitySetId) {
+      const options: QueryOptions = {}
+      if (top != null) options.$top = top
+      if (skip != null) options.$skip = skip
+      const values = await client
+        .dataclass(dataclass)
+        .entitySet(entitySetId)
+        .distinct(attribute, options)
+      return { dataclass, attribute, values }
+    }
+    let query = buildDataclassQuery(dataclass, {
+      filter: params.filter,
+      filterParams: params.filterParams,
+    })
+    if (top != null) query = query.top(top)
+    if (skip != null) query = query.skip(skip)
+    const values = await query.distinctValues(attribute)
+    return { dataclass, attribute, values }
+  },
+
+  /**
+   * Compute aggregation on an attribute (dataclass filter or entity set).
+   * Uses `$compute` on `/{dc}/{attr}` or `/{dc}/{attr}/$entityset/{id}`.
+   */
+  computeAttribute: async (params: {
+    dataclass: string
+    attribute: string
+    operation?: ComputeOperation
+    entitySetId?: string
+    filter?: string
+    filterParams?: Array<{ type: string; value: string }>
+  }): Promise<{
+    dataclass: string
+    attribute: string
+    operation: ComputeOperation
+    result: ComputeResult | SimpleComputeResult
+  }> => {
+    const operation = params.operation ?? '$all'
+    const { dataclass, attribute, entitySetId } = params
+    if (entitySetId) {
+      const result = await client
+        .dataclass(dataclass)
+        .entitySet(entitySetId)
+        .compute(attribute, operation)
+      return { dataclass, attribute, operation, result }
+    }
+    const result = await buildDataclassQuery(dataclass, {
+      filter: params.filter,
+      filterParams: params.filterParams,
+    }).compute(operation, attribute)
+    return { dataclass, attribute, operation, result }
+  },
+
+  /**
+   * Page through an entity set (or filtered dataclass) and return all entities.
+   * Defaults to `$top=200` pages. Pass `attributes` to limit columns via `$attributes`.
+   */
+  fetchAllEntities: async (params: {
+    dataclass: string
+    entitySetId?: string
+    filter?: string
+    filterParams?: Array<{ type: string; value: string }>
+    attributes?: string[]
+    pageSize?: number
+    onProgress?: (fetched: number, total: number) => void
+  }): Promise<{ dataclass: string; entities: Entity[]; count: number }> => {
+    const pageSize = params.pageSize ?? 200
+    const all: Entity[] = []
+    let total = Number.POSITIVE_INFINITY
+    let skip = 0
+
+    while (skip < total) {
+      const page = await api.getEntities(params.dataclass, {
+        page: Math.floor(skip / pageSize) + 1,
+        top: pageSize,
+        filter: params.filter,
+        filterParams: params.filterParams,
+        select: params.attributes,
+        entitySetId: params.entitySetId,
+        createEntitySet: params.entitySetId ? undefined : !!params.filter,
+      })
+      total = page.pagination.total
+      all.push(...page.entities)
+      params.onProgress?.(all.length, total)
+      if (page.entities.length === 0) break
+      skip += page.entities.length
+      if (all.length >= total) break
+    }
+
+    return { dataclass: params.dataclass, entities: all, count: all.length }
   },
 
   /**

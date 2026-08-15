@@ -88,6 +88,7 @@ import { CommandPalette } from './CommandPalette'
 import { DatabaseIdentityHeaderChip } from './DatabaseIdentityPanel'
 import { DesktopSslWarningFooterControl } from './DesktopSslWarningFooterControl'
 import { DesktopUpdateFooterControl } from './DesktopUpdateFooterControl'
+import { EntityIoHost } from './EntityIo'
 import { EnvSwitcher } from './Environments/EnvSwitcher'
 import { KeyboardShortcutsModal } from './KeyboardShortcutsModal'
 import { MobileAppFooter } from './MobileAppFooter'
@@ -1181,6 +1182,7 @@ export function Layout({
           onLoadingChange={setAssistantLoading}
         />
       ) : null}
+      <EntityIoHost />
     </div>
   )
 }

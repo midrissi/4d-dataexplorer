@@ -10,6 +10,16 @@ type CommandPaletteMode =
 
 type GraphRelationFilter = 'all' | 'selected' | 'none'
 
+export type EntityIoTarget = {
+  dataclassName: string
+  entitySetId?: string | null
+  filter?: string
+  filterParams?: Array<{ type: string; value: string }>
+  selectionCount?: number | null
+  /** Preferred export columns (e.g. FieldManager visible fields). */
+  columns?: string[]
+}
+
 type EventType =
   | 'new-entity'
   | 'edit-entity'
@@ -37,6 +47,10 @@ type EventType =
   | 'graph-deselect'
   | 'assistant-metadata-changed'
   | 'catalog-reloaded'
+  | 'open-entity-analyze'
+  | 'open-entity-export'
+  | 'open-entity-import'
+  | 'open-entity-anonymize'
 
 type EventPayloadMap = {
   'open-command-palette': { mode?: CommandPaletteMode } | undefined
@@ -49,6 +63,10 @@ type EventPayloadMap = {
   'catalog-reloaded': undefined
   /** Remount the active dataclass tab. Set skipFetch when the caller already refreshed data. */
   'refresh-view': { skipFetch?: boolean } | undefined
+  'open-entity-analyze': EntityIoTarget
+  'open-entity-export': EntityIoTarget
+  'open-entity-import': EntityIoTarget
+  'open-entity-anonymize': EntityIoTarget
 }
 
 type EventPayload<T extends EventType> = T extends keyof EventPayloadMap

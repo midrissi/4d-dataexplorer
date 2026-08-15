@@ -28,7 +28,14 @@ export function createCommandContext(overrides: CommandContextOverrides = {}): C
   const activeTab = tabsState.tabs.find((t) => t.id === tabsState.activeTabId)
   const activeDataclassTab =
     activeTab && isDataclassTab(activeTab)
-      ? { dataclassName: activeTab.dataclassName, id: activeTab.id, viewMode: activeTab.viewMode }
+      ? {
+          dataclassName: activeTab.dataclassName,
+          id: activeTab.id,
+          viewMode: activeTab.viewMode,
+          entitySetId: activeTab.entitySetId,
+          selectionCount: activeTab.selectionCount,
+          queryOptions: activeTab.queryOptions,
+        }
       : null
 
   const storedTheme = getTheme()
@@ -86,7 +93,15 @@ export function createCommandContext(overrides: CommandContextOverrides = {}): C
     tabs: tabsState.tabs,
     activeTabId: tabsState.activeTabId,
     activeDataclassTab: activeDataclassTab
-      ? { dataclassName: activeDataclassTab.dataclassName }
+      ? {
+          dataclassName: activeDataclassTab.dataclassName,
+          entitySetId: activeDataclassTab.entitySetId,
+          selectionCount: activeDataclassTab.selectionCount,
+          queryOptions: {
+            filter: activeDataclassTab.queryOptions.filter,
+            filterParams: activeDataclassTab.queryOptions.filterParams,
+          },
+        }
       : null,
     closeTab: tabsState.closeTab,
     closeOtherTabs: tabsState.closeOtherTabs,

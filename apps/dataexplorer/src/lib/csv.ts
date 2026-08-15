@@ -143,3 +143,29 @@ export function isCsvContentType(contentType: string | null | undefined): boolea
     ct.includes('text/tsv')
   )
 }
+
+/** Escape a single CSV/TSV field (RFC 4180-ish). */
+export function escapeCsvField(value: string, delim: ',' | ';' | '\t' = ','): string {
+  if (
+    value.includes('"') ||
+    value.includes(delim) ||
+    value.includes('\n') ||
+    value.includes('\r')
+  ) {
+    return `"${value.replace(/"/g, '""')}"`
+  }
+  return value
+}
+
+/** Serialize headers + rows to CSV/TSV text. */
+export function stringifyCsv(
+  headers: string[],
+  rows: string[][],
+  delim: ',' | ';' | '\t' = ','
+): string {
+  const lines = [
+    headers.map((h) => escapeCsvField(h, delim)).join(delim),
+    ...rows.map((row) => headers.map((_, i) => escapeCsvField(row[i] ?? '', delim)).join(delim)),
+  ]
+  return `${lines.join('\n')}\n`
+}

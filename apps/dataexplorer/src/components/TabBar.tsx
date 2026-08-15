@@ -18,6 +18,7 @@ import {
   ChevronDown,
   Copy,
   Database,
+  Download,
   FileDown,
   FileText,
   Home,
@@ -26,6 +27,7 @@ import {
   Play,
   Send,
   Settings,
+  Shield,
   SquareStack,
   Variable,
   X,
@@ -986,19 +988,59 @@ export function TabBar() {
                 </DropdownMenuItem>
               )}
               {contextMenuEntitySetId ? (
-                <DropdownMenuItem
-                  onClick={() => {
-                    void navigator.clipboard.writeText(contextMenuEntitySetId)
-                    closeContextMenu()
-                  }}
-                  className={cn(
-                    'flex w-full items-center gap-2 whitespace-nowrap',
-                    mobile && mobileMenuItemClass()
-                  )}
-                >
-                  <Copy className="h-4 w-4 shrink-0" />
-                  <span className="min-w-0 flex-1">{t('tabs.copyEntitySetId')}</span>
-                </DropdownMenuItem>
+                <>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      void navigator.clipboard.writeText(contextMenuEntitySetId)
+                      closeContextMenu()
+                    }}
+                    className={cn(
+                      'flex w-full items-center gap-2 whitespace-nowrap',
+                      mobile && mobileMenuItemClass()
+                    )}
+                  >
+                    <Copy className="h-4 w-4 shrink-0" />
+                    <span className="min-w-0 flex-1">{t('tabs.copyEntitySetId')}</span>
+                  </DropdownMenuItem>
+                  {isDataclassTab(contextMenuTab) ? (
+                    <>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          eventBus.emit('open-entity-export', {
+                            dataclassName: contextMenuTab.dataclassName,
+                            entitySetId: contextMenuEntitySetId,
+                            selectionCount: contextMenuTab.selectionCount,
+                          })
+                          closeContextMenu()
+                        }}
+                        className={cn(
+                          'flex w-full items-center gap-2 whitespace-nowrap',
+                          mobile && mobileMenuItemClass()
+                        )}
+                      >
+                        <Download className="h-4 w-4 shrink-0" />
+                        <span className="min-w-0 flex-1">{t('entity.io.export')}</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          eventBus.emit('open-entity-anonymize', {
+                            dataclassName: contextMenuTab.dataclassName,
+                            entitySetId: contextMenuEntitySetId,
+                            selectionCount: contextMenuTab.selectionCount,
+                          })
+                          closeContextMenu()
+                        }}
+                        className={cn(
+                          'flex w-full items-center gap-2 whitespace-nowrap',
+                          mobile && mobileMenuItemClass()
+                        )}
+                      >
+                        <Shield className="h-4 w-4 shrink-0" />
+                        <span className="min-w-0 flex-1">{t('entity.io.anonymize')}</span>
+                      </DropdownMenuItem>
+                    </>
+                  ) : null}
+                </>
               ) : null}
               {isDataclassTab(contextMenuTab) && <DropdownMenuSeparator />}
               {renderTabCloseActions(contextMenuTab, closeContextMenu)}

@@ -19,6 +19,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Bar, BarChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { EmptyPanel, EmptyPanelAction } from '~/components/EmptyPanel'
+import { EntitySetActionsMenu } from '~/components/EntityIo/EntitySetActionsMenu'
 import { PullToRefresh } from '~/components/PullToRefresh'
 import { getIntlLocale, useTranslation } from '~/i18n'
 import { api } from '~/lib/api'
@@ -522,6 +523,9 @@ export function WelcomeScreen() {
                         <th className="sticky top-0 z-10 bg-muted px-3 py-2 font-medium text-foreground shadow-[0_1px_0_0_hsl(var(--border))]">
                           {t('welcome.expires')}
                         </th>
+                        <th className="sticky top-0 z-10 w-12 bg-muted px-3 py-2 shadow-[0_1px_0_0_hsl(var(--border))]">
+                          <span className="sr-only">{t('entity.io.actionsMenu')}</span>
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
@@ -549,6 +553,15 @@ export function WelcomeScreen() {
                             {es.expires === 'never'
                               ? t('welcome.noExpiry')
                               : new Date(es.expires).toLocaleString(locale)}
+                          </td>
+                          <td className="px-3 py-2">
+                            <EntitySetActionsMenu
+                              target={{
+                                dataclassName: es.dataClass,
+                                entitySetId: es.id,
+                                selectionCount: es.selectionSize,
+                              }}
+                            />
                           </td>
                         </tr>
                       ))}
