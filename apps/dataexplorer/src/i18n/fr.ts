@@ -2077,8 +2077,19 @@ export const fr = {
       modeFixed: 'Valeur fixe',
       modeKeep: 'Conserver',
       modeEmpty: 'Vider',
+      anonymizeActions: 'Actions',
       download: 'Télécharger',
       importAsNew: 'Importer comme nouveaux',
+      importKeepExisting: 'Conserver les enregistrements existants',
+      importReplaceExisting: 'Supprimer d’abord les enregistrements existants',
+      importAsNewConfirmTitle: 'Importer les enregistrements anonymisés ?',
+      importAsNewConfirmDescription:
+        'Cette action crée dans {dataclass} des copies anonymisées de chaque enregistrement de l’ensemble d’entités actuel.',
+      importAsNewConfirm: 'Importer les enregistrements',
+      importAsNewReplaceConfirmTitle: 'Supprimer les enregistrements existants et importer ?',
+      importAsNewReplaceConfirmDescription:
+        'Cette action supprime définitivement tous les enregistrements existants de {dataclass}, puis importe des copies anonymisées depuis l’ensemble d’entités actuel. Elle est irréversible.',
+      importAsNewReplaceConfirm: 'Tout supprimer et importer',
       anonymizeExisting: 'Anonymiser les existants',
       anonymizeExistingConfirmTitle: 'Anonymiser les enregistrements existants ?',
       anonymizeExistingConfirmDescription:

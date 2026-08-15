@@ -2069,8 +2069,19 @@ export const es = {
       modeFixed: 'Valor fijo',
       modeKeep: 'Conservar',
       modeEmpty: 'Vaciar',
+      anonymizeActions: 'Acciones',
       download: 'Descargar',
       importAsNew: 'Importar como nuevos',
+      importKeepExisting: 'Conservar los registros existentes',
+      importReplaceExisting: 'Eliminar primero los registros existentes',
+      importAsNewConfirmTitle: '¿Importar los registros anonimizados?',
+      importAsNewConfirmDescription:
+        'Esta acción crea en {dataclass} copias anonimizadas de cada registro del conjunto de entidades actual.',
+      importAsNewConfirm: 'Importar registros',
+      importAsNewReplaceConfirmTitle: '¿Eliminar los registros existentes e importar?',
+      importAsNewReplaceConfirmDescription:
+        'Esta acción elimina permanentemente todos los registros existentes de {dataclass} y luego importa copias anonimizadas desde el conjunto de entidades actual. No se puede deshacer.',
+      importAsNewReplaceConfirm: 'Eliminar todo e importar',
       anonymizeExisting: 'Anonimizar existentes',
       anonymizeExistingConfirmTitle: '¿Anonimizar los registros existentes?',
       anonymizeExistingConfirmDescription:

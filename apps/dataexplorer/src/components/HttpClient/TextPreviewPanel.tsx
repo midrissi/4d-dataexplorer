@@ -51,17 +51,35 @@ export function detectTextPreviewMode(text: string): TextPreviewMode {
   if (tryParseJson(text) !== undefined) return 'json'
   if (looksLikeHtml(text)) return 'html'
   if (looksLikeCsv(text)) return 'csv'
+  // YAML list dumps look like markdown bullet lists — prefer Code for them.
+  if (looksLikeYaml(text)) return 'code'
   if (looksLikeMarkdown(text)) return 'markdown'
   return 'code'
 }
 
-function monacoLanguageForText(text: string, mode: TextPreviewMode): string {
+function looksLikeYaml(text: string): boolean {
+  const head = text.trimStart()
+  if (!head || head[0] === '{' || head[0] === '[') return false
+  // Document start, list item, or indented key: value pairs.
+  if (head.startsWith('---')) return true
+  if (/^-\s+\S/m.test(head) && /^[ \t]+\w[\w.-]*:\s/m.test(head)) return true
+  if (/^\w[\w.-]*:\s+\S/m.test(head) && head.includes('\n')) return true
+  return false
+}
+
+function monacoLanguageForText(
+  text: string,
+  mode: TextPreviewMode,
+  preferredLanguage?: string
+): string {
   if (mode === 'json') return 'json'
   if (mode === 'html') return 'html'
   if (mode === 'markdown') return 'markdown'
   if (mode === 'csv') return 'plaintext'
+  if (preferredLanguage) return preferredLanguage
   if (tryParseJson(text) !== undefined) return 'json'
   if (looksLikeHtml(text)) return 'html'
+  if (looksLikeYaml(text)) return 'yaml'
   if (looksLikeMarkdown(text)) return 'markdown'
   return 'plaintext'
 }
@@ -87,25 +105,39 @@ type TextPreviewPanelProps = {
   className?: string
   /** Override initial mode; defaults to content sniffing. */
   initialMode?: TextPreviewMode
+  /** Monaco language for Code mode (e.g. yaml, xml, sql). */
+  language?: string
 }
 
-export function TextPreviewPanel({ text, baseUrl, className, initialMode }: TextPreviewPanelProps) {
+export function TextPreviewPanel({
+  text,
+  baseUrl,
+  className,
+  initialMode,
+  language: preferredLanguage,
+}: TextPreviewPanelProps) {
   const { t } = useTranslation()
   const editorPrefs = useCodeEditorPrefs()
   const updateEditorPrefs = useUpdateCodeEditorPrefs()
   const suggested = useMemo(() => detectTextPreviewMode(text), [text])
   const [mode, setMode] = useState<TextPreviewMode>(initialMode ?? suggested)
   const [seenText, setSeenText] = useState(text)
+  const [seenInitialMode, setSeenInitialMode] = useState(initialMode)
 
   // New payload → re-sniff mode (unless parent pinned initialMode once).
   if (text !== seenText) {
     setSeenText(text)
     setMode(initialMode ?? detectTextPreviewMode(text))
   }
+  // Parent format change should update the preview tab even when text shape is similar.
+  if (initialMode !== seenInitialMode) {
+    setSeenInitialMode(initialMode)
+    if (initialMode) setMode(initialMode)
+  }
 
   const jsonValue = useMemo(() => tryParseJson(text), [text])
   const csvTable = useMemo(() => (mode === 'csv' ? parseCsv(text) : null), [mode, text])
-  const language = monacoLanguageForText(text, mode)
+  const language = monacoLanguageForText(text, mode, preferredLanguage)
   const htmlSrcDoc = useMemo(
     () => (mode === 'html' ? htmlPreviewDocument(text, baseUrl) : ''),
     [baseUrl, mode, text]
@@ -190,7 +222,6 @@ export function TextPreviewPanel({ text, baseUrl, className, initialMode }: Text
             toolbar
             editorPrefs={editorPrefs}
             onEditorPrefsChange={updateEditorPrefs}
-            path="http-client-text-preview://body"
           />
         ) : null}
 

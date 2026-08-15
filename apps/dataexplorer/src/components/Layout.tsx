@@ -22,6 +22,7 @@ import {
 import {
   BookText,
   Braces,
+  ChevronsLeft,
   ChevronsRight,
   Command,
   Eye,
@@ -367,7 +368,7 @@ export function Layout({
             : 'grid h-10 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3'
         )}
       >
-        {/* Left side - Logo (+ expand when sidebar is collapsed on desktop) */}
+        {/* Left side - Logo (hover reveals collapse/expand on desktop) */}
         <div
           className={cn(
             'flex min-w-0 items-center',
@@ -385,22 +386,37 @@ export function Layout({
             >
               <List className="h-4 w-4" />
             </Button>
-          ) : sidebarCollapsed ? (
+          ) : null}
+          {mobile ? (
+            <div className="h-8 w-8 shrink-0 shadow-xs">
+              <AppBrandIcon className="h-full w-full" />
+            </div>
+          ) : (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
+                    type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 shrink-0"
+                    className="group relative h-7 w-7 shrink-0 overflow-hidden p-0 shadow-xs hover:bg-muted/70"
                     onClick={toggleSidebarCollapsed}
-                    aria-label={t('layout.expandSidebar')}
+                    aria-label={
+                      sidebarCollapsed ? t('layout.expandSidebar') : t('layout.collapseSidebar')
+                    }
                   >
-                    <ChevronsRight className="h-3.5 w-3.5" />
+                    <AppBrandIcon className="h-full w-full transition-opacity duration-fast group-hover:opacity-0 group-focus-visible:opacity-0" />
+                    <span className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-fast group-hover:opacity-100 group-focus-visible:opacity-100">
+                      {sidebarCollapsed ? (
+                        <ChevronsRight className="h-3.5 w-3.5" />
+                      ) : (
+                        <ChevronsLeft className="h-3.5 w-3.5" />
+                      )}
+                    </span>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="bottom">
-                  {t('layout.expandSidebar')}
+                  {sidebarCollapsed ? t('layout.expandSidebar') : t('layout.collapseSidebar')}
                   {(() => {
                     const sc = getShortcut('toggle-sidebar')
                     return sc?.enabled ? (
@@ -412,10 +428,7 @@ export function Layout({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-          ) : null}
-          <div className={cn('shrink-0 shadow-xs', mobile ? 'h-8 w-8' : 'h-7 w-7')}>
-            <AppBrandIcon className="h-full w-full" />
-          </div>
+          )}
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               <h1 className="truncate font-semibold text-sm leading-tight tracking-tight">

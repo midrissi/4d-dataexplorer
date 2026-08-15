@@ -2040,8 +2040,19 @@ export const en = {
       modeFixed: 'Fixed value',
       modeKeep: 'Keep',
       modeEmpty: 'Empty',
+      anonymizeActions: 'Actions',
       download: 'Download',
       importAsNew: 'Import as new',
+      importKeepExisting: 'Keep existing records',
+      importReplaceExisting: 'Remove existing records first',
+      importAsNewConfirmTitle: 'Import anonymized records?',
+      importAsNewConfirmDescription:
+        'This creates anonymized copies in {dataclass} for every record in the current entity set.',
+      importAsNewConfirm: 'Import records',
+      importAsNewReplaceConfirmTitle: 'Remove existing records and import?',
+      importAsNewReplaceConfirmDescription:
+        'This permanently deletes every existing record in {dataclass}, then imports anonymized copies from the current entity set. This cannot be undone.',
+      importAsNewReplaceConfirm: 'Remove all and import',
       anonymizeExisting: 'Anonymize existing',
       anonymizeExistingConfirmTitle: 'Anonymize existing records?',
       anonymizeExistingConfirmDescription:

@@ -101,8 +101,12 @@ describe('anonymize', () => {
   it('lists mappable attributes and builds single-field plans', () => {
     const mappable = listAnonymizeMappableAttributes(agencyAttrs, 'ID')
     expect(mappable.map((a) => a.name)).toEqual(['firstName', 'email'])
-    expect(buildAnonymizeFieldPlan(mappable[0]!).name).toBe('firstName')
-    expect(buildAnonymizeFieldPlan(mappable[0]!).mode).toBe('faker')
+    const first = mappable[0]
+    expect(first).toBeDefined()
+    if (!first) return
+    const plan = buildAnonymizeFieldPlan(first)
+    expect(plan.name).toBe('firstName')
+    expect(plan.mode).toBe('faker')
   })
 
   it('skips primary key and replaces mapped fields', () => {

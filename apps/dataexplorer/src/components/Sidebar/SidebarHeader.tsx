@@ -12,7 +12,6 @@ import {
   TooltipTrigger,
 } from '@4d/ui'
 import {
-  ChevronsLeft,
   Dices,
   Hash,
   Home,
@@ -86,8 +85,6 @@ export function SidebarHeader({
   const isHomeActive = useIsHomeTabActive()
   const searchShortcut = useShortcut('search-dataclasses')
   const openHomeShortcut = useShortcut('open-home')
-  const toggleSidebarShortcut = useShortcut('toggle-sidebar')
-  const toggleSidebarCollapsed = useSettingsStore((state) => state.toggleSidebarCollapsed)
   const { t } = useTranslation()
   const mobile = isMobileShell()
   const controlSize = mobile ? 'h-11 w-11' : 'h-6 w-6'
@@ -137,29 +134,7 @@ export function SidebarHeader({
             <X className="h-4 w-4" />
             {t('mobile.closeCatalog')}
           </Button>
-        ) : (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 shrink-0"
-                onClick={toggleSidebarCollapsed}
-                aria-label={t('layout.collapseSidebar')}
-              >
-                <ChevronsLeft className="h-3.5 w-3.5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom">
-              {t('layout.collapseSidebar')}
-              {toggleSidebarShortcut?.enabled ? (
-                <kbd className="ml-2 rounded bg-muted px-1.5 font-mono text-xs">
-                  {formatShortcut(toggleSidebarShortcut)}
-                </kbd>
-              ) : null}
-            </TooltipContent>
-          </Tooltip>
-        )}
+        ) : null}
       </div>
 
       <div

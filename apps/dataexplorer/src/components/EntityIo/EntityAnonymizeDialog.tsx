@@ -4,6 +4,10 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
   Input,
   Label,
@@ -15,6 +19,7 @@ import {
   useToast,
 } from '@4d/ui'
 import {
+  ChevronDown,
   Download,
   Eye,
   Info,
@@ -24,6 +29,7 @@ import {
   RotateCcw,
   Shield,
   ShieldAlert,
+  Trash2,
   Upload,
   WandSparkles,
 } from 'lucide-react'
@@ -272,12 +278,35 @@ export function EntityAnonymizeDialog({
     }
   }
 
-  const handleImport = async () => {
+  const handleImport = async (removeExisting: boolean) => {
     if (!target) return
+    const ok = await confirm({
+      title: t(
+        removeExisting
+          ? 'entity.io.importAsNewReplaceConfirmTitle'
+          : 'entity.io.importAsNewConfirmTitle'
+      ),
+      description: t(
+        removeExisting
+          ? 'entity.io.importAsNewReplaceConfirmDescription'
+          : 'entity.io.importAsNewConfirmDescription',
+        { dataclass: target.dataclassName }
+      ),
+      confirmText: t(
+        removeExisting ? 'entity.io.importAsNewReplaceConfirm' : 'entity.io.importAsNewConfirm'
+      ),
+      cancelText: t('entity.cancel'),
+      variant: removeExisting ? 'destructive' : undefined,
+    })
+    if (!ok) return
+
     setBusy(true)
     try {
       const rows = await fetchAnonymized()
       const prepared = rows.map((r) => stripForCreate(r, primaryKey, plan))
+      if (removeExisting) {
+        await api.deleteManyEntities(target.dataclassName)
+      }
       const result = await api.createManyEntities(target.dataclassName, prepared)
       toast({
         title: t('entity.io.anonymizeImported'),
@@ -355,47 +384,57 @@ export function EntityAnonymizeDialog({
               >
                 {t('entity.cancel')}
               </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                disabled={busy || !hasEntitySet || plan.length === 0}
-                onClick={() => void handleDownload()}
-              >
-                {busy ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Download className="h-3.5 w-3.5" />
-                )}
-                {t('entity.io.download')}
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                disabled={busy || !hasEntitySet || plan.length === 0}
-                onClick={() => void handleImport()}
-              >
-                {busy ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Upload className="h-3.5 w-3.5" />
-                )}
-                {t('entity.io.importAsNew')}
-              </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                size="sm"
-                disabled={busy || !hasEntitySet || !hasAnonymizedFields}
-                onClick={() => void handleUpdateExisting()}
-              >
-                {busy ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <ShieldAlert className="h-3.5 w-3.5" />
-                )}
-                {t('entity.io.anonymizeExisting')}
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={busy || !hasEntitySet || plan.length === 0}
+                  >
+                    {busy ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <WandSparkles className="h-3.5 w-3.5" />
+                    )}
+                    {t('entity.io.anonymizeActions')}
+                    <ChevronDown className="h-3.5 w-3.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem onSelect={() => void handleDownload()}>
+                    <Download />
+                    {t('entity.io.download')}
+                  </DropdownMenuItem>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger className="gap-2 [&_svg]:size-3.5 [&_svg]:shrink-0">
+                      <Upload />
+                      {t('entity.io.importAsNew')}
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent className="w-56">
+                      <DropdownMenuItem onSelect={() => void handleImport(false)}>
+                        <Plus />
+                        {t('entity.io.importKeepExisting')}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                        onSelect={() => void handleImport(true)}
+                      >
+                        <Trash2 />
+                        {t('entity.io.importReplaceExisting')}
+                      </DropdownMenuItem>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="text-destructive focus:bg-destructive/10 focus:text-destructive"
+                    disabled={!hasAnonymizedFields}
+                    onSelect={() => void handleUpdateExisting()}
+                  >
+                    <ShieldAlert />
+                    {t('entity.io.anonymizeExisting')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           }
         >
@@ -409,22 +448,19 @@ export function EntityAnonymizeDialog({
           ) : null}
 
           <EntityIoPanel icon={WandSparkles} title="Faker">
-            <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid items-start gap-2 sm:grid-cols-2">
               <div className="space-y-1">
-                <div className="flex items-center gap-1">
-                  <Label htmlFor="anon-seed">{t('entity.io.seed')}</Label>
-                  <TooltipProvider>
+                <div className="flex h-4 items-center gap-1">
+                  <Label htmlFor="anon-seed" className="leading-none">
+                    {t('entity.io.seed')}
+                  </Label>
+                  <TooltipProvider delayDuration={200}>
                     <Tooltip>
+                      {/* Non-focusable trigger: dialog autofocus must not open the help. */}
                       <TooltipTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="h-5 w-5 shrink-0 text-muted-foreground"
-                          aria-label={t('entity.io.seedHelp')}
-                        >
-                          <Info className="h-3.5 w-3.5" />
-                        </Button>
+                        <span className="flex h-4 w-4 shrink-0 items-center justify-center text-muted-foreground">
+                          <Info className="h-3 w-3" aria-hidden />
+                        </span>
                       </TooltipTrigger>
                       <TooltipContent side="top" className="max-w-xs text-xs">
                         {t('entity.io.seedHelp')}
@@ -438,10 +474,18 @@ export function EntityAnonymizeDialog({
                   onChange={(e) => setSeed(e.target.value)}
                   placeholder="42"
                   inputMode="numeric"
+                  aria-describedby="anon-seed-help"
                 />
+                <p id="anon-seed-help" className="sr-only">
+                  {t('entity.io.seedHelp')}
+                </p>
               </div>
               <div className="space-y-1">
-                <Label htmlFor="anon-format">{t('entity.io.formatLabel')}</Label>
+                <div className="flex h-4 items-center">
+                  <Label htmlFor="anon-format" className="leading-none">
+                    {t('entity.io.formatLabel')}
+                  </Label>
+                </div>
                 <EntityIoSelect
                   id="anon-format"
                   value={formatId}
@@ -546,6 +590,7 @@ export function EntityAnonymizeDialog({
                 text={previewText}
                 className="h-56 rounded-none border-0"
                 initialMode={previewModeForFormat(formatId)}
+                language={getEntityIoFormat(formatId)?.language}
               />
             ) : (
               <p className="p-2 text-muted-foreground text-xs">
