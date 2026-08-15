@@ -302,6 +302,21 @@ describe('resolveHelperTemplate', () => {
     expect(['1', '2', '3']).toContain(result.text)
   })
 
+  it('ignores inline-ref directives (top / entityset) during resolution', () => {
+    const result = resolveHelperTemplate(
+      '$pick',
+      [
+        { name: 'from', args: ['ds.Agency.name'] },
+        { name: 'entityset', args: ['64D65C5DEDD64577B589C5ECD3B0D689'] },
+        { name: 'top', args: ['10'] },
+      ],
+      { lists: { 'ds.Agency.name': ['Alpha', 'Beta', 'Gamma'] } }
+    )
+    expect(result).not.toBeNull()
+    if (!result) return
+    expect(['Alpha', 'Beta', 'Gamma']).toContain(result.text)
+  })
+
   it('rejects inline ref when not pre-loaded', () => {
     expect(resolveHelperTemplate('$pick', [{ name: 'from', args: ['ds.Employee.ID'] }])).toBeNull()
     expect(

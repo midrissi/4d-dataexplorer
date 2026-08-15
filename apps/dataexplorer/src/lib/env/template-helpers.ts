@@ -36,6 +36,13 @@ const HELPERS_PATH_RE =
 
 const RESERVED_HELPER_FILTERS = new Set(['from', 'of', 'count', 'dims', 'normalize'])
 
+/**
+ * Directives for inline `from:ds.Dataclass.Attribute` refs. They are consumed at
+ * load time by `collectInlineListRefs` (to scope / cap the `$distinct` fetch) and
+ * are inert during template resolution, so `$pick`/`$sample` must ignore them.
+ */
+const INLINE_LIST_FILTERS = new Set(['top', 'entityset'])
+
 const GENERATOR_OPTION_NAMES = new Set([
   'female',
   'male',
@@ -453,6 +460,7 @@ function validateHelperFilters(kind: HelperKind, filters: readonly EnvTemplateFi
     const name = filter.name.toLowerCase()
     if (TRANSFORM_FILTER_NAMES.has(name) || GENERATOR_OPTION_NAMES.has(name)) continue
     if (RESERVED_HELPER_FILTERS.has(name)) continue
+    if (INLINE_LIST_FILTERS.has(name)) continue
     // Object fields are free-form filter names.
     if (kind === 'object') continue
     return false
@@ -486,7 +494,8 @@ export function resolveHelperTemplate(
         if (
           TRANSFORM_FILTER_NAMES.has(name) ||
           GENERATOR_OPTION_NAMES.has(name) ||
-          RESERVED_HELPER_FILTERS.has(name)
+          RESERVED_HELPER_FILTERS.has(name) ||
+          INLINE_LIST_FILTERS.has(name)
         ) {
           continue
         }

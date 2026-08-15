@@ -37,6 +37,8 @@ export const ENV_TEMPLATE_FILTER_SUGGESTIONS: readonly EnvTemplateSuggestion[] =
   { key: 'from', detail: 'from:a,b,c | $lists.name | ds.Class.Attr', group: 'filter' },
   { key: 'of', detail: 'of:$faker.path (repeat/uniqueArray)', group: 'filter' },
   { key: 'count', detail: 'count:n | count:min,max | count:>=n | count:<=n', group: 'filter' },
+  { key: 'top', detail: 'top:n (max distinct for from:ds.Class.Attr)', group: 'filter' },
+  { key: 'entityset', detail: 'entityset:id (scope from:ds.Class.Attr)', group: 'filter' },
   { key: 'dims', detail: 'dims:n (vector dimensions)', group: 'filter' },
   { key: 'normalize', detail: 'L2-normalize ($vector)', group: 'filter' },
 ]
