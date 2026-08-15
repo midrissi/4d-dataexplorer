@@ -45,3 +45,30 @@ export function handleArgInputTabNavigation(event: ReactKeyboardEvent<HTMLElemen
     next.select()
   }
 }
+
+/** Focus a newly added argument value control once it is mounted. */
+export function focusArgumentInput(paramName?: string): void {
+  const focus = () => {
+    const root = document.querySelector('[data-runtime-arguments]')
+    if (!root) return false
+    const selector = paramName
+      ? `input[${ARG_INPUT_ATTR}][data-param-name="${CSS.escape(paramName)}"], textarea[${ARG_INPUT_ATTR}][data-param-name="${CSS.escape(paramName)}"], [${ARG_INPUT_ATTR}][data-param-name="${CSS.escape(paramName)}"]`
+      : `input[${ARG_INPUT_ATTR}], textarea[${ARG_INPUT_ATTR}], [${ARG_INPUT_ATTR}]`
+    const candidates = root.querySelectorAll<HTMLElement>(selector)
+    const target = candidates[candidates.length - 1]
+    if (!target) return false
+    target.focus()
+    if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
+      target.select()
+    }
+    return true
+  }
+
+  if (focus()) return
+  requestAnimationFrame(() => {
+    if (focus()) return
+    setTimeout(() => {
+      focus()
+    }, 0)
+  })
+}

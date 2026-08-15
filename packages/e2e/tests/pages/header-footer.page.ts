@@ -15,7 +15,7 @@ export class HeaderFooterPage extends BasePage {
 
   readonly themeButton = this.page.getByRole('button', { name: 'Theme' })
 
-  readonly toolsButton = this.page.getByRole('button', { name: 'Tools' })
+  readonly toolsButton = this.page.getByRole('button', { name: 'Tools', exact: true })
 
   readonly sidebar = this.page.locator('[class*="border-r"]').first()
 

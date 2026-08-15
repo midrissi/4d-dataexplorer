@@ -12,6 +12,7 @@
  *   -d, --discard-changes   git-restore files that are visually identical to HEAD
  *   --threshold <0-1>       pixelmatch sensitivity (default 0.1; lower = stricter)
  *   --max-diff-ratio <n>    max mismatched pixel ratio still treated as same (default 0.001)
+ *   --concurrency <n>       parallel compares (default 4)
  */
 
 import { createHash } from 'node:crypto'
@@ -24,11 +25,13 @@ import { SCREENSHOTS_DIR } from './doc-screenshots'
 
 const ROOT = join(import.meta.dir, '..')
 const SCREENSHOTS_REL = relative(ROOT, SCREENSHOTS_DIR)
+const DEFAULT_CONCURRENCY = 4
 
 type Args = {
   discard: boolean
   threshold: number
   maxDiffRatio: number
+  concurrency: number
 }
 
 type GitEntry = {
@@ -63,6 +66,7 @@ function parseArgs(argv: string[]): Args {
   let discard = false
   let threshold = 0.1
   let maxDiffRatio = 0.001
+  let concurrency = DEFAULT_CONCURRENCY
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
@@ -86,6 +90,14 @@ function parseArgs(argv: string[]): Args {
       maxDiffRatio = value
       continue
     }
+    if (arg === '--concurrency') {
+      const value = Number(argv[++i])
+      if (!Number.isInteger(value) || value < 1 || value > 32) {
+        fail(`Invalid --concurrency "${argv[i]}" (expected 1–32)`)
+      }
+      concurrency = value
+      continue
+    }
     if (arg === '-h' || arg === '--help') {
       console.log(`Usage: bun scripts/compare-screenshot-changes.ts [options]
 
@@ -93,6 +105,7 @@ Options:
   -d, --discard-changes   Restore screenshots that match HEAD visually
   --threshold <0-1>       Pixelmatch threshold (default 0.1)
   --max-diff-ratio <n>    Max diff ratio still counted as same (default 0.001)
+  --concurrency <n>       Parallel compares (default ${DEFAULT_CONCURRENCY})
   -h, --help              Show this help
 `)
       process.exit(0)
@@ -100,7 +113,12 @@ Options:
     fail(`Unknown argument: ${arg}`)
   }
 
-  return { discard, threshold, maxDiffRatio }
+  return { discard, threshold, maxDiffRatio, concurrency }
+}
+
+function logLine(message: string): void {
+  // Prefer write+flush so interactive terminals show progress immediately.
+  process.stdout.write(`${message}\n`)
 }
 
 async function gitStatusPorcelain(): Promise<string> {
@@ -137,10 +155,19 @@ function decodePng(buf: Buffer): PNG {
   return PNG.sync.read(buf)
 }
 
+/** Read a HEAD blob without Bun's shell text decoding (binary-safe). */
 async function readHeadFile(repoPath: string): Promise<Buffer | null> {
-  const result = await $`git -C ${ROOT} show HEAD:${repoPath}`.quiet().nothrow()
-  if (result.exitCode !== 0) return null
-  return Buffer.from(result.stdout)
+  const proc = Bun.spawn(['git', '-C', ROOT, 'show', `HEAD:${repoPath}`], {
+    stdout: 'pipe',
+    stderr: 'pipe',
+  })
+  const [stdout, , exitCode] = await Promise.all([
+    new Response(proc.stdout).arrayBuffer(),
+    new Response(proc.stderr).arrayBuffer(),
+    proc.exited,
+  ])
+  if (exitCode !== 0) return null
+  return Buffer.from(stdout)
 }
 
 function compareImages(
@@ -274,51 +301,74 @@ function isDiscardable(kind: CompareKind): boolean {
   return kind === 'identical' || kind === 'same'
 }
 
+async function mapPool<T, R>(
+  items: readonly T[],
+  concurrency: number,
+  worker: (item: T, index: number) => Promise<R>
+): Promise<R[]> {
+  const results = new Array<R>(items.length)
+  let next = 0
+
+  async function runWorker(): Promise<void> {
+    while (true) {
+      const index = next++
+      if (index >= items.length) return
+      results[index] = await worker(items[index] as T, index)
+    }
+  }
+
+  const workers = Array.from({ length: Math.min(concurrency, items.length) }, () => runWorker())
+  await Promise.all(workers)
+  return results
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2))
 
-  console.log('🔍 Checking git status for docs screenshots…')
-  console.log(`📂 ${SCREENSHOTS_REL}`)
+  logLine('🔍 Checking git status for docs screenshots…')
+  logLine(`📂 ${SCREENSHOTS_REL}`)
 
   const insideRepo = await $`git -C ${ROOT} rev-parse --is-inside-work-tree`.quiet().nothrow()
   if (insideRepo.exitCode !== 0) {
     fail('Not inside a git repository')
   }
 
-  const fullStatus = await $`git -C ${ROOT} status --short`.quiet()
+  // Scope status to screenshots so a dirty monorepo cannot stall the listing.
+  const fullStatus = await $`git -C ${ROOT} status --short -- ${SCREENSHOTS_REL}`.quiet()
   const fullText = fullStatus.text().trim()
   if (!fullText) {
-    console.log('✨ Working tree clean — nothing to compare.')
+    logLine('✨ Working tree clean — nothing to compare.')
     return
   }
 
-  console.log('\n📋 Git status (repo):')
+  logLine('\n📋 Git status (screenshots):')
   for (const line of fullText.split('\n').slice(0, 20)) {
-    console.log(`   ${line}`)
+    logLine(`   ${line}`)
   }
   const extra = fullText.split('\n').length - 20
-  if (extra > 0) console.log(`   … +${extra} more`)
+  if (extra > 0) logLine(`   … +${extra} more`)
 
   const porcelain = await gitStatusPorcelain()
   const entries = parseStatusLines(porcelain)
 
   if (entries.length === 0) {
-    console.log('\n✅ No screenshot changes under docs/screenshots.')
+    logLine('\n✅ No screenshot changes under docs/screenshots.')
     return
   }
 
-  console.log(`\n🖼️  Comparing ${entries.length} screenshot change(s) to HEAD…`)
-  console.log(
-    `   threshold=${args.threshold}  maxDiffRatio=${args.maxDiffRatio}${args.discard ? '  discard=on' : ''}`
+  logLine(`\n🖼️  Comparing ${entries.length} screenshot change(s) to HEAD…`)
+  logLine(
+    `   threshold=${args.threshold}  maxDiffRatio=${args.maxDiffRatio}  concurrency=${args.concurrency}${args.discard ? '  discard=on' : ''}`
   )
 
-  const results: CompareResult[] = []
-  for (const entry of entries) {
+  const results = await mapPool(entries, args.concurrency, async (entry, index) => {
     const result = await compareEntry(entry, args.threshold, args.maxDiffRatio)
-    results.push(result)
     const suffix = result.detail ? ` — ${result.detail}` : ''
-    console.log(` ${emojiFor(result.kind)}  ${result.path}  (${labelFor(result.kind)}${suffix})`)
-  }
+    logLine(
+      ` [${index + 1}/${entries.length}] ${emojiFor(result.kind)}  ${result.path}  (${labelFor(result.kind)}${suffix})`
+    )
+    return result
+  })
 
   const identical = results.filter((r) => r.kind === 'identical')
   const same = results.filter((r) => r.kind === 'same')
@@ -328,20 +378,21 @@ async function main() {
   const errored = results.filter((r) => r.kind === 'error')
   const discardable = results.filter((r) => isDiscardable(r.kind))
 
-  console.log('\n📊 Summary')
-  console.log(`   🧊 identical:     ${identical.length}`)
-  console.log(`   😌 visually same: ${same.length}`)
-  console.log(`   👀 different:     ${different.length}`)
-  console.log(`   🆕 added:         ${added.length}`)
-  console.log(`   🗑️  deleted:       ${deleted.length}`)
-  if (errored.length > 0) console.log(`   💥 errors:        ${errored.length}`)
+  logLine('\n📊 Summary')
+  logLine(`   🧊 identical:     ${identical.length}`)
+  logLine(`   😌 visually same: ${same.length}`)
+  logLine(`   👀 different:     ${different.length}`)
+  logLine(`   🆕 added:         ${added.length}`)
+  logLine(`   🗑️  deleted:       ${deleted.length}`)
+  if (errored.length > 0) logLine(`   💥 errors:        ${errored.length}`)
 
   if (args.discard) {
     if (discardable.length === 0) {
-      console.log('\n💤 Nothing to discard — no screenshots match HEAD closely enough.')
+      logLine('\n💤 Nothing to discard — no screenshots match HEAD closely enough.')
     } else {
-      console.log(`\n♻️  Discarding ${discardable.length} no-op screenshot change(s)…`)
-      for (const item of discardable) {
+      logLine(`\n♻️  Discarding ${discardable.length} no-op screenshot change(s)…`)
+      for (const [index, item] of discardable.entries()) {
+        logLine(`   [${index + 1}/${discardable.length}] restoring ${item.path}`)
         const restore =
           await $`git -C ${ROOT} restore --source=HEAD --staged --worktree -- ${item.path}`
             .quiet()
@@ -351,16 +402,16 @@ async function main() {
             .quiet()
             .nothrow()
           if (worktreeOnly.exitCode !== 0) {
-            console.log(`   ⚠️  failed to restore ${item.path}`)
+            logLine(`   ⚠️  failed to restore ${item.path}`)
             continue
           }
         }
-        console.log(`   🗑️  restored ${item.path}`)
+        logLine(`   🗑️  restored ${item.path}`)
       }
-      console.log('✨ Discard complete.')
+      logLine('✨ Discard complete.')
     }
   } else if (discardable.length > 0) {
-    console.log(
+    logLine(
       `\n💡 Tip: re-run with -d / --discard-changes to restore ${discardable.length} visually-same file(s).`
     )
   }

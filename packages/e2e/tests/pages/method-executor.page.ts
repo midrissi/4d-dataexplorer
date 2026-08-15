@@ -10,7 +10,7 @@ export class MethodExecutorPage extends BasePage {
   readonly executeButton = this.page.getByRole('button', { name: /^Execute$/i })
 
   async openFromToolsMenu(): Promise<void> {
-    await this.page.getByRole('button', { name: 'Tools' }).click()
+    await this.page.getByRole('button', { name: 'Tools', exact: true }).click()
     await this.pause(400)
     await this.page.getByRole('menuitem', { name: /Method Executor/i }).click()
     await this.title.waitFor({ state: 'visible', timeout: 8000 })

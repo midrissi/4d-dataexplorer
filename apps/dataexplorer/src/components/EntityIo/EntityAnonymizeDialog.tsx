@@ -117,6 +117,13 @@ export function EntityAnonymizeDialog({
     () => mappableAttributes.filter((attr) => !plannedNames.has(attr.name)),
     [mappableAttributes, plannedNames]
   )
+  const anonymizeThisRoot = useMemo(
+    () => ({
+      ...Object.fromEntries(mappableAttributes.map((attr) => [attr.name, undefined])),
+      ...sampleRows[0],
+    }),
+    [mappableAttributes, sampleRows]
+  )
 
   useEffect(() => {
     if (!open || !dataclassName) return
@@ -173,6 +180,10 @@ export function EntityAnonymizeDialog({
   const resetPlan = useCallback(() => {
     setPlan(mappableAttributes.map(buildAnonymizeFieldPlan))
   }, [mappableAttributes])
+
+  const clearPlan = useCallback(() => {
+    setPlan([])
+  }, [])
 
   const fieldOptionsFor = useCallback(
     (currentName: string): EntityIoSelectOption<string>[] => {
@@ -511,6 +522,17 @@ export function EntityAnonymizeDialog({
                   variant="ghost"
                   size="sm"
                   className="h-6 px-2 text-[11px] text-muted-foreground"
+                  disabled={plan.length === 0}
+                  onClick={clearPlan}
+                >
+                  <Trash2 className="h-3 w-3" />
+                  {t('entity.io.removeAllFields')}
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-[11px] text-muted-foreground"
                   disabled={mappableAttributes.length === 0}
                   onClick={resetPlan}
                 >
@@ -558,6 +580,7 @@ export function EntityAnonymizeDialog({
                   fieldLabel={t('entity.io.fieldName')}
                   modeLabel={t('entity.io.importMode')}
                   removeLabel={t('entity.io.removeField')}
+                  thisRoot={anonymizeThisRoot}
                   onFieldNameChange={replaceField}
                   onChange={updateField}
                   onRemove={removeField}

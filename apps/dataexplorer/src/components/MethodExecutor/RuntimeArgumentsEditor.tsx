@@ -19,7 +19,7 @@ import { useRef } from 'react'
 import { useTranslation } from '~/i18n'
 import type { RuntimeArgument } from '~/store/method-executor-types'
 import { ArgumentRow } from './ArgumentRow'
-import { flushPendingArgumentValues } from './arg-input'
+import { flushPendingArgumentValues, focusArgumentInput } from './arg-input'
 import {
   ARGUMENT_KINDS,
   changeRuntimeArgumentKind,
@@ -78,8 +78,14 @@ export function RuntimeArgumentsEditor({
     patchArgument(changeRuntimeArgumentKind(current, kind))
   }
 
-  const addArgument = () =>
-    commit([...listRef.current, emptyArgument(listRef.current.length + 1, namePrefix, defaultKind)])
+  const addArgument = () => {
+    const next = [
+      ...listRef.current,
+      emptyArgument(listRef.current.length + 1, namePrefix, defaultKind),
+    ]
+    commit(next)
+    focusArgumentInput(`${namePrefix}${next.length}`)
+  }
   const onDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
     if (!over || active.id === over.id) return

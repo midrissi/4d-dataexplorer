@@ -2036,6 +2036,7 @@ export const en = {
       fieldName: 'Field',
       addField: 'Add field',
       resetFieldPlan: 'Restore defaults',
+      removeAllFields: 'Remove all',
       removeField: 'Remove',
       modeFaker: 'Faker',
       modeFixed: 'Fixed value',

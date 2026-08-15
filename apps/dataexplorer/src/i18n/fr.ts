@@ -2073,6 +2073,7 @@ export const fr = {
       fieldName: 'Champ',
       addField: 'Ajouter un champ',
       resetFieldPlan: 'Restaurer les défauts',
+      removeAllFields: 'Tout retirer',
       removeField: 'Retirer',
       modeFaker: 'Faker',
       modeFixed: 'Valeur fixe',

@@ -179,7 +179,8 @@ export function buildEntityTools(): AssistantToolHandler[] {
             await dataState.fetchEntities()
             return toolResultOk({ scope })
           case 'all':
-            await dataState.refreshCurrentView()
+            await dataState.fetchDataclasses()
+            await dataState.fetchEntities()
             return toolResultOk({ scope })
           default:
             return toolResultErr(`Unknown scope: ${scope}`)

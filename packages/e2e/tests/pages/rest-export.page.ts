@@ -6,7 +6,7 @@ export class RestExportPage extends BasePage {
   readonly previewStep = this.page.getByRole('button', { name: /Preview/i })
 
   async openFromToolsMenu(): Promise<void> {
-    const tools = this.page.getByRole('button', { name: 'Tools' })
+    const tools = this.page.getByRole('button', { name: 'Tools', exact: true })
     const item = this.page.getByRole('menuitem', { name: /REST Export/i })
 
     for (let attempt = 0; attempt < 3; attempt++) {

@@ -31,7 +31,7 @@ export class HttpClientPage extends BasePage {
   readonly responseStatus = this.page.getByRole('status').first()
 
   async openFromToolsMenu(): Promise<void> {
-    const tools = this.page.getByRole('button', { name: 'Tools' })
+    const tools = this.page.getByRole('button', { name: 'Tools', exact: true })
     const item = this.page.getByRole('menuitem', { name: /^HTTP Client$/i })
 
     for (let attempt = 0; attempt < 3; attempt++) {

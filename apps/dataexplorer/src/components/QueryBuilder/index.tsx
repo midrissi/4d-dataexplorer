@@ -299,11 +299,8 @@ export function QueryBuilder() {
           const currentPagination = useDataExplorerStore.getState().pagination
           addToHistory(selectedDataclass, newQueryOptions, currentPagination?.total)
         }
-        // Mobile: fold the panel so results are visible after run.
-        if (isMobileShell() && activeDataclassTab) {
-          setQueryExpanded(activeDataclassTab.id, false)
-        }
       })
+      handleCollapse()
     },
     [
       localFilter,
@@ -313,8 +310,7 @@ export function QueryBuilder() {
       selectedDataclass,
       addToHistory,
       defaultCreateEntitySet,
-      activeDataclassTab,
-      setQueryExpanded,
+      handleCollapse,
     ]
   )
 
@@ -337,7 +333,8 @@ export function QueryBuilder() {
       },
       { createEntitySet: false }
     )
-  }, [handleResetQueryOptions, fetchEntities, pageSize])
+    handleCollapse()
+  }, [handleResetQueryOptions, fetchEntities, pageSize, handleCollapse])
 
   const displayedEntitySetId = entitySetIdEditing
     ? localEntitySetId

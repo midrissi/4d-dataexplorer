@@ -127,6 +127,7 @@ type DataExplorerState = {
     /** Delete every entity in the dataclass (no filter). */
     all?: boolean
   }) => Promise<{ count: number }>
+  /** Refetch entities for the active dataclass tab only (does not reload the catalog). */
   refreshCurrentView: () => Promise<void>
   /**
    * Soft-refresh the connected app: reload catalog + current entities, then
@@ -635,8 +636,8 @@ export const useDataExplorerStore = create<DataExplorerState>()(
           return { count: result.count ?? 0 }
         },
 
+        /** Refetch entities for the active dataclass tab only (no catalog reload). */
         refreshCurrentView: async () => {
-          await get().fetchDataclasses()
           const { selectedDataclass, pagination } = get()
           if (selectedDataclass) {
             await get().fetchEntities(pagination?.page || 1)
@@ -644,7 +645,11 @@ export const useDataExplorerStore = create<DataExplorerState>()(
         },
 
         refreshApp: async () => {
-          await get().refreshCurrentView()
+          await get().fetchDataclasses()
+          const { selectedDataclass, pagination } = get()
+          if (selectedDataclass) {
+            await get().fetchEntities(pagination?.page || 1)
+          }
           eventBus.emit('refresh-view', { skipFetch: true })
         },
       }

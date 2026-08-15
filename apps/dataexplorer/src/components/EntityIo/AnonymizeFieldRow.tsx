@@ -3,6 +3,7 @@ import { X } from 'lucide-react'
 import { memo, useMemo } from 'react'
 import { useTemplatedEnvFieldProps } from '~/components/Environments/use-templated-env-field-props'
 import type { AnonymizeFieldMode, AnonymizeFieldPlan } from '~/lib/entity-io'
+import type { EnvTemplateThis } from '~/lib/env/this-context'
 import { EntityIoSelect, type EntityIoSelectOption } from './EntityIoSelect'
 
 export const AnonymizeFieldRow = memo(function AnonymizeFieldRow({
@@ -12,6 +13,7 @@ export const AnonymizeFieldRow = memo(function AnonymizeFieldRow({
   fieldLabel,
   modeLabel,
   removeLabel,
+  thisRoot,
   onFieldNameChange,
   onChange,
   onRemove,
@@ -22,6 +24,7 @@ export const AnonymizeFieldRow = memo(function AnonymizeFieldRow({
   fieldLabel: string
   modeLabel: string
   removeLabel: string
+  thisRoot?: EnvTemplateThis
   onFieldNameChange: (from: string, to: string) => void
   onChange: (name: string, patch: Partial<AnonymizeFieldPlan>) => void
   onRemove: (name: string) => void
@@ -30,7 +33,7 @@ export const AnonymizeFieldRow = memo(function AnonymizeFieldRow({
     () => ({ name: field.name, type: field.type }),
     [field.name, field.type]
   )
-  const envField = useTemplatedEnvFieldProps({ field: fieldHint })
+  const envField = useTemplatedEnvFieldProps({ field: fieldHint, thisRoot })
 
   return (
     <div className="grid min-h-8 grid-cols-[minmax(7rem,1fr)_7rem_minmax(9rem,1.2fr)_1.75rem] items-center gap-1.5 border-border/50 border-b px-2 py-1 text-xs transition-colors last:border-b-0 hover:bg-muted/35">

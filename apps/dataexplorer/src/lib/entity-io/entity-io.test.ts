@@ -139,6 +139,36 @@ describe('anonymize', () => {
     expect(entity?.status).toBe('anonymous')
   })
 
+  it('resolves $this from the source value when anonymizing the same field', () => {
+    const [entity] = anonymizeEntities([{ passwordHash: 'secret' }], {
+      plan: [
+        {
+          name: 'passwordHash',
+          mode: 'faker',
+          fakerKey: '{{$this.passwordHash | hash:md5}}',
+        },
+      ],
+    })
+
+    expect(entity?.passwordHash).toBe('5ebe2294ecd0e0f08eab7690d2a6ee69')
+  })
+
+  it('resolves $this from values generated earlier in the plan', () => {
+    const [entity] = anonymizeEntities([{ firstName: 'Secret', email: 'private@example.com' }], {
+      plan: [
+        { name: 'firstName', mode: 'fixed', fixedValue: 'Anonymous' },
+        {
+          name: 'email',
+          mode: 'faker',
+          fakerKey: '{{$this.firstName | lower}}',
+        },
+      ],
+    })
+
+    expect(entity?.firstName).toBe('Anonymous')
+    expect(entity?.email).toBe('anonymous')
+  })
+
   it('prepares in-place updates with lock keys and changed fields only', () => {
     const update = prepareAnonymizedUpdate(
       {

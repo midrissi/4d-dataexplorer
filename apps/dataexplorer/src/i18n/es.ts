@@ -2065,6 +2065,7 @@ export const es = {
       fieldName: 'Campo',
       addField: 'Añadir campo',
       resetFieldPlan: 'Restaurar valores por defecto',
+      removeAllFields: 'Quitar todos',
       removeField: 'Quitar',
       modeFaker: 'Faker',
       modeFixed: 'Valor fijo',

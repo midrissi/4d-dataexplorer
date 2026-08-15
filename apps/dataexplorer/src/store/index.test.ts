@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, mock } from 'bun:test'
+import { beforeEach, describe, expect, it } from 'bun:test'
 import { setCurrentBaseId } from '~/lib/storage'
 import {
   mockCatalogClearCache,
@@ -14,9 +14,6 @@ import {
 } from '../test-rest-mock'
 import { type Entity, useDataExplorerStore } from './index'
 import { useTabsStore } from './tabs'
-
-// Re-import api helpers after mocks are wired (test-setup preloads test-rest-mock)
-const { api } = await import('~/lib/api')
 
 describe('store/index', () => {
   beforeEach(() => {
@@ -317,19 +314,23 @@ describe('store/index', () => {
   })
 
   describe('refreshCurrentView', () => {
-    it('refetches dataclasses only when none selected', async () => {
-      const spy = mock(() => api.getDataclasses())
+    it('does nothing when no dataclass is selected', async () => {
+      mockCatalogClearCache.mockClear()
+      mockFetchPage.mockClear()
       await useDataExplorerStore.getState().refreshCurrentView()
-      expect(useDataExplorerStore.getState().dataclasses.length).toBeGreaterThan(0)
-      spy.mockRestore()
+      expect(mockCatalogClearCache).not.toHaveBeenCalled()
+      expect(mockFetchPage).not.toHaveBeenCalled()
+      expect(useDataExplorerStore.getState().entities).toEqual([])
     })
 
-    it('refetches dataclasses and entities when dataclass selected', async () => {
+    it('refetches entities for the selected dataclass without reloading the catalog', async () => {
       useDataExplorerStore.setState({
         selectedDataclass: 'Employee',
         pagination: { page: 2, limit: 20, total: 100, totalPages: 5, hasNext: true, hasPrev: true },
       })
+      mockCatalogClearCache.mockClear()
       await useDataExplorerStore.getState().refreshCurrentView()
+      expect(mockCatalogClearCache).not.toHaveBeenCalled()
       expect(useDataExplorerStore.getState().entities.length).toBeGreaterThan(0)
     })
   })
