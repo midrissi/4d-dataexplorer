@@ -1,7 +1,6 @@
 import { Button, Dialog, Input, Label, useToast } from '@4d/ui'
 import { Download, Eye, ListChecks, Loader2, Shield, Upload, WandSparkles } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { SuggestInput } from '~/components/SuggestInput'
 import { useTranslation } from '~/i18n'
 import { api } from '~/lib/api'
 import { downloadBytes } from '~/lib/download-bytes'
@@ -18,15 +17,15 @@ import {
 } from '~/lib/entity-io'
 import type { EntityIoTarget } from '~/lib/eventBus'
 import { eventBus } from '~/lib/eventBus'
+import { AnonymizeFieldRow } from './AnonymizeFieldRow'
 import {
   anonymizeFakerGroupLabels,
   listAnonymizeFakerSuggestions,
-  suggestionsForAnonymizeField,
 } from './anonymize-faker-suggestions'
 import { EntityIoCodePreview } from './EntityIoCodePreview'
 import { EntityIoDialogFrame } from './EntityIoDialogFrame'
 import { EntityIoPanel } from './EntityIoPanel'
-import { EntityIoSelect } from './EntityIoSelect'
+import { EntityIoSelect, type EntityIoSelectOption } from './EntityIoSelect'
 
 export function EntityAnonymizeDialog({
   open,
@@ -49,9 +48,18 @@ export function EntityAnonymizeDialog({
   const [primaryKey, setPrimaryKey] = useState<string | undefined>()
   const [seed, setSeed] = useState('')
   const [formatId, setFormatId] = useState<EntityIoFormatId>('json')
-  const [preview, setPreview] = useState<Record<string, unknown>[]>([])
+  const [sampleRows, setSampleRows] = useState<Record<string, unknown>[]>([])
   const [busy, setBusy] = useState(false)
   const [loading, setLoading] = useState(false)
+
+  const modeOptions = useMemo(
+    (): EntityIoSelectOption<AnonymizeFieldMode>[] => [
+      { value: 'faker', label: t('entity.io.modeFaker') },
+      { value: 'keep', label: t('entity.io.modeKeep') },
+      { value: 'empty', label: t('entity.io.modeEmpty') },
+    ],
+    [t]
+  )
 
   const dataclassName = target?.dataclassName ?? ''
   const hasEntitySet = Boolean(target?.entitySetId?.trim())
@@ -69,26 +77,22 @@ export function EntityAnonymizeDialog({
     }
   }, [open, dataclassName])
 
-  const updateField = (name: string, patch: Partial<AnonymizeFieldPlan>) => {
+  const updateField = useCallback((name: string, patch: Partial<AnonymizeFieldPlan>) => {
     setPlan((prev) => prev.map((f) => (f.name === name ? { ...f, ...patch } : f)))
-  }
+  }, [])
 
-  const loadPreview = useCallback(async () => {
-    if (!target?.entitySetId?.trim()) return
+  // Sample rows are fetched once per selection; editing the plan re-anonymizes them locally.
+  const loadSample = useCallback(async () => {
+    const entitySetId = target?.entitySetId?.trim()
+    if (!target || !entitySetId) return
     setLoading(true)
     try {
       const page = await api.getEntities(target.dataclassName, {
-        entitySetId: target.entitySetId,
+        entitySetId,
         top: 5,
         page: 1,
       })
-      const seedNum = seed.trim() ? Number(seed) : undefined
-      setPreview(
-        anonymizeEntities(page.entities as Record<string, unknown>[], {
-          plan,
-          seed: Number.isFinite(seedNum) ? seedNum : undefined,
-        })
-      )
+      setSampleRows(page.entities as Record<string, unknown>[])
     } catch (err) {
       toast({
         title: t('entity.io.anonymizePreviewFailed'),
@@ -98,11 +102,20 @@ export function EntityAnonymizeDialog({
     } finally {
       setLoading(false)
     }
-  }, [plan, seed, t, target, toast])
+  }, [t, target?.dataclassName, target?.entitySetId, toast, target])
 
   useEffect(() => {
-    if (open && hasEntitySet && plan.length > 0) void loadPreview()
-  }, [open, hasEntitySet, plan.length, loadPreview])
+    if (open && hasEntitySet) void loadSample()
+  }, [open, hasEntitySet, loadSample])
+
+  const preview = useMemo(() => {
+    if (sampleRows.length === 0 || plan.length === 0) return []
+    const seedNum = seed.trim() ? Number(seed) : undefined
+    return anonymizeEntities(sampleRows, {
+      plan,
+      seed: Number.isFinite(seedNum) ? seedNum : undefined,
+    })
+  }, [sampleRows, plan, seed])
 
   // Preview mirrors the download payload so the chosen format is what gets highlighted.
   const previewText = useMemo(() => {
@@ -280,35 +293,15 @@ export function EntityAnonymizeDialog({
           contentClassName="max-h-64 overflow-auto overscroll-contain p-0"
         >
           {plan.map((field) => (
-            <div
+            <AnonymizeFieldRow
               key={field.name}
-              className="grid min-h-8 grid-cols-[minmax(7rem,1fr)_7rem_minmax(9rem,1.2fr)] items-center gap-1.5 border-border/50 border-b px-2 py-1 text-xs transition-colors last:border-b-0 hover:bg-muted/35"
-            >
-              <span className="truncate font-mono">{field.name}</span>
-              <EntityIoSelect<AnonymizeFieldMode>
-                ariaLabel={`${field.name} ${t('entity.io.importMode')}`}
-                value={field.mode}
-                onValueChange={(mode) => updateField(field.name, { mode })}
-                options={[
-                  { value: 'faker', label: t('entity.io.modeFaker') },
-                  { value: 'keep', label: t('entity.io.modeKeep') },
-                  { value: 'empty', label: t('entity.io.modeEmpty') },
-                ]}
-              />
-              <SuggestInput
-                className="min-w-0"
-                inputClassName="font-mono text-[10px]"
-                aria-label={`${field.name} Faker`}
-                disabled={field.mode !== 'faker'}
-                value={field.fakerKey ?? ''}
-                onChange={(next) => updateField(field.name, { fakerKey: next })}
-                placeholder="$faker.person.firstName"
-                filter="includes"
-                minListWidth={240}
-                suggestions={suggestionsForAnonymizeField(field.name, fakerCatalog)}
-                groupLabels={fakerGroupLabels}
-              />
-            </div>
+              field={field}
+              modeOptions={modeOptions}
+              modeLabel={t('entity.io.importMode')}
+              fakerCatalog={fakerCatalog}
+              fakerGroupLabels={fakerGroupLabels}
+              onChange={updateField}
+            />
           ))}
         </EntityIoPanel>
 
@@ -324,7 +317,7 @@ export function EntityAnonymizeDialog({
               size="sm"
               className="h-6 px-2 text-[11px] text-muted-foreground"
               disabled={!hasEntitySet || loading}
-              onClick={() => void loadPreview()}
+              onClick={() => void loadSample()}
             >
               {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
               {t('entity.analyze.refresh')}

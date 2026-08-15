@@ -58,6 +58,7 @@ export function SuggestInput({
   id,
   'aria-label': ariaLabel,
   filter = 'prefix',
+  maxSuggestions,
   minListWidth,
   disabled,
   groupLabels,
@@ -84,6 +85,8 @@ export function SuggestInput({
   'aria-label'?: string
   /** How to narrow the list. Use `off` when the parent already contextualizes suggestions. */
   filter?: SuggestFilterMode
+  /** Caps rendered options; keeps large catalogs from re-rendering the whole list per keystroke. */
+  maxSuggestions?: number
   minListWidth?: number
   disabled?: boolean
   /** Maps `SuggestOption.group` keys to visible section titles. */
@@ -129,10 +132,13 @@ export function SuggestInput({
 
   const normalized = useMemo(() => normalizeSuggestions(suggestions), [suggestions])
 
-  const filtered = useMemo(
-    () => (suppressPathSuggestions ? [] : filterSuggestions(normalized, value, filter)),
-    [filter, normalized, suppressPathSuggestions, value]
-  )
+  const filtered = useMemo(() => {
+    if (suppressPathSuggestions) return []
+    const matches = filterSuggestions(normalized, value, filter)
+    return maxSuggestions && matches.length > maxSuggestions
+      ? matches.slice(0, maxSuggestions)
+      : matches
+  }, [filter, maxSuggestions, normalized, suppressPathSuggestions, value])
 
   const showPathSuggestions =
     open && !showHighlight && !envAutocomplete.active && filtered.length > 0

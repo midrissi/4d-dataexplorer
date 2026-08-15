@@ -2022,6 +2022,7 @@ export const fr = {
     },
     io: {
       actionsMenu: 'Outils de sélection',
+      requiresSelection: 'Nécessite une sélection',
       export: 'Exporter',
       import: 'Importer',
       anonymize: 'Anonymiser',

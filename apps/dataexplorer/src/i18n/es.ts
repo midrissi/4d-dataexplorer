@@ -2014,6 +2014,7 @@ export const es = {
     },
     io: {
       actionsMenu: 'Herramientas de selección',
+      requiresSelection: 'Requiere una selección',
       export: 'Exportar',
       import: 'Importar',
       anonymize: 'Anonimizar',

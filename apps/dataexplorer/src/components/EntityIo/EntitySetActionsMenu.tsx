@@ -63,21 +63,22 @@ export function EntitySetActionsMenu({
           <TooltipContent>{t('entity.io.actionsMenu')}</TooltipContent>
         </Tooltip>
       </TooltipProvider>
-      <DropdownMenuContent align="end" className={mobile ? mobileMenuContentClass('w-64') : 'w-64'}>
+      <DropdownMenuContent align="end" className={mobile ? mobileMenuContentClass('w-72') : 'w-72'}>
         <DropdownMenuItem
           className={mobile ? mobileMenuItemClass() : undefined}
           disabled={exportDisabled}
           onClick={() => open('open-entity-export')}
         >
           <Download className="h-4 w-4" />
-          <div className="flex flex-col">
-            <span>{t('entity.io.export')}</span>
-            {exportDisabled ? (
-              <span className="text-muted-foreground text-xs">
-                {t('entity.deleteManySelectionUnavailable')}
-              </span>
-            ) : null}
-          </div>
+          <span>{t('entity.io.export')}</span>
+          {exportDisabled ? (
+            <span
+              className="ml-auto whitespace-nowrap text-muted-foreground text-xs"
+              title={t('entity.deleteManySelectionUnavailable')}
+            >
+              {t('entity.io.requiresSelection')}
+            </span>
+          ) : null}
         </DropdownMenuItem>
         <DropdownMenuItem
           className={mobile ? mobileMenuItemClass() : undefined}
@@ -93,14 +94,15 @@ export function EntitySetActionsMenu({
           onClick={() => open('open-entity-anonymize')}
         >
           <Shield className="h-4 w-4" />
-          <div className="flex flex-col">
-            <span>{t('entity.io.anonymize')}</span>
-            {anonymizeDisabled ? (
-              <span className="text-muted-foreground text-xs">
-                {t('entity.deleteManySelectionUnavailable')}
-              </span>
-            ) : null}
-          </div>
+          <span>{t('entity.io.anonymize')}</span>
+          {anonymizeDisabled ? (
+            <span
+              className="ml-auto whitespace-nowrap text-muted-foreground text-xs"
+              title={t('entity.deleteManySelectionUnavailable')}
+            >
+              {t('entity.io.requiresSelection')}
+            </span>
+          ) : null}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

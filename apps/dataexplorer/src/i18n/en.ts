@@ -1985,6 +1985,7 @@ export const en = {
     },
     io: {
       actionsMenu: 'Selection tools',
+      requiresSelection: 'Requires a selection',
       export: 'Export',
       import: 'Import',
       anonymize: 'Anonymize',
