@@ -200,14 +200,18 @@ export function EntityList({ tabId }: { tabId: string }) {
     if (!activeTab) return
     resetQueryOptions(activeTab.id)
     setEntitySetId(activeTab.id, null)
-    void fetchEntities(1, {
-      filter: '',
-      filterParams: [],
-      sort: '',
-      order: 'desc',
-      select: '',
-      top: queryTop,
-    })
+    void fetchEntities(
+      1,
+      {
+        filter: '',
+        filterParams: [],
+        sort: '',
+        order: 'desc',
+        select: '',
+        top: queryTop,
+      },
+      { resetSelection: true }
+    )
   }, [activeTab, resetQueryOptions, setEntitySetId, fetchEntities, queryTop])
 
   const handleCloseTab = useCallback(() => {

@@ -371,13 +371,13 @@ export function QueryBuilder() {
     if (!id) {
       setLocalEntitySetId('')
       setEntitySetId(activeDataclassTab.id, null)
-      fetchEntities(1)
+      fetchEntities(1, undefined, { resetSelection: true })
       return
     }
 
     setLocalEntitySetId(id)
     setEntitySetId(activeDataclassTab.id, id)
-    fetchEntities(1)
+    fetchEntities(1, undefined, { resetSelection: true })
   }, [
     entitySetIdEditing,
     localEntitySetId,
@@ -410,7 +410,7 @@ export function QueryBuilder() {
       handleSetQueryOptions(item.query)
       setLocalFilter(item.query.filter)
       setFilterError(null)
-      fetchEntities(1, item.query)
+      fetchEntities(1, item.query, { resetSelection: true })
       setShowHistory(false)
     },
     [handleSetQueryOptions, fetchEntities]

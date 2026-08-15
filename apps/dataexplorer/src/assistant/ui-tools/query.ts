@@ -86,7 +86,9 @@ export function buildQueryTools(): AssistantToolHandler[] {
       },
       invoke: async (args) => {
         const page = typeof args.page === 'number' ? args.page : undefined
-        await useDataExplorerStore.getState().fetchEntities(page)
+        await useDataExplorerStore.getState().fetchEntities(page, undefined, {
+          resetSelection: true,
+        })
         return toolResultOk({ ran: true, page: page ?? 1 })
       },
     },

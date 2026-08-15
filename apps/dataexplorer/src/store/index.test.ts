@@ -142,6 +142,74 @@ describe('store/index', () => {
       await useDataExplorerStore.getState().fetchEntities()
       expect(useDataExplorerStore.getState().entitiesError).toBe('fetch failed')
     })
+
+    it('clears entity selection when a new query is sent', async () => {
+      useTabsStore.getState().openTab('Employee')
+      const tabId = useTabsStore.getState().activeTabId
+      expect(tabId).toBeTruthy()
+      if (!tabId) return
+
+      const entity: Entity = { id: '1', __KEY: '1', __STAMP: 1, name: 'Alice' }
+      useTabsStore.getState().setSelectedEntityId(tabId, '1')
+      useDataExplorerStore.setState({
+        selectedDataclass: 'Employee',
+        selectedEntity: entity,
+        selectedEntityId: '1',
+      })
+
+      await useDataExplorerStore.getState().fetchEntities(1, undefined, { createEntitySet: false })
+
+      expect(useDataExplorerStore.getState().selectedEntity).toBeNull()
+      expect(useDataExplorerStore.getState().selectedEntityId).toBeNull()
+      const tab = useTabsStore.getState().tabs.find((t) => t.id === tabId)
+      expect(tab && tab.type === 'dataclass' ? tab.selectedEntityId : 'missing').toBeNull()
+    })
+
+    it('clears entity selection when the query returns no entities', async () => {
+      useTabsStore.getState().openTab('Employee')
+      const tabId = useTabsStore.getState().activeTabId
+      expect(tabId).toBeTruthy()
+      if (!tabId) return
+
+      const entity: Entity = { id: '1', __KEY: '1', __STAMP: 1, name: 'Alice' }
+      useTabsStore.getState().setSelectedEntityId(tabId, '1')
+      useDataExplorerStore.setState({
+        selectedDataclass: 'Employee',
+        selectedEntity: entity,
+        selectedEntityId: '1',
+      })
+      mockDataclassFetch.mockResolvedValueOnce({ __COUNT: 0, __ENTITIES: [] })
+
+      await useDataExplorerStore.getState().fetchEntities()
+
+      expect(useDataExplorerStore.getState().selectedEntity).toBeNull()
+      expect(useDataExplorerStore.getState().selectedEntityId).toBeNull()
+      expect(useDataExplorerStore.getState().entities).toEqual([])
+      const tab = useTabsStore.getState().tabs.find((t) => t.id === tabId)
+      expect(tab && tab.type === 'dataclass' ? tab.selectedEntityId : 'missing').toBeNull()
+    })
+
+    it('keeps entity selection when paging without a new query', async () => {
+      useTabsStore.getState().openTab('Employee')
+      const tabId = useTabsStore.getState().activeTabId
+      expect(tabId).toBeTruthy()
+      if (!tabId) return
+
+      const entity: Entity = { id: '1', __KEY: '1', __STAMP: 1, name: 'Alice' }
+      useTabsStore.getState().setSelectedEntityId(tabId, '1')
+      useDataExplorerStore.setState({
+        selectedDataclass: 'Employee',
+        selectedEntity: entity,
+        selectedEntityId: '1',
+      })
+
+      await useDataExplorerStore.getState().fetchEntities(2)
+
+      expect(useDataExplorerStore.getState().selectedEntity).toEqual(entity)
+      expect(useDataExplorerStore.getState().selectedEntityId).toBe('1')
+      const tab = useTabsStore.getState().tabs.find((t) => t.id === tabId)
+      expect(tab && tab.type === 'dataclass' ? tab.selectedEntityId : 'missing').toBe('1')
+    })
   })
 
   describe('entity selection and editing', () => {

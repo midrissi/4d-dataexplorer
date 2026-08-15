@@ -108,7 +108,7 @@ type DataExplorerState = {
   fetchEntities: (
     page?: number,
     queryOptions?: QueryOptions,
-    options?: { createEntitySet?: boolean }
+    options?: { createEntitySet?: boolean; resetSelection?: boolean }
   ) => Promise<void>
   selectEntity: (entity: Entity | null) => void
   setSearchQuery: (query: string) => void
@@ -348,7 +348,7 @@ export const useDataExplorerStore = create<DataExplorerState>()(
         fetchEntities: async (
           page = 1,
           queryOptionsOverride?: QueryOptions,
-          options?: { createEntitySet?: boolean }
+          options?: { createEntitySet?: boolean; resetSelection?: boolean }
         ) => {
           const { selectedDataclass } = get()
           if (!selectedDataclass) return
@@ -357,6 +357,10 @@ export const useDataExplorerStore = create<DataExplorerState>()(
           const activeTab = tabsState.tabs.find((t) => t.id === tabsState.activeTabId)
           const forceCreateEntitySet = options?.createEntitySet === true
           const forceQueryOnly = options?.createEntitySet === false
+          // New query/request (Run, Reset, history, entity set load) — drop the
+          // previous entity so the viewer cannot keep showing a stale record.
+          const resetSelection =
+            options?.resetSelection === true || options?.createEntitySet !== undefined
 
           // Use override or get from tabs store
           const queryOptions = queryOptionsOverride ?? getActiveTabQueryOptions()
@@ -378,7 +382,22 @@ export const useDataExplorerStore = create<DataExplorerState>()(
                 ? activeTab.entitySetId
                 : null
 
-          setView({ entitiesLoading: true, entitiesError: null })
+          if (resetSelection && activeTab && isDataclassTab(activeTab)) {
+            tabsState.setSelectedEntityId(activeTab.id, null)
+          }
+
+          setView({
+            entitiesLoading: true,
+            entitiesError: null,
+            ...(resetSelection
+              ? {
+                  selectedEntity: null,
+                  selectedEntityId: null,
+                  isEditing: false,
+                  editedEntity: null,
+                }
+              : {}),
+          })
           try {
             // Determine which attributes to request. The per-tab field selection
             // (table + card fields, possibly dotted relation paths) takes
@@ -434,13 +453,36 @@ export const useDataExplorerStore = create<DataExplorerState>()(
             // Skip when the store already has a matching selection so update/create
             // refresh paths keep the entity they just wrote.
             const entities = result.entities as Entity[]
+            const latestTab =
+              activeTab && isDataclassTab(activeTab)
+                ? useTabsStore.getState().tabs.find((tab) => tab.id === activeTab.id)
+                : undefined
             const tabSelectedId =
-              activeTab && isDataclassTab(activeTab) ? activeTab.selectedEntityId : null
+              latestTab && isDataclassTab(latestTab) ? latestTab.selectedEntityId : null
             const { selectedEntity: currentEntity, selectedEntityId: currentId } = get()
+            const emptySelection = result.pagination.total === 0
             const needsRehydrate =
-              !!tabSelectedId && (!currentId || currentId !== tabSelectedId || !currentEntity)
+              !resetSelection &&
+              !emptySelection &&
+              !!tabSelectedId &&
+              (!currentId || currentId !== tabSelectedId || !currentEntity)
 
-            if (needsRehydrate) {
+            if (emptySelection && latestTab && isDataclassTab(latestTab) && tabSelectedId) {
+              tabsState.setSelectedEntityId(latestTab.id, null)
+            }
+
+            if (emptySelection) {
+              setView({
+                entities,
+                pagination: result.pagination,
+                entitiesLoading: false,
+                selectedEntity: null,
+                selectedEntityId: null,
+                isEditing: false,
+                editedEntity: null,
+                queryExplain: nextExplain,
+              })
+            } else if (needsRehydrate) {
               const matched = entities.find(
                 (entity) =>
                   String(entity.id) === tabSelectedId || String(entity.__KEY) === tabSelectedId

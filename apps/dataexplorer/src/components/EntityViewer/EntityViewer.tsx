@@ -145,11 +145,13 @@ export function EntityViewer(props: EntityViewerProps) {
   const [isLoadingDetails, setIsLoadingDetails] = useState(false)
   const selectedEntity = isStandalone
     ? standaloneEntity
-    : fullEntity && fullEntity.id === selectedEntityId
-      ? fullEntity
-      : isLoadingDetails && fullEntity
+    : !selectedEntityId
+      ? null
+      : fullEntity && fullEntity.id === selectedEntityId
         ? fullEntity
-        : storeSelectedEntity
+        : isLoadingDetails && fullEntity
+          ? fullEntity
+          : storeSelectedEntity
 
   // setSelectedEntityId for syncing with EntityList
   const setSelectedEntityId = useTabsStore((s) => s.setSelectedEntityId)
