@@ -21,10 +21,7 @@ import { coerceEntityDataBySchema } from '~/lib/env/coerce-entity-data'
 import { getActiveEnvMap } from '~/lib/env/runtime'
 import { buildEntityThis, buildQueryThis } from '~/lib/env/this-context-builders'
 import { getBaseUrl, getCustomHeaders, getLoggingFetch, getTimeout } from '~/lib/platform'
-import {
-  extractQueryExplain,
-  mergeQueryExplain,
-} from '~/lib/query-explain/extract'
+import { extractQueryExplain, mergeQueryExplain } from '~/lib/query-explain/extract'
 import type { QueryExplainPayload } from '~/lib/query-explain/types'
 import { getCurrentBaseId, getDataclassCustomizations, setCurrentBaseId } from '~/lib/storage'
 import type { Dataclass, Entity, Pagination } from '~/store'

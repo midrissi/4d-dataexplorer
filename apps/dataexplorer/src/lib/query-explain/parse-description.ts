@@ -1,8 +1,4 @@
-import type {
-  QueryExplainAccess,
-  QueryExplainJoinOn,
-  QueryExplainPredicate,
-} from './types'
+import type { QueryExplainAccess, QueryExplainJoinOn, QueryExplainPredicate } from './types'
 
 export type ParsedExplainStep = {
   access: QueryExplainAccess
@@ -15,16 +11,17 @@ export type ParsedExplainStep = {
   children: ParsedExplainStep[]
 }
 
-const STEP_STARTER_RE = /Join on Table\s*:|Indexed query on Table\s*:|Sequential scan on Table\s*:/gi
+const STEP_STARTER_RE =
+  /Join on Table\s*:|Indexed query on Table\s*:|Sequential scan on Table\s*:/gi
 const JOIN_HEAD_RE = /^Join on Table\s*:\s*([^:]+)\s*:\s*/i
 const INDEX_HEAD_RE = /^Indexed query on Table\s*:\s*([^:]+)\s*(?::\s*)?/i
-const SEQUENTIAL_HEAD_RE = /^Sequential scan on Table\s*:\s*([^:{]+?)\s*(?=(?:\s+with filter\b|:|$))/i
+const SEQUENTIAL_HEAD_RE =
+  /^Sequential scan on Table\s*:\s*([^:{]+?)\s*(?=(?:\s+with filter\b|:|$))/i
 const FILTER_BRACE_RE = /\s+with filter\s*\{/i
 const FILTER_COLON_RE = /\s+with filter\s*:/i
 const OPERATOR_RE = /^(AND|OR|NOT|EXCEPT)$/i
 const BOOLEAN_OPS = ['OR', 'EXCEPT', 'AND'] as const
-const PREDICATE_RE =
-  /^(.+?)\s*(==|!=|<=|>=|#|=|>|<|LIKE|begin)\s*(.*?)$/i
+const PREDICATE_RE = /^(.+?)\s*(==|!=|<=|>=|#|=|>|<|LIKE|begin)\s*(.*?)$/i
 const TABLE_INSTANCE_RE = /^(.*?)(?:\((\d+)\))$/
 const JUNK_TOKEN_RE = /^[()[\]{},.;]+$/
 
@@ -228,8 +225,7 @@ function takeFilterSuffix(rest: string): {
   const colonMatch = rest.match(FILTER_COLON_RE)
   const braceAt = braceMatch?.index
   const colonAt = colonMatch?.index
-  const useBrace =
-    braceAt != null && (colonAt == null || braceAt <= colonAt) && braceMatch
+  const useBrace = braceAt != null && (colonAt == null || braceAt <= colonAt) && braceMatch
   if (useBrace && braceAt != null) {
     const open = rest.indexOf('{', braceAt)
     const close = matchingBrace(rest, open)

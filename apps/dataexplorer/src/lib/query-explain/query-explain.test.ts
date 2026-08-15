@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'bun:test'
+import { createKeyValuePair } from '~/store/http-client-types'
 import { extractQueryExplain, mergeQueryExplain, queryExplainHasData } from './extract'
 import {
   detectQueryExplainAccess,
   maxQueryExplainTime,
-  normalizeQueryPlan,
   normalizeQueryPath,
+  normalizeQueryPlan,
   summarizeQueryExplain,
 } from './normalize'
-import { displayExplainAttribute, formatExplainIdentifier } from './parse-description'
 import { areQueryExplainParamsEnabled, setQueryExplainParams } from './params'
-import { createKeyValuePair } from '~/store/http-client-types'
+import { displayExplainAttribute, formatExplainIdentifier } from './parse-description'
 
 const DOC_PLAN = {
   And: [
@@ -143,8 +143,16 @@ describe('normalizeQueryPath', () => {
       time: 5,
       recordsfounds: 10,
       steps: [
-        { description: 'Indexed query on Table : People : lastName = Jones', time: 1, recordsfounds: 10 },
-        { description: 'Sequential scan on Table : People with filter : age > 30', time: 4, recordsfounds: 3 },
+        {
+          description: 'Indexed query on Table : People : lastName = Jones',
+          time: 1,
+          recordsfounds: 10,
+        },
+        {
+          description: 'Sequential scan on Table : People with filter : age > 30',
+          time: 4,
+          recordsfounds: 3,
+        },
       ],
     })
     const summary = summarizeQueryExplain(root)

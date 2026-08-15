@@ -190,6 +190,17 @@ export const en = {
     switchProfileAria: 'Switch profile',
     onlyOneProfile: 'Only one profile',
   },
+  copyAs: {
+    menu: 'Copy as',
+    formats: {
+      fourDHttpRequest: '4D - HTTPRequest',
+      fourDHttpRequestClassic: '4D - HTTP Request',
+      curl: 'cURL',
+      http: 'HTTP',
+      jsFetch: 'JavaScript - Fetch',
+      pythonRequests: 'Python - Requests',
+    },
+  },
   console: {
     title: 'Console',
     open: 'Open console',

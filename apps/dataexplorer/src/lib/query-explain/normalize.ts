@@ -1,4 +1,4 @@
-import { parseDescriptionForest, type ParsedExplainStep } from './parse-description'
+import { type ParsedExplainStep, parseDescriptionForest } from './parse-description'
 import type {
   QueryExplainAccess,
   QueryExplainKind,
@@ -69,9 +69,7 @@ function parsedToNode(
     predicate: extra?.predicate ?? step.predicate,
     timeMs: extra?.timeMs,
     recordsFound: extra?.recordsFound,
-    children:
-      extra?.children ??
-      step.children.map((child) => parsedToNode(kind, child)),
+    children: extra?.children ?? step.children.map((child) => parsedToNode(kind, child)),
   }
 }
 

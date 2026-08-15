@@ -25,6 +25,7 @@ export function LogEntry({
     if (target.closest('[data-network-send]')) return
     if (target.closest('[data-network-cancel]')) return
     if (target.closest('[data-console-remove]')) return
+    if (target.closest('[data-network-copy-as]')) return
     setNetworkOpen((current) => !current)
   }
 
@@ -47,6 +48,9 @@ export function LogEntry({
         onClick={toggleNetwork}
         onKeyDown={(event) => {
           if (event.target instanceof Element && event.target.closest('[data-console-remove]')) {
+            return
+          }
+          if (event.target instanceof Element && event.target.closest('[data-network-copy-as]')) {
             return
           }
           if (event.key === 'Enter' || event.key === ' ') {

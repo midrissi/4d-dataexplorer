@@ -1,10 +1,4 @@
-export type QueryExplainAccess =
-  | 'index'
-  | 'sequential'
-  | 'join'
-  | 'filter'
-  | 'operator'
-  | 'unknown'
+export type QueryExplainAccess = 'index' | 'sequential' | 'join' | 'filter' | 'operator' | 'unknown'
 
 export type QueryExplainKind = 'plan' | 'path'
 

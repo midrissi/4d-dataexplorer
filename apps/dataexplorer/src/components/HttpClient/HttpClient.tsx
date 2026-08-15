@@ -37,6 +37,7 @@ import {
   Timer,
 } from 'lucide-react'
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
+import { CopyAsMenu } from '~/components/CopyAs/CopyAsMenu'
 import { EmptyPanel } from '~/components/EmptyPanel'
 import { useTemplatedEnvFieldProps } from '~/components/Environments/use-templated-env-field-props'
 import { MobileFullscreenSheet } from '~/components/MobileFullscreenSheet'
@@ -46,6 +47,7 @@ import { RequestResponseSplit } from '~/components/RequestResponseSplit'
 import { SuggestInput } from '~/components/SuggestInput'
 import { useTranslation } from '~/i18n'
 import { api } from '~/lib/api'
+import { copyableFromHttpDraft } from '~/lib/copy-as'
 import { applyEnvTemplateDecorations, registerEnvTemplateCompletionProvider } from '~/lib/env'
 import { buildHttpThis } from '~/lib/env/this-context-builders'
 import {
@@ -74,12 +76,12 @@ import {
 } from '~/lib/http-client'
 import { isModClick } from '~/lib/mod-click'
 import { getBaseUrl, isDesktop, isMobileShell, onConnectionChange } from '~/lib/platform'
-import { areQueryExplainParamsEnabled, setQueryExplainParams } from '~/lib/query-explain/params'
 import {
   httpSeedExportLabel,
   httpSeedToPostmanItem,
   type PostmanExportItemInput,
 } from '~/lib/postman'
+import { areQueryExplainParamsEnabled, setQueryExplainParams } from '~/lib/query-explain/params'
 import { useDataExplorerStore } from '~/store'
 import {
   createHttpId,
@@ -872,6 +874,13 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
                         )}
                       />
                     </Button>
+                    <CopyAsMenu
+                      getRequest={() => copyableFromHttpDraft(draft)}
+                      disabled={!canSend}
+                      variant="ghost"
+                      triggerClassName={cn('shrink-0 rounded-sm', mobile ? 'h-8 w-8' : 'h-5 w-5')}
+                      iconClassName="h-3 w-3"
+                    />
                     <Button
                       type="button"
                       variant="ghost"

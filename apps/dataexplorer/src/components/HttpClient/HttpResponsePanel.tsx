@@ -17,13 +17,13 @@ import { ResultPanel } from '~/components/MethodExecutor/ResultPanel'
 import { QueryExplainPanel } from '~/components/QueryExplain/QueryExplainPanel'
 import { useTranslation } from '~/i18n'
 import { isCsvContentType, looksLikeCsv } from '~/lib/csv'
-import { extractQueryExplain, queryExplainHasData } from '~/lib/query-explain/extract'
 import {
   formatResponseBody,
   monacoLanguageForRaw,
   rawLanguageFromContentType,
 } from '~/lib/http-client'
 import { isMobileShell } from '~/lib/platform'
+import { extractQueryExplain, queryExplainHasData } from '~/lib/query-explain/extract'
 import type { HttpClientResponse } from '~/store/http-client-types'
 import { useCodeEditorPrefs, useUpdateCodeEditorPrefs } from '~/store/settings'
 
@@ -163,9 +163,7 @@ export function HttpResponsePanel({ response }: { response: HttpClientResponse |
       id: 'cookies' as const,
       label: `${t('httpClient.responseCookies')} (${response.cookies.length})`,
     },
-    ...(showExplainTab
-      ? [{ id: 'explain' as const, label: t('queryExplain.tab') }]
-      : []),
+    ...(showExplainTab ? [{ id: 'explain' as const, label: t('queryExplain.tab') }] : []),
   ]
 
   const bodyActions = (

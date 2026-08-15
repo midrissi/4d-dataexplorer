@@ -15,6 +15,7 @@ import {
   useRef,
   useState,
 } from 'react'
+import { CopyAsMenu } from '~/components/CopyAs/CopyAsMenu'
 import { TriStateIconButton } from '~/components/TriStateIconButton'
 import { useTranslation } from '~/i18n'
 import {
@@ -28,6 +29,7 @@ import {
   pathNeedsUrlDecode,
   splitNetworkUrl,
 } from '~/lib/console-format'
+import { copyableFromNetworkDetails } from '~/lib/copy-as'
 import { abortNetworkRequest } from '~/lib/network-abort'
 import { mapNetworkDetailsToSeed } from '~/lib/network-to-http-seed'
 import { isObjectTreeTooLarge } from '~/lib/object-tree-size'
@@ -229,6 +231,21 @@ export function NetworkEntry({
     </TooltipProvider>
   )
 
+  const copyAsButton = (
+    <CopyAsMenu
+      getRequest={() => copyableFromNetworkDetails(details)}
+      variant="ghost"
+      dataAttr="data-network-copy-as"
+      triggerClassName={cn(
+        'hover:text-foreground',
+        mobile
+          ? 'h-8 w-8 opacity-100'
+          : 'h-4 w-4 opacity-100 sm:opacity-0 sm:group-hover/network:opacity-100 sm:group-focus-within/network:opacity-100'
+      )}
+      iconClassName={mobile ? 'h-3.5 w-3.5' : 'h-2.5 w-2.5'}
+    />
+  )
+
   return (
     <div ref={rootRef} className="group/network min-w-0 flex-1">
       {mobile ? (
@@ -261,6 +278,7 @@ export function NetworkEntry({
                 {displayPath}
               </span>
               {cancelButton}
+              {copyAsButton}
               {sendButton}
             </div>
             <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 pl-5 text-[10px] text-muted-foreground tabular-nums">
@@ -327,6 +345,7 @@ export function NetworkEntry({
                 </span>
               ) : null}
               {cancelButton}
+              {copyAsButton}
               {sendButton}
             </div>
 

@@ -163,9 +163,7 @@ export function ResultPanel({
       id: 'headers' as const,
       label: `${t('httpClient.responseHeaders')} (${headerEntries.length})`,
     },
-    ...(showExplainTab
-      ? [{ id: 'explain' as const, label: t('queryExplain.tab') }]
-      : []),
+    ...(showExplainTab ? [{ id: 'explain' as const, label: t('queryExplain.tab') }] : []),
   ]
 
   return (

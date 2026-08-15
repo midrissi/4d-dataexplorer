@@ -10,15 +10,18 @@ import {
   Star,
 } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { CopyAsMenu } from '~/components/CopyAs/CopyAsMenu'
 import { EmptyPanel } from '~/components/EmptyPanel'
 import { EnvThisProvider } from '~/components/Environments/env-this-context'
 import { MobileFullscreenSheet } from '~/components/MobileFullscreenSheet'
 import { PostmanExportModal } from '~/components/PostmanExport'
+import { QueryExplainToggle } from '~/components/QueryExplain/QueryExplainToggle'
 import { RequestHeadersParamsEditor } from '~/components/RequestKeyValue'
 import { RequestResponseSplit } from '~/components/RequestResponseSplit'
 import { useTranslation } from '~/i18n'
 import { api } from '~/lib/api'
 import { consoleService } from '~/lib/console'
+import { copyableFromMethodSeed } from '~/lib/copy-as'
 import { resolveEnvTemplates } from '~/lib/env'
 import { getActiveEnvMap, mergeUnresolved } from '~/lib/env/runtime'
 import { buildMethodThis } from '~/lib/env/this-context-builders'
@@ -29,12 +32,13 @@ import {
 } from '~/lib/key-value-pairs'
 import { methodSeedToHttpSeed } from '~/lib/method-seed-to-http-seed'
 import { isModClick, isModShiftClick } from '~/lib/mod-click'
-import { isMobileShell } from '~/lib/platform'
+import { getBaseUrl, isMobileShell } from '~/lib/platform'
 import {
   methodSeedExportLabel,
   methodSeedToPostmanItem,
   type PostmanExportItemInput,
 } from '~/lib/postman'
+import { areQueryExplainParamsEnabled, setQueryExplainParams } from '~/lib/query-explain/params'
 import type { HttpClientResponse, HttpKeyValuePair } from '~/store/http-client-types'
 import type {
   MethodExecutorSeed,
@@ -64,8 +68,6 @@ import { type MethodResponseMeta, methodResponseMetaFromCall } from './method-re
 import { parseParamsText } from './parse-params-text'
 import { parseWrapperText } from './parse-wrapper-text'
 import { ResultPanel } from './ResultPanel'
-import { QueryExplainToggle } from '~/components/QueryExplain/QueryExplainToggle'
-import { areQueryExplainParamsEnabled, setQueryExplainParams } from '~/lib/query-explain/params'
 import {
   areRuntimeArgumentsReady,
   flushPendingArgumentValues,
@@ -912,6 +914,13 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
                       )}
                     />
                   </Button>
+                  <CopyAsMenu
+                    getRequest={() => copyableFromMethodSeed(currentConfig(), getBaseUrl())}
+                    disabled={!canExecute}
+                    variant="outline"
+                    triggerClassName="h-11 w-11"
+                    iconClassName="h-4 w-4"
+                  />
                   <Button
                     variant="outline"
                     size="icon"
@@ -1175,6 +1184,13 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
                       )}
                     />
                   </Button>
+                  <CopyAsMenu
+                    getRequest={() => copyableFromMethodSeed(currentConfig(), getBaseUrl())}
+                    disabled={!canExecute}
+                    variant="outline"
+                    triggerClassName={cn(mobile ? 'h-11 w-11' : 'h-8 w-8')}
+                    iconClassName="h-3.5 w-3.5"
+                  />
                   <Button
                     variant="outline"
                     size="icon"

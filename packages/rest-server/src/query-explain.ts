@@ -17,9 +17,15 @@ function stripFilterQuotes(filter: string): string {
 }
 
 function splitConjunction(expression: string): { op: 'And' | 'Or'; parts: string[] } | null {
-  const orParts = expression.split(/\s+OR\s+/i).map((part) => part.trim()).filter(Boolean)
+  const orParts = expression
+    .split(/\s+OR\s+/i)
+    .map((part) => part.trim())
+    .filter(Boolean)
   if (orParts.length > 1) return { op: 'Or', parts: orParts }
-  const andParts = expression.split(/\s+AND\s+/i).map((part) => part.trim()).filter(Boolean)
+  const andParts = expression
+    .split(/\s+AND\s+/i)
+    .map((part) => part.trim())
+    .filter(Boolean)
   if (andParts.length > 1) return { op: 'And', parts: andParts }
   return null
 }
@@ -38,11 +44,7 @@ function planFromFilter(dataclassName: string, filter: string | undefined) {
   }
 }
 
-function pathFromFilter(
-  dataclassName: string,
-  filter: string | undefined,
-  recordsFound: number
-) {
+function pathFromFilter(dataclassName: string, filter: string | undefined, recordsFound: number) {
   const expression = filter ? stripFilterQuotes(filter) : ''
   if (!expression) {
     return {

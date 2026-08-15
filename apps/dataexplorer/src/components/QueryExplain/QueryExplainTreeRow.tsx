@@ -4,9 +4,9 @@ import { useState } from 'react'
 import { useTranslation } from '~/i18n'
 import { isMobileShell } from '~/lib/platform'
 import type { QueryExplainNode } from '~/lib/query-explain/types'
-import { queryExplainAccentClass, queryExplainRailClass } from './query-explain-display'
 import { QueryExplainStepDetails } from './QueryExplainStepDetails'
 import { QueryExplainStepMeta } from './QueryExplainStepMeta'
+import { queryExplainAccentClass, queryExplainRailClass } from './query-explain-display'
 
 export function QueryExplainTreeRow({
   node,

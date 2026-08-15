@@ -195,6 +195,17 @@ export const fr = {
     switchProfileAria: 'Changer de profil',
     onlyOneProfile: 'Un seul profil',
   },
+  copyAs: {
+    menu: 'Copier au format',
+    formats: {
+      fourDHttpRequest: '4D - HTTPRequest',
+      fourDHttpRequestClassic: '4D - HTTP Request',
+      curl: 'cURL',
+      http: 'HTTP',
+      jsFetch: 'JavaScript - Fetch',
+      pythonRequests: 'Python - Requests',
+    },
+  },
   console: {
     title: 'Console',
     open: 'Ouvrir la console',

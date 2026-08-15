@@ -195,6 +195,17 @@ export const es = {
     switchProfileAria: 'Cambiar perfil',
     onlyOneProfile: 'Solo un perfil',
   },
+  copyAs: {
+    menu: 'Copiar como',
+    formats: {
+      fourDHttpRequest: '4D - HTTPRequest',
+      fourDHttpRequestClassic: '4D - HTTP Request',
+      curl: 'cURL',
+      http: 'HTTP',
+      jsFetch: 'JavaScript - Fetch',
+      pythonRequests: 'Python - Requests',
+    },
+  },
   console: {
     title: 'Consola',
     open: 'Abrir consola',

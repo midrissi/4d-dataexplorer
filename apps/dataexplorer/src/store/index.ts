@@ -1,11 +1,11 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import { api } from '~/lib/api'
-import { queryExplainHasData } from '~/lib/query-explain/extract'
-import type { QueryExplainPayload } from '~/lib/query-explain/types'
 import { AUTO_COUNT_THRESHOLD } from '~/lib/dataclass-counts'
 import { removeStatusField } from '~/lib/entitySanitizer'
 import { eventBus } from '~/lib/eventBus'
+import { queryExplainHasData } from '~/lib/query-explain/extract'
+import type { QueryExplainPayload } from '~/lib/query-explain/types'
 import { isDataclassTab, normalizeQueryOptions, type QueryOptions, useTabsStore } from './tabs'
 
 export type Dataclass = {

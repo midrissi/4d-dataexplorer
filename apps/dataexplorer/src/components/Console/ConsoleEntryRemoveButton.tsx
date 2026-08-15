@@ -5,11 +5,7 @@ import { useTranslation } from '~/i18n'
 import { isMobileShell } from '~/lib/platform'
 import { useConsoleStore } from '~/store/console'
 
-export function ConsoleEntryRemoveButton({
-  entryId,
-}: {
-  entryId: string
-}) {
+export function ConsoleEntryRemoveButton({ entryId }: { entryId: string }) {
   const { t } = useTranslation()
   const mobile = isMobileShell()
   const remove = useConsoleStore((state) => state.remove)

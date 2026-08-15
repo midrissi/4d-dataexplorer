@@ -18,7 +18,9 @@ function findExplainIndex(pairs: HttpKeyValuePair[], key: string): number {
 
 export function areQueryExplainParamsEnabled(pairs: readonly HttpKeyValuePair[]): boolean {
   return QUERY_EXPLAIN_PARAM_KEYS.every((key) =>
-    pairs.some((pair) => pair.enabled !== false && pair.key.trim() === key && isTruthyParam(pair.value))
+    pairs.some(
+      (pair) => pair.enabled !== false && pair.key.trim() === key && isTruthyParam(pair.value)
+    )
   )
 }
 
@@ -56,7 +58,10 @@ export function setQueryExplainParams(
       next.push(pair)
       continue
     }
-    if (pair.id === QUERY_EXPLAIN_PARAM_IDS.$queryplan || pair.id === QUERY_EXPLAIN_PARAM_IDS.$querypath) {
+    if (
+      pair.id === QUERY_EXPLAIN_PARAM_IDS.$queryplan ||
+      pair.id === QUERY_EXPLAIN_PARAM_IDS.$querypath
+    ) {
       continue
     }
     next.push({ ...pair, enabled: false })

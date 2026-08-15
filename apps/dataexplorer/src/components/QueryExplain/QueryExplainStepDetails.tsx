@@ -11,12 +11,11 @@ export function QueryExplainStepDetails({ node }: { node: QueryExplainNode }) {
   const { t } = useTranslation()
   const joinOn = node.joinOn
   const predicate = node.predicate
-  const showTitle = node.access === 'join' || node.access === 'index' || node.access === 'sequential'
+  const showTitle =
+    node.access === 'join' || node.access === 'index' || node.access === 'sequential'
   const showRawLabel = !joinOn && !predicate && node.access === 'unknown'
   const showWhereLabel = Boolean(predicate && node.access !== 'filter' && (showTitle || joinOn))
-  const predicateLeft = predicate
-    ? displayExplainAttribute(predicate.attribute, node.table)
-    : ''
+  const predicateLeft = predicate ? displayExplainAttribute(predicate.attribute, node.table) : ''
   const hasExpr = Boolean(joinOn || predicate || showRawLabel)
 
   return (
@@ -52,7 +51,10 @@ export function QueryExplainStepDetails({ node }: { node: QueryExplainNode }) {
         />
       ) : null}
       {showRawLabel ? (
-        <span className="min-w-0 truncate font-mono text-[11px] text-muted-foreground" translate="no">
+        <span
+          className="min-w-0 truncate font-mono text-[11px] text-muted-foreground"
+          translate="no"
+        >
           {node.label}
         </span>
       ) : null}

@@ -33,10 +33,7 @@ function looksLikePlan(value: unknown): boolean {
  * Pull `__queryPlan` / `__queryPath` (and aliases) from a 4D REST body.
  * Also accepts a bare plan or path object as the body (e.g. `GET /rest/$querypath`).
  */
-export function extractQueryExplain(
-  body: unknown,
-  requested = true
-): QueryExplainPayload | null {
+export function extractQueryExplain(body: unknown, requested = true): QueryExplainPayload | null {
   if (!requested) return null
   if (!isRecord(body)) {
     return { requested: true, plan: null, path: null }

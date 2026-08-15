@@ -6,8 +6,8 @@ import { EmptyPanel } from '~/components/EmptyPanel'
 import { useTranslation } from '~/i18n'
 import { queryExplainHasData } from '~/lib/query-explain/extract'
 import {
-  normalizeQueryPlan,
   normalizeQueryPath,
+  normalizeQueryPlan,
   summarizeQueryExplain,
 } from '~/lib/query-explain/normalize'
 import type { QueryExplainPayload } from '~/lib/query-explain/types'
