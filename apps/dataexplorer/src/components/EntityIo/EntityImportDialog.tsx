@@ -144,6 +144,7 @@ export function EntityImportDialog({
             detail={fileName ? t('entity.io.rowCount', { count: rows.length }) : undefined}
             chooseLabel={t('entity.io.chooseFile')}
             changeLabel={t('entity.io.changeFile')}
+            dropLabel={t('entity.io.dropFileHere')}
             onFile={(file) => void onFile(file)}
           />
         </EntityIoPanel>

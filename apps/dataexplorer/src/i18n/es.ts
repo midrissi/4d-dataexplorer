@@ -2031,6 +2031,7 @@ export const es = {
       file: 'Archivo',
       chooseFile: 'Elegir archivo',
       changeFile: 'Cambiar',
+      dropFileHere: 'Suelte un archivo aquí',
       rowCount: '{count} filas',
       preview: 'Vista previa',
       progress: 'Obtenidos {fetched} de {total}',

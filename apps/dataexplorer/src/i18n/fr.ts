@@ -2039,6 +2039,7 @@ export const fr = {
       file: 'Fichier',
       chooseFile: 'Choisir un fichier',
       changeFile: 'Changer',
+      dropFileHere: 'Déposez un fichier ici',
       rowCount: '{count} lignes',
       preview: 'Aperçu',
       progress: 'Chargé {fetched} sur {total}',

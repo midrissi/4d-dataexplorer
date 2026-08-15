@@ -2002,6 +2002,7 @@ export const en = {
       file: 'File',
       chooseFile: 'Choose file',
       changeFile: 'Change',
+      dropFileHere: 'Drop file here',
       rowCount: '{count} rows',
       preview: 'Preview',
       progress: 'Fetched {fetched} of {total}',
