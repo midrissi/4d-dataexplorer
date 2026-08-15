@@ -288,6 +288,7 @@ describe('store/index', () => {
             entitiesError: null,
             isEditing: false,
             editedEntity: null,
+            queryExplain: null,
           },
         },
       })

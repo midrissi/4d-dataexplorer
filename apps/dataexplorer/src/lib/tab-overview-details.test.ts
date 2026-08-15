@@ -22,6 +22,7 @@ function dataclassTab(overrides: Partial<Extract<Tab, { type: 'dataclass' }>> = 
     },
     fieldConfig: { table: [], cards: [] },
     queryExpanded: false,
+    queryExplainExpanded: true,
     queryPanelHeight: null,
     selectedEntityId: null,
     entitiesPage: 1,

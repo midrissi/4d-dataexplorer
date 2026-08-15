@@ -28,13 +28,15 @@ The full resolved URL is shown under the bar. Use **⌘/Ctrl+Enter** to send whe
 | **Params** | Query string key/value pairs (for example `$filter`, `$top`); table rows can be reordered |
 | **Headers** | Custom request headers; same sortable table as params |
 | **Body** | None, form data (Key / Type / Value table), `x-www-form-urlencoded`, raw (Monaco), or binary file |
-| **Settings** | Cookies, timeout, redirects, and desktop TLS options |
+| **Settings** | Cookies, timeout, redirects, desktop TLS, and optional 4D REST query plan/path |
 
 ![HTTP Client settings](/screenshots/28-http-client-settings.png)
 
 ### Response
 
 After **Send**, the right panel shows status, timing, size, content type, headers, cookies, and body. Copy helpers are available on response sections. Use **Preview** / **Raw** when a structured preview is available.
+
+When **Query plan & path** is enabled in Settings (or `$queryplan` / `$querypath` are in Params) and the JSON body includes `__queryPlan` or `__queryPath`, a **Plan** tab visualizes the same tree as the Query builder.
 
 #### Text and structured bodies
 
@@ -102,4 +104,5 @@ In the [Console panel](/guide/console) network log, use **Open in HTTP Client** 
 - Prefer the **desktop** app for requests that need unrestricted cookies, redirects, or TLS options — browser builds are limited by CORS and cookie rules.
 - Clear the **Server** field to leave a blank custom origin; it does not snap back until you choose a matching origin again.
 - Connection cookies apply only when targeting the **current** server (see **Settings → Session**).
+- For 4D REST `$filter` / `$orderby`, the client matches Query Builder encoding: the expression is wrapped in quotes, spaces stay spaces (not `+`), and only `&` / `=` are percent-encoded. You can paste the Query Builder expression with or without surrounding quotes.
 - To try response previews locally, point **Server** at your 4D WebFolder origin (for example `http://localhost`) and request paths such as `/text.txt`, `/markdown.md`, `/html.html`, `/CSV.csv`, `/PDF.pdf`, or `/JPG.png`.

@@ -93,6 +93,8 @@ export interface EntityCollection<T extends Entity = Entity> {
   __FIRST: number
   __ENTITIES: T[]
   __ENTITYSET?: string
+  __queryPlan?: unknown
+  __queryPath?: unknown
 }
 
 export interface EntityMutationResult<_T extends Entity = Entity> extends Entity {

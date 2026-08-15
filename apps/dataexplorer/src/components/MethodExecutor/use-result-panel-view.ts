@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { HttpClientResponse } from '~/store/http-client-types'
 import type { DetectedMethodResult } from './detect-method-result'
 
-export type ResultPanelTab = 'body' | 'headers'
+export type ResultPanelTab = 'body' | 'headers' | 'explain'
 export type ResultBodyView = 'preview' | 'raw'
 
 /** Reset Body/Headers + Preview/Raw when a new method result or error arrives. */

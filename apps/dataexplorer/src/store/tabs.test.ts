@@ -160,6 +160,7 @@ describe('store/tabs', () => {
       },
       fieldConfig: { table: [], cards: [] },
       queryExpanded: true,
+      queryExplainExpanded: true,
       queryPanelHeight: null,
       selectedEntityId: null,
       entitiesPage: 1,
@@ -563,6 +564,7 @@ describe('store/tabs', () => {
       useTabsStore.getState().rehydrateTabs()
       expect(useTabsStore.getState().tabs.length).toBe(1)
       expect(useTabsStore.getState().activeTabId).toBe('stored-tab')
+      expect((useTabsStore.getState().tabs[0] as DataclassTab).queryExplainExpanded).toBe(false)
     })
 
     it('applyDefaultViewModeToAllTabs updates all dataclass tabs', () => {
@@ -706,8 +708,13 @@ describe('store/tabs', () => {
       expect(dcId).toBeDefined()
       if (dcId !== undefined) {
         useTabsStore.getState().setQueryExpanded(dcId, true)
+        expect((useTabsStore.getState().tabs[0] as DataclassTab).queryExplainExpanded).toBe(false)
+        useTabsStore.getState().setQueryExplainExpanded(dcId, true)
+        expect((useTabsStore.getState().tabs[0] as DataclassTab).queryExplainExpanded).toBe(true)
+        useTabsStore.getState().setQueryExplainExpanded(dcId, false)
       }
       expect((useTabsStore.getState().tabs[0] as DataclassTab).queryExpanded).toBe(true)
+      expect((useTabsStore.getState().tabs[0] as DataclassTab).queryExplainExpanded).toBe(false)
       useTabsStore.getState().openSettingsTab()
       const settingsId = useTabsStore.getState().tabs.find((t) => isSettingsTab(t))?.id
       expect(settingsId).toBeDefined()

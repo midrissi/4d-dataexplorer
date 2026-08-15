@@ -69,6 +69,7 @@ import { EntityDataGrid } from './EntityDataGrid'
 import { FieldManager } from './FieldManager'
 import { MethodListPopover } from './MethodExecutor/MethodListPopover'
 import { QueryBuilder } from './QueryBuilder/index'
+import { QueryExplainPanel } from './QueryExplain/QueryExplainPanel'
 import { QueryTopSelector } from './QueryTopSelector'
 import { ResizableVerticalHandle } from './ResizablePanel'
 
@@ -1084,6 +1085,7 @@ export function EntityList({ tabId }: { tabId: string }) {
             onDoubleClick={handleQueryPanelReset}
           />
         ) : null}
+        {view?.queryExplain ? <QueryExplainPanel payload={view.queryExplain} /> : null}
 
         {/* Content Area */}
         {entitiesLoading && entities.length === 0 ? (

@@ -30,6 +30,10 @@ export interface EntityCollection<T extends Entity = Entity> {
   __FIRST: number
   __ENTITIES: T[]
   __ENTITYSET?: string
+  /** Present when the request included `$queryplan=true`. */
+  __queryPlan?: unknown
+  /** Present when the request included `$querypath=true`. */
+  __queryPath?: unknown
 }
 
 /**

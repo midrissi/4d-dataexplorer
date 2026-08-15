@@ -25,6 +25,8 @@ Arguments keep positional order (`$1`, `$2`, …). Each can be a **Custom** valu
 
 After **Execute**, the right panel adapts to the response: an **entity selection** opens as a preview table (with count and **Open all in new tab**), a single **entity** opens in the entity viewer, and any other value is shown as read-only JSON. The screenshots below are examples from a sample database — the methods themselves are not built into the executor.
 
+Enable **Query plan & path** next to Execute to add `$queryplan` and `$querypath`. If the method response includes `__queryPlan` or `__queryPath`, a **Plan** tab appears beside Body / Headers with the same tree visualizer as the Query builder.
+
 ![Entity selection result](/screenshots/19-method-executor-get-entity-sel.png)
 
 ![Entity result](/screenshots/20-method-executor-get-first-car.png)

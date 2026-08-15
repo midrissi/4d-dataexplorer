@@ -1,3 +1,4 @@
+import { normalizeFilterExpression, normalizeOrderByExpression } from '@4d/rest'
 import { keyValuePairsToRecord } from '~/lib/key-value-pairs'
 import {
   createHttpId,
@@ -706,6 +707,24 @@ export function paramsFromSearch(search: string): HttpKeyValuePair[] {
   return result
 }
 
+/**
+ * 4D REST `$filter` / `$orderby` must not use `+` for spaces (4D treats `+` as
+ * an operator → "Wrong comparison operator"). Match `@4d/rest` HttpClient:
+ * wrap the expression in quotes, encode only `&` and `=`.
+ */
+const REST_MINIMAL_QUERY_KEYS = new Set(['$filter', '$orderby', '$savedfilter', '$savedorderby'])
+
+function encodeHttpQueryPair(key: string, value: string): string {
+  if (REST_MINIMAL_QUERY_KEYS.has(key) && value.trim()) {
+    const normalized =
+      key === '$orderby' || key === '$savedorderby'
+        ? normalizeOrderByExpression(value)
+        : normalizeFilterExpression(value)
+    return `${key}=${normalized.replace(/&/g, '%26').replace(/=/g, '%3D')}`
+  }
+  return new URLSearchParams({ [key]: value }).toString()
+}
+
 export function applyParamsToPath(path: string, params: HttpKeyValuePair[]): string {
   let pathname = path
   let existingSearch = ''
@@ -732,11 +751,10 @@ export function applyParamsToPath(path: string, params: HttpKeyValuePair[]): str
     return pathname || '/'
   }
 
-  const search = new URLSearchParams()
-  for (const param of enabled) {
-    search.append(param.key.trim(), param.value)
-  }
-  const query = search.toString()
+  const query = enabled
+    .map((param) => encodeHttpQueryPair(param.key.trim(), param.value))
+    .filter(Boolean)
+    .join('&')
   return query ? `${pathname || '/'}?${query}` : pathname || '/'
 }
 

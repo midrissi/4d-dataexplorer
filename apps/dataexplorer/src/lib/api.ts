@@ -21,6 +21,11 @@ import { coerceEntityDataBySchema } from '~/lib/env/coerce-entity-data'
 import { getActiveEnvMap } from '~/lib/env/runtime'
 import { buildEntityThis, buildQueryThis } from '~/lib/env/this-context-builders'
 import { getBaseUrl, getCustomHeaders, getLoggingFetch, getTimeout } from '~/lib/platform'
+import {
+  extractQueryExplain,
+  mergeQueryExplain,
+} from '~/lib/query-explain/extract'
+import type { QueryExplainPayload } from '~/lib/query-explain/types'
 import { getCurrentBaseId, getDataclassCustomizations, setCurrentBaseId } from '~/lib/storage'
 import type { Dataclass, Entity, Pagination } from '~/store'
 import { type DataclassCustomization, useSettingsStore } from '~/store/settings'
@@ -194,6 +199,8 @@ type EntityQueryParams = {
   select?: string[]
   expand?: string[]
   filterParams?: Array<{ type: string; value: string }>
+  /** Request `$queryplan` and `$querypath` on the REST call. */
+  explain?: boolean
 }
 
 /** Build $orderby/$attributes/$expand for entity-set page fetches.
@@ -216,6 +223,11 @@ function buildEntitySetPageOptions(params?: EntityQueryParams): QueryOptions {
 
   if (params?.expand?.length) {
     options.$expand = params.expand.join(',')
+  }
+
+  if (params?.explain) {
+    options.$queryplan = true
+    options.$querypath = true
   }
 
   return options
@@ -259,7 +271,29 @@ function buildDataclassQuery(dataclassName: string, params?: EntityQueryParams) 
   if (params?.expand?.length) {
     baseQuery = baseQuery.expand(...params.expand)
   }
+  if (params?.explain) {
+    baseQuery = baseQuery.withQueryPlan().withQueryPath()
+  }
   return baseQuery
+}
+
+function explainFromCollection(
+  collection: { __queryPlan?: unknown; __queryPath?: unknown },
+  requested: boolean,
+  extra?: { queryPlan?: unknown; queryPath?: unknown }
+): QueryExplainPayload | null {
+  const fromBody = extractQueryExplain(collection, requested)
+  if (!requested || !extra) return fromBody
+  return mergeQueryExplain(
+    fromBody,
+    extractQueryExplain(
+      {
+        __queryPlan: extra.queryPlan,
+        __queryPath: extra.queryPath,
+      },
+      true
+    )
+  )
 }
 
 async function releaseEntitySetOnServer(dataclassName: string, entitySetId: string): Promise<void> {
@@ -666,16 +700,20 @@ export const api = {
       entitySetId?: string
       /** When false, query without creating/reusing an entity set. Default true when no entitySetId. */
       createEntitySet?: boolean
+      /** Include `$queryplan` and `$querypath` in the REST request. */
+      explain?: boolean
     }
   ): Promise<{
     dataclass: string
     entities: Entity[]
     pagination: Pagination
     entitySetId: string
+    queryExplain: QueryExplainPayload | null
   }> => {
     const page = params?.page ?? 1
     const top = params?.top ?? params?.limit ?? 20
     const skip = (page - 1) * top
+    const explainRequested = params?.explain === true
 
     // Load from an existing entity set (e.g. tab opened by entity set ID)
     if (params?.entitySetId) {
@@ -698,6 +736,7 @@ export const api = {
           hasPrev: page > 1,
         },
         entitySetId: params.entitySetId,
+        queryExplain: explainFromCollection(result, explainRequested),
       }
     }
 
@@ -718,6 +757,7 @@ export const api = {
           hasPrev: page > 1,
         },
         entitySetId: '',
+        queryExplain: explainFromCollection(result, explainRequested),
       }
     }
 
@@ -744,6 +784,7 @@ export const api = {
           hasPrev: page > 1,
         },
         entitySetId: existing.entitySetId,
+        queryExplain: explainFromCollection(result, explainRequested),
       }
     }
 
@@ -786,6 +827,10 @@ export const api = {
         hasPrev: page > 1,
       },
       entitySetId: ref.id,
+      queryExplain: explainFromCollection(result, explainRequested, {
+        queryPlan: ref.queryPlan,
+        queryPath: ref.queryPath,
+      }),
     }
   },
 

@@ -1,12 +1,15 @@
 import { cn } from '@4d/ui'
 import { CodeEditor } from '@4d/ui/code-editor'
 import { Code2, FlaskConical, MousePointerClick, Play, TableProperties } from 'lucide-react'
+import { useMemo } from 'react'
 import { EmptyPanel } from '~/components/EmptyPanel'
 import { HttpResponseErrorBody } from '~/components/HttpClient/HttpResponseErrorBody'
 import { HttpResponseKeyValueList } from '~/components/HttpClient/HttpResponseKeyValueList'
 import { HttpResponseStatusBar } from '~/components/HttpClient/HttpResponseStatusBar'
+import { QueryExplainPanel } from '~/components/QueryExplain/QueryExplainPanel'
 import { useTranslation } from '~/i18n'
 import { isMobileShell } from '~/lib/platform'
+import { extractQueryExplain, queryExplainHasData } from '~/lib/query-explain/extract'
 import type { HttpClientResponse } from '~/store/http-client-types'
 import type { DetectedMethodResult } from './detect-method-result'
 import { MethodResponseStatusBar } from './MethodResponseStatusBar'
@@ -35,6 +38,9 @@ export function ResultPanel({
   const { t } = useTranslation()
   const mobile = isMobileShell()
   const { tab, setTab, bodyView, setBodyView } = useResultPanelView(result, errorResponse)
+  const explainPayload = useMemo(() => extractQueryExplain(rawBody, true), [rawBody])
+  const showExplainTab = queryExplainHasData(explainPayload)
+  const resolvedTab = tab === 'explain' && !showExplainTab ? 'body' : tab
 
   if (errorResponse) {
     const headerEntries = Object.entries(errorResponse.headers).map(([key, value]) => ({
@@ -157,6 +163,9 @@ export function ResultPanel({
       id: 'headers' as const,
       label: `${t('httpClient.responseHeaders')} (${headerEntries.length})`,
     },
+    ...(showExplainTab
+      ? [{ id: 'explain' as const, label: t('queryExplain.tab') }]
+      : []),
   ]
 
   return (
@@ -183,11 +192,11 @@ export function ResultPanel({
               key={item.id}
               type="button"
               role="tab"
-              aria-selected={tab === item.id}
+              aria-selected={resolvedTab === item.id}
               className={cn(
                 'cursor-pointer border-b-2 font-medium text-xs transition-colors',
                 mobile ? 'min-h-9 shrink-0 px-2.5' : '-mb-px px-3 py-1.5',
-                tab === item.id
+                resolvedTab === item.id
                   ? 'border-primary text-foreground'
                   : 'border-transparent text-muted-foreground hover:text-foreground'
               )}
@@ -197,7 +206,7 @@ export function ResultPanel({
             </button>
           ))}
         </div>
-        {tab === 'body' ? (
+        {resolvedTab === 'body' ? (
           <fieldset
             className={cn(
               'm-0 mb-1 inline-flex shrink-0 items-stretch overflow-hidden border bg-muted/40 p-0.5',
@@ -232,7 +241,9 @@ export function ResultPanel({
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        {tab === 'body' ? (
+        {resolvedTab === 'explain' && explainPayload ? (
+          <QueryExplainPanel payload={explainPayload} embedded />
+        ) : resolvedTab === 'body' ? (
           bodyView === 'raw' ? (
             <CodeEditor
               value={prettyJson(rawBody ?? result.value)}

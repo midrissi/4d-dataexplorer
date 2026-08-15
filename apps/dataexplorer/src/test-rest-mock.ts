@@ -135,6 +135,8 @@ function createChainable(
     select: () => chain,
     expand: () => chain,
     params: () => chain,
+    withQueryPlan: () => chain,
+    withQueryPath: () => chain,
     all: () => chain,
     fetch: impl,
     delete: mockQueryDelete,

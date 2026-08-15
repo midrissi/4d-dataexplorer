@@ -29,6 +29,7 @@ import {
   Link2,
   List,
   RefreshCw,
+  Route,
   Send,
   Shield,
   Square,
@@ -73,6 +74,7 @@ import {
 } from '~/lib/http-client'
 import { isModClick } from '~/lib/mod-click'
 import { getBaseUrl, isDesktop, isMobileShell, onConnectionChange } from '~/lib/platform'
+import { areQueryExplainParamsEnabled, setQueryExplainParams } from '~/lib/query-explain/params'
 import {
   httpSeedExportLabel,
   httpSeedToPostmanItem,
@@ -1215,6 +1217,21 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
                         </span>
                       ) : null}
                     </div>
+
+                    <SettingsSection
+                      icon={Route}
+                      title={t('httpClient.settingsGroupRest')}
+                      description={t('httpClient.settingsGroupRestHint')}
+                    >
+                      <SettingsToggleRow
+                        label={t('httpClient.settingsQueryExplain')}
+                        hint={t('httpClient.settingsQueryExplainHint')}
+                        checked={areQueryExplainParamsEnabled(draft.params)}
+                        onCheckedChange={(checked) =>
+                          onParamsChange(setQueryExplainParams(draft.params, checked))
+                        }
+                      />
+                    </SettingsSection>
 
                     <SettingsSection
                       icon={Cookie}

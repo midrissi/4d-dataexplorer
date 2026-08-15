@@ -1,5 +1,6 @@
 import path from 'node:path'
 import { Elysia } from 'elysia'
+import { attachQueryExplain } from './query-explain'
 import { serveStatic } from './static-server'
 import { store } from './store'
 import type { Entity, EntityCollection, EntityMutationResult } from './types'
@@ -157,7 +158,13 @@ const app = new Elysia()
       return total
     }
 
-    return result
+    return attachQueryExplain(
+      result,
+      query as Record<string, unknown>,
+      dataclassName,
+      total,
+      typeof query.$filter === 'string' ? query.$filter : undefined
+    )
   })
   /**
    * GET /rest/:dataclassName(:key)

@@ -23,17 +23,22 @@ export function resolveMethodQueryParams(pairs?: HttpKeyValuePair[]): HttpKeyVal
   return pairs ?? createDefaultMethodQueryParams()
 }
 
+import { QUERY_EXPLAIN_PARAM_KEYS } from '~/lib/query-explain/params'
+
+function isDefaultMethodParam(pair: HttpKeyValuePair): boolean {
+  return pair.key.trim() === '$method' && pair.value === 'entityset' && pair.enabled !== false
+}
+
+function isExplainParam(pair: HttpKeyValuePair): boolean {
+  const key = pair.key.trim()
+  return QUERY_EXPLAIN_PARAM_KEYS.includes(key as (typeof QUERY_EXPLAIN_PARAM_KEYS)[number])
+}
+
 /**
  * True when params go beyond the built-in `$method=entityset` default
  * (used so Advanced stays collapsed for an untouched default).
  */
 export function hasExtraMethodQueryParams(pairs?: HttpKeyValuePair[]): boolean {
   if (!pairs?.length) return false
-  if (pairs.length === 1) {
-    const pair = pairs[0]
-    if (pair.key.trim() === '$method' && pair.value === 'entityset' && pair.enabled !== false) {
-      return false
-    }
-  }
-  return true
+  return pairs.some((pair) => !isDefaultMethodParam(pair) && !isExplainParam(pair))
 }

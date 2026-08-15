@@ -38,4 +38,8 @@ Enter an **entity set ID** to bind the tab to a server-side entity set (`$entity
 
 Entity sets can also be **combined** (`AND` / `OR` / `EXCEPT` / `INTERSECT`) and **released** through the API and the assistant tools.
 
+### Query plan and path
+
+Turn on **Query plan & path** in the expanded Query panel before running. The request adds `$queryplan=true` and `$querypath=true`. When the server returns `__queryPlan` / `__queryPath`, a tree below the query panel shows index vs sequential access, join steps, timings, and records found. Switch to JSON to copy the raw payload.
+
 ---

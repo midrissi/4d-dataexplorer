@@ -64,6 +64,8 @@ import { type MethodResponseMeta, methodResponseMetaFromCall } from './method-re
 import { parseParamsText } from './parse-params-text'
 import { parseWrapperText } from './parse-wrapper-text'
 import { ResultPanel } from './ResultPanel'
+import { QueryExplainToggle } from '~/components/QueryExplain/QueryExplainToggle'
+import { areQueryExplainParamsEnabled, setQueryExplainParams } from '~/lib/query-explain/params'
 import {
   areRuntimeArgumentsReady,
   flushPendingArgumentValues,
@@ -865,23 +867,32 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
 
             {mobileStep === 'args' ? (
               <>
-                {allowedOnHTTPGET ? (
-                  <Label
-                    className="flex items-center gap-2 text-xs"
-                    title={wrapperEnabled ? t('methodExecutor.wrapperRequiresPost') : undefined}
-                  >
-                    <Checkbox
-                      checked={useGet}
-                      disabled={wrapperEnabled}
-                      onCheckedChange={(checked) => setUseGet(checked === true)}
-                    />
-                    {t('methodExecutor.executeWithGet')}
-                  </Label>
-                ) : (
-                  <span className="text-muted-foreground text-xs">
-                    {t('methodExecutor.postRequest')}
-                  </span>
-                )}
+                <div className="flex min-w-0 flex-1 flex-col gap-1">
+                  {allowedOnHTTPGET ? (
+                    <Label
+                      className="flex items-center gap-2 text-xs"
+                      title={wrapperEnabled ? t('methodExecutor.wrapperRequiresPost') : undefined}
+                    >
+                      <Checkbox
+                        checked={useGet}
+                        disabled={wrapperEnabled}
+                        onCheckedChange={(checked) => setUseGet(checked === true)}
+                      />
+                      {t('methodExecutor.executeWithGet')}
+                    </Label>
+                  ) : (
+                    <span className="text-muted-foreground text-xs">
+                      {t('methodExecutor.postRequest')}
+                    </span>
+                  )}
+                  <QueryExplainToggle
+                    checked={areQueryExplainParamsEnabled(queryParams)}
+                    disabled={executing}
+                    onCheckedChange={(checked) =>
+                      setQueryParams((current) => setQueryExplainParams(current, checked))
+                    }
+                  />
+                </div>
                 <div className="ml-auto flex items-center gap-2">
                   <Button
                     variant="outline"
@@ -1113,27 +1124,38 @@ export function MethodExecutor({ tabId, seed }: { tabId: string; seed?: MethodEx
               )}
 
               <div className="sticky bottom-0 flex items-center justify-between gap-3 border-t bg-background/95 py-2 backdrop-blur">
-                {!methodName ? (
-                  <span className="text-muted-foreground text-xs">
-                    {t('methodExecutor.chooseMethodFirst')}
-                  </span>
-                ) : allowedOnHTTPGET ? (
-                  <Label
-                    className="flex items-center gap-2 text-xs"
-                    title={wrapperEnabled ? t('methodExecutor.wrapperRequiresPost') : undefined}
-                  >
-                    <Checkbox
-                      checked={useGet}
-                      disabled={wrapperEnabled}
-                      onCheckedChange={(checked) => setUseGet(checked === true)}
+                <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1">
+                  {methodName ? (
+                    <QueryExplainToggle
+                      checked={areQueryExplainParamsEnabled(queryParams)}
+                      disabled={executing}
+                      onCheckedChange={(checked) =>
+                        setQueryParams((current) => setQueryExplainParams(current, checked))
+                      }
                     />
-                    {t('methodExecutor.executeWithGet')}
-                  </Label>
-                ) : (
-                  <span className="text-muted-foreground text-xs">
-                    {t('methodExecutor.postRequest')}
-                  </span>
-                )}
+                  ) : null}
+                  {!methodName ? (
+                    <span className="text-muted-foreground text-xs">
+                      {t('methodExecutor.chooseMethodFirst')}
+                    </span>
+                  ) : allowedOnHTTPGET ? (
+                    <Label
+                      className="flex items-center gap-2 text-xs"
+                      title={wrapperEnabled ? t('methodExecutor.wrapperRequiresPost') : undefined}
+                    >
+                      <Checkbox
+                        checked={useGet}
+                        disabled={wrapperEnabled}
+                        onCheckedChange={(checked) => setUseGet(checked === true)}
+                      />
+                      {t('methodExecutor.executeWithGet')}
+                    </Label>
+                  ) : (
+                    <span className="text-muted-foreground text-xs">
+                      {t('methodExecutor.postRequest')}
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-center gap-1.5">
                   <Button
                     variant="outline"

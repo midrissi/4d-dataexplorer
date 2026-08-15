@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { devtools } from 'zustand/middleware'
 import { api } from '~/lib/api'
+import { queryExplainHasData } from '~/lib/query-explain/extract'
+import type { QueryExplainPayload } from '~/lib/query-explain/types'
 import { AUTO_COUNT_THRESHOLD } from '~/lib/dataclass-counts'
 import { removeStatusField } from '~/lib/entitySanitizer'
 import { eventBus } from '~/lib/eventBus'
@@ -45,6 +47,7 @@ export type EntityViewState = {
   entitiesError: string | null
   isEditing: boolean
   editedEntity: string | null
+  queryExplain: QueryExplainPayload | null
 }
 
 const EMPTY_VIEW: EntityViewState = {
@@ -56,6 +59,7 @@ const EMPTY_VIEW: EntityViewState = {
   entitiesError: null,
   isEditing: false,
   editedEntity: null,
+  queryExplain: null,
 }
 
 type DataExplorerState = {
@@ -84,6 +88,9 @@ type DataExplorerState = {
   // Edit mode
   isEditing: boolean
   editedEntity: string | null
+
+  /** Last `$queryplan` / `$querypath` payload for the active dataclass tab. */
+  queryExplain: QueryExplainPayload | null
 
   // Search/Query
   searchQuery: string
@@ -170,6 +177,8 @@ export const useDataExplorerStore = create<DataExplorerState>()(
             isEditing: patch.isEditing !== undefined ? patch.isEditing : state.isEditing,
             editedEntity:
               patch.editedEntity !== undefined ? patch.editedEntity : state.editedEntity,
+            queryExplain:
+              patch.queryExplain !== undefined ? patch.queryExplain : state.queryExplain,
           }
           return {
             ...patch,
@@ -195,6 +204,7 @@ export const useDataExplorerStore = create<DataExplorerState>()(
         isEditing: false,
         editedEntity: null,
         searchQuery: '',
+        queryExplain: null,
         tabData: {},
 
         // Actions
@@ -399,12 +409,24 @@ export const useDataExplorerStore = create<DataExplorerState>()(
               entitySetId: boundEntitySetId ?? undefined,
               // Unbound tabs query directly; only "Run as selection" creates a set
               createEntitySet: forceCreateEntitySet ? true : boundEntitySetId ? undefined : false,
+              explain: queryOptions.explain === true,
             })
 
             if (activeTab && isDataclassTab(activeTab)) {
               tabsState.setEntitySetId(activeTab.id, result.entitySetId || null)
               tabsState.setEntitiesPage(activeTab.id, page)
               tabsState.setSelectionCount(activeTab.id, result.pagination.total)
+            }
+
+            let nextExplain: QueryExplainPayload | null = null
+            if (queryOptions.explain) {
+              if (queryExplainHasData(result.queryExplain)) {
+                nextExplain = result.queryExplain
+              } else if (page === 1) {
+                nextExplain = result.queryExplain ?? { requested: true, plan: null, path: null }
+              } else {
+                nextExplain = get().queryExplain
+              }
             }
 
             // Rehydrate the in-memory selected entity from the tab's persisted
@@ -431,18 +453,21 @@ export const useDataExplorerStore = create<DataExplorerState>()(
                 selectedEntity: matched ?? null,
                 isEditing: false,
                 editedEntity: matched ? JSON.stringify(matched, null, 2) : null,
+                queryExplain: nextExplain,
               })
             } else {
               setView({
                 entities,
                 pagination: result.pagination,
                 entitiesLoading: false,
+                queryExplain: nextExplain,
               })
             }
           } catch (error) {
             setView({
               entitiesError: error instanceof Error ? error.message : 'Failed to fetch entities',
               entitiesLoading: false,
+              queryExplain: null,
             })
           }
         },

@@ -271,6 +271,8 @@ export class QueryBuilder<T extends Entity = Entity> {
       uri: result.__ENTITYSET,
       dataClass: this.dataClassName,
       count: result.__COUNT,
+      queryPlan: result.__queryPlan,
+      queryPath: result.__queryPath,
     }
   }
 
@@ -313,4 +315,6 @@ export interface EntitySetReference {
   uri: string
   dataClass: string
   count: number
+  queryPlan?: unknown
+  queryPath?: unknown
 }

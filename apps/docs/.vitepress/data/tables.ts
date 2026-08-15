@@ -175,6 +175,11 @@ export const queryRows: DocTableRow[] = [
     rest: '—',
     description: 'Typed parameters for filter expressions',
   },
+  {
+    parameter: '**Plan & path**',
+    rest: '`$queryplan` / `$querypath`',
+    description: 'Optional — visualize how 4D planned and executed the filter',
+  },
 ]
 
 export const viewModeColumns: DocTableColumn[] = [

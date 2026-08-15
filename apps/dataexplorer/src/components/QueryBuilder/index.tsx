@@ -47,6 +47,7 @@ import {
   RuntimeArgumentsEditor,
   readLiveArgumentInputValues,
 } from '~/components/MethodExecutor/RuntimeArgumentsEditor'
+import { QueryExplainToggle } from '~/components/QueryExplain/QueryExplainToggle'
 import { useAssistantLlmConfigured } from '~/hooks/useAssistantLlmConfigured'
 import { useCloudLlmOffline } from '~/hooks/useCloudLlmOffline'
 import { getIntlLocale, useTranslation } from '~/i18n'
@@ -134,6 +135,7 @@ export function QueryBuilder() {
         select: activeDataclassTab?.queryOptions?.select,
         top: activeDataclassTab?.queryOptions?.top,
         limit: (activeDataclassTab?.queryOptions as { limit?: number } | undefined)?.limit,
+        explain: activeDataclassTab?.queryOptions?.explain,
       }),
     [
       activeDataclassTab?.queryOptions?.filter,
@@ -142,6 +144,7 @@ export function QueryBuilder() {
       activeDataclassTab?.queryOptions?.order,
       activeDataclassTab?.queryOptions?.select,
       activeDataclassTab?.queryOptions?.top,
+      activeDataclassTab?.queryOptions?.explain,
       activeDataclassTab?.queryOptions,
     ]
   )
@@ -806,22 +809,45 @@ export function QueryBuilder() {
             <X className="h-4 w-4" />
           </Button>
         ) : null}
-        <div className="min-w-0 flex-1 basis-24">
-          {!isExpanded && boundEntitySetId && (
-            <code className="mr-2 inline-block max-w-full truncate rounded bg-muted px-2 py-1 font-mono text-muted-foreground text-xs">
-              {t('query.entitySetId')}:{' '}
-              {boundEntitySetId.length > 16
-                ? `${boundEntitySetId.slice(0, 16)}…`
-                : boundEntitySetId}
-            </code>
-          )}
-          {!isExpanded && queryOptions.filter && (
-            <code className="inline-block max-w-full truncate rounded bg-muted px-2 py-1 font-mono text-muted-foreground text-xs">
-              {queryOptions.filter.length > 50
-                ? `${queryOptions.filter.slice(0, 50)}...`
-                : queryOptions.filter}
-            </code>
-          )}
+        <div className="flex min-w-0 flex-1 basis-24 items-center gap-1.5">
+          {!isExpanded && queryOptions.explain ? (
+            <span className="inline-flex h-6 shrink-0 items-center rounded-sm bg-primary/10 px-1.5 font-medium text-[10px] text-primary uppercase leading-none">
+              {t('queryExplain.badge')}
+            </span>
+          ) : null}
+          {!isExpanded && boundEntitySetId ? (
+            <TooltipProvider delayDuration={250}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <code className="inline-flex h-6 min-w-0 max-w-full cursor-default items-center truncate rounded bg-muted px-2 font-mono text-muted-foreground text-xs leading-none">
+                    {t('query.entitySetId')}:{' '}
+                    {boundEntitySetId.length > 16
+                      ? `${boundEntitySetId.slice(0, 16)}…`
+                      : boundEntitySetId}
+                  </code>
+                </TooltipTrigger>
+                <TooltipContent className="wrap-break-word max-w-sm font-mono text-xs">
+                  {boundEntitySetId}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : null}
+          {!isExpanded && queryOptions.filter ? (
+            <TooltipProvider delayDuration={250}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <code className="inline-flex h-6 min-w-0 max-w-full cursor-default items-center truncate rounded bg-muted px-2 font-mono text-muted-foreground text-xs leading-none">
+                    {queryOptions.filter.length > 50
+                      ? `${queryOptions.filter.slice(0, 50)}…`
+                      : queryOptions.filter}
+                  </code>
+                </TooltipTrigger>
+                <TooltipContent className="wrap-break-word max-w-sm font-mono text-xs">
+                  {queryOptions.filter}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : null}
         </div>
         <div className="ml-auto flex flex-wrap items-center justify-end gap-1">
           <TooltipProvider>
@@ -1242,6 +1268,12 @@ export function QueryBuilder() {
               aria-label={t('query.attributes')}
             />
           </div>
+
+          <QueryExplainToggle
+            checked={queryOptions.explain === true}
+            disabled={entitiesLoading}
+            onCheckedChange={(checked) => handleSetQueryOptions({ explain: checked })}
+          />
 
           {!mobile ? (
             <p className="text-muted-foreground text-xs">{t('query.runQueryShortcut')}</p>

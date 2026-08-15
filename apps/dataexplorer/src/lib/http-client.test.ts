@@ -81,6 +81,34 @@ describe('http-client helpers', () => {
     expect(paramsFromSearch('?a=1&a=2').map((p) => p.value)).toEqual(['1', '2'])
   })
 
+  it('encodes $filter like Query Builder (quoted, spaces kept, = encoded)', () => {
+    const path = applyParamsToPath('/rest/Agency', [
+      createKeyValuePair({ key: '$params', value: '["A@a"]', enabled: true }),
+      createKeyValuePair({
+        key: '$filter',
+        value: 'manager.employeeAgency.category.label=:1 and category.label=:1',
+        enabled: true,
+      }),
+    ])
+    expect(path).not.toContain('+and+')
+    expect(path).toContain('$filter="')
+    expect(path).toContain('label%3D:1 and category.label%3D:1"')
+    expect(path).toContain('%24params=')
+  })
+
+  it('does not double-quote an already quoted $filter', () => {
+    const path = applyParamsToPath('/rest/Agency', [
+      createKeyValuePair({
+        key: '$filter',
+        value: '"manager.employeeAgency.category.label=:1 and category.label=:1"',
+        enabled: true,
+      }),
+    ])
+    expect(path).toBe(
+      '/rest/Agency?$filter="manager.employeeAgency.category.label%3D:1 and category.label%3D:1"'
+    )
+  })
+
   it('infers content types for raw languages', () => {
     expect(inferRawContentType('json', '')).toBe('application/json')
     expect(inferRawContentType('xml', '')).toBe('application/xml')
@@ -194,6 +222,8 @@ describe('http-client helpers', () => {
     expect(REST_QUERY_PARAMS).toContain('$filter')
     expect(REST_QUERY_PARAMS).toContain('$method')
     expect(REST_QUERY_PARAMS).toContain('$top')
+    expect(REST_QUERY_PARAMS).toContain('$queryplan')
+    expect(REST_QUERY_PARAMS).toContain('$querypath')
     expect(restParamValueSuggestions('$method')).toContain('entityset')
     expect(restParamValueSuggestions('$compute')).toContain('sum')
     expect(restParamValueSuggestions('$asArray')).toEqual(['true', 'false'])

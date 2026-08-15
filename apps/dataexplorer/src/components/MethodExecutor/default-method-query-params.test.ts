@@ -61,4 +61,14 @@ describe('hasExtraMethodQueryParams', () => {
       ])
     ).toBe(true)
   })
+
+  it('ignores $queryplan / $querypath when deciding extra params', () => {
+    expect(
+      hasExtraMethodQueryParams([
+        ...createDefaultMethodQueryParams(),
+        createKeyValuePair({ key: '$queryplan', value: 'true', enabled: true }),
+        createKeyValuePair({ key: '$querypath', value: 'true', enabled: true }),
+      ])
+    ).toBe(false)
+  })
 })

@@ -103,6 +103,8 @@ export type QueryOptions = {
   select: string // Comma-separated fields
   /** REST $top — max entities returned per request */
   top: number
+  /** When true, requests `$queryplan` and `$querypath` on the next fetch. */
+  explain?: boolean
 }
 
 /**
@@ -152,6 +154,8 @@ export type DataclassTab = BaseTab & {
   /** Per-tab field selection for table columns and card fields. */
   fieldConfig: FieldConfig
   queryExpanded: boolean
+  /** When false, Query plan & path is collapsed so the entity list can use the space. */
+  queryExplainExpanded: boolean
   /** Expanded query panel height in px; null uses the default CSS max height. */
   queryPanelHeight: number | null
   selectedEntityId: string | null
@@ -341,6 +345,7 @@ const DEFAULT_QUERY_OPTIONS: QueryOptions = {
   order: 'desc',
   select: '',
   top: 50,
+  explain: false,
 }
 
 const DEFAULT_FIELD_CONFIG: FieldConfig = {
@@ -377,6 +382,7 @@ export function normalizeQueryOptions(
     order: options?.order ?? DEFAULT_QUERY_OPTIONS.order,
     select: normalizeSelect(options?.select),
     top,
+    explain: options?.explain ?? DEFAULT_QUERY_OPTIONS.explain,
   }
 }
 
@@ -433,6 +439,7 @@ const createDataclassTab = (
         (preset ? { table: columnPresetTableNames(preset), cards: preset.cards } : undefined)
     ),
     queryExpanded: false,
+    queryExplainExpanded: false,
     queryPanelHeight: null,
     selectedEntityId: null,
     entitiesPage: 1,
@@ -585,6 +592,7 @@ type TabsState = {
   /** Update the per-tab field selection (table columns / card fields). */
   setFieldConfig: (tabId: string, config: Partial<FieldConfig>) => void
   setQueryExpanded: (tabId: string, expanded: boolean) => void
+  setQueryExplainExpanded: (tabId: string, expanded: boolean) => void
   setQueryPanelHeight: (tabId: string, height: number | null) => void
   resetQueryOptions: (tabId: string) => void
   setSelectedEntityId: (tabId: string, entityId: string | null) => void
@@ -1320,6 +1328,10 @@ export const useTabsStore = create<TabsState>()(
           set({ tabs: updateDataclassTab(get().tabs, tabId, { queryExpanded: expanded }) })
         },
 
+        setQueryExplainExpanded: (tabId, expanded) => {
+          set({ tabs: updateDataclassTab(get().tabs, tabId, { queryExplainExpanded: expanded }) })
+        },
+
         setQueryPanelHeight: (tabId, height) => {
           set({ tabs: updateDataclassTab(get().tabs, tabId, { queryPanelHeight: height }) })
         },
@@ -1447,6 +1459,10 @@ export const useTabsStore = create<TabsState>()(
                     ...tab,
                     queryOptions: normalizeQueryOptions(tab.queryOptions),
                     fieldConfig: normalizeFieldConfig(tab.fieldConfig),
+                    queryExplainExpanded:
+                      typeof tab.queryExplainExpanded === 'boolean'
+                        ? tab.queryExplainExpanded
+                        : false,
                     queryPanelHeight:
                       typeof tab.queryPanelHeight === 'number' &&
                       Number.isFinite(tab.queryPanelHeight)

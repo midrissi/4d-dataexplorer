@@ -14,8 +14,10 @@ import { HttpResponseStatusBar } from '~/components/HttpClient/HttpResponseStatu
 import { JsonTreePreview, TextPreviewPanel } from '~/components/HttpClient/TextPreviewPanel'
 import { detectMethodResult } from '~/components/MethodExecutor/detect-method-result'
 import { ResultPanel } from '~/components/MethodExecutor/ResultPanel'
+import { QueryExplainPanel } from '~/components/QueryExplain/QueryExplainPanel'
 import { useTranslation } from '~/i18n'
 import { isCsvContentType, looksLikeCsv } from '~/lib/csv'
+import { extractQueryExplain, queryExplainHasData } from '~/lib/query-explain/extract'
 import {
   formatResponseBody,
   monacoLanguageForRaw,
@@ -25,7 +27,7 @@ import { isMobileShell } from '~/lib/platform'
 import type { HttpClientResponse } from '~/store/http-client-types'
 import { useCodeEditorPrefs, useUpdateCodeEditorPrefs } from '~/store/settings'
 
-type ResponseTab = 'body' | 'headers' | 'cookies'
+type ResponseTab = 'body' | 'headers' | 'cookies' | 'explain'
 type BodyView = 'preview' | 'raw'
 
 function isHtmlContentType(contentType: string | null | undefined): boolean {
@@ -117,6 +119,13 @@ export function HttpResponsePanel({ response }: { response: HttpClientResponse |
     return htmlPreviewDocument(bodyText, response.url)
   }, [bodyText, isHtmlBody, response])
 
+  const explainPayload = useMemo(
+    () => (response ? extractQueryExplain(response.bodyJson, true) : null),
+    [response]
+  )
+  const showExplainTab = queryExplainHasData(explainPayload)
+  const resolvedTab: ResponseTab = tab === 'explain' && !showExplainTab ? 'body' : tab
+
   const selectionTabTitle =
     detected?.kind === 'entitysel' && detected.dataClass
       ? t('httpClient.selectionTabTitle', { name: detected.dataClass })
@@ -154,11 +163,14 @@ export function HttpResponsePanel({ response }: { response: HttpClientResponse |
       id: 'cookies' as const,
       label: `${t('httpClient.responseCookies')} (${response.cookies.length})`,
     },
+    ...(showExplainTab
+      ? [{ id: 'explain' as const, label: t('queryExplain.tab') }]
+      : []),
   ]
 
   const bodyActions = (
     <>
-      {tab === 'body' && (bodyText || response.error) && !isBinaryBody ? (
+      {resolvedTab === 'body' && (bodyText || response.error) && !isBinaryBody ? (
         <ClickToCopy
           value={response.error ? formatResponseBody(response) : (bodyText ?? '')}
           tooltipLabel={t('common.clickToCopy')}
@@ -174,7 +186,7 @@ export function HttpResponsePanel({ response }: { response: HttpClientResponse |
           {t('httpClient.copy')}
         </ClickToCopy>
       ) : null}
-      {tab === 'body' && canPreviewBody ? (
+      {resolvedTab === 'body' && canPreviewBody ? (
         <fieldset
           className={cn(
             'm-0 inline-flex shrink-0 items-stretch overflow-hidden border bg-muted/40 p-0.5',
@@ -225,10 +237,10 @@ export function HttpResponsePanel({ response }: { response: HttpClientResponse |
                   key={item.id}
                   type="button"
                   role="tab"
-                  aria-selected={tab === item.id}
+                  aria-selected={resolvedTab === item.id}
                   className={cn(
                     'min-h-9 shrink-0 cursor-pointer border-b-2 px-2.5 font-medium text-xs transition-colors',
-                    tab === item.id
+                    resolvedTab === item.id
                       ? 'border-primary text-foreground'
                       : 'border-transparent text-muted-foreground'
                   )}
@@ -238,7 +250,7 @@ export function HttpResponsePanel({ response }: { response: HttpClientResponse |
                 </button>
               ))}
             </div>
-            {tab === 'body' && (canPreviewBody || bodyText || response.error) ? (
+            {resolvedTab === 'body' && (canPreviewBody || bodyText || response.error) ? (
               <div className="mb-0.5 flex shrink-0 items-center gap-1.5">{bodyActions}</div>
             ) : null}
           </div>
@@ -255,7 +267,7 @@ export function HttpResponsePanel({ response }: { response: HttpClientResponse |
                 type="button"
                 className={cn(
                   '-mb-px cursor-pointer border-b-2 px-3 py-1.5 font-medium text-xs transition-colors',
-                  tab === item.id
+                  resolvedTab === item.id
                     ? 'border-primary text-foreground'
                     : 'border-transparent text-muted-foreground hover:text-foreground'
                 )}
@@ -271,7 +283,11 @@ export function HttpResponsePanel({ response }: { response: HttpClientResponse |
       )}
 
       <div className="min-h-0 flex-1 overflow-hidden">
-        {tab === 'body' ? (
+        {resolvedTab === 'explain' && explainPayload ? (
+          <QueryExplainPanel payload={explainPayload} embedded />
+        ) : null}
+
+        {resolvedTab === 'body' ? (
           response.error ? (
             <HttpResponseErrorBody response={response} className="h-full" />
           ) : isBinaryBody ? (
@@ -320,7 +336,7 @@ export function HttpResponsePanel({ response }: { response: HttpClientResponse |
           )
         ) : null}
 
-        {tab === 'headers' ? (
+        {resolvedTab === 'headers' ? (
           <HttpResponseKeyValueList
             entries={headerEntries.map(([key, value]) => ({ key, value }))}
             keyLabel={t('httpClient.key')}
@@ -341,7 +357,7 @@ export function HttpResponsePanel({ response }: { response: HttpClientResponse |
           />
         ) : null}
 
-        {tab === 'cookies' ? (
+        {resolvedTab === 'cookies' ? (
           <HttpResponseKeyValueList
             entries={response.cookies.map((cookie) => ({
               key: cookie.name,
