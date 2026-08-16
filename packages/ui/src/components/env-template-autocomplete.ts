@@ -101,6 +101,11 @@ function filterAcceptsListsRef(filterName: string): boolean {
   return filterName === 'from' || filterName === 'of'
 }
 
+function isObjectTemplatePrefix(prefix: string): boolean {
+  const pipe = prefix.indexOf('|')
+  return (pipe === -1 ? prefix : prefix.slice(0, pipe)).trim() === '$object'
+}
+
 function rankSuggestions(
   suggestions: readonly EnvTemplateSuggestion[],
   query: string
@@ -133,6 +138,12 @@ export function filterEnvTemplateSuggestions(
     }
 
     const argCtx = getEnvTemplateFilterArgContext(prefix)
+    if (argCtx && isObjectTemplatePrefix(prefix)) {
+      return rankSuggestions(
+        suggestions.filter((item) => !item.key.startsWith('ds.')),
+        argCtx.argQuery
+      )
+    }
     if (argCtx && filterAcceptsListsRef(argCtx.filterName)) {
       const q = argCtx.argQuery.toLowerCase()
       // `ds.…` → inline `ds.Dataclass.Attribute` direct-load refs.
@@ -186,8 +197,14 @@ export function applyEnvTemplateCompletion(
   }
 
   const argCtx = pipe !== -1 ? getEnvTemplateFilterArgContext(match.prefix) : null
-  if (argCtx && (key.startsWith('$lists.') || key.startsWith('ds.') || key.startsWith('$'))) {
-    // Complete only the current filter arg (`| from:$lists.name` or `| from:ds.Class.Attr`).
+  if (
+    argCtx &&
+    (isObjectTemplatePrefix(match.prefix) ||
+      key.startsWith('$lists.') ||
+      key.startsWith('ds.') ||
+      key.startsWith('$'))
+  ) {
+    // Complete only the current filter arg (`| name:$faker…` or `| from:$lists.name`).
     const argAbs = match.braceStart + 2 + argCtx.argStartInPrefix
     const value = `${text.slice(0, argAbs)}${key}}}${text.slice(match.cursor + closeLen)}`
     return { value, cursor: argAbs + key.length }

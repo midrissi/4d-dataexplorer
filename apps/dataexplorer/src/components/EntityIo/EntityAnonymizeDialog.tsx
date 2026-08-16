@@ -37,7 +37,7 @@ import {
   Upload,
   WandSparkles,
 } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { type TextPreviewMode, TextPreviewPanel } from '~/components/HttpClient/TextPreviewPanel'
 import { useTranslation } from '~/i18n'
 import { api } from '~/lib/api'
@@ -190,6 +190,7 @@ export function EntityAnonymizeDialog({
     [mappableAttributes, plannedNames]
   )
   const planJson = useMemo(() => JSON.stringify(plan, null, 2), [plan])
+  const deferredPreviewPlan = useDeferredValue(plan)
 
   useEffect(() => {
     if (planView === 'json') return
@@ -451,14 +452,14 @@ export function EntityAnonymizeDialog({
   }, [open, hasEntitySet, dataclassName, sampleEntitySetId, t, toast])
 
   const preview = useMemo(() => {
-    if (sampleRows.length === 0 || plan.length === 0) return []
+    if (sampleRows.length === 0 || deferredPreviewPlan.length === 0) return []
     const seedNum = seed.trim() ? Number(seed) : undefined
     return anonymizeEntities(sampleRows, {
-      plan,
+      plan: deferredPreviewPlan,
       seed: Number.isFinite(seedNum) ? seedNum : undefined,
       lists: anonymizeLists,
     })
-  }, [sampleRows, plan, seed, anonymizeLists])
+  }, [sampleRows, deferredPreviewPlan, seed, anonymizeLists])
 
   // Preview mirrors the download payload so the chosen format is what gets highlighted.
   const previewText = useMemo(() => {
@@ -467,11 +468,11 @@ export function EntityAnonymizeDialog({
     if (!format) return ''
     return format
       .serialize(
-        preview.map((row) => stripForCreate(row, primaryKey, plan)),
+        preview.map((row) => stripForCreate(row, primaryKey, deferredPreviewPlan)),
         { dataclassName }
       )
       .trimEnd()
-  }, [preview, formatId, primaryKey, dataclassName, plan])
+  }, [preview, formatId, primaryKey, dataclassName, deferredPreviewPlan])
 
   const fetchAnonymized = async (signal: AbortSignal) => {
     if (!target?.entitySetId?.trim()) throw new Error(t('entity.deleteManySelectionUnavailable'))

@@ -68,9 +68,11 @@ export function buildAnonymizeFieldPlan(attr: EntityIoAttribute): AnonymizeField
       ? '$faker.datatype.boolean'
       : attr.type === 'date'
         ? '$faker.date.past'
-        : isNumericType(attr.type)
-          ? '$faker.number.int'
-          : '$faker.lorem.word'
+        : attr.type === 'object'
+          ? '$faker.airline.airline'
+          : isNumericType(attr.type)
+            ? '$faker.number.int'
+            : '$faker.lorem.word'
   return { name: attr.name, type: attr.type, mode: 'faker', fakerKey: `{{${typeKey}}}` }
 }
 
@@ -81,7 +83,7 @@ export function listAnonymizeMappableAttributes(
 ): EntityIoAttribute[] {
   return attrs.filter((a) => {
     if (a.kind === 'relatedEntity' || a.kind === 'relatedEntities') return false
-    if (a.type === 'blob' || a.type === 'object') return false
+    if (a.type === 'blob') return false
     if (a.kind && a.kind !== 'storage' && a.kind !== 'calculated' && a.kind !== 'alias')
       return false
     if (primaryKey && a.name === primaryKey) return false
@@ -117,6 +119,13 @@ function throwIfAborted(signal?: AbortSignal): void {
 }
 
 function coerceReplacement(original: unknown, replacement: string, fieldType?: string): unknown {
+  if (typeof original === 'object' || fieldType?.toLowerCase() === 'object') {
+    try {
+      return JSON.parse(replacement) as unknown
+    } catch {
+      return replacement
+    }
+  }
   if (typeof original === 'boolean' || fieldType?.toLowerCase() === 'bool') {
     const normalized = replacement.trim().toLowerCase()
     if (normalized === 'true' || normalized === '1') return true

@@ -164,6 +164,7 @@ export function QueryBuilder() {
   const ordaServiceRef = useRef<LanguageService | null>(null)
   const ordaLanguageConfiguredRef = useRef(false)
   const localFilterRef = useRef(localFilter)
+  const filterPersistTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   localFilterRef.current = localFilter
 
   ordaServiceRef.current = ordaService
@@ -202,6 +203,12 @@ export function QueryBuilder() {
   const entitySetInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
+    return () => {
+      if (filterPersistTimerRef.current) clearTimeout(filterPersistTimerRef.current)
+    }
+  }, [])
+
+  useEffect(() => {
     setLocalEntitySetId(boundEntitySetId)
     setEntitySetError(null)
   }, [boundEntitySetId])
@@ -209,6 +216,7 @@ export function QueryBuilder() {
   useEffect(() => {
     if (previousDataclassTabId.current !== activeDataclassTabId) {
       previousDataclassTabId.current = activeDataclassTabId
+      if (filterPersistTimerRef.current) clearTimeout(filterPersistTimerRef.current)
       setEntitySetIdEditing(false)
     }
   }, [activeDataclassTabId])
@@ -240,14 +248,20 @@ export function QueryBuilder() {
     [activeDataclassTab, setQueryOptions]
   )
 
-  // Persist filter drafts like sort/select so a page refresh keeps the expression.
-  // (Previously only Run wrote filter into the tab store.)
+  // Keep editor updates local; persisting every Monaco keystroke re-renders the
+  // active tab and parameter editor, making the input lag on large schemas.
   const handleFilterChange = useCallback(
     (value: string) => {
       setLocalFilter(value)
-      handleSetQueryOptions({ filter: value })
+      if (filterPersistTimerRef.current) clearTimeout(filterPersistTimerRef.current)
+      const tabId = activeDataclassTab?.id
+      if (!tabId) return
+      filterPersistTimerRef.current = setTimeout(() => {
+        setQueryOptions(tabId, { filter: value })
+        filterPersistTimerRef.current = null
+      }, 250)
     },
-    [handleSetQueryOptions]
+    [activeDataclassTab?.id, setQueryOptions]
   )
 
   const handleResetQueryOptions = useCallback(() => {

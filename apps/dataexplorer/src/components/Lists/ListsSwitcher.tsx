@@ -28,6 +28,19 @@ type ListEntry = {
   name: string
   type: 'dataclass' | 'hardcoded'
   scope: ScopeId
+  valueHint?: string
+}
+
+function listValueHint(declaration: PickListDeclaration): string | undefined {
+  if (isDataclassPickList(declaration)) {
+    return declaration.dataclass && declaration.attribute
+      ? `${declaration.dataclass}.${declaration.attribute}`
+      : undefined
+  }
+
+  const values = declaration.values.slice(0, 3)
+  if (values.length === 0) return undefined
+  return `${values.join(', ')}${declaration.values.length > values.length ? ', ...' : ''}`
 }
 
 function ScopeIcon({ scope }: { scope: ScopeId }) {
@@ -90,6 +103,7 @@ export function ListsSwitcher({
           name,
           type: isDataclassPickList(d) ? 'dataclass' : 'hardcoded',
           scope,
+          valueHint: listValueHint(d),
         })
         seen.add(name)
       }
@@ -149,8 +163,15 @@ export function ListsSwitcher({
               key={entry.name}
               className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 px-2.5 py-1 transition-colors duration-150 hover:bg-muted/40"
             >
-              <span className="min-w-0 truncate font-mono text-[11px] text-foreground">
-                {entry.name}
+              <span className="min-w-0">
+                <span className="block truncate font-mono text-[11px] text-foreground">
+                  {entry.name}
+                </span>
+                {entry.valueHint ? (
+                  <span className="block truncate font-mono text-[9px] text-muted-foreground">
+                    {entry.valueHint}
+                  </span>
+                ) : null}
               </span>
               <span className="shrink-0 rounded-sm border border-border/60 bg-muted/40 px-1 py-px font-mono text-[9px] text-muted-foreground">
                 {entry.type === 'dataclass' ? t('lists.typeDataclass') : t('lists.typeHardcoded')}
@@ -238,8 +259,15 @@ export function ListsSwitcher({
                   key={entry.name}
                   className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 px-2.5 py-1.5 transition-colors duration-150 hover:bg-muted/40"
                 >
-                  <span className="min-w-0 truncate font-mono text-[11px] text-foreground">
-                    {entry.name}
+                  <span className="min-w-0">
+                    <span className="block truncate font-mono text-[11px] text-foreground">
+                      {entry.name}
+                    </span>
+                    {entry.valueHint ? (
+                      <span className="block truncate font-mono text-[9px] text-muted-foreground">
+                        {entry.valueHint}
+                      </span>
+                    ) : null}
                   </span>
                   <span className="shrink-0 rounded-sm border border-border/60 bg-muted/40 px-1 py-px font-mono text-[9px] text-muted-foreground">
                     {entry.type === 'dataclass'

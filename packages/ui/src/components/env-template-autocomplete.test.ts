@@ -82,6 +82,15 @@ describe('applyEnvTemplateCompletion', () => {
       cursor: 27,
     })
   })
+
+  it('completes a named $object property value', () => {
+    expect(
+      applyEnvTemplateCompletion('{{$object | name:$faker.person.', 32, '$faker.person.lastName')
+    ).toEqual({
+      value: '{{$object | name:$faker.person.lastName}}',
+      cursor: 39,
+    })
+  })
 })
 
 describe('filterEnvTemplateSuggestions', () => {
@@ -160,6 +169,15 @@ describe('filterEnvTemplateSuggestions', () => {
     expect(
       filterEnvTemplateSuggestions(items, '$pick | from:ds.Company').map((i) => i.key)
     ).toEqual(['ds.Company.name'])
+  })
+
+  it('suggests variables while typing a named $object property', () => {
+    expect(
+      filterEnvTemplateSuggestions(items, '$object | name:$faker.person.').map((item) => item.key)
+    ).toEqual(['$faker.person.lastName'])
+    expect(
+      filterEnvTemplateSuggestions(items, '$object | status:base').map((item) => item.key)
+    ).toEqual(['baseUrl'])
   })
 
   it('hides inline ds.* refs from the top-level variable list', () => {

@@ -149,6 +149,21 @@ describe('anonymize', () => {
     expect(buildAnonymizeFieldPlan(portrait).fakerKey).toContain('$faker.image')
   })
 
+  it('includes writable object attributes in anonymization mappings', () => {
+    const mappable = listAnonymizeMappableAttributes(
+      [...agencyAttrs, { name: 'preferences', type: 'object', kind: 'storage' as const }],
+      'ID'
+    )
+
+    expect(mappable.map((attribute) => attribute.name)).toContain('preferences')
+    const preferences = mappable.find((attribute) => attribute.name === 'preferences')
+    expect(preferences).toBeDefined()
+    if (!preferences) return
+    expect(buildAnonymizeFieldPlan(preferences)).toMatchObject({
+      fakerKey: '{{$faker.airline.airline}}',
+    })
+  })
+
   it('uploads generated image URLs and replaces them with 4D upload IDs', async () => {
     const uploaded: File[] = []
     const progress: Array<[number, number]> = []
@@ -284,6 +299,25 @@ describe('anonymize', () => {
 
     expect(entity?.age).toBe(7)
     expect(entity?.status).toBe('anonymous')
+  })
+
+  it('preserves generated Faker objects for object attributes', () => {
+    const [entity] = anonymizeEntities([{ airline: { name: 'Private Air' } }], {
+      plan: [
+        {
+          name: 'airline',
+          type: 'object',
+          mode: 'faker',
+          fakerKey: '{{$faker.airline.airline}}',
+        },
+      ],
+      seed: 42,
+    })
+
+    expect(entity?.airline).toMatchObject({
+      name: expect.any(String),
+      iataCode: expect.any(String),
+    })
   })
 
   it('resolves $this from the source value when anonymizing the same field', () => {
