@@ -1,7 +1,8 @@
 import { Button, cn } from '@4d/ui'
 import { FileUp, Paperclip, X } from 'lucide-react'
-import { type ChangeEvent, type DragEvent, useRef, useState } from 'react'
+import { type ChangeEvent, type DragEvent, useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from '~/i18n'
+import { subscribeDesktopFileDragState, subscribeDesktopFileDrop } from '~/lib/desktop-file-drop'
 import { formatByteSize } from '~/lib/http-client'
 
 function fileExtensionTone(fileName: string): string {
@@ -30,6 +31,26 @@ function extensionLabel(fileName: string): string {
   return ext
 }
 
+function contentTypeFromFileName(fileName: string): string | undefined {
+  const ext = fileName.split('.').pop()?.toLowerCase()
+  const types: Record<string, string> = {
+    csv: 'text/csv',
+    gif: 'image/gif',
+    html: 'text/html',
+    jpeg: 'image/jpeg',
+    jpg: 'image/jpeg',
+    json: 'application/json',
+    pdf: 'application/pdf',
+    png: 'image/png',
+    svg: 'image/svg+xml',
+    txt: 'text/plain',
+    webp: 'image/webp',
+    xml: 'application/xml',
+    zip: 'application/zip',
+  }
+  return ext ? types[ext] : undefined
+}
+
 export function HttpFilePicker({
   fileName,
   contentType,
@@ -51,6 +72,7 @@ export function HttpFilePicker({
 }) {
   const { t } = useTranslation()
   const inputRef = useRef<HTMLInputElement>(null)
+  const dragDepthRef = useRef(0)
   const [dragging, setDragging] = useState(false)
   const hasFile = Boolean(fileName)
   const selectedName = fileName ?? ''
@@ -61,33 +83,60 @@ export function HttpFilePicker({
     inputRef.current?.click()
   }
 
-  const applyFile = (file: File | undefined | null) => {
-    if (!file) return
-    onPick(file)
-    if (inputRef.current) inputRef.current.value = ''
-  }
+  const applyFile = useCallback(
+    (file: File | undefined | null) => {
+      if (!file) return
+      onPick(file)
+      if (inputRef.current) inputRef.current.value = ''
+    },
+    [onPick]
+  )
 
   const onInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     applyFile(event.target.files?.[0])
   }
 
+  useEffect(
+    () =>
+      subscribeDesktopFileDrop((dropped) => {
+        const bytes = Uint8Array.from(dropped.bytes)
+        applyFile(
+          new File([bytes], dropped.name, {
+            type: dropped.type || contentTypeFromFileName(dropped.name),
+          })
+        )
+      }),
+    [applyFile]
+  )
+
+  useEffect(() => subscribeDesktopFileDragState(setDragging), [])
+
   const onDrop = (event: DragEvent) => {
     event.preventDefault()
     event.stopPropagation()
+    dragDepthRef.current = 0
     setDragging(false)
     applyFile(event.dataTransfer.files?.[0])
+  }
+
+  const onDragEnter = (event: DragEvent) => {
+    event.preventDefault()
+    event.stopPropagation()
+    if (!Array.from(event.dataTransfer.types).includes('Files')) return
+    dragDepthRef.current += 1
+    setDragging(true)
   }
 
   const onDragOver = (event: DragEvent) => {
     event.preventDefault()
     event.stopPropagation()
-    setDragging(true)
   }
 
   const onDragLeave = (event: DragEvent) => {
     event.preventDefault()
     event.stopPropagation()
-    setDragging(false)
+    dragDepthRef.current = Math.max(0, dragDepthRef.current - 1)
+    if (dragDepthRef.current === 0) setDragging(false)
   }
 
   const hiddenInput = (
@@ -113,6 +162,7 @@ export function HttpFilePicker({
               dragging && 'border-primary bg-primary/5'
             )}
             onDrop={onDrop}
+            onDragEnter={onDragEnter}
             onDragOver={onDragOver}
             onDragLeave={onDragLeave}
           >
@@ -162,6 +212,7 @@ export function HttpFilePicker({
             type="button"
             onClick={openPicker}
             onDrop={onDrop}
+            onDragEnter={onDragEnter}
             onDragOver={onDragOver}
             onDragLeave={onDragLeave}
             className={cn(
@@ -184,7 +235,7 @@ export function HttpFilePicker({
                 {dragging ? t('httpClient.dropFileHere') : t('httpClient.chooseBinaryTitle')}
               </p>
               <p className="max-w-xs text-muted-foreground text-xs">
-                {t('httpClient.chooseBinary')}
+                {dragging ? t('httpClient.dropFileHere') : t('httpClient.dropOrChooseFile')}
               </p>
             </div>
             <span className="mt-1 inline-flex items-center gap-1.5 rounded-md border bg-background px-2.5 py-1 font-medium text-[11px] shadow-sm">
@@ -207,6 +258,7 @@ export function HttpFilePicker({
           className
         )}
         onDrop={onDrop}
+        onDragEnter={onDragEnter}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
       >
@@ -256,6 +308,7 @@ export function HttpFilePicker({
       type="button"
       onClick={openPicker}
       onDrop={onDrop}
+      onDragEnter={onDragEnter}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       className={cn(

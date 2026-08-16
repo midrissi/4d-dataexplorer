@@ -1195,6 +1195,7 @@ export const api = {
     attributes?: string[]
     pageSize?: number
     onProgress?: (fetched: number, total: number) => void
+    signal?: AbortSignal
   }): Promise<{ dataclass: string; entities: Entity[]; count: number }> => {
     const pageSize = params.pageSize ?? 200
     const all: Entity[] = []
@@ -1202,6 +1203,7 @@ export const api = {
     let skip = 0
 
     while (skip < total) {
+      if (params.signal?.aborted) throw new DOMException('Request cancelled', 'AbortError')
       const page = await api.getEntities(params.dataclass, {
         page: Math.floor(skip / pageSize) + 1,
         top: pageSize,
@@ -1212,6 +1214,7 @@ export const api = {
         createEntitySet: params.entitySetId ? undefined : !!params.filter,
       })
       total = page.pagination.total
+      if (params.signal?.aborted) throw new DOMException('Request cancelled', 'AbortError')
       all.push(...page.entities)
       params.onProgress?.(all.length, total)
       if (page.entities.length === 0) break
@@ -1289,7 +1292,11 @@ export const api = {
    * Upload a file (image or binary) to the server
    * Returns the upload ID that can be used to update entity attributes
    */
-  uploadFile: async (file: File, isImage: boolean): Promise<{ ID: string }> => {
+  uploadFile: async (
+    file: File,
+    isImage: boolean,
+    signal?: AbortSignal
+  ): Promise<{ ID: string }> => {
     const httpClient = client.getHttpClient()
     const baseUrl = httpClient.getBaseUrl()
     const url = `${baseUrl}/rest/$upload?${isImage ? '$rawPict=true' : '$binary=true'}`
@@ -1299,9 +1306,10 @@ export const api = {
     const response = await platformFetch(url, {
       method: 'POST',
       headers: {
-        'Content-Type': isImage ? 'image/png' : 'application/octet-stream',
+        'Content-Type': isImage ? file.type || 'image/png' : 'application/octet-stream',
       },
       body: file,
+      signal,
     })
 
     if (!response.ok) {

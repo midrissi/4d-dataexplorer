@@ -20,6 +20,7 @@ export function SavedListRow({
   onDuplicate,
   duplicateLabel,
   onRemove,
+  onRemoveExcept,
   removeLabel,
   removeMode = 'trash',
   onOpen,
@@ -41,6 +42,8 @@ export function SavedListRow({
   onDuplicate?: () => void
   duplicateLabel?: string
   onRemove?: () => void
+  /** Shift+click on remove retains this row and removes its siblings. */
+  onRemoveExcept?: () => void
   removeLabel?: string
   /** Favourites lists use a filled star; history uses trash. */
   removeMode?: 'trash' | 'star'
@@ -116,6 +119,10 @@ export function SavedListRow({
             className={cn('text-amber-500 hover:text-destructive', actionBtn)}
             onClick={(event) => {
               event.stopPropagation()
+              if (event.shiftKey && onRemoveExcept) {
+                onRemoveExcept()
+                return
+              }
               onRemove()
             }}
             aria-label={removeLabel}
@@ -130,6 +137,10 @@ export function SavedListRow({
             className={cn('text-muted-foreground hover:text-destructive', actionBtn)}
             onClick={(event) => {
               event.stopPropagation()
+              if (event.shiftKey && onRemoveExcept) {
+                onRemoveExcept()
+                return
+              }
               onRemove()
             }}
             aria-label={removeLabel}

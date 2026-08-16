@@ -1,5 +1,5 @@
 import { Button, Input, TemplatedTextInput } from '@4d/ui'
-import { X } from 'lucide-react'
+import { Trash2 } from 'lucide-react'
 import { memo, useMemo } from 'react'
 import { useTemplatedEnvFieldProps } from '~/components/Environments/use-templated-env-field-props'
 import type { AnonymizeFieldMode, AnonymizeFieldPlan } from '~/lib/entity-io'
@@ -19,6 +19,7 @@ export const AnonymizeFieldRow = memo(function AnonymizeFieldRow({
   onFieldNameChange,
   onChange,
   onRemove,
+  onRemoveExcept,
 }: {
   field: AnonymizeFieldPlan
   fieldOptions: EntityIoSelectOption<string>[]
@@ -32,6 +33,7 @@ export const AnonymizeFieldRow = memo(function AnonymizeFieldRow({
   onFieldNameChange: (from: string, to: string) => void
   onChange: (name: string, patch: Partial<AnonymizeFieldPlan>) => void
   onRemove: (name: string) => void
+  onRemoveExcept: (name: string) => void
 }) {
   const fieldHint = useMemo(
     () => ({ name: field.name, type: field.type }),
@@ -86,9 +88,15 @@ export const AnonymizeFieldRow = memo(function AnonymizeFieldRow({
         size="icon"
         className="h-7 w-7 shrink-0 text-muted-foreground hover:text-destructive"
         aria-label={`${removeLabel} ${field.name}`}
-        onClick={() => onRemove(field.name)}
+        onClick={(event) => {
+          if (event.shiftKey) {
+            onRemoveExcept(field.name)
+            return
+          }
+          onRemove(field.name)
+        }}
       >
-        <X className="h-3.5 w-3.5" />
+        <Trash2 className="h-3.5 w-3.5" aria-hidden />
       </Button>
     </div>
   )

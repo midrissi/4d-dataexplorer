@@ -195,6 +195,9 @@ function buildFakerCallArgs(
         return [{ firstName }]
       }
     }
+    if (moduleName === 'image' && resolvedMethod === 'personPortrait') {
+      return [{ sex }]
+    }
   }
 
   if (options.min != null || options.max != null) {

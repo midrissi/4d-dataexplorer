@@ -3,12 +3,17 @@ export {
   type AnonymizeFieldPlan,
   type AnonymizeOptions,
   anonymizeEntities,
+  anonymizeEntitiesWithProgress,
   anonymizeEntity,
   buildAnonymizeFieldPlan,
   buildDefaultAnonymizePlan,
+  IMAGE_UPLOAD_CONCURRENCY,
+  isImageAnonymizeField,
   listAnonymizeMappableAttributes,
+  parseAnonymizeFieldPlan,
   prepareAnonymizedUpdate,
   stripForCreate,
+  uploadAnonymizedImages,
 } from './anonymize'
 export { ENTITY_IO_FORMATS } from './formats'
 export {

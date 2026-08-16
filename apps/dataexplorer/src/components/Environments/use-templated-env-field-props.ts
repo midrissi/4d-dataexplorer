@@ -156,7 +156,6 @@ export function useTemplatedEnvFieldProps(options?: TemplatedEnvFieldOptions) {
   const inlineRefSuggestions = useInlineListRefSuggestions()
 
   const openEnvironmentsTab = useTabsStore((s) => s.openEnvironmentsTab)
-  const openListsTab = useTabsStore((s) => s.openListsTab)
 
   const labels = useMemo(
     () => ({
@@ -418,8 +417,6 @@ export function useTemplatedEnvFieldProps(options?: TemplatedEnvFieldOptions) {
     onVariableChange,
     onManageVariables: openEnvironmentsTab,
     manageVariablesLabel: t('environments.manageVariables'),
-    onManageLists: openListsTab,
-    manageListsLabel: t('lists.manageLists'),
     writeTargets,
     addToLabel: t('environments.addTo'),
     unresolvedLabel: t('environments.unresolved'),

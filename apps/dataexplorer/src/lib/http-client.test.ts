@@ -12,6 +12,7 @@ import {
   formatHttpClientNetworkError,
   formatResponseBody,
   getDesktopHttpUserAgent,
+  headerValueSuggestions,
   inferRawContentType,
   listHttpBuiltInHeaders,
   mergeRestPathSuggestions,
@@ -117,6 +118,12 @@ describe('http-client helpers', () => {
     )
   })
 
+  it('suggests MIME values only for Content-Type headers', () => {
+    expect(headerValueSuggestions('Content-Type')).toContain('image/png')
+    expect(headerValueSuggestions(' content-type ')).toContain('application/json')
+    expect(headerValueSuggestions('Accept')).toEqual([])
+  })
+
   it('proposes progressive REST path chunks', () => {
     expect(buildRestPathSuggestions('', ['Color', 'Employee'])).toEqual(['/rest'])
     expect(buildRestPathSuggestions('/re', ['Color'])).toEqual(['/rest'])
@@ -127,6 +134,8 @@ describe('http-client helpers', () => {
       '/rest/$info',
       '/rest/$singleton',
       '/rest/$upload',
+      '/rest/$upload?$binary=true',
+      '/rest/$upload?$rawPict=true',
       '/rest/Color',
       '/rest/Employee',
     ])
@@ -143,6 +152,11 @@ describe('http-client helpers', () => {
     expect(afterColor).toContain('/rest/Color/$entityset/')
     expect(afterColor.every((path) => !path.includes('?'))).toBe(true)
     expect(afterColor.every((path) => path.startsWith('/rest/Color'))).toBe(true)
+
+    expect(buildRestPathSuggestions('/rest/$upload', ['Color'])).toEqual([
+      '/rest/$upload?$binary=true',
+      '/rest/$upload?$rawPict=true',
+    ])
   })
 
   it('matches REST path suggestions case-insensitively', () => {
@@ -150,6 +164,15 @@ describe('http-client helpers', () => {
     expect(buildRestPathSuggestions('/rest/COLOR', ['Color'])).toContain('/rest/Color[1]')
     expect(buildRestPathSuggestions('/REST', ['Color'])).toContain('/rest/Color')
     expect(buildRestPathSuggestions('/rest/$CAT', ['Color'])).toContain('/rest/$catalog')
+  })
+
+  it('deduplicates equivalent upload presets from history and catalog', () => {
+    expect(
+      mergeRestPathSuggestions(
+        ['/rest/$upload?$binary=true', '/rest/$upload?$rawPict=true'],
+        [' /rest/$upload/?$binary=true ']
+      )
+    ).toEqual(['/rest/$upload/?$binary=true', '/rest/$upload?$rawPict=true'])
   })
 
   it('surfaces unique recent history paths for the active target', () => {

@@ -1,4 +1,12 @@
-import { cn, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@4d/ui'
+import {
+  cn,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+  useConfirm,
+} from '@4d/ui'
 import { History } from 'lucide-react'
 import type { MouseEvent } from 'react'
 import {
@@ -27,10 +35,12 @@ function HistoryRequestRow({
   item,
   onOpen,
   onRemove,
+  onRemoveExcept,
 }: {
   item: HttpRequestHistoryItem
   onOpen: (event: MouseEvent<HTMLButtonElement>) => void
   onRemove: () => void
+  onRemoveExcept: () => void
 }) {
   const { t } = useTranslation()
   const mobile = isMobileShell()
@@ -83,6 +93,7 @@ function HistoryRequestRow({
         removeLabel: t('httpClient.removeFavourite'),
       }}
       onRemove={onRemove}
+      onRemoveExcept={onRemoveExcept}
       removeLabel={t('httpClient.removeHistoryItem')}
       onOpen={onOpen}
     />
@@ -107,56 +118,79 @@ export function HttpRequestHistory({
   onClose: () => void
 }) {
   const { t } = useTranslation()
+  const { confirm, ConfirmDialog } = useConfirm()
   const mobile = isMobileShell()
 
+  const removeAllExcept = async (current: HttpRequestHistoryItem) => {
+    const { path, fullUrl } = httpRequestLabel(current.seed)
+    const ok = await confirm({
+      title: t('httpClient.keepOnlyRowConfirmTitle'),
+      description: t('httpClient.keepOnlyRowConfirmDescription', { key: path || fullUrl }),
+      confirmText: t('httpClient.keepOnlyRowConfirm'),
+      cancelText: t('common.cancel'),
+      variant: 'destructive',
+    })
+    if (!ok) return
+    for (const item of requests) {
+      if (item.id !== current.id) onRemoveRequest(item.id)
+    }
+  }
+
   return (
-    <SavedListPanel
-      icon={History}
-      title={t('httpClient.lastRequests')}
-      titleId={mobile ? 'http-request-history-title' : undefined}
-      count={requests.length}
-      countMax={maxCount}
-      headerExtra={
-        <Select value={String(maxCount)} onValueChange={(value) => onMaxCountChange(Number(value))}>
-          <SelectTrigger
-            className={cn(
-              'h-6 w-auto gap-1 border-dashed bg-background/50 px-1.5 text-[10px] text-muted-foreground',
-              mobile && 'h-9 px-2 text-xs'
-            )}
-            aria-label={t('httpClient.historyLimit')}
+    <>
+      <SavedListPanel
+        icon={History}
+        title={t('httpClient.lastRequests')}
+        titleId={mobile ? 'http-request-history-title' : undefined}
+        count={requests.length}
+        countMax={maxCount}
+        headerExtra={
+          <Select
+            value={String(maxCount)}
+            onValueChange={(value) => onMaxCountChange(Number(value))}
           >
-            <span className="text-muted-foreground/70">{t('httpClient.historyLimit')}</span>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {HTTP_REQUEST_HISTORY_LIMIT_OPTIONS.map((option) => (
-              <SelectItem key={option} value={String(option)}>
-                {option}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      }
-      clearLabel={t('httpClient.clearAll')}
-      onClear={onClearRequests}
-      clearConfirm={{
-        title: t('httpClient.clearHistoryTitle'),
-        description: t('httpClient.clearHistoryDescription'),
-        confirmText: t('httpClient.clearAll'),
-        cancelText: t('common.cancel'),
-      }}
-      emptyTitle={t('httpClient.noHistoryTitle')}
-      emptyDescription={t('httpClient.noHistoryDescription')}
-      onClose={onClose}
-    >
-      {requests.map((item) => (
-        <HistoryRequestRow
-          key={item.id}
-          item={item}
-          onOpen={(event) => onOpenRequest(item.seed, event)}
-          onRemove={() => onRemoveRequest(item.id)}
-        />
-      ))}
-    </SavedListPanel>
+            <SelectTrigger
+              className={cn(
+                'h-6 w-auto gap-1 border-dashed bg-background/50 px-1.5 text-[10px] text-muted-foreground',
+                mobile && 'h-9 px-2 text-xs'
+              )}
+              aria-label={t('httpClient.historyLimit')}
+            >
+              <span className="text-muted-foreground/70">{t('httpClient.historyLimit')}</span>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {HTTP_REQUEST_HISTORY_LIMIT_OPTIONS.map((option) => (
+                <SelectItem key={option} value={String(option)}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        }
+        clearLabel={t('httpClient.clearAll')}
+        onClear={onClearRequests}
+        clearConfirm={{
+          title: t('httpClient.clearHistoryTitle'),
+          description: t('httpClient.clearHistoryDescription'),
+          confirmText: t('httpClient.clearAll'),
+          cancelText: t('common.cancel'),
+        }}
+        emptyTitle={t('httpClient.noHistoryTitle')}
+        emptyDescription={t('httpClient.noHistoryDescription')}
+        onClose={onClose}
+      >
+        {requests.map((item) => (
+          <HistoryRequestRow
+            key={item.id}
+            item={item}
+            onOpen={(event) => onOpenRequest(item.seed, event)}
+            onRemove={() => onRemoveRequest(item.id)}
+            onRemoveExcept={() => void removeAllExcept(item)}
+          />
+        ))}
+      </SavedListPanel>
+      <ConfirmDialog />
+    </>
   )
 }

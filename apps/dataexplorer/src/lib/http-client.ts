@@ -126,15 +126,32 @@ export const COMMON_REQUEST_HEADERS = [
 
 export const COMMON_CONTENT_TYPES = [
   'application/json',
+  'application/ld+json',
+  'application/pdf',
   'application/xml',
   'application/x-www-form-urlencoded',
+  'application/zip',
   'multipart/form-data',
   'text/plain',
   'text/html',
   'text/xml',
+  'text/css',
+  'text/csv',
   'application/javascript',
+  'image/png',
+  'image/jpeg',
+  'image/gif',
+  'image/webp',
+  'image/svg+xml',
+  'audio/mpeg',
+  'video/mp4',
   'application/octet-stream',
 ] as const
+
+/** MIME completions are relevant only for a `Content-Type` request header. */
+export function headerValueSuggestions(key: string): readonly string[] {
+  return key.trim().toLowerCase() === 'content-type' ? COMMON_CONTENT_TYPES : []
+}
 
 /**
  * Progressive 4D REST path autocomplete — only the next path chunk.
@@ -220,12 +237,19 @@ export function mergeRestPathSuggestions(
   const seen = new Set<string>()
   const out: string[] = []
   for (const path of [...recentPaths, ...catalogSuggestions]) {
-    const key = path.toLowerCase()
+    const key = suggestionPathKey(path)
     if (seen.has(key)) continue
     seen.add(key)
-    out.push(path)
+    out.push(path.trim())
   }
   return out
+}
+
+/** Canonical key for matching UI path suggestions from catalog and request history. */
+function suggestionPathKey(path: string): string {
+  const trimmed = path.trim()
+  const [pathname, query = ''] = trimmed.split('?', 2)
+  return `${pathname.replace(/\/+$/, '').toLowerCase()}?${query.toLowerCase()}`
 }
 
 /** Keep suggestions that extend `input` (case-insensitive); drop exact matches. */
@@ -364,6 +388,8 @@ export function buildRestPathSuggestions(
       `${REST_ROOT}/$catalog`,
       `${REST_ROOT}/$info`,
       `${REST_ROOT}/$upload`,
+      `${REST_ROOT}/$upload?$binary=true`,
+      `${REST_ROOT}/$upload?$rawPict=true`,
       `${REST_ROOT}/$singleton`,
       ...names.map((name) => `${REST_ROOT}/${name}`),
     ])
@@ -401,9 +427,16 @@ export function buildRestPathSuggestions(
     if (matched.length) return matched
   }
 
-  // /rest/$upload — leaf (use Params for $rawPict / $binary)
+  // /rest/$upload — offer ready-to-use binary and image upload variants.
   if (equalsCI(afterSlash, '$upload') || startsWithCI(afterSlash, '$upload')) {
-    return []
+    return extendingPrefix(
+      [
+        `${REST_ROOT}/$upload`,
+        `${REST_ROOT}/$upload?$binary=true`,
+        `${REST_ROOT}/$upload?$rawPict=true`,
+      ],
+      input
+    )
   }
 
   // /rest/$singleton → class/function template

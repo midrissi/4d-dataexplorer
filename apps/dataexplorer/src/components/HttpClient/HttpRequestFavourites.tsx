@@ -51,6 +51,7 @@ function FavouriteRequestRow({
   editing,
   onOpen,
   onRemove,
+  onRemoveExcept,
   onEdit,
   onDuplicate,
   onSaveMeta,
@@ -62,6 +63,7 @@ function FavouriteRequestRow({
   editing: boolean
   onOpen: (event: MouseEvent<HTMLButtonElement>) => void
   onRemove: () => void
+  onRemoveExcept: () => void
   onEdit: () => void
   onDuplicate: () => void
   onSaveMeta: (meta: { name?: string; tags?: string[] }) => void
@@ -121,6 +123,7 @@ function FavouriteRequestRow({
       onDuplicate={onDuplicate}
       duplicateLabel={t('favouriteMeta.duplicate')}
       onRemove={onRemove}
+      onRemoveExcept={onRemoveExcept}
       removeLabel={t('httpClient.removeFavourite')}
       removeMode="star"
       onOpen={onOpen}
@@ -193,6 +196,23 @@ export function HttpRequestFavourites({
     onRemoveFavourite(favourite.id)
   }
 
+  const confirmRemoveAllExcept = async (current: HttpRequestFavourite) => {
+    const { path, fullUrl } = httpRequestLabel(current.seed)
+    const label = current.name?.trim() || path || fullUrl
+    const ok = await confirm({
+      title: t('httpClient.keepOnlyRowConfirmTitle'),
+      description: t('httpClient.keepOnlyRowConfirmDescription', { key: label }),
+      confirmText: t('httpClient.keepOnlyRowConfirm'),
+      cancelText: t('common.cancel'),
+      variant: 'destructive',
+    })
+    if (!ok) return
+    if (editingId && editingId !== current.id) setEditingId(null)
+    for (const favourite of favourites) {
+      if (favourite.id !== current.id) onRemoveFavourite(favourite.id)
+    }
+  }
+
   return (
     <>
       <SavedListPanel
@@ -238,6 +258,9 @@ export function HttpRequestFavourites({
               onOpen={(event) => onOpenFavourite(favourite, event)}
               onRemove={() => {
                 void confirmRemove(favourite)
+              }}
+              onRemoveExcept={() => {
+                void confirmRemoveAllExcept(favourite)
               }}
               onEdit={() => setEditingId(favourite.id)}
               onDuplicate={() => {

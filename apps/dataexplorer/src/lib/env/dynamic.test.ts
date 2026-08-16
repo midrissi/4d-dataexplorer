@@ -105,7 +105,7 @@ describe('dynamic env vars', () => {
     expect(result.unresolved).toEqual([])
   })
 
-  it('honors gender options for faker person names', () => {
+  it('honors gender options for faker person names and portraits', () => {
     for (let i = 0; i < 20; i++) {
       const fakerFemale = resolveDynamicEnvVar('$faker.person.firstName', { gender: 'female' })
       const fakerMale = resolveDynamicEnvVar('$faker.person.firstName', { gender: 'male' })
@@ -114,6 +114,9 @@ describe('dynamic env vars', () => {
       expect(fakerFemale?.length).toBeGreaterThan(0)
       expect(fakerMale?.length).toBeGreaterThan(0)
     }
+    expect(resolveDynamicEnvVar('$faker.image.personPortrait', { gender: 'female' })).toContain(
+      '/female/'
+    )
   })
 
   it('honors int between options on faker.number.int', () => {

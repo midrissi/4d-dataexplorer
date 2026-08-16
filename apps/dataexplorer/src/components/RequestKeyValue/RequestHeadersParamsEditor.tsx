@@ -2,8 +2,8 @@ import { cn } from '@4d/ui'
 import { useState } from 'react'
 import { useTranslation } from '~/i18n'
 import {
-  COMMON_CONTENT_TYPES,
   COMMON_REQUEST_HEADERS,
+  headerValueSuggestions,
   REST_QUERY_PARAMS,
   restParamValueSuggestions,
 } from '~/lib/http-client'
@@ -107,7 +107,7 @@ export function RequestHeadersParamsEditor({
             keyPlaceholder={t('httpClient.key')}
             valuePlaceholder={t('httpClient.value')}
             keySuggestions={COMMON_REQUEST_HEADERS}
-            valueSuggestions={COMMON_CONTENT_TYPES}
+            getValueSuggestions={headerValueSuggestions}
             thisRoot={thisRoot}
             addLabel={t('httpClient.addHeader')}
             emptyTitle={t('httpClient.noHeadersRequestTitle')}

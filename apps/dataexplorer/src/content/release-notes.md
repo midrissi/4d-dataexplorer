@@ -19,6 +19,7 @@ Version `1.4.x` adds **environment variables** (globals, profile, and database l
 - **`$this` context** — Call-site object access (`{{$this.firstName}}`, `{{$this.headers.Authorization}}`, `{{$this.methodName}}`, …) for entity forms, HTTP Client, Method Executor, and Query Builder; multi-pass sibling resolve.
 - **Dynamic variables** — Full Faker surface via `{{$faker.module.method}}` (e.g. `{{$faker.person.fullName}}`, `{{$faker.string.uuid}}`), plus clock aliases `{{$timestamp}}` / `{{$isoTimestamp}}`.
 - **Helper templates** — `$pick` / `$sample` / `$unique` / `$repeat` / `$object` / `$vector` (and `$faker.helpers.*`) for lists, JSON objects, and embedding-style float arrays; `count:n`, `count:min,max`, or `count:>=n` / `count:<=n` for dynamic array length; `$vector | dims:n` (optional `normalize`); deep resolve rehydrates exact structured leaves.
+- **Named Lists** — Define global, profile, or database-scoped hardcoded or dataclass-backed `$lists.name` sources; manage them from the footer **Lists** switcher and reuse their values in `$pick`, `$sample`, and `$unique` templates.
 - **Chips & autocomplete** — Known variables highlight as chips; completions cover environment keys, aliases, helpers, and `$faker.*` paths; unresolved keys stay visible as `{{…}}`.
 - **Export / Import** — Share environments as JSON from the editor toolbar.
 - **Terminal API** — `app.environment` helpers plus `.env` / `.envs` dot commands.
@@ -71,17 +72,20 @@ Version `1.4.x` adds **environment variables** (globals, profile, and database l
 - **Analyze** — Distinct values (`$distinct`) and compute cards (`$compute=$all`) for one attribute on the current entity set.
 - **Export / Import** — Extendable formats (JSON, JSON REST, JSONL, CSV, TSV, SQL, XML, YAML, Markdown, HTML); import creates or updates records in the open dataclass.
 - **Anonymize** — Field mapping with Faker templates (including `|` filters), fixed values, keep, or empty; remove fields from the plan so they are omitted from payloads; optional seed; HTTP Client–style preview with auto-detected view mode.
-- **Anonymize actions** — Download anonymized data, import as new records, or overwrite mapped fields on the current entity set (confirmed; `__KEY` / `__STAMP` plus changed fields only).
+- **Image anonymization** — Writable Image attributes accept Faker image templates such as `{{$faker.image.personPortrait | female}}`; generated portraits are fetched, uploaded through `$upload?$rawPict=true`, and replaced by 4D upload IDs before export or write actions.
+- **Anonymize actions** — Download anonymized data, import as new records, or overwrite mapped fields on the current entity set (confirmed; `__KEY` / `__STAMP` plus changed fields only); progress covers fetch, Faker generation, parallel image uploads, and finalization, with cancellation while work is still pending.
 
 #### UX
 
 - **About dialog** — App about information from mobile/desktop chrome.
 - **Panel heights** — Entity list and request panes remember height; console height clamps safely when the viewport size is unknown.
 - **HTTP Client (mobile)** — Responsive request/response summary for narrow screens.
+- **HTTP binary uploads** — Binary-body pickers accept browser and desktop-native drag/drop, infer the selected file’s `Content-Type`, and suggest `/rest/$upload?$rawPict=true` / `$binary=true` endpoints; Content-Type values autocomplete common MIME types.
 - **HTTP Client notifications** — Responses containing `__WEBFORM.__NOTIFICATION` display the same typed notification alert and privilege stamp as Method Executor results.
 - **Console URL decoding** — Optional toggle to decode percent-encoded URLs in the network log for easier reading.
 - **Environment switcher** — Footer control refined for clearer active profile / database selection and Manage access.
 - **Shared request editors** — HTTP Client and Method Executor share the Params/Headers key-value editor for consistent Advanced editing.
+- **Keep-only gesture** — Shift+click a trash action in field mappings, variables, named lists, request history, favourites, or key/value rows to retain that item and remove its siblings after confirmation.
 
 ### Docs
 
