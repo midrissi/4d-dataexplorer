@@ -383,6 +383,34 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
     setDraft((prev) => ({ ...prev, body: { ...prev.body, ...patch } }))
   }
 
+  const setBinaryFile = (file: File) => {
+    const contentType = file.type || 'application/octet-stream'
+    binaryFileRef.current = file
+    setBinaryFileSize(file.size)
+    setDraft((prev) => {
+      const body = {
+        ...prev.body,
+        binaryFileName: file.name,
+        binaryContentType: contentType,
+      }
+      if (contentTypeTouchedRef.current) return { ...prev, body }
+
+      const contentTypeIndex = prev.headers.findIndex(
+        (header) => header.key.toLowerCase() === 'content-type'
+      )
+      const headers =
+        contentTypeIndex >= 0
+          ? prev.headers.map((header, index) =>
+              index === contentTypeIndex ? { ...header, value: contentType, enabled: true } : header
+            )
+          : [
+              ...prev.headers,
+              { id: createHttpId(), key: 'Content-Type', value: contentType, enabled: true },
+            ]
+      return { ...prev, body, headers }
+    })
+  }
+
   const setSettings = (patch: Partial<HttpClientRequestDraft['settings']>) => {
     setDraft((prev) => {
       const settings = { ...prev.settings, ...patch }
@@ -1185,14 +1213,7 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
                         fileName={draft.body.binaryFileName}
                         contentType={draft.body.binaryContentType}
                         fileSize={binaryFileSize}
-                        onPick={(file) => {
-                          binaryFileRef.current = file
-                          setBinaryFileSize(file.size)
-                          setBody({
-                            binaryFileName: file.name,
-                            binaryContentType: file.type || 'application/octet-stream',
-                          })
-                        }}
+                        onPick={setBinaryFile}
                         onClear={() => {
                           binaryFileRef.current = null
                           setBinaryFileSize(undefined)

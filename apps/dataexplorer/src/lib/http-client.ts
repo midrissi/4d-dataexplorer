@@ -237,12 +237,19 @@ export function mergeRestPathSuggestions(
   const seen = new Set<string>()
   const out: string[] = []
   for (const path of [...recentPaths, ...catalogSuggestions]) {
-    const key = path.toLowerCase()
+    const key = suggestionPathKey(path)
     if (seen.has(key)) continue
     seen.add(key)
-    out.push(path)
+    out.push(path.trim())
   }
   return out
+}
+
+/** Canonical key for matching UI path suggestions from catalog and request history. */
+function suggestionPathKey(path: string): string {
+  const trimmed = path.trim()
+  const [pathname, query = ''] = trimmed.split('?', 2)
+  return `${pathname.replace(/\/+$/, '').toLowerCase()}?${query.toLowerCase()}`
 }
 
 /** Keep suggestions that extend `input` (case-insensitive); drop exact matches. */
@@ -381,6 +388,8 @@ export function buildRestPathSuggestions(
       `${REST_ROOT}/$catalog`,
       `${REST_ROOT}/$info`,
       `${REST_ROOT}/$upload`,
+      `${REST_ROOT}/$upload?$binary=true`,
+      `${REST_ROOT}/$upload?$rawPict=true`,
       `${REST_ROOT}/$singleton`,
       ...names.map((name) => `${REST_ROOT}/${name}`),
     ])
@@ -418,9 +427,16 @@ export function buildRestPathSuggestions(
     if (matched.length) return matched
   }
 
-  // /rest/$upload — leaf (use Params for $rawPict / $binary)
+  // /rest/$upload — offer ready-to-use binary and image upload variants.
   if (equalsCI(afterSlash, '$upload') || startsWithCI(afterSlash, '$upload')) {
-    return []
+    return extendingPrefix(
+      [
+        `${REST_ROOT}/$upload`,
+        `${REST_ROOT}/$upload?$binary=true`,
+        `${REST_ROOT}/$upload?$rawPict=true`,
+      ],
+      input
+    )
   }
 
   // /rest/$singleton → class/function template
