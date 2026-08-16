@@ -1,11 +1,19 @@
 import { api } from '~/lib/api'
 import {
   collectInlineListRefs,
+  createPickListValuesCache,
   PICK_LIST_DEFAULT_LIMIT,
   type PickListDistinctLoader,
   stringifyDistinctValue,
 } from '~/lib/env'
+import { getCurrentBaseId } from '~/lib/storage'
 import { useListsStore } from '~/store/lists'
+
+const inlineListValuesCache = createPickListValuesCache()
+
+function inlineListCacheId(ref: { key: string; top?: number; entitySetId?: string }): string {
+  return `${ref.key}\0${ref.top ?? PICK_LIST_DEFAULT_LIMIT}\0${ref.entitySetId ?? ''}`
+}
 
 /** Loader used by ensurePickLists — kept outside the store to avoid api↔store cycles. */
 export const loadPickListDistinctValues: PickListDistinctLoader = async ({
@@ -50,21 +58,22 @@ export async function loadInlineListRefs(
   const refs = collectInlineListRefs(texts)
   if (refs.length === 0) return {}
 
+  const baseId = getCurrentBaseId() ?? ''
   const results = await Promise.allSettled(
     refs.map(async (ref) => {
       const top = ref.top ?? PICK_LIST_DEFAULT_LIMIT
-      const result = await api.getDistinctValues({
-        dataclass: ref.dataclass,
-        attribute: ref.attribute,
-        top,
-        ...(ref.entitySetId ? { entitySetId: ref.entitySetId } : {}),
-      })
-      const values: string[] = []
-      for (const raw of result.values) {
-        const text = stringifyDistinctValue(raw)
-        if (text != null) values.push(text)
-      }
-      return { key: ref.key, values }
+      const result = await inlineListValuesCache.ensure(
+        baseId,
+        inlineListCacheId(ref),
+        {
+          dataclass: ref.dataclass,
+          attribute: ref.attribute,
+          top,
+          ...(ref.entitySetId ? { entitySetId: ref.entitySetId } : {}),
+        },
+        loadPickListDistinctValues
+      )
+      return { key: ref.key, values: result.values }
     })
   )
 

@@ -16,6 +16,40 @@ export type AnonymizeFieldPlan = {
   fixedValue?: string
 }
 
+const ANONYMIZE_FIELD_MODES = new Set<string>(['faker', 'fixed', 'keep', 'empty'])
+
+function isAnonymizeFieldMode(value: unknown): value is AnonymizeFieldMode {
+  return typeof value === 'string' && ANONYMIZE_FIELD_MODES.has(value)
+}
+
+/** Parse a JSON-compatible field plan before applying it to an anonymization run. */
+export function parseAnonymizeFieldPlan(value: unknown): AnonymizeFieldPlan[] | null {
+  if (!Array.isArray(value)) return null
+
+  const names = new Set<string>()
+  const plan: AnonymizeFieldPlan[] = []
+  for (const item of value) {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return null
+    const field = item as Record<string, unknown>
+    const name = typeof field.name === 'string' ? field.name.trim() : ''
+    if (!name || names.has(name)) return null
+    if (!isAnonymizeFieldMode(field.mode)) return null
+    if (field.type !== undefined && typeof field.type !== 'string') return null
+    if (field.fakerKey !== undefined && typeof field.fakerKey !== 'string') return null
+    if (field.fixedValue !== undefined && typeof field.fixedValue !== 'string') return null
+
+    names.add(name)
+    plan.push({
+      name,
+      mode: field.mode,
+      ...(typeof field.type === 'string' ? { type: field.type } : {}),
+      ...(typeof field.fakerKey === 'string' ? { fakerKey: field.fakerKey } : {}),
+      ...(typeof field.fixedValue === 'string' ? { fixedValue: field.fixedValue } : {}),
+    })
+  }
+  return plan
+}
+
 /** Build a single default anonymization mapping for one attribute. */
 export function buildAnonymizeFieldPlan(attr: EntityIoAttribute): AnonymizeFieldPlan {
   const keys = proposeFieldTemplateKeys({ name: attr.name, type: attr.type })
@@ -145,6 +179,33 @@ export function anonymizeEntities(
       lists: options.lists,
     })
   )
+}
+
+/** Anonymize in chunks so callers can render progress for large selections. */
+export async function anonymizeEntitiesWithProgress(
+  entities: Record<string, unknown>[],
+  options: AnonymizeOptions,
+  onProgress: (processed: number, total: number) => void,
+  chunkSize = 100
+): Promise<Record<string, unknown>[]> {
+  const out: Record<string, unknown>[] = []
+  for (let start = 0; start < entities.length; start += chunkSize) {
+    const chunk = entities.slice(start, start + chunkSize)
+    out.push(
+      ...chunk.map((entity, index) =>
+        anonymizeEntity(entity, {
+          plan: options.plan,
+          seed: options.seed != null ? options.seed + start + index : undefined,
+          lists: options.lists,
+        })
+      )
+    )
+    onProgress(out.length, entities.length)
+    if (start + chunk.length < entities.length) {
+      await new Promise<void>((resolve) => setTimeout(resolve, 0))
+    }
+  }
+  return out
 }
 
 /** Keep optimistic-lock keys and only fields changed by the anonymization plan. */

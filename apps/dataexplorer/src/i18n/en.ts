@@ -2071,6 +2071,8 @@ export const en = {
       rowCount: '{count} rows',
       preview: 'Preview',
       progress: 'Fetched {fetched} of {total}',
+      anonymizeProgress: 'Anonymizing {current} of {total}',
+      anonymizeFinalizing: 'Finalizing anonymization',
       continue: 'Continue',
       largeExportTitle: 'Large export',
       largeExportDescription:
@@ -2099,6 +2101,7 @@ export const en = {
       fieldPlanView: 'Field mapping view',
       fieldPlanForm: 'Form',
       fieldPlanJson: 'JSON',
+      fieldPlanJsonInvalid: 'Use a JSON array with unique field names and valid modes.',
       copyFieldPlan: 'Copy plan',
       fieldPlanEmpty:
         'No fields mapped. Add a field or restore defaults. Removed fields are omitted from download, import, and update.',

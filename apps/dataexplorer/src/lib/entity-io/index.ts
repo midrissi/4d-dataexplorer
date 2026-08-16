@@ -3,10 +3,12 @@ export {
   type AnonymizeFieldPlan,
   type AnonymizeOptions,
   anonymizeEntities,
+  anonymizeEntitiesWithProgress,
   anonymizeEntity,
   buildAnonymizeFieldPlan,
   buildDefaultAnonymizePlan,
   listAnonymizeMappableAttributes,
+  parseAnonymizeFieldPlan,
   prepareAnonymizedUpdate,
   stripForCreate,
 } from './anonymize'

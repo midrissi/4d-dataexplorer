@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'bun:test'
 import {
   anonymizeEntities,
+  anonymizeEntitiesWithProgress,
   buildAnonymizeFieldPlan,
   buildDefaultAnonymizePlan,
   detectEntityIoFormat,
   getEntityIoFormat,
   listAnonymizeMappableAttributes,
+  parseAnonymizeFieldPlan,
   prepareAnonymizedUpdate,
   stripForCreate,
   stripSystemFields,
@@ -98,6 +100,30 @@ describe('anonymize', () => {
     { name: 'notes', type: 'string', kind: 'storage' as const, readOnly: true },
   ]
 
+  it('parses valid JSON field plans and rejects malformed entries', () => {
+    expect(
+      parseAnonymizeFieldPlan([
+        {
+          name: 'firstName',
+          type: 'string',
+          mode: 'faker',
+          fakerKey: '{{$faker.person.firstName}}',
+        },
+        { name: 'status', mode: 'fixed', fixedValue: 'Anonymous' },
+      ])
+    ).toEqual([
+      { name: 'firstName', type: 'string', mode: 'faker', fakerKey: '{{$faker.person.firstName}}' },
+      { name: 'status', mode: 'fixed', fixedValue: 'Anonymous' },
+    ])
+    expect(parseAnonymizeFieldPlan([{ name: 'status', mode: 'unknown' }])).toBeNull()
+    expect(
+      parseAnonymizeFieldPlan([
+        { name: 'status', mode: 'keep' },
+        { name: 'status', mode: 'empty' },
+      ])
+    ).toBeNull()
+  })
+
   it('lists mappable attributes and builds single-field plans', () => {
     const mappable = listAnonymizeMappableAttributes(agencyAttrs, 'ID')
     expect(mappable.map((a) => a.name)).toEqual(['firstName', 'email'])
@@ -121,6 +147,22 @@ describe('anonymize', () => {
     expect(entities[0]?.ID).toBe(1)
     expect(entities[0]?.firstName).not.toBe('Secret')
     expect(entities[0]?.email).not.toBe('a@b.com')
+  })
+
+  it('reports progress while anonymizing large selections', async () => {
+    const progress: Array<[number, number]> = []
+    const entities = await anonymizeEntitiesWithProgress(
+      [{ name: 'one' }, { name: 'two' }, { name: 'three' }],
+      { plan: [{ name: 'name', mode: 'fixed', fixedValue: 'Anonymous' }] },
+      (processed, total) => progress.push([processed, total]),
+      2
+    )
+
+    expect(entities.map((entity) => entity.name)).toEqual(['Anonymous', 'Anonymous', 'Anonymous'])
+    expect(progress).toEqual([
+      [2, 3],
+      [3, 3],
+    ])
   })
 
   it('supports Faker filters and fixed values', () => {

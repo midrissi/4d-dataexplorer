@@ -2106,6 +2106,8 @@ export const fr = {
       rowCount: '{count} lignes',
       preview: 'Aperçu',
       progress: 'Chargé {fetched} sur {total}',
+      anonymizeProgress: 'Anonymisation de {current} sur {total}',
+      anonymizeFinalizing: 'Finalisation de l’anonymisation',
       continue: 'Continuer',
       largeExportTitle: 'Export volumineux',
       largeExportDescription:
@@ -2134,6 +2136,8 @@ export const fr = {
       fieldPlanView: 'Vue de la correspondance des champs',
       fieldPlanForm: 'Formulaire',
       fieldPlanJson: 'JSON',
+      fieldPlanJsonInvalid:
+        'Utilisez un tableau JSON avec des noms de champs uniques et des modes valides.',
       copyFieldPlan: 'Copier le plan',
       fieldPlanEmpty:
         'Aucun champ mappé. Ajoutez un champ ou restaurez les défauts. Les champs retirés sont omis du téléchargement, de l’import et de la mise à jour.',

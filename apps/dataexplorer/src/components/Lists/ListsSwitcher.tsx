@@ -10,7 +10,7 @@ import {
   TooltipTrigger,
 } from '@4d/ui'
 import { Database, List, Settings2, UserRound } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from '~/i18n'
 import {
   isDataclassPickList,
@@ -76,7 +76,7 @@ export function ListsSwitcher({
     base: t('lists.switcherScopeBase'),
   }
 
-  const entries = useMemo((): ListEntry[] => {
+  const entries = (() => {
     const scoped = getScopedLists()
     // Collect per-scope entries; the merged view shows base > profile > globals precedence.
     const seen = new Set<string>()
@@ -104,7 +104,7 @@ export function ListsSwitcher({
       .filter((e) => mergedNames.has(e.name))
       .filter((e, i, arr) => arr.findIndex((x) => x.name === e.name) === i)
       .sort((a, b) => a.name.localeCompare(b.name))
-  }, [getScopedLists]) // eslint-disable-line react-hooks/exhaustive-deps
+  })()
 
   const count = entries.length
   const countLabel =

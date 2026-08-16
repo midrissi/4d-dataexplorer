@@ -2099,6 +2099,8 @@ export const es = {
       rowCount: '{count} filas',
       preview: 'Vista previa',
       progress: 'Obtenidos {fetched} de {total}',
+      anonymizeProgress: 'Anonimizando {current} de {total}',
+      anonymizeFinalizing: 'Finalizando la anonimización',
       continue: 'Continuar',
       largeExportTitle: 'Exportación grande',
       largeExportDescription:
@@ -2127,6 +2129,7 @@ export const es = {
       fieldPlanView: 'Vista de la asignación de campos',
       fieldPlanForm: 'Formulario',
       fieldPlanJson: 'JSON',
+      fieldPlanJsonInvalid: 'Use un arreglo JSON con nombres de campo unicos y modos validos.',
       copyFieldPlan: 'Copiar plan',
       fieldPlanEmpty:
         'No hay campos asignados. Añada un campo o restaure los valores por defecto. Los campos eliminados se omiten en la descarga, importación y actualización.',

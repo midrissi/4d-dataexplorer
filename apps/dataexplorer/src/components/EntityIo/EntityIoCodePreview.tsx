@@ -5,10 +5,14 @@ export function EntityIoCodePreview({
   value,
   language,
   height = 160,
+  onChange,
+  onBlur,
 }: {
   value: string
   language: string
   height?: number
+  onChange?: (value: string) => void
+  onBlur?: () => void
 }) {
   const codeEditorPrefs = useCodeEditorPrefs()
   const updateCodeEditorPrefs = useUpdateCodeEditorPrefs()
@@ -17,7 +21,9 @@ export function EntityIoCodePreview({
     <CodeEditor
       value={value}
       language={language}
-      readOnly
+      readOnly={!onChange}
+      onChange={onChange}
+      onBlur={onBlur}
       height={height}
       className="rounded-none border-0"
       editorPrefs={codeEditorPrefs}
