@@ -74,6 +74,9 @@ export const fr = {
     accessKeySessionFailed: "Impossible de se connecter avec la clé d'accès enregistrée.",
     accessKeyAuthRequired: 'Le serveur exige une authentification (401).',
   },
+  errors: {
+    unauthorized: 'Non autorisé',
+  },
   emptyState: {
     title: 'Aucune dataclass trouvée',
     description:

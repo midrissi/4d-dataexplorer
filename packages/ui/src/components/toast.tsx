@@ -102,6 +102,7 @@ export type ToastProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'title'> &
     icon?: React.ReactNode | false
     onClose?: () => void
     closeLabel?: string
+    action?: { label: React.ReactNode; onClick: () => void }
     /** Auto-dismiss duration in ms; shows a progress bar when set. */
     duration?: number
   }
@@ -116,6 +117,7 @@ const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
       icon,
       onClose,
       closeLabel = 'Close',
+      action,
       duration,
       children,
       ...props
@@ -148,6 +150,11 @@ const Toast = React.forwardRef<HTMLDivElement, ToastProps>(
             <p className={cn(toastDescriptionVariants({ variant: resolvedVariant }))}>
               {description}
             </p>
+          ) : null}
+          {action ? (
+            <Button type="button" size="xs" variant="outline" onClick={action.onClick}>
+              {action.label}
+            </Button>
           ) : null}
           {children}
         </div>

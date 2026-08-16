@@ -2,6 +2,7 @@ import { consoleService } from '~/lib/console'
 import { registerNetworkAbort, unregisterNetworkAbort } from '~/lib/network-abort'
 import type { PlatformFetchInit } from '~/lib/platform'
 import type { NetworkDetails } from '~/store/console'
+import { dispatchUnauthorizedResponse } from './unauthorized-response'
 
 const MAX_BODY_BYTES = 64 * 1024
 const REDACTED = '[REDACTED]'
@@ -133,6 +134,34 @@ function isAbortError(error: unknown): boolean {
   )
 }
 
+function unauthorizedMessage(body: unknown, fallback: string): string {
+  if (typeof body === 'string' && body.trim()) return body.trim()
+  if (body && typeof body === 'object') {
+    const response = body as {
+      __ERROR?: unknown
+      ERROR?: unknown
+      error?: unknown
+      errors?: unknown
+      message?: unknown
+    }
+    if (typeof response.message === 'string' && response.message.trim())
+      return response.message.trim()
+    if (typeof response.error === 'string' && response.error.trim()) return response.error.trim()
+    const errors = response.__ERROR ?? response.ERROR ?? response.errors
+    if (Array.isArray(errors)) {
+      const messages = errors.flatMap((error) => {
+        if (typeof error === 'string') return [error]
+        if (error && typeof error === 'object' && typeof error.message === 'string') {
+          return [error.message]
+        }
+        return []
+      })
+      if (messages.length > 0) return messages.join('\n')
+    }
+  }
+  return fallback || 'Unauthorized'
+}
+
 /**
  * `new Request(input, init)` only keeps Fetch `RequestInit` fields. Desktop
  * options (`skipSsl`, timeouts, cookie policy) must be forwarded separately.
@@ -261,6 +290,11 @@ export function createLoggingFetch(inner: typeof fetch): typeof fetch {
             requestBody: requestResult.body,
             responseBody: responseResult.body,
           })
+          if (response.status === 401) {
+            dispatchUnauthorizedResponse(
+              unauthorizedMessage(responseResult.body, response.statusText)
+            )
+          }
         }
       )
 

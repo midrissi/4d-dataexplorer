@@ -1,4 +1,5 @@
 import { AuthenticationError, type RESTClientError } from '@4d/rest'
+import { useToast } from '@4d/ui'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { AccessKeyScreen } from './components/AccessKeyScreen'
 import { DataclassView } from './components/DataclassView'
@@ -14,6 +15,10 @@ import { api, clearCatalogCacheAndStorage, formatThrownError, isTransportError }
 import '~/lib/assistant-llm-configured'
 import { AUTO_COUNT_THRESHOLD } from './lib/dataclass-counts'
 import { getConnectionStoreAPI, isDesktop, isMobileShell } from './lib/platform'
+import {
+  UNAUTHORIZED_RESPONSE_EVENT,
+  type UnauthorizedResponseDetail,
+} from './lib/unauthorized-response'
 import { KeyboardShortcutsProvider } from './providers/KeyboardShortcutsProvider'
 import { ShortcutController } from './providers/ShortcutController'
 import { ThemeProvider } from './providers/ThemeProvider'
@@ -31,6 +36,7 @@ type AppContentProps = {
 
 function AppContent({ onDisconnect, onSwitchConnection, onEditConnection }: AppContentProps) {
   const { t } = useTranslation()
+  const toast = useToast()
   const [appState, setAppState] = useState<AppState>('loading')
   const [loadingSteps, setLoadingSteps] = useState<LoadingStep[]>([
     { id: 'catalog', label: t('loading.connecting'), status: 'pending' },
@@ -195,6 +201,26 @@ function AppContent({ onDisconnect, onSwitchConnection, onEditConnection }: AppC
     },
     [initializeApp, persistAccessKey]
   )
+
+  useEffect(() => {
+    const showUnauthorizedToast = (event: Event) => {
+      if (appState !== 'ready') return
+      const { message } = (event as CustomEvent<UnauthorizedResponseDetail>).detail
+      toast({
+        id: 'unauthorized-response',
+        title: t('errors.unauthorized'),
+        description: message,
+        variant: 'destructive',
+        duration: 0,
+        action: {
+          label: t('desktopMenu.reload'),
+          onClick: () => window.location.reload(),
+        },
+      })
+    }
+    window.addEventListener(UNAUTHORIZED_RESPONSE_EVENT, showUnauthorizedToast)
+    return () => window.removeEventListener(UNAUTHORIZED_RESPONSE_EVENT, showUnauthorizedToast)
+  }, [appState, t, toast])
 
   // Initialize on mount
   useEffect(() => {

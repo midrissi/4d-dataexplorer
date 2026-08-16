@@ -21,6 +21,7 @@ export type ToastInput = {
   icon?: ToastProps['icon']
   duration?: number
   closeLabel?: string
+  action?: ToastProps['action']
 }
 
 type ToastRecord = ToastInput & {
@@ -137,6 +138,7 @@ export function ToastProvider({
                   icon={item.icon}
                   duration={item.duration}
                   closeLabel={item.closeLabel ?? closeLabel}
+                  action={item.action}
                   onClose={() => dismiss(item.id)}
                 />
               ))}

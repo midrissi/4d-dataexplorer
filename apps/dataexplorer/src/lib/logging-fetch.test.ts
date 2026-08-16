@@ -2,6 +2,10 @@ import { beforeEach, describe, expect, it, mock } from 'bun:test'
 import { useConsoleStore } from '~/store/console'
 import { createLoggingFetch } from './logging-fetch'
 import { hasNetworkAbort } from './network-abort'
+import {
+  UNAUTHORIZED_RESPONSE_EVENT,
+  type UnauthorizedResponseDetail,
+} from './unauthorized-response'
 
 async function flushBodyLogging(): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 0))
@@ -124,6 +128,34 @@ describe('createLoggingFetch', () => {
     await flushBodyLogging()
 
     expect(useConsoleStore.getState().entries[0]?.network?.responseSizeBytes).toBe(2048)
+  })
+
+  it('emits the returned error when a response is unauthorized', async () => {
+    const messages: string[] = []
+    const listener = (event: Event) => {
+      messages.push((event as CustomEvent<UnauthorizedResponseDetail>).detail.message)
+    }
+    window.addEventListener(UNAUTHORIZED_RESPONSE_EVENT, listener)
+
+    try {
+      const inner = mock(() =>
+        Promise.resolve(
+          new Response(JSON.stringify({ __ERROR: [{ message: 'bad key' }] }), {
+            status: 401,
+            statusText: 'Unauthorized',
+            headers: { 'Content-Type': 'application/json' },
+          })
+        )
+      ) as unknown as typeof fetch
+
+      const response = await createLoggingFetch(inner)('https://example.test/rest/items')
+      await flushBodyLogging()
+
+      expect(response.status).toBe(401)
+      expect(messages).toEqual(['bad key'])
+    } finally {
+      window.removeEventListener(UNAUTHORIZED_RESPONSE_EVENT, listener)
+    }
   })
 
   it('logs failed requests and rethrows the original error', async () => {

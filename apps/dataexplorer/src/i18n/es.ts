@@ -74,6 +74,9 @@ export const es = {
     accessKeySessionFailed: 'No se pudo iniciar sesión con la clave de acceso guardada.',
     accessKeyAuthRequired: 'El servidor requiere autenticación (401).',
   },
+  errors: {
+    unauthorized: 'No autorizado',
+  },
   emptyState: {
     title: 'No se encontraron dataclasses',
     description:

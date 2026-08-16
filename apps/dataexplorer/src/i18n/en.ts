@@ -69,6 +69,9 @@ export const en = {
     accessKeySessionFailed: 'Could not sign in with the saved access key.',
     accessKeyAuthRequired: 'The server requires authentication (401).',
   },
+  errors: {
+    unauthorized: 'Unauthorized',
+  },
   emptyState: {
     title: 'No Dataclasses Found',
     description:
