@@ -6,11 +6,13 @@ import {
   buildDefaultAnonymizePlan,
   detectEntityIoFormat,
   getEntityIoFormat,
+  IMAGE_UPLOAD_CONCURRENCY,
   listAnonymizeMappableAttributes,
   parseAnonymizeFieldPlan,
   prepareAnonymizedUpdate,
   stripForCreate,
   stripSystemFields,
+  uploadAnonymizedImages,
 } from './index'
 import type { EntityIoFormat, EntityIoFormatId } from './types'
 
@@ -133,6 +135,109 @@ describe('anonymize', () => {
     const plan = buildAnonymizeFieldPlan(first)
     expect(plan.name).toBe('firstName')
     expect(plan.mode).toBe('faker')
+  })
+
+  it('includes writable image attributes in anonymization mappings', () => {
+    const mappable = listAnonymizeMappableAttributes(
+      [...agencyAttrs, { name: 'portrait', type: 'image', kind: 'storage' as const }],
+      'ID'
+    )
+    expect(mappable.map((attribute) => attribute.name)).toContain('portrait')
+    const portrait = mappable.find((attribute) => attribute.name === 'portrait')
+    expect(portrait).toBeDefined()
+    if (!portrait) return
+    expect(buildAnonymizeFieldPlan(portrait).fakerKey).toContain('$faker.image')
+  })
+
+  it('uploads generated image URLs and replaces them with 4D upload IDs', async () => {
+    const uploaded: File[] = []
+    const progress: Array<[number, number]> = []
+    const rows = await uploadAnonymizedImages(
+      [{ portrait: 'https://images.example.test/portrait.jpg' }],
+      [
+        {
+          name: 'portrait',
+          type: 'image',
+          mode: 'faker',
+          fakerKey: '{{$faker.image.personPortrait}}',
+        },
+      ],
+      async (file) => {
+        uploaded.push(file)
+        return { ID: 'IMAGE-UPLOAD-ID' }
+      },
+      (current, total) => progress.push([current, total]),
+      async () => new Response(new Blob(['image'], { type: 'image/jpeg' }), { status: 200 })
+    )
+
+    expect(uploaded[0]?.name).toBe('portrait.jpg')
+    expect(uploaded[0]?.type).toBe('image/jpeg')
+    expect(rows[0]?.portrait).toEqual({ ID: 'IMAGE-UPLOAD-ID' })
+    expect(progress).toEqual([[1, 1]])
+  })
+
+  it('uploads generated images with bounded concurrency', async () => {
+    let inFlight = 0
+    let maxInFlight = 0
+    let release: (() => void) | undefined
+    const gate = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    const rows = [
+      { portrait: 'https://images.test/1.png' },
+      { portrait: 'https://images.test/2.png' },
+      { portrait: 'https://images.test/3.png' },
+    ]
+    const upload = uploadAnonymizedImages(
+      rows,
+      [{ name: 'portrait', type: 'image', mode: 'faker', fakerKey: '{{$faker.image.avatar}}' }],
+      async (file) => ({ ID: file.name }),
+      () => {},
+      async () => {
+        inFlight += 1
+        maxInFlight = Math.max(maxInFlight, inFlight)
+        await gate
+        inFlight -= 1
+        return new Response(new Blob(['image'], { type: 'image/png' }), { status: 200 })
+      },
+      2
+    )
+
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(maxInFlight).toBe(2)
+    release?.()
+    await upload
+    expect(rows.every((row) => typeof row.portrait === 'object')).toBe(true)
+    expect(IMAGE_UPLOAD_CONCURRENCY).toBeGreaterThan(1)
+  })
+
+  it('stops image upload work when anonymization is cancelled', async () => {
+    const controller = new AbortController()
+    controller.abort()
+    let fetchCalls = 0
+    let uploadCalls = 0
+
+    await expect(
+      uploadAnonymizedImages(
+        [{ portrait: 'https://images.test/portrait.png' }],
+        [{ name: 'portrait', type: 'image', mode: 'faker', fakerKey: '{{$faker.image.avatar}}' }],
+        async () => {
+          uploadCalls += 1
+          return { ID: 'unused' }
+        },
+        () => {},
+        async () => {
+          fetchCalls += 1
+          return new Response()
+        },
+        1,
+        controller.signal
+      )
+    ).rejects.toMatchObject({ name: 'AbortError' })
+
+    expect(fetchCalls).toBe(0)
+    expect(uploadCalls).toBe(0)
   })
 
   it('skips primary key and replaces mapped fields', () => {

@@ -12,6 +12,7 @@ import {
   formatHttpClientNetworkError,
   formatResponseBody,
   getDesktopHttpUserAgent,
+  headerValueSuggestions,
   inferRawContentType,
   listHttpBuiltInHeaders,
   mergeRestPathSuggestions,
@@ -115,6 +116,12 @@ describe('http-client helpers', () => {
     expect(inferRawContentType('custom', 'application/vnd.api+json')).toBe(
       'application/vnd.api+json'
     )
+  })
+
+  it('suggests MIME values only for Content-Type headers', () => {
+    expect(headerValueSuggestions('Content-Type')).toContain('image/png')
+    expect(headerValueSuggestions(' content-type ')).toContain('application/json')
+    expect(headerValueSuggestions('Accept')).toEqual([])
   })
 
   it('proposes progressive REST path chunks', () => {

@@ -61,6 +61,7 @@ import {
   draftToHttpSeed,
   executeHttpRequest,
   type HttpClientRequestDraft,
+  headerValueSuggestions,
   inferRawContentType,
   joinOriginAndPath,
   listHttpBuiltInHeaders,
@@ -1035,7 +1036,7 @@ export function HttpClient({ tabId, seed }: { tabId: string; seed?: HttpClientSe
                         keyPlaceholder={t('httpClient.headerName')}
                         valuePlaceholder={t('httpClient.headerValue')}
                         keySuggestions={COMMON_REQUEST_HEADERS}
-                        valueSuggestions={COMMON_CONTENT_TYPES}
+                        getValueSuggestions={headerValueSuggestions}
                         thisRoot={buildHttpThis(draft)}
                         addLabel={t('httpClient.addHeader')}
                         emptyTitle={t('httpClient.noHeadersRequestTitle')}

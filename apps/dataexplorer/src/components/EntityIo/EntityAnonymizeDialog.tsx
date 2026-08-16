@@ -37,7 +37,7 @@ import {
   Upload,
   WandSparkles,
 } from 'lucide-react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { type TextPreviewMode, TextPreviewPanel } from '~/components/HttpClient/TextPreviewPanel'
 import { useTranslation } from '~/i18n'
 import { api } from '~/lib/api'
@@ -53,11 +53,13 @@ import {
   type EntityIoAttribute,
   type EntityIoFormatId,
   getEntityIoFormat,
+  isImageAnonymizeField,
   listAnonymizeMappableAttributes,
   listExportFormats,
   parseAnonymizeFieldPlan,
   prepareAnonymizedUpdate,
   stripForCreate,
+  uploadAnonymizedImages,
 } from '~/lib/entity-io'
 import {
   collectInlineListRefs,
@@ -149,6 +151,7 @@ export function EntityAnonymizeDialog({
   const [sampleRows, setSampleRows] = useState<Record<string, unknown>[]>([])
   const [busy, setBusy] = useState(false)
   const [progress, setProgress] = useState<AnonymizeProgress | null>(null)
+  const abortRef = useRef<AbortController | null>(null)
   const [loading, setLoading] = useState(false)
   const [listsReady, setListsReady] = useState<Record<string, readonly string[]>>({})
 
@@ -346,6 +349,20 @@ export function EntityAnonymizeDialog({
     setPlan((prev) => prev.filter((f) => f.name !== name))
   }, [])
 
+  const removeAllFieldsExcept = useCallback(
+    async (name: string) => {
+      const ok = await confirm({
+        title: t('entity.io.keepOnlyFieldConfirmTitle'),
+        description: t('entity.io.keepOnlyFieldConfirmDescription', { field: name }),
+        confirmText: t('entity.io.keepOnlyFieldConfirm'),
+        cancelText: t('entity.cancel'),
+        variant: 'destructive',
+      })
+      if (ok) setPlan((prev) => prev.filter((field) => field.name === name))
+    },
+    [confirm, t]
+  )
+
   const addField = useCallback(
     (attrName: string) => {
       setPlan((prev) => {
@@ -455,7 +472,7 @@ export function EntityAnonymizeDialog({
       .trimEnd()
   }, [preview, formatId, primaryKey, dataclassName, plan])
 
-  const fetchAnonymized = async () => {
+  const fetchAnonymized = async (signal: AbortSignal) => {
     if (!target?.entitySetId?.trim()) throw new Error(t('entity.deleteManySelectionUnavailable'))
     const ensured = await ensureReferencedLists()
     if (!ensured.ok) {
@@ -470,34 +487,61 @@ export function EntityAnonymizeDialog({
       dataclass: target.dataclassName,
       entitySetId: target.entitySetId,
       onProgress: (current, total) => setProgress({ phase: 'fetching', current, total }),
+      signal,
     })
     const seedNum = seed.trim() ? Number(seed) : undefined
     const entities = fetched.entities as Record<string, unknown>[]
     setProgress({ phase: 'anonymizing', current: 0, total: entities.length })
-    return anonymizeEntitiesWithProgress(
+    const anonymized = await anonymizeEntitiesWithProgress(
       entities,
       {
         plan,
         seed: Number.isFinite(seedNum) ? seedNum : undefined,
         lists: ensured.lists,
       },
-      (current, total) => setProgress({ phase: 'anonymizing', current, total })
+      (current, total) => setProgress({ phase: 'anonymizing', current, total }),
+      100,
+      signal
+    )
+    const imageCount = plan.filter(isImageAnonymizeField).length
+    if (imageCount === 0) return anonymized
+    setProgress({ phase: 'uploading', current: 0, total: entities.length * imageCount })
+    return uploadAnonymizedImages(
+      anonymized,
+      plan,
+      (file) => api.uploadFile(file, true, signal),
+      (current, total) => setProgress({ phase: 'uploading', current, total }),
+      (url) => fetch(url, { signal }),
+      undefined,
+      signal
     )
   }
 
-  const showFinalizingProgress = async () => {
+  const cancelAnonymization = useCallback(() => {
+    abortRef.current?.abort()
+  }, [])
+
+  const wasCancelled = (error: unknown) =>
+    (error instanceof DOMException && error.name === 'AbortError') ||
+    (error instanceof Error && error.name === 'AbortError')
+
+  const showFinalizingProgress = async (signal: AbortSignal) => {
+    if (signal.aborted) throw new DOMException('Anonymization cancelled', 'AbortError')
     setProgress({ phase: 'finalizing' })
     await new Promise<void>((resolve) => setTimeout(resolve, 0))
+    if (signal.aborted) throw new DOMException('Anonymization cancelled', 'AbortError')
   }
 
   const handleDownload = async () => {
     if (!target) return
     const format = getEntityIoFormat(formatId)
     if (!format) return
+    const controller = new AbortController()
+    abortRef.current = controller
     setBusy(true)
     try {
-      const rows = await fetchAnonymized()
-      await showFinalizingProgress()
+      const rows = await fetchAnonymized(controller.signal)
+      await showFinalizingProgress(controller.signal)
       const text = format.serialize(
         rows.map((r) => stripForCreate(r, primaryKey, plan)),
         {
@@ -515,12 +559,14 @@ export function EntityAnonymizeDialog({
         description: t('entity.io.exportDoneDescription', { count: rows.length, filename }),
       })
     } catch (err) {
+      if (wasCancelled(err)) return
       toast({
         title: t('entity.io.anonymizeFailed'),
         description: err instanceof Error ? err.message : String(err),
         variant: 'destructive',
       })
     } finally {
+      if (abortRef.current === controller) abortRef.current = null
       setBusy(false)
       setProgress(null)
     }
@@ -548,10 +594,12 @@ export function EntityAnonymizeDialog({
     })
     if (!ok) return
 
+    const controller = new AbortController()
+    abortRef.current = controller
     setBusy(true)
     try {
-      const rows = await fetchAnonymized()
-      await showFinalizingProgress()
+      const rows = await fetchAnonymized(controller.signal)
+      await showFinalizingProgress(controller.signal)
       const prepared = rows.map((r) => stripForCreate(r, primaryKey, plan))
       if (removeExisting) {
         await api.deleteManyEntities(target.dataclassName)
@@ -564,12 +612,14 @@ export function EntityAnonymizeDialog({
       eventBus.emit('refresh-view')
       onOpenChange(false)
     } catch (err) {
+      if (wasCancelled(err)) return
       toast({
         title: t('entity.io.anonymizeFailed'),
         description: err instanceof Error ? err.message : String(err),
         variant: 'destructive',
       })
     } finally {
+      if (abortRef.current === controller) abortRef.current = null
       setBusy(false)
       setProgress(null)
     }
@@ -588,10 +638,12 @@ export function EntityAnonymizeDialog({
     })
     if (!ok) return
 
+    const controller = new AbortController()
+    abortRef.current = controller
     setBusy(true)
     try {
-      const rows = await fetchAnonymized()
-      await showFinalizingProgress()
+      const rows = await fetchAnonymized(controller.signal)
+      await showFinalizingProgress(controller.signal)
       const prepared = rows.map((row) => prepareAnonymizedUpdate(row, plan))
       const missing = prepared.filter((row) => row.__KEY == null || row.__STAMP == null)
       if (missing.length > 0) {
@@ -605,12 +657,14 @@ export function EntityAnonymizeDialog({
       eventBus.emit('refresh-view')
       onOpenChange(false)
     } catch (err) {
+      if (wasCancelled(err)) return
       toast({
         title: t('entity.io.anonymizeFailed'),
         description: err instanceof Error ? err.message : String(err),
         variant: 'destructive',
       })
     } finally {
+      if (abortRef.current === controller) abortRef.current = null
       setBusy(false)
       setProgress(null)
     }
@@ -628,7 +682,9 @@ export function EntityAnonymizeDialog({
           footer={
             <>
               <div className="min-w-0 flex-1">
-                {progress ? <EntityIoAnonymizeProgress progress={progress} /> : null}
+                {progress ? (
+                  <EntityIoAnonymizeProgress progress={progress} onCancel={cancelAnonymization} />
+                ) : null}
               </div>
               <div className="ml-auto flex shrink-0 items-center gap-1.5">
                 <Button
@@ -880,23 +936,29 @@ export function EntityAnonymizeDialog({
             ) : plan.length === 0 ? (
               <p className="p-2 text-muted-foreground text-xs">{t('entity.io.fieldPlanEmpty')}</p>
             ) : (
-              plan.map((field) => (
-                <AnonymizeFieldRow
-                  key={field.name}
-                  field={field}
-                  fieldOptions={fieldOptionsFor(field.name)}
-                  modeOptions={modeOptions}
-                  fieldLabel={t('entity.io.fieldName')}
-                  modeLabel={t('entity.io.importMode')}
-                  removeLabel={t('entity.io.removeField')}
-                  thisRoot={anonymizeThisRoot}
-                  lists={anonymizeLists}
-                  listNames={anonymizeListNames}
-                  onFieldNameChange={replaceField}
-                  onChange={updateField}
-                  onRemove={removeField}
-                />
-              ))
+              <>
+                {plan.map((field) => (
+                  <AnonymizeFieldRow
+                    key={field.name}
+                    field={field}
+                    fieldOptions={fieldOptionsFor(field.name)}
+                    modeOptions={modeOptions}
+                    fieldLabel={t('entity.io.fieldName')}
+                    modeLabel={t('entity.io.importMode')}
+                    removeLabel={t('entity.io.removeField')}
+                    thisRoot={anonymizeThisRoot}
+                    lists={anonymizeLists}
+                    listNames={anonymizeListNames}
+                    onFieldNameChange={replaceField}
+                    onChange={updateField}
+                    onRemove={removeField}
+                    onRemoveExcept={(name) => void removeAllFieldsExcept(name)}
+                  />
+                ))}
+                <p className="border-border/50 border-t px-2 py-1.5 text-muted-foreground text-xs">
+                  {t('entity.io.fieldPlanKeepOnlyHint')}
+                </p>
+              </>
             )}
           </EntityIoPanel>
 

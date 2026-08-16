@@ -126,15 +126,32 @@ export const COMMON_REQUEST_HEADERS = [
 
 export const COMMON_CONTENT_TYPES = [
   'application/json',
+  'application/ld+json',
+  'application/pdf',
   'application/xml',
   'application/x-www-form-urlencoded',
+  'application/zip',
   'multipart/form-data',
   'text/plain',
   'text/html',
   'text/xml',
+  'text/css',
+  'text/csv',
   'application/javascript',
+  'image/png',
+  'image/jpeg',
+  'image/gif',
+  'image/webp',
+  'image/svg+xml',
+  'audio/mpeg',
+  'video/mp4',
   'application/octet-stream',
 ] as const
+
+/** MIME completions are relevant only for a `Content-Type` request header. */
+export function headerValueSuggestions(key: string): readonly string[] {
+  return key.trim().toLowerCase() === 'content-type' ? COMMON_CONTENT_TYPES : []
+}
 
 /**
  * Progressive 4D REST path autocomplete — only the next path chunk.

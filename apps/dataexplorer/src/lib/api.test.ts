@@ -511,10 +511,15 @@ describe('lib/api', () => {
       })
       ;(globalThis as { fetch: typeof fetch }).fetch = mockFetch as unknown as typeof fetch
 
-      const file = new File(['content'], 'test.png', { type: 'image/png' })
+      const file = new File(['content'], 'test.jpg', { type: 'image/jpeg' })
       const result = await api.uploadFile(file, true)
       expect(result).toEqual({ ID: 'upload-123' })
       expect(mockFetch).toHaveBeenCalledTimes(1)
+      const uploadRequest = mockFetch.mock.calls[0]?.[0]
+      const uploadInit = mockFetch.mock.calls[0]?.[1]
+      const request =
+        uploadRequest instanceof Request ? uploadRequest : new Request(uploadRequest, uploadInit)
+      expect(request.headers.get('content-type')).toBe('image/jpeg')
 
       ;(globalThis as { fetch: typeof fetch }).fetch = originalFetch
     })

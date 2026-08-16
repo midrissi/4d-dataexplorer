@@ -29,6 +29,8 @@
 }
 
 .entity-io-anonymize-progress__label {
+  display: flex;
+  gap: 0.35rem;
   overflow: hidden;
   color: var(--muted-foreground);
   font-size: 0.6875rem;
@@ -36,6 +38,11 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   animation: entity-io-anonymize-progress-label 180ms ease-out;
+}
+
+.entity-io-anonymize-progress__count {
+  flex: none;
+  font-variant-numeric: tabular-nums;
 }
 
 .entity-io-anonymize-progress__track {

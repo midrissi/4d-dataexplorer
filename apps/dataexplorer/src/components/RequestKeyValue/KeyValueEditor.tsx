@@ -1,4 +1,4 @@
-import { Button, Checkbox, cn } from '@4d/ui'
+import { Button, Checkbox, cn, useConfirm } from '@4d/ui'
 import {
   closestCenter,
   DndContext,
@@ -43,6 +43,7 @@ function SortableKeyValueRow({
   thisRoot,
   onUpdate,
   onRemove,
+  onRemoveExcept,
 }: {
   pair: HttpKeyValuePair
   index: number
@@ -56,6 +57,7 @@ function SortableKeyValueRow({
   thisRoot?: unknown
   onUpdate: (index: number, patch: Partial<HttpKeyValuePair>) => void
   onRemove: (index: number) => void
+  onRemoveExcept: (index: number) => void
 }) {
   const { t } = useTranslation()
   const envField = useTemplatedEnvFieldProps({ thisRoot })
@@ -142,7 +144,13 @@ function SortableKeyValueRow({
           variant="ghost"
           size="icon"
           className="h-7 w-7 text-muted-foreground opacity-0 transition-opacity hover:text-destructive focus-visible:opacity-100 group-focus-within:opacity-100 group-hover:opacity-100"
-          onClick={() => onRemove(index)}
+          onClick={(event) => {
+            if (event.shiftKey) {
+              onRemoveExcept(index)
+              return
+            }
+            onRemove(index)
+          }}
           aria-label={t('httpClient.removeRow')}
         >
           <Trash2 className="h-3.5 w-3.5" />
@@ -185,6 +193,7 @@ export function KeyValueEditor({
   emptyDescription?: string
 }) {
   const { t } = useTranslation()
+  const { confirm, ConfirmDialog } = useConfirm()
   const [forceTextById, setForceTextById] = useState<Record<string, boolean>>({})
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -217,6 +226,18 @@ export function KeyValueEditor({
 
   const remove = (index: number) => {
     onChange(pairs.filter((_, i) => i !== index))
+  }
+
+  const removeAllExcept = async (index: number) => {
+    const key = pairs[index]?.key || t('httpClient.value')
+    const ok = await confirm({
+      title: t('httpClient.keepOnlyRowConfirmTitle'),
+      description: t('httpClient.keepOnlyRowConfirmDescription', { key }),
+      confirmText: t('httpClient.keepOnlyRowConfirm'),
+      cancelText: t('entity.cancel'),
+      variant: 'destructive',
+    })
+    if (ok) onChange(pairs.filter((_, itemIndex) => itemIndex === index))
   }
 
   const add = () => {
@@ -289,6 +310,7 @@ export function KeyValueEditor({
                   thisRoot={thisRoot}
                   onUpdate={update}
                   onRemove={remove}
+                  onRemoveExcept={(index) => void removeAllExcept(index)}
                 />
               ))}
             </SortableContext>
@@ -301,6 +323,7 @@ export function KeyValueEditor({
           {addLabel}
         </Button>
       ) : null}
+      <ConfirmDialog />
     </div>
   )
 }
