@@ -148,10 +148,12 @@ function VariableRow({
   row,
   onChange,
   onRemove,
+  onRemoveExcept,
 }: {
   row: EnvVariable
   onChange: (patch: Partial<EnvVariable>) => void
   onRemove: () => void
+  onRemoveExcept: () => void
 }) {
   const { t } = useTranslation()
   const ValueInput = row.type === 'secret' ? PasswordInput : Input
@@ -218,7 +220,13 @@ function VariableRow({
         variant="ghost"
         size="icon"
         className="h-5 w-5 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-focus-within:opacity-100 group-hover:opacity-100"
-        onClick={onRemove}
+        onClick={(event) => {
+          if (event.shiftKey) {
+            onRemoveExcept()
+            return
+          }
+          onRemove()
+        }}
         aria-label={t('environments.removeVariable')}
       >
         <Trash2 className="h-3 w-3" />
@@ -239,6 +247,7 @@ function VariablesList({
   emptyDescription: string
 }) {
   const { t } = useTranslation()
+  const { confirm, ConfirmDialog } = useConfirm()
   const focusKeyForIdRef = useRef<string | null>(null)
 
   const addVariable = () => {
@@ -264,58 +273,77 @@ function VariablesList({
     onChange(variables.map((row, i) => (i === index ? { ...row, ...patch } : row)))
   }
 
+  const removeAllExcept = async (index: number) => {
+    const key = variables[index]?.key.trim() || t('environments.variablePlaceholder')
+    const ok = await confirm({
+      title: t('environments.keepOnlyVariableConfirmTitle'),
+      description: t('environments.keepOnlyVariableConfirmDescription', { key }),
+      confirmText: t('environments.keepOnlyVariableConfirm'),
+      cancelText: t('entity.cancel'),
+      variant: 'destructive',
+    })
+    if (ok) onChange(variables.filter((_, itemIndex) => itemIndex === index))
+  }
+
   if (variables.length === 0) {
     return (
-      <div className="p-2">
-        <AppEmptyPanel
-          icon={Variable}
-          badgeTone="muted"
-          title={emptyTitle}
-          description={emptyDescription}
-          ghost="rows"
-          bordered
-          size="sm"
-          action={
-            <EmptyPanelAction icon={Plus} onClick={addVariable}>
-              {t('environments.addVariable')}
-            </EmptyPanelAction>
-          }
-        />
-      </div>
+      <>
+        <div className="p-2">
+          <AppEmptyPanel
+            icon={Variable}
+            badgeTone="muted"
+            title={emptyTitle}
+            description={emptyDescription}
+            ghost="rows"
+            bordered
+            size="sm"
+            action={
+              <EmptyPanelAction icon={Plus} onClick={addVariable}>
+                {t('environments.addVariable')}
+              </EmptyPanelAction>
+            }
+          />
+        </div>
+        <ConfirmDialog />
+      </>
     )
   }
 
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-background/40">
-      <div className="sticky top-0 z-10 grid grid-cols-[1.5rem_minmax(7rem,0.9fr)_minmax(0,1fr)_minmax(0,1fr)_5.5rem_1.75rem] gap-1 border-border/60 border-b bg-muted/25 px-2 py-1 text-[10px] text-muted-foreground">
-        <span />
-        <span>{t('environments.variable')}</span>
-        <span>{t('environments.initialValue')}</span>
-        <span>{t('environments.currentValue')}</span>
-        <span>{t('environments.type')}</span>
-        <span />
+    <>
+      <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-background/40">
+        <div className="sticky top-0 z-10 grid grid-cols-[1.5rem_minmax(7rem,0.9fr)_minmax(0,1fr)_minmax(0,1fr)_5.5rem_1.75rem] gap-1 border-border/60 border-b bg-muted/25 px-2 py-1 text-[10px] text-muted-foreground">
+          <span />
+          <span>{t('environments.variable')}</span>
+          <span>{t('environments.initialValue')}</span>
+          <span>{t('environments.currentValue')}</span>
+          <span>{t('environments.type')}</span>
+          <span />
+        </div>
+        {variables.map((row, index) => (
+          <VariableRow
+            key={row.id}
+            row={row}
+            onChange={(patch) => updateRow(index, patch)}
+            onRemove={() => onChange(variables.filter((_, i) => i !== index))}
+            onRemoveExcept={() => void removeAllExcept(index)}
+          />
+        ))}
+        <div className="border-border/50 border-t px-2 py-1.5">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-6 px-2 text-[11px] text-muted-foreground"
+            onClick={addVariable}
+          >
+            <Plus className="mr-1 h-3.5 w-3.5" />
+            {t('environments.addVariable')}
+          </Button>
+        </div>
       </div>
-      {variables.map((row, index) => (
-        <VariableRow
-          key={row.id}
-          row={row}
-          onChange={(patch) => updateRow(index, patch)}
-          onRemove={() => onChange(variables.filter((_, i) => i !== index))}
-        />
-      ))}
-      <div className="border-border/50 border-t px-2 py-1.5">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-6 px-2 text-[11px] text-muted-foreground"
-          onClick={addVariable}
-        >
-          <Plus className="mr-1 h-3.5 w-3.5" />
-          {t('environments.addVariable')}
-        </Button>
-      </div>
-    </div>
+      <ConfirmDialog />
+    </>
   )
 }
 

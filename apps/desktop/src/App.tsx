@@ -4,6 +4,7 @@ import DataExplorerApp from '~/App'
 import { AboutDialog } from '~/components/AboutDialog'
 import { useTranslation } from '~/i18n'
 import { reconfigureClient } from '~/lib/api'
+import { emitDesktopFileDragState, emitDesktopFileDrop } from '~/lib/desktop-file-drop'
 import { registerDownloadBytes } from '~/lib/download-bytes'
 import {
   importHttpJarCookiesIfNeeded,
@@ -76,6 +77,42 @@ export function DesktopApp() {
     return () => {
       cancelled = true
       cancelAnimationFrame(raf)
+    }
+  }, [])
+
+  // Native macOS WebView drops expose file paths instead of browser File objects.
+  // Convert the first dropped path to bytes and forward it to mounted shared drop zones.
+  useEffect(() => {
+    let unlisten: (() => void) | undefined
+    let cancelled = false
+    void Promise.all([import('@tauri-apps/api/window'), import('@tauri-apps/plugin-fs')]).then(
+      async ([{ getCurrentWindow }, { readFile }]) => {
+        if (cancelled) return
+        unlisten = await getCurrentWindow().onDragDropEvent(async (event) => {
+          if (event.payload.type === 'enter' || event.payload.type === 'over') {
+            emitDesktopFileDragState(true)
+            return
+          }
+          if (event.payload.type === 'leave') {
+            emitDesktopFileDragState(false)
+            return
+          }
+          emitDesktopFileDragState(false)
+          const path = event.payload.paths[0]
+          if (!path) return
+          try {
+            const bytes = await readFile(path)
+            const name = path.split(/[\\/]/).pop() || 'dropped-file'
+            emitDesktopFileDrop({ name, bytes })
+          } catch {
+            // Native file access may be denied outside the configured filesystem scope.
+          }
+        })
+      }
+    )
+    return () => {
+      cancelled = true
+      unlisten?.()
     }
   }, [])
 

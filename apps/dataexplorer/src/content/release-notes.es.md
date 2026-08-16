@@ -19,6 +19,7 @@ La versión `1.4.x` añade **variables de entorno** (capas globales, perfil y ba
 - **Contexto `$this`** — Acceso al objeto de ejecución (`{{$this.firstName}}`, `{{$this.headers.Authorization}}`, `{{$this.methodName}}`, …) en formularios de entidad, Cliente HTTP, Ejecutor de métodos y Query Builder; resolución multipase entre campos hermanos.
 - **Variables dinámicas** — Superficie Faker completa vía `{{$faker.module.method}}` (p. ej. `{{$faker.person.fullName}}`, `{{$faker.string.uuid}}`), más alias de reloj `{{$timestamp}}` / `{{$isoTimestamp}}`.
 - **Plantillas helper** — `$pick` / `$sample` / `$unique` / `$repeat` / `$object` / `$vector` (y `$faker.helpers.*`) para listas, objetos JSON y arrays float tipo embedding; `count:n`, `count:min,max` o `count:>=n` / `count:<=n` para longitud dinámica; `$vector | dims:n` (opción `normalize`); la resolución profunda rehidrata hojas estructuradas exactas.
+- **Listas con nombre** — Defina fuentes `$lists.nombre` fijas o respaldadas por dataclass en los ámbitos global, perfil o base; adminístrelas desde el conmutador **Listas** del pie y reutilícelas en plantillas `$pick`, `$sample` y `$unique`.
 - **Chips y autocompletado** — Las variables conocidas se destacan como chips; sugerencias para claves de entorno, alias, helpers y rutas `$faker.*`; las claves sin resolver permanecen visibles como `{{…}}`.
 - **Exportar / Importar** — Comparta entornos como JSON desde la barra del editor.
 - **API del terminal** — Helpers `app.environment` y comandos `.env` / `.envs`.
@@ -71,17 +72,20 @@ La versión `1.4.x` añade **variables de entorno** (capas globales, perfil y ba
 - **Analizar** — Valores distintos (`$distinct`) y tarjetas de cálculo (`$compute=$all`) para un atributo del conjunto de entidades actual.
 - **Exportar / Importar** — Formatos extensibles (JSON, JSON REST, JSONL, CSV, TSV, SQL, XML, YAML, Markdown, HTML); la importación crea o actualiza registros en la dataclass abierta.
 - **Anonimizar** — Asignación de campos con plantillas Faker (filtros `|`), valores fijos, conservar o vaciar; quitar campos del plan para omitirlos de los payloads; semilla opcional; vista previa al estilo del Cliente HTTP con modo auto-detectado.
-- **Acciones de anonimización** — Descargar datos anonimizados, importar como registros nuevos, o sobrescribir los campos asignados del conjunto actual (confirmación; `__KEY` / `__STAMP` más solo campos modificados).
+- **Anonimización de imágenes** — Los atributos Image editables aceptan plantillas de imagen Faker como `{{$faker.image.personPortrait | female}}`; los retratos generados se descargan, cargan mediante `$upload?$rawPict=true` y se sustituyen por IDs de carga 4D antes de exportar o escribir.
+- **Acciones de anonimización** — Descargar datos anonimizados, importar como registros nuevos, o sobrescribir los campos asignados del conjunto actual (confirmación; `__KEY` / `__STAMP` más solo campos modificados); el progreso cubre recuperación, generación Faker, cargas de imágenes paralelas y finalización, con cancelación mientras el trabajo sigue pendiente.
 
 #### UX
 
 - **Acerca de** — Diálogo de información desde el chrome móvil/escritorio.
 - **Alturas de paneles** — La lista de entidades y paneles de petición recuerdan la altura; la altura de la consola se limita si el viewport es desconocido.
 - **Cliente HTTP (móvil)** — Resumen de petición/respuesta adaptado a pantallas estrechas.
+- **Cargas binarias HTTP** — Los selectores de cuerpo binario aceptan arrastrar y soltar en navegador y desktop, deducen el `Content-Type` del archivo seleccionado y sugieren endpoints `/rest/$upload?$rawPict=true` / `$binary=true`; los valores Content-Type completan tipos MIME comunes.
 - **Notificaciones del Cliente HTTP** — Las respuestas que contienen `__WEBFORM.__NOTIFICATION` muestran la misma alerta tipada y el mismo sello de privilegio que los resultados del Ejecutor de métodos.
 - **Decodificación de URL en consola** — Opción para decodificar URLs percent-encoded en el registro de red.
 - **Conmutador de entorno** — Control del pie refinado para el perfil / base activos y el acceso a Gestionar.
 - **Editores de petición compartidos** — El Cliente HTTP y el Ejecutor de métodos comparten el editor clave/valor Params/Headers para una edición Advanced coherente.
+- **Gesto conservar solo** — Mayús+clic en una acción de papelera de asignaciones de campos, variables, listas con nombre, historial de peticiones, favoritos o filas clave/valor conserva ese elemento y elimina los demás tras confirmación.
 
 ### Documentación
 

@@ -1,7 +1,8 @@
 import { Button, cn } from '@4d/ui'
 import { FileUp, Paperclip, X } from 'lucide-react'
-import { type ChangeEvent, type DragEvent, useRef, useState } from 'react'
+import { type ChangeEvent, type DragEvent, useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from '~/i18n'
+import { subscribeDesktopFileDragState, subscribeDesktopFileDrop } from '~/lib/desktop-file-drop'
 import { formatByteSize } from '~/lib/http-client'
 
 function fileExtensionTone(fileName: string): string {
@@ -28,6 +29,26 @@ function extensionLabel(fileName: string): string {
   const ext = fileName.split('.').pop()?.toUpperCase()
   if (!ext || ext === fileName.toUpperCase() || ext.length > 5) return 'FILE'
   return ext
+}
+
+function contentTypeFromFileName(fileName: string): string | undefined {
+  const ext = fileName.split('.').pop()?.toLowerCase()
+  const types: Record<string, string> = {
+    csv: 'text/csv',
+    gif: 'image/gif',
+    html: 'text/html',
+    jpeg: 'image/jpeg',
+    jpg: 'image/jpeg',
+    json: 'application/json',
+    pdf: 'application/pdf',
+    png: 'image/png',
+    svg: 'image/svg+xml',
+    txt: 'text/plain',
+    webp: 'image/webp',
+    xml: 'application/xml',
+    zip: 'application/zip',
+  }
+  return ext ? types[ext] : undefined
 }
 
 export function HttpFilePicker({
@@ -62,15 +83,33 @@ export function HttpFilePicker({
     inputRef.current?.click()
   }
 
-  const applyFile = (file: File | undefined | null) => {
-    if (!file) return
-    onPick(file)
-    if (inputRef.current) inputRef.current.value = ''
-  }
+  const applyFile = useCallback(
+    (file: File | undefined | null) => {
+      if (!file) return
+      onPick(file)
+      if (inputRef.current) inputRef.current.value = ''
+    },
+    [onPick]
+  )
 
   const onInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     applyFile(event.target.files?.[0])
   }
+
+  useEffect(
+    () =>
+      subscribeDesktopFileDrop((dropped) => {
+        const bytes = Uint8Array.from(dropped.bytes)
+        applyFile(
+          new File([bytes], dropped.name, {
+            type: dropped.type || contentTypeFromFileName(dropped.name),
+          })
+        )
+      }),
+    [applyFile]
+  )
+
+  useEffect(() => subscribeDesktopFileDragState(setDragging), [])
 
   const onDrop = (event: DragEvent) => {
     event.preventDefault()

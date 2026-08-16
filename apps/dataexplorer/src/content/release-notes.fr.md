@@ -19,6 +19,7 @@ La version `1.4.x` ajoute les **variables d'environnement** (couches globales, p
 - **Contexte `$this`** — Accès à l’objet d’exécution (`{{$this.firstName}}`, `{{$this.headers.Authorization}}`, `{{$this.methodName}}`, …) pour les formulaires d’entité, le Client HTTP, l’Exécuteur de méthodes et le Query Builder ; résolution multi-passes entre champs frères.
 - **Variables dynamiques** — Surface Faker complète via `{{$faker.module.method}}` (ex. `{{$faker.person.fullName}}`, `{{$faker.string.uuid}}`), plus alias horloge `{{$timestamp}}` / `{{$isoTimestamp}}`.
 - **Templates helpers** — `$pick` / `$sample` / `$unique` / `$repeat` / `$object` / `$vector` (et `$faker.helpers.*`) pour listes, objets JSON et tableaux float style embedding ; `count:n`, `count:min,max` ou `count:>=n` / `count:<=n` pour une longueur dynamique ; `$vector | dims:n` (option `normalize`) ; la résolution profonde réhydrate les feuilles structurées exactes.
+- **Listes nommées** — Définissez des sources `$lists.nom` figées ou issues d’une dataclass, aux portées globale, profil ou base ; gérez-les depuis le sélecteur **Listes** du pied de page et réutilisez-les dans les templates `$pick`, `$sample` et `$unique`.
 - **Chips et autocomplétion** — Les variables connues s'affichent en chips ; suggestions pour clés d'environnement, alias, helpers et chemins `$faker.*` ; les clés non résolues restent visibles en `{{…}}`.
 - **Export / Import** — Partagez les environnements en JSON depuis la barre d'outils de l'éditeur.
 - **API Terminal** — Helpers `app.environment` et commandes `.env` / `.envs`.
@@ -71,17 +72,20 @@ La version `1.4.x` ajoute les **variables d'environnement** (couches globales, p
 - **Analyser** — Valeurs distinctes (`$distinct`) et cartes de calcul (`$compute=$all`) pour un attribut de l’ensemble d’entités courant.
 - **Exporter / Importer** — Formats extensibles (JSON, JSON REST, JSONL, CSV, TSV, SQL, XML, YAML, Markdown, HTML) ; l’import crée ou met à jour des enregistrements dans la dataclass ouverte.
 - **Anonymiser** — Correspondance de champs avec templates Faker (filtres `|`), valeurs fixes, conserver ou vider ; retirer des champs du plan pour les omettre des payloads ; graine optionnelle ; aperçu style Client HTTP avec mode auto-détecté.
-- **Actions d’anonymisation** — Télécharger les données anonymisées, importer comme nouveaux enregistrements, ou écraser les champs mappés de l’ensemble courant (confirmation ; `__KEY` / `__STAMP` plus champs modifiés uniquement).
+- **Anonymisation d’images** — Les attributs Image modifiables acceptent les templates Faker image tels que `{{$faker.image.personPortrait | female}}` ; les portraits générés sont récupérés, téléversés via `$upload?$rawPict=true`, puis remplacés par des IDs 4D avant l’export ou l’écriture.
+- **Actions d’anonymisation** — Télécharger les données anonymisées, importer comme nouveaux enregistrements, ou écraser les champs mappés de l’ensemble courant (confirmation ; `__KEY` / `__STAMP` plus champs modifiés uniquement) ; la progression couvre récupération, génération Faker, téléversements d’images parallèles et finalisation, avec annulation tant que le travail est en cours.
 
 #### UX
 
 - **À propos** — Dialogue d'informations depuis le chrome mobile/desktop.
 - **Hauteurs de panneaux** — Liste d'entités et volets de requête mémorisent la hauteur ; hauteur console bornée si le viewport est inconnu.
 - **Client HTTP (mobile)** — Résumé requête/réponse adapté aux écrans étroits.
+- **Envois binaires HTTP** — Les sélecteurs de corps binaire acceptent le glisser-déposer navigateur et desktop, déduisent le `Content-Type` du fichier sélectionné, et suggèrent les endpoints `/rest/$upload?$rawPict=true` / `$binary=true` ; les valeurs Content-Type complètent les types MIME courants.
 - **Notifications du Client HTTP** — Les réponses contenant `__WEBFORM.__NOTIFICATION` affichent la même alerte typée et le même stamp de privilège que les résultats de l’Exécuteur de méthodes.
 - **Décodage d'URL console** — Option pour décoder les URL percent-encoded dans le journal réseau.
 - **Sélecteur d'environnement** — Contrôle du pied de page affiné pour le profil / la base actifs et l'accès à Gérer.
 - **Éditeurs de requête partagés** — Le Client HTTP et l’Exécuteur de méthodes partagent l’éditeur clé/valeur Params/Headers pour une édition Advanced cohérente.
+- **Geste conserver uniquement** — Maj+clic sur une action corbeille dans les correspondances de champs, variables, listes nommées, historique de requêtes, favoris ou lignes clé/valeur conserve cet élément et retire les autres après confirmation.
 
 ### Documentation
 
