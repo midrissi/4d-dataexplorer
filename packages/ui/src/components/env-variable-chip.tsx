@@ -60,6 +60,7 @@ export function EnvVariableChip({
   const unresolved = !lookup || lookup.unresolved
   const dynamic = lookup?.dynamic === true
   const secret = lookup?.secret === true
+  const canManageVariable = Boolean(onManageVariables) && !dynamic
   const [open, setOpen] = React.useState(false)
   const [draft, setDraft] = React.useState(lookup?.value ?? '')
 
@@ -99,6 +100,15 @@ export function EnvVariableChip({
   }
 
   const showWritePicker = unresolved && !dynamic && (writeTargets?.length ?? 0) > 0
+
+  const manageVariables = () => {
+    setOpen(false)
+    onManageVariables?.()
+    window.requestAnimationFrame(() => {
+      if (!document.querySelector('[role="dialog"][data-state="open"]')) return
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    })
+  }
 
   const handleOpenChange = (next: boolean) => {
     if (!next && open && unresolved && !dynamic) {
@@ -213,15 +223,22 @@ export function EnvVariableChip({
               </span>
             </span>
           )}
-          {onManageVariables ? (
+          {canManageVariable ? (
             <Button
               type="button"
               variant="link"
               size="xs"
               className="h-6 shrink-0 px-1.5"
-              onClick={() => {
-                setOpen(false)
-                onManageVariables()
+              onPointerDown={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                manageVariables()
+              }}
+              onClick={(event) => {
+                if (event.detail !== 0) return
+                event.preventDefault()
+                event.stopPropagation()
+                manageVariables()
               }}
             >
               {manageVariablesLabel}

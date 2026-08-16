@@ -16,6 +16,7 @@ export const AnonymizeFieldRow = memo(function AnonymizeFieldRow({
   thisRoot,
   lists,
   listNames,
+  onManageVariables,
   onFieldNameChange,
   onChange,
   onRemove,
@@ -30,6 +31,7 @@ export const AnonymizeFieldRow = memo(function AnonymizeFieldRow({
   thisRoot?: EnvTemplateThis
   lists?: Record<string, readonly string[]>
   listNames?: readonly string[]
+  onManageVariables?: () => void
   onFieldNameChange: (from: string, to: string) => void
   onChange: (name: string, patch: Partial<AnonymizeFieldPlan>) => void
   onRemove: (name: string) => void
@@ -44,6 +46,7 @@ export const AnonymizeFieldRow = memo(function AnonymizeFieldRow({
     thisRoot,
     lists,
     listNames,
+    onManageVariables,
   })
 
   return (

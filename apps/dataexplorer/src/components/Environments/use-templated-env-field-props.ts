@@ -40,6 +40,18 @@ import { useTabsStore } from '~/store/tabs'
 type InlineRefCache = { baseId: string | null; items: EnvTemplateSuggestion[] }
 let inlineRefCache: InlineRefCache | null = null
 let inlineRefPromise: Promise<void> | null = null
+let dynamicSuggestionCache: readonly EnvTemplateSuggestion[] | null = null
+
+function getDynamicSuggestions(): readonly EnvTemplateSuggestion[] {
+  if (dynamicSuggestionCache) return dynamicSuggestionCache
+  dynamicSuggestionCache = listAllDynamicEnvVarDefs().map((item) => ({
+    key: item.key,
+    detail: item.description,
+    example: item.generate(),
+    group: 'dynamic',
+  }))
+  return dynamicSuggestionCache
+}
 
 function loadInlineRefSuggestions(baseId: string | null): Promise<void> {
   if (inlineRefCache?.baseId === baseId) return Promise.resolve()
@@ -141,6 +153,8 @@ export type TemplatedEnvFieldOptions = {
    * attribute name / type (entity forms, typed args, …).
    */
   field?: FieldTemplateHint
+  /** Invoked after navigating to the Environments tab from a variable chip. */
+  onManageVariables?: () => void
 }
 
 /** Shared props for @4d/ui TemplatedTextInput / TemplatedTextarea. */
@@ -150,12 +164,17 @@ export function useTemplatedEnvFieldProps(options?: TemplatedEnvFieldOptions) {
   const thisRoot = options?.thisRoot !== undefined ? options.thisRoot : contextThis
   const lists = options?.lists
   const listNames = options?.listNames
+  const afterManageVariables = options?.onManageVariables
   // Re-render when env data changes so chip lookups / suggestions stay fresh.
   const revision = useEnvironmentsStore((s) => s.revision)
   // Inline `ds.Dataclass.Attribute` completions from the cached catalog.
   const inlineRefSuggestions = useInlineListRefSuggestions()
 
   const openEnvironmentsTab = useTabsStore((s) => s.openEnvironmentsTab)
+  const manageVariables = useCallback(() => {
+    openEnvironmentsTab()
+    afterManageVariables?.()
+  }, [afterManageVariables, openEnvironmentsTab])
 
   const labels = useMemo(
     () => ({
@@ -379,13 +398,9 @@ export function useTemplatedEnvFieldProps(options?: TemplatedEnvFieldOptions) {
       })
     }
     const dynamicItems: EnvTemplateSuggestion[] = []
-    for (const item of listAllDynamicEnvVarDefs()) {
+    for (const item of getDynamicSuggestions()) {
       if (seen.has(item.key)) continue
-      dynamicItems.push({
-        key: item.key,
-        detail: item.description,
-        group: 'dynamic',
-      })
+      dynamicItems.push(item)
     }
     const catalog = [
       ...envItems,
@@ -415,7 +430,7 @@ export function useTemplatedEnvFieldProps(options?: TemplatedEnvFieldOptions) {
   return {
     resolveVariable,
     onVariableChange,
-    onManageVariables: openEnvironmentsTab,
+    onManageVariables: manageVariables,
     manageVariablesLabel: t('environments.manageVariables'),
     writeTargets,
     addToLabel: t('environments.addTo'),

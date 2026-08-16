@@ -40,6 +40,15 @@ describe('dynamic env vars', () => {
     }
   })
 
+  it('generates autocomplete examples for image methods too', () => {
+    const imageAvatar = listAllDynamicEnvVarDefs().find(
+      (item) => item.key === '$faker.image.avatar'
+    )
+    expect(imageAvatar?.generate()).toBeTruthy()
+    expect(listDynamicEnvVarKeys()).not.toContain('$faker.image.urlLoremFlickr')
+    expect(resolveDynamicEnvVar('$faker.image.urlLoremFlickr')).toBeTruthy()
+  })
+
   it('resolves clock aliases', () => {
     expect(isDynamicEnvVar('$timestamp')).toBe(true)
     const ts = resolveDynamicEnvVar('$timestamp')

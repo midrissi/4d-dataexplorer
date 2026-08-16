@@ -182,6 +182,7 @@ export function EntityAnonymizeDialog({
 
   const dataclassName = target?.dataclassName ?? ''
   const hasEntitySet = Boolean(target?.entitySetId?.trim())
+  const closeForManageVariables = useCallback(() => onOpenChange(false), [onOpenChange])
   const hasAnonymizedFields = plan.some((field) => field.mode !== 'keep')
   const plannedNames = useMemo(() => new Set(plan.map((field) => field.name)), [plan])
   const availableToAdd = useMemo(
@@ -949,6 +950,7 @@ export function EntityAnonymizeDialog({
                     thisRoot={anonymizeThisRoot}
                     lists={anonymizeLists}
                     listNames={anonymizeListNames}
+                    onManageVariables={closeForManageVariables}
                     onFieldNameChange={replaceField}
                     onChange={updateField}
                     onRemove={removeField}

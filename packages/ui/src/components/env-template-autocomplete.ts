@@ -4,6 +4,8 @@ export type EnvTemplateSuggestion = {
   key: string
   /** Secondary text (value preview or description). */
   detail?: string
+  /** Optional generated sample value, shown by wide autocomplete lists. */
+  example?: string
   /** Group key for section headers. */
   group?: string
 }

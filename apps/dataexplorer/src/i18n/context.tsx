@@ -12,7 +12,22 @@ type I18nContextValue = {
   setLanguage: (locale: Locale) => void
 }
 
-const I18nContext = createContext<I18nContextValue | null>(null)
+const I18N_CONTEXT_KEY = '__dataexplorerI18nContext'
+
+type I18nContextGlobal = typeof globalThis & {
+  [I18N_CONTEXT_KEY]?: ReturnType<typeof createContext<I18nContextValue | null>>
+}
+
+const i18nContextGlobal = globalThis as I18nContextGlobal
+function getI18nContext(): ReturnType<typeof createContext<I18nContextValue | null>> {
+  const existingContext = i18nContextGlobal[I18N_CONTEXT_KEY]
+  if (existingContext) return existingContext
+
+  const context = createContext<I18nContextValue | null>(null)
+  i18nContextGlobal[I18N_CONTEXT_KEY] = context
+  return context
+}
+const I18nContext = getI18nContext()
 
 export function I18nProvider({ children }: { children: ReactNode }) {
   const language = useSettingsStore((s) => s.language) as Locale

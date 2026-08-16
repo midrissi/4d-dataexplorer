@@ -147,6 +147,11 @@ function getFakerModule(moduleName: string): object | undefined {
 /** Faker v8 → v9 renames still seen in older templates / field synonyms. */
 const FAKER_METHOD_ALIASES: Readonly<Record<string, Readonly<Record<string, string>>>> = {
   internet: { userName: 'username' },
+  image: { urlLoremFlickr: 'url' },
+}
+
+const DEPRECATED_FAKER_METHODS: Readonly<Record<string, ReadonlySet<string>>> = {
+  image: new Set(['urlLoremFlickr']),
 }
 
 function resolveFakerMethodName(moduleName: string, methodName: string): string {
@@ -264,6 +269,7 @@ function enumerateFakerPathDefs(): DynamicEnvVarDef[] {
     const mod = getFakerModule(moduleName)
     if (!mod) continue
     for (const methodName of listModuleMethods(mod)) {
+      if (DEPRECATED_FAKER_METHODS[moduleName]?.has(methodName)) continue
       const key = `$faker.${moduleName}.${methodName}`
       defs.push(
         def(key, `Faker ${moduleName}.${methodName}`, (options) => {
