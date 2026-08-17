@@ -1,3 +1,4 @@
+export { parseDistinctResponse } from './distinct'
 export { normalizeEntityMutationResults } from './entity-mutation'
 export {
   dateValueToInputValue,

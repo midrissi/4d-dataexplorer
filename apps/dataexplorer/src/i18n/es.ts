@@ -1208,6 +1208,13 @@ export const es = {
     keepOnlyConfirmTitle: '¿Conservar solo esta lista?',
     keepOnlyConfirmDescription: 'Esto elimina todas las demás listas excepto {name}.',
     keepOnlyConfirm: 'Conservar solo esta lista',
+    rowActions: 'Acciones de la lista',
+    moveTo: 'Mover a',
+    duplicateTo: 'Duplicar a',
+    moveReplaceConfirmTitle: '¿Reemplazar {name} en {scope}?',
+    moveReplaceConfirmDescription:
+      'Ya existe una lista llamada {name} en {scope}. Mover esta lista la reemplazará.',
+    moveReplaceConfirm: 'Reemplazar y mover',
     truncated: 'truncado',
     emptyValues: 'Sin valores distintos',
     nameInvalid: 'Use un nombre con letra/guion bajo (A–Z, 0–9, _)',

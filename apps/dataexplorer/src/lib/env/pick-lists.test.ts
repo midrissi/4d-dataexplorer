@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'bun:test'
 import {
+  applyListsImport,
   buildPickListsResolveMap,
   collectInlineListRefs,
   collectPickListNamesFromPlan,
@@ -7,7 +8,11 @@ import {
   createPickListValuesCache,
   isValidPickListName,
   listDeclaredPickListNames,
+  mergeScopedPickLists,
   normalizePickListDeclarations,
+  parseHardcodedListValues,
+  parseListsExport,
+  stringifyDistinctValue,
 } from './pick-lists'
 
 describe('pick-lists normalize', () => {
@@ -59,6 +64,8 @@ describe('pick-lists normalize', () => {
         'bad-name': ['x'],
       })
     ).toEqual({ companyKeys: ['1', '2'] })
+    expect(stringifyDistinctValue({ ID: 12, __KEY: '12' }, 'ID')).toBe('12')
+    expect(stringifyDistinctValue(12)).toBe('12')
   })
 })
 
@@ -135,6 +142,17 @@ describe('collectInlineListRefs', () => {
     const refs = collectInlineListRefs(['{{$pick | from:Employee.ID}}'])
     expect(refs).toHaveLength(0)
   })
+
+  it('collects compact templates without spaces around |', () => {
+    const refs = collectInlineListRefs(['{{$pick|from:ds.Employee.ID}}'])
+    expect(refs).toEqual([
+      expect.objectContaining({
+        key: 'ds.Employee.ID',
+        dataclass: 'Employee',
+        attribute: 'ID',
+      }),
+    ])
+  })
 })
 
 describe('createPickListValuesCache', () => {
@@ -199,5 +217,80 @@ describe('createPickListValuesCache', () => {
       truncated: false,
     }))
     expect(cache.getCached('base1', 'decl-role')).toEqual({ status: 'empty' })
+  })
+})
+
+describe('mergeScopedPickLists', () => {
+  it('prefers base over profile over globals and skips invalid names', () => {
+    expect(
+      mergeScopedPickLists({
+        base: [{ id: 'b', name: 'shared', type: 'hardcoded', values: ['base'] }],
+        profile: [
+          { id: 'p', name: 'shared', type: 'hardcoded', values: ['profile'] },
+          { id: 'p2', name: 'profileOnly', type: 'hardcoded', values: ['p'] },
+        ],
+        globals: [
+          { id: 'g', name: 'shared', type: 'hardcoded', values: ['globals'] },
+          { id: 'g2', name: '1bad', type: 'hardcoded', values: ['x'] },
+        ],
+      }).map((d) => d.name)
+    ).toEqual(['shared', 'profileOnly'])
+  })
+})
+
+describe('parseHardcodedListValues', () => {
+  it('splits on commas and newlines, trims, and dedupes', () => {
+    expect(parseHardcodedListValues('a, b\nc, A')).toEqual(['a', 'b', 'c'])
+  })
+})
+
+describe('parseListsExport / applyListsImport', () => {
+  it('parses versioned exports and ignores other versions', () => {
+    expect(parseListsExport({ version: 2, globals: [] })).toBeNull()
+    expect(
+      parseListsExport({
+        version: 1,
+        globals: [{ name: 'g', type: 'hardcoded', values: ['1'] }],
+      })?.globals
+    ).toEqual([expect.objectContaining({ name: 'g', type: 'hardcoded', values: ['1'] })])
+  })
+
+  it('applies versioned scopes and skips base when disconnected', () => {
+    const payload = {
+      version: 1,
+      globals: [{ name: 'g', type: 'hardcoded', values: ['1'] }],
+      base: [{ name: 'b', type: 'hardcoded', values: ['2'] }],
+    }
+    expect(applyListsImport(payload, { hasBase: false })).toEqual({
+      globals: [expect.objectContaining({ name: 'g' })],
+    })
+    expect(applyListsImport(payload, { hasBase: true })?.base).toEqual([
+      expect.objectContaining({ name: 'b' }),
+    ])
+  })
+
+  it('reads legacy Environments pickLists into base when connected', () => {
+    expect(
+      applyListsImport(
+        { pickLists: [{ name: 'legacy', type: 'hardcoded', values: ['x'] }] },
+        {
+          hasBase: true,
+        }
+      )?.base
+    ).toEqual([expect.objectContaining({ name: 'legacy' })])
+    expect(
+      applyListsImport(
+        { pickLists: [{ name: 'legacy', type: 'hardcoded', values: ['x'] }] },
+        {
+          hasBase: false,
+        }
+      )
+    ).toBeNull()
+    expect(
+      applyListsImport(
+        { base: { pickLists: [{ name: 'nested', type: 'hardcoded', values: ['y'] }] } },
+        { hasBase: true }
+      )?.base
+    ).toEqual([expect.objectContaining({ name: 'nested' })])
   })
 })

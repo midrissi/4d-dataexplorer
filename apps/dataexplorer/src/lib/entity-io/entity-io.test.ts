@@ -124,6 +124,23 @@ describe('anonymize', () => {
         { name: 'status', mode: 'empty' },
       ])
     ).toBeNull()
+    expect(
+      parseAnonymizeFieldPlan({
+        ID_employee: '{{$pick|from:ds.Employee.ID}}',
+        role: '{{$pick|from:USER,MANAGER,ADMIN,SUPER_ADMIN}}',
+      })
+    ).toEqual([
+      {
+        name: 'ID_employee',
+        mode: 'faker',
+        fakerKey: '{{$pick|from:ds.Employee.ID}}',
+      },
+      {
+        name: 'role',
+        mode: 'faker',
+        fakerKey: '{{$pick|from:USER,MANAGER,ADMIN,SUPER_ADMIN}}',
+      },
+    ])
   })
 
   it('lists mappable attributes and builds single-field plans', () => {
@@ -373,6 +390,28 @@ describe('anonymize', () => {
 
     expect(entity?.comp_id).toBe(100)
     expect(entity?.role).toBe('admin')
+  })
+
+  it('picks FK values from inline ds.Dataclass.Attribute lists', () => {
+    const [entity] = anonymizeEntities([{ ID_employee: 0 }], {
+      plan: [
+        {
+          name: 'ID_employee',
+          type: 'long',
+          mode: 'faker',
+          fakerKey: '{{$pick|from:ds.Employee.ID}}',
+        },
+      ],
+      lists: { 'ds.Employee.ID': ['42'] },
+    })
+    expect(entity?.ID_employee).toBe(42)
+  })
+
+  it('does not coerce blank numeric replacements to 0', () => {
+    const [entity] = anonymizeEntities([{ ID_employee: 7 }], {
+      plan: [{ name: 'ID_employee', type: 'long', mode: 'fixed', fixedValue: '' }],
+    })
+    expect(entity?.ID_employee).toBeNull()
   })
 
   it('nulls fields when $lists is missing', () => {

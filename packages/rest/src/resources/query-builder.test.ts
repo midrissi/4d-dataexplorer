@@ -251,6 +251,19 @@ describe('QueryBuilder terminal operations', () => {
     expect(calls[0].params.$top).toBe('50')
   })
 
+  it('distinctValues unwraps entity-shaped and attribute-keyed payloads', async () => {
+    const wrapped = makeHttp({
+      __ENTITIES: [
+        { __KEY: '1', ID: 1 },
+        { __KEY: '2', ID: 2 },
+      ],
+    })
+    expect(await new QueryBuilder(wrapped.http, 'Employee').distinctValues('ID')).toEqual([1, 2])
+
+    const keyed = makeHttp({ ID: [10, 20] })
+    expect(await new QueryBuilder(keyed.http, 'Employee').distinctValues('ID')).toEqual([10, 20])
+  })
+
   it('count returns the COUNT field', async () => {
     const { http, calls } = makeHttp({ __ENTITIES: [], __COUNT: 42 })
     const total = await new QueryBuilder(http, 'Employee').count()

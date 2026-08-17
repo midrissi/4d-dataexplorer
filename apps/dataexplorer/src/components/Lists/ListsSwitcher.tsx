@@ -9,61 +9,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@4d/ui'
-import { Database, List, Settings2, UserRound } from 'lucide-react'
-import { useState } from 'react'
+import { List, Settings2 } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from '~/i18n'
-import {
-  isDataclassPickList,
-  isValidPickListName,
-  mergeScopedPickLists,
-  type PickListDeclaration,
-} from '~/lib/env'
 import { useListsStore } from '~/store/lists'
 import { useTabsStore } from '~/store/tabs'
-
-type ScopeId = 'globals' | 'profile' | 'base'
-
-type ListEntry = {
-  id: string
-  name: string
-  type: 'dataclass' | 'hardcoded'
-  scope: ScopeId
-  valueHint?: string
-}
-
-function listValueHint(declaration: PickListDeclaration): string | undefined {
-  if (isDataclassPickList(declaration)) {
-    return declaration.dataclass && declaration.attribute
-      ? `${declaration.dataclass}.${declaration.attribute}`
-      : undefined
-  }
-
-  const values = declaration.values.slice(0, 3)
-  if (values.length === 0) return undefined
-  return `${values.join(', ')}${declaration.values.length > values.length ? ', ...' : ''}`
-}
-
-function ScopeIcon({ scope }: { scope: ScopeId }) {
-  if (scope === 'profile')
-    return <UserRound className="size-2.5 shrink-0 text-muted-foreground" aria-hidden />
-  if (scope === 'base')
-    return <Database className="size-2.5 shrink-0 text-muted-foreground" aria-hidden />
-  return (
-    <span
-      className="size-2.5 shrink-0 rounded-full border border-muted-foreground/50 border-dashed"
-      aria-hidden
-    />
-  )
-}
-
-function ScopeBadge({ scope, label }: { scope: ScopeId; label: string }) {
-  return (
-    <span className="inline-flex shrink-0 items-center gap-1 rounded-sm border border-border/70 bg-muted/60 px-1 py-px font-sans text-[9px] text-muted-foreground leading-none">
-      <ScopeIcon scope={scope} />
-      {label}
-    </span>
-  )
-}
+import { ListsSwitcherEntryList } from './ListsSwitcherEntryList'
+import { buildSwitcherEntries, type ListsSwitcherScopeId } from './lists-switcher-entries'
 
 /** Status-bar trigger button + tooltip + popover for the merged $lists. */
 export function ListsSwitcher({
@@ -83,42 +35,13 @@ export function ListsSwitcher({
 
   const openListsTab = useTabsStore((s) => s.openListsTab)
 
-  const scopeLabel: Record<ScopeId, string> = {
+  const scopeLabel: Record<ListsSwitcherScopeId, string> = {
     globals: t('lists.switcherScopeGlobals'),
     profile: t('lists.switcherScopeProfile'),
     base: t('lists.switcherScopeBase'),
   }
 
-  const entries = (() => {
-    const scoped = getScopedLists()
-    // Collect per-scope entries; the merged view shows base > profile > globals precedence.
-    const seen = new Set<string>()
-    const result: ListEntry[] = []
-    const push = (decls: PickListDeclaration[], scope: ScopeId) => {
-      for (const d of decls) {
-        const name = d.name.trim()
-        if (!name || !isValidPickListName(name)) continue
-        result.push({
-          id: d.id,
-          name,
-          type: isDataclassPickList(d) ? 'dataclass' : 'hardcoded',
-          scope,
-          valueHint: listValueHint(d),
-        })
-        seen.add(name)
-      }
-    }
-    push(scoped.base, 'base')
-    push(scoped.profile, 'profile')
-    push(scoped.globals, 'globals')
-    // Deduplicate by name (base > profile > globals wins, already pushed first).
-    const merged = mergeScopedPickLists(scoped)
-    const mergedNames = new Set(merged.map((d) => d.name.trim()))
-    return result
-      .filter((e) => mergedNames.has(e.name))
-      .filter((e, i, arr) => arr.findIndex((x) => x.name === e.name) === i)
-      .sort((a, b) => a.name.localeCompare(b.name))
-  })()
+  const entries = useMemo(() => buildSwitcherEntries(getScopedLists()), [getScopedLists])
 
   const count = entries.length
   const countLabel =
@@ -129,6 +52,24 @@ export function ListsSwitcher({
     setOpen(false)
     openListsTab()
   }
+
+  const entryList = (
+    <ListsSwitcherEntryList
+      entries={entries}
+      scopeLabel={scopeLabel}
+      typeDataclassLabel={t('lists.typeDataclass')}
+      typeHardcodedLabel={t('lists.typeHardcoded')}
+    />
+  )
+  const compactEntryList = (
+    <ListsSwitcherEntryList
+      entries={entries}
+      scopeLabel={scopeLabel}
+      typeDataclassLabel={t('lists.typeDataclass')}
+      typeHardcodedLabel={t('lists.typeHardcoded')}
+      compact
+    />
+  )
 
   const tooltipContent = (
     <div className="overflow-hidden">
@@ -157,29 +98,7 @@ export function ListsSwitcher({
           <p className="text-[11px] text-muted-foreground">{t('lists.switcherEmpty')}</p>
         </div>
       ) : (
-        <ul className="max-h-52 overflow-y-auto overscroll-contain py-1">
-          {entries.map((entry) => (
-            <li
-              key={entry.name}
-              className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 px-2.5 py-1 transition-colors duration-150 hover:bg-muted/40"
-            >
-              <span className="min-w-0">
-                <span className="block truncate font-mono text-[11px] text-foreground">
-                  {entry.name}
-                </span>
-                {entry.valueHint ? (
-                  <span className="block truncate font-mono text-[9px] text-muted-foreground">
-                    {entry.valueHint}
-                  </span>
-                ) : null}
-              </span>
-              <span className="shrink-0 rounded-sm border border-border/60 bg-muted/40 px-1 py-px font-mono text-[9px] text-muted-foreground">
-                {entry.type === 'dataclass' ? t('lists.typeDataclass') : t('lists.typeHardcoded')}
-              </span>
-              <ScopeBadge scope={entry.scope} label={scopeLabel[entry.scope]} />
-            </li>
-          ))}
-        </ul>
+        compactEntryList
       )}
     </div>
   )
@@ -253,31 +172,7 @@ export function ListsSwitcher({
               <p className="text-[11px] text-muted-foreground">{t('lists.switcherEmpty')}</p>
             </div>
           ) : (
-            <ul className="max-h-64 overflow-y-auto overscroll-contain py-1">
-              {entries.map((entry) => (
-                <li
-                  key={entry.name}
-                  className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 px-2.5 py-1.5 transition-colors duration-150 hover:bg-muted/40"
-                >
-                  <span className="min-w-0">
-                    <span className="block truncate font-mono text-[11px] text-foreground">
-                      {entry.name}
-                    </span>
-                    {entry.valueHint ? (
-                      <span className="block truncate font-mono text-[9px] text-muted-foreground">
-                        {entry.valueHint}
-                      </span>
-                    ) : null}
-                  </span>
-                  <span className="shrink-0 rounded-sm border border-border/60 bg-muted/40 px-1 py-px font-mono text-[9px] text-muted-foreground">
-                    {entry.type === 'dataclass'
-                      ? t('lists.typeDataclass')
-                      : t('lists.typeHardcoded')}
-                  </span>
-                  <ScopeBadge scope={entry.scope} label={scopeLabel[entry.scope]} />
-                </li>
-              ))}
-            </ul>
+            entryList
           )}
         </div>
 

@@ -9,6 +9,7 @@ import type {
   QueryOptions,
   SimpleComputeResult,
 } from '../types'
+import { parseDistinctResponse } from '../utils/distinct'
 
 /**
  * Resource for entity set operations
@@ -166,15 +167,8 @@ export class EntitySetResource<T extends Entity = Entity> {
   async distinct(attribute: string, options?: QueryOptions): Promise<unknown[]> {
     const { $attributes: _a, $expand: _e, $orderby: _o, $method: _m, ...rest } = options ?? {}
     const params: QueryOptions = { ...rest, $distinct: true }
-    const result = await this.http.get<unknown[] | { __ENTITIES?: unknown[] }>(
-      this.buildAttributePath(attribute),
-      params
-    )
-    if (Array.isArray(result)) return result
-    if (result && typeof result === 'object' && Array.isArray(result.__ENTITIES)) {
-      return result.__ENTITIES
-    }
-    return []
+    const result = await this.http.get<unknown>(this.buildAttributePath(attribute), params)
+    return parseDistinctResponse(result, attribute)
   }
 
   /**

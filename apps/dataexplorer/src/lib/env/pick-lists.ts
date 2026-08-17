@@ -18,9 +18,6 @@ import {
   parseListsRefName,
 } from './this-context'
 
-/** Soft cap so huge dataclasses do not freeze anonymize / `$pick`. */
-export const PICK_LIST_TOP = 5000
-
 /** Default limit for new dataclass list declarations in the UI. */
 export const PICK_LIST_DEFAULT_LIMIT = 500
 
@@ -222,11 +219,16 @@ export function buildPickListsResolveMap(
   return out
 }
 
-export function stringifyDistinctValue(value: unknown): string | null {
+export function stringifyDistinctValue(value: unknown, attribute?: string): string | null {
   if (value === null || value === undefined) return null
   if (typeof value === 'string') return value
   if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
     return String(value)
+  }
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const record = value as Record<string, unknown>
+    if (attribute && attribute in record) return stringifyDistinctValue(record[attribute])
+    if ('__KEY' in record) return stringifyDistinctValue(record.__KEY)
   }
   try {
     return JSON.stringify(value)
@@ -398,6 +400,30 @@ export function parseListsExport(raw: unknown): ListsExport | null {
     out.base = normalizePickListDeclarations(raw.pickLists)
   }
   return out
+}
+
+/** Apply a Lists JSON file or a legacy Environments export that nested pickLists. */
+export function applyListsImport(
+  parsed: unknown,
+  opts: { hasBase: boolean }
+): Partial<ScopedPickLists> | null {
+  const imported = parseListsExport(parsed)
+  if (imported) {
+    const out: Partial<ScopedPickLists> = {}
+    if (imported.globals) out.globals = imported.globals
+    if (imported.profile) out.profile = imported.profile
+    if (imported.base && opts.hasBase) out.base = imported.base
+    return out
+  }
+  if (!isRecord(parsed) || !opts.hasBase) return null
+  let base: PickListDeclaration[] | undefined
+  if (Array.isArray(parsed.pickLists)) {
+    base = parseListsExport({ version: 1, base: parsed.pickLists })?.base
+  }
+  if (isRecord(parsed.base) && Array.isArray(parsed.base.pickLists)) {
+    base = parseListsExport({ version: 1, base: parsed.base.pickLists })?.base
+  }
+  return base ? { base } : null
 }
 
 /**

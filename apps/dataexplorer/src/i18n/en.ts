@@ -1189,6 +1189,13 @@ export const en = {
     keepOnlyConfirmTitle: 'Keep only this list?',
     keepOnlyConfirmDescription: 'This removes every other list except {name}.',
     keepOnlyConfirm: 'Keep only this list',
+    rowActions: 'List actions',
+    moveTo: 'Move to',
+    duplicateTo: 'Duplicate to',
+    moveReplaceConfirmTitle: 'Replace {name} in {scope}?',
+    moveReplaceConfirmDescription:
+      'A list named {name} already exists in {scope}. Moving this list will replace it.',
+    moveReplaceConfirm: 'Replace and move',
     truncated: 'truncated',
     emptyValues: 'No distinct values',
     nameInvalid: 'Use a letter/underscore name (A–Z, 0–9, _)',

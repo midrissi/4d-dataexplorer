@@ -43,6 +43,7 @@ export {
   resetVariablesToInitial,
 } from './normalize'
 export {
+  applyListsImport,
   buildPickListsResolveMap,
   collectInlineListRefs,
   collectPickListNamesFromPlan,
@@ -64,7 +65,6 @@ export {
   normalizePickListDeclaration,
   normalizePickListDeclarations,
   PICK_LIST_DEFAULT_LIMIT,
-  PICK_LIST_TOP,
   type PickListDeclaration,
   type PickListDistinctLoader,
   type PickListKind,

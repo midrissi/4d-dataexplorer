@@ -22,20 +22,57 @@ export const loadPickListDistinctValues: PickListDistinctLoader = async ({
   top,
   entitySetId,
 }) => {
-  const result = await api.getDistinctValues({
-    dataclass,
-    attribute,
-    top,
-    ...(entitySetId ? { entitySetId } : {}),
-  })
-  const values: string[] = []
-  for (const raw of result.values) {
-    const text = stringifyDistinctValue(raw)
-    if (text != null) values.push(text)
+  let raw: unknown[] = []
+  try {
+    const result = await api.getDistinctValues({
+      dataclass,
+      attribute,
+      top,
+      ...(entitySetId ? { entitySetId } : {}),
+    })
+    raw = result.values
+  } catch {
+    raw = []
+  }
+
+  let values = distinctValueStrings(raw, attribute)
+  if (values.length === 0) {
+    values = await loadDistinctFromEntities({ dataclass, attribute, top, entitySetId })
   }
   return {
     values,
-    truncated: result.values.length >= top,
+    truncated: values.length >= top,
+  }
+}
+
+function distinctValueStrings(raw: readonly unknown[], attribute: string): string[] {
+  const out: string[] = []
+  const seen = new Set<string>()
+  for (const item of raw) {
+    const text = stringifyDistinctValue(item, attribute)
+    if (text == null || seen.has(text)) continue
+    seen.add(text)
+    out.push(text)
+  }
+  return out
+}
+
+async function loadDistinctFromEntities(params: {
+  dataclass: string
+  attribute: string
+  top: number
+  entitySetId?: string
+}): Promise<string[]> {
+  try {
+    const page = await api.getEntities(params.dataclass, {
+      top: params.top,
+      select: [params.attribute],
+      createEntitySet: false,
+      ...(params.entitySetId ? { entitySetId: params.entitySetId } : {}),
+    })
+    return distinctValueStrings(page.entities, params.attribute)
+  } catch {
+    return []
   }
 }
 

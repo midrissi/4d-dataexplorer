@@ -4,6 +4,7 @@ import {
   filterEnvTemplateSuggestions,
   getEnvTemplateMatch,
 } from './env-template-autocomplete'
+import { measurePlacement } from './use-env-template-autocomplete'
 
 describe('getEnvTemplateMatch', () => {
   it('detects unfinished {{ at cursor', () => {
@@ -187,5 +188,47 @@ describe('filterEnvTemplateSuggestions', () => {
     expect(filterEnvTemplateSuggestions(items, '').map((i) => i.key)).not.toContain(
       'ds.Employee.ID'
     )
+  })
+})
+
+describe('measurePlacement', () => {
+  it('places the list below when there is room', () => {
+    const placement = measurePlacement(
+      {
+        top: 40,
+        bottom: 64,
+        left: 10,
+        right: 210,
+        width: 200,
+        height: 24,
+        x: 10,
+        y: 40,
+        toJSON() {},
+      },
+      800
+    )
+    expect(placement.side).toBe('bottom')
+    expect(placement.top).toBe(70)
+    expect(placement.width).toBe(280)
+  })
+
+  it('places the list above when space below is tight', () => {
+    const placement = measurePlacement(
+      {
+        top: 700,
+        bottom: 740,
+        left: 10,
+        right: 310,
+        width: 300,
+        height: 40,
+        x: 10,
+        y: 700,
+        toJSON() {},
+      },
+      780
+    )
+    expect(placement.side).toBe('top')
+    expect(placement.top).toBe(694)
+    expect(placement.maxHeight).toBeGreaterThan(0)
   })
 })

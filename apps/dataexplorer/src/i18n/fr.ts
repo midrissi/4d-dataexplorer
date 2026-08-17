@@ -1211,6 +1211,13 @@ export const fr = {
     keepOnlyConfirmTitle: 'Conserver uniquement cette liste ?',
     keepOnlyConfirmDescription: 'Cette action retire toutes les autres listes sauf {name}.',
     keepOnlyConfirm: 'Conserver uniquement cette liste',
+    rowActions: 'Actions de la liste',
+    moveTo: 'Déplacer vers',
+    duplicateTo: 'Dupliquer vers',
+    moveReplaceConfirmTitle: 'Remplacer {name} dans {scope} ?',
+    moveReplaceConfirmDescription:
+      'Une liste nommée {name} existe déjà dans {scope}. Déplacer cette liste la remplacera.',
+    moveReplaceConfirm: 'Remplacer et déplacer',
     truncated: 'tronqué',
     emptyValues: 'Aucune valeur distincte',
     nameInvalid: 'Utilisez un nom lettre/underscore (A–Z, 0–9, _)',

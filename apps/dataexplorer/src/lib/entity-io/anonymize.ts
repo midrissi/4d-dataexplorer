@@ -25,30 +25,66 @@ function isAnonymizeFieldMode(value: unknown): value is AnonymizeFieldMode {
 
 /** Parse a JSON-compatible field plan before applying it to an anonymization run. */
 export function parseAnonymizeFieldPlan(value: unknown): AnonymizeFieldPlan[] | null {
-  if (!Array.isArray(value)) return null
+  if (Array.isArray(value)) return parseAnonymizeFieldPlanArray(value)
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return parseAnonymizeFieldPlanMap(value as Record<string, unknown>)
+  }
+  return null
+}
 
+function parseAnonymizeFieldPlanArray(value: unknown[]): AnonymizeFieldPlan[] | null {
   const names = new Set<string>()
   const plan: AnonymizeFieldPlan[] = []
   for (const item of value) {
     if (!item || typeof item !== 'object' || Array.isArray(item)) return null
-    const field = item as Record<string, unknown>
-    const name = typeof field.name === 'string' ? field.name.trim() : ''
-    if (!name || names.has(name)) return null
-    if (!isAnonymizeFieldMode(field.mode)) return null
-    if (field.type !== undefined && typeof field.type !== 'string') return null
-    if (field.fakerKey !== undefined && typeof field.fakerKey !== 'string') return null
-    if (field.fixedValue !== undefined && typeof field.fixedValue !== 'string') return null
-
-    names.add(name)
-    plan.push({
-      name,
-      mode: field.mode,
-      ...(typeof field.type === 'string' ? { type: field.type } : {}),
-      ...(typeof field.fakerKey === 'string' ? { fakerKey: field.fakerKey } : {}),
-      ...(typeof field.fixedValue === 'string' ? { fixedValue: field.fixedValue } : {}),
-    })
+    const parsed = parseAnonymizeFieldPlanItem(item as Record<string, unknown>)
+    if (!parsed || names.has(parsed.name)) return null
+    names.add(parsed.name)
+    plan.push(parsed)
   }
   return plan
+}
+
+/**
+ * Compact `{ fieldName: "{{$pick|from:…}}" }` maps from the JSON editor.
+ * A single `{ name, mode }` object is rejected so it is not mistaken for this shape.
+ */
+function parseAnonymizeFieldPlanMap(value: Record<string, unknown>): AnonymizeFieldPlan[] | null {
+  if (typeof value.name === 'string' && isAnonymizeFieldMode(value.mode)) return null
+  const names = new Set<string>()
+  const plan: AnonymizeFieldPlan[] = []
+  for (const [rawName, raw] of Object.entries(value)) {
+    const name = rawName.trim()
+    if (!name || names.has(name)) return null
+    names.add(name)
+    if (typeof raw === 'string') {
+      const trimmed = raw.trim()
+      plan.push(
+        trimmed ? { name, mode: 'faker', fakerKey: asTemplate(trimmed) } : { name, mode: 'empty' }
+      )
+      continue
+    }
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null
+    const parsed = parseAnonymizeFieldPlanItem({ ...(raw as Record<string, unknown>), name })
+    if (!parsed) return null
+    plan.push(parsed)
+  }
+  return plan
+}
+
+function parseAnonymizeFieldPlanItem(field: Record<string, unknown>): AnonymizeFieldPlan | null {
+  const name = typeof field.name === 'string' ? field.name.trim() : ''
+  if (!name || !isAnonymizeFieldMode(field.mode)) return null
+  if (field.type !== undefined && typeof field.type !== 'string') return null
+  if (field.fakerKey !== undefined && typeof field.fakerKey !== 'string') return null
+  if (field.fixedValue !== undefined && typeof field.fixedValue !== 'string') return null
+  return {
+    name,
+    mode: field.mode,
+    ...(typeof field.type === 'string' ? { type: field.type } : {}),
+    ...(typeof field.fakerKey === 'string' ? { fakerKey: field.fakerKey } : {}),
+    ...(typeof field.fixedValue === 'string' ? { fixedValue: field.fixedValue } : {}),
+  }
 }
 
 /** Build a single default anonymization mapping for one attribute. */
@@ -132,7 +168,9 @@ function coerceReplacement(original: unknown, replacement: string, fieldType?: s
     if (normalized === 'false' || normalized === '0') return false
   }
   if (typeof original === 'number' || (fieldType ? isNumericType(fieldType) : false)) {
-    const number = Number(replacement)
+    const trimmed = replacement.trim()
+    if (trimmed === '') return null
+    const number = Number(trimmed)
     if (!Number.isNaN(number)) return number
   }
   return replacement

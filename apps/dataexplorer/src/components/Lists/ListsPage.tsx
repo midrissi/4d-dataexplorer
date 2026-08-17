@@ -3,7 +3,7 @@ import { Download, List, Upload } from 'lucide-react'
 import { useMemo, useRef } from 'react'
 import { ListsEditor } from '~/components/Lists/ListsEditor'
 import { useTranslation } from '~/i18n'
-import { type ListsExport, type PickListScope, parseListsExport } from '~/lib/env'
+import { applyListsImport, type ListsExport, type PickListScope } from '~/lib/env'
 import { getCurrentBaseId } from '~/lib/storage'
 import { useListsStore } from '~/store/lists'
 import { type ListsScope, useActiveListsTab, useTabsStore } from '~/store/tabs'
@@ -68,26 +68,11 @@ export function ListsPage() {
     try {
       const text = await file.text()
       const parsed = JSON.parse(text) as unknown
-      const imported = parseListsExport(parsed)
-      if (!imported) {
-        // Legacy Environments export with top-level / nested pickLists.
-        const record =
-          parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : null
-        if (!record) return
-        if (Array.isArray(record.pickLists) && hasBase) {
-          setLists('base', parseListsExport({ version: 1, base: record.pickLists })?.base ?? [])
-        }
-        if (record.base && typeof record.base === 'object') {
-          const base = record.base as { pickLists?: unknown }
-          if (Array.isArray(base.pickLists) && hasBase) {
-            setLists('base', parseListsExport({ version: 1, base: base.pickLists })?.base ?? [])
-          }
-        }
-        return
-      }
+      const imported = applyListsImport(parsed, { hasBase })
+      if (!imported) return
       if (imported.globals) setLists('globals', imported.globals)
       if (imported.profile) setLists('profile', imported.profile)
-      if (imported.base && hasBase) setLists('base', imported.base)
+      if (imported.base) setLists('base', imported.base)
     } catch {
       // ignore invalid files
     }
@@ -159,7 +144,7 @@ export function ListsPage() {
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <ListsEditor scope={scope} />
+          <ListsEditor scope={scope} onMovedTo={setScope} />
         </div>
       </div>
     </div>

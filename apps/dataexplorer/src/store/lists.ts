@@ -249,8 +249,3 @@ export const useListsStore = create<ListsState>()((set, get) => ({
     return { lists, missing, errors }
   },
 }))
-
-/** Back-compat accessors used by Environments / anonymize until callers migrate. */
-export function getPickListsCompat(): PickListDeclaration[] {
-  return useListsStore.getState().getMergedLists()
-}

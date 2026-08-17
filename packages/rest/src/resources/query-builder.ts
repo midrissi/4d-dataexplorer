@@ -9,6 +9,7 @@ import type {
   QueryOptions,
   SimpleComputeResult,
 } from '../types'
+import { parseDistinctResponse } from '../utils/distinct'
 
 /** Wrap order-by expressions for 4D REST ($orderby="attr desc, attr2 asc"). */
 export function normalizeOrderByExpression(expression: string): string {
@@ -308,12 +309,8 @@ export class QueryBuilder<T extends Entity = Entity> {
     const path = `/${this.dataClassName}/${attribute}`
     const { $attributes: _a, $expand: _e, $orderby: _o, $method: _m, ...rest } = this.options
     const options: QueryOptions = { ...rest, $distinct: true }
-    const result = await this.http.get<unknown[] | { __ENTITIES?: unknown[] }>(path, options)
-    if (Array.isArray(result)) return result
-    if (result && typeof result === 'object' && Array.isArray(result.__ENTITIES)) {
-      return result.__ENTITIES
-    }
-    return []
+    const result = await this.http.get<unknown>(path, options)
+    return parseDistinctResponse(result, attribute)
   }
 
   /**
