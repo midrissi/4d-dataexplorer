@@ -82,10 +82,10 @@ export function useListsEditor(
     (id: string, next: PickListDeclaration) => {
       setLists(
         scope,
-        entries.map((entry) => (entry.id === id ? next : entry))
+        getLists(scope).map((entry) => (entry.id === id ? next : entry))
       )
     },
-    [entries, scope, setLists]
+    [getLists, scope, setLists]
   )
 
   const handleTypeChange = useCallback(
@@ -157,21 +157,22 @@ export function useListsEditor(
   const addEntry = useCallback(() => {
     const next = createEmptyDataclassPickList()
     pendingFocusId.current = next.id
-    setLists(scope, [...entries, next])
-  }, [entries, scope, setLists])
+    setLists(scope, [...getLists(scope), next])
+  }, [getLists, scope, setLists])
 
   const removeEntry = useCallback(
     (id: string) => {
-      const removed = entries.find((e) => e.id === id)
+      const current = getLists(scope)
+      const removed = current.find((e) => e.id === id)
       if (removed && isDataclassPickList(removed)) {
         invalidatePickList(removed.id)
       }
       setLists(
         scope,
-        entries.filter((entry) => entry.id !== id)
+        current.filter((entry) => entry.id !== id)
       )
     },
-    [entries, invalidatePickList, scope, setLists]
+    [getLists, invalidatePickList, scope, setLists]
   )
 
   const removeAllEntriesExcept = useCallback(

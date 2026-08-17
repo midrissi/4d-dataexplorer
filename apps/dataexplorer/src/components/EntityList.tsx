@@ -1535,9 +1535,14 @@ export function EntityList({ tabId }: { tabId: string }) {
             if (options?.emptyBeforeInsert) {
               await deleteManyEntities({ all: true })
             }
+            if (options?.signal?.aborted) {
+              throw new DOMException('Request cancelled', 'AbortError')
+            }
             await createEntity(data, {
               refresh: options?.refresh,
               count: options?.count,
+              onProgress: options?.onProgress,
+              signal: options?.signal,
             })
           }}
           onRefresh={async () => {

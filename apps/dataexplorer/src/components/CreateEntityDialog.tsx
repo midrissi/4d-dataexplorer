@@ -26,8 +26,13 @@ import {
   CreateEntityDialogOptions,
   MAX_CREATE_COUNT,
 } from '~/components/CreateEntityDialogOptions'
+import {
+  CreateEntityProgress,
+  type CreateEntityProgressState,
+} from '~/components/CreateEntityProgress'
 import { EntityForm, type EntityFormHandle } from '~/components/EntityForm'
 import { useEditorLabels, useTranslation } from '~/i18n'
+import { isAbortError } from '~/lib/abort'
 import { mobileFullscreenDialogClass } from '~/lib/mobile-menu'
 import { isMobileShell } from '~/lib/platform'
 import type { EditMode } from '~/store/settings'
@@ -64,7 +69,13 @@ interface CreateEntityDialogProps {
   isDuplicate?: boolean
   onSubmit: (
     data: Record<string, unknown>,
-    options?: { refresh?: boolean; count?: number; emptyBeforeInsert?: boolean }
+    options?: {
+      refresh?: boolean
+      count?: number
+      emptyBeforeInsert?: boolean
+      onProgress?: (current: number, total: number, phase: 'preparing' | 'creating') => void
+      signal?: AbortSignal
+    }
   ) => Promise<void>
   /** Refresh list/count after a create batch (or partial batch on error). */
   onRefresh?: () => Promise<void>
@@ -88,7 +99,9 @@ export function CreateEntityDialog({
   const updateCodeEditorPrefs = useUpdateCodeEditorPrefs()
   const defaultEditMode = useDefaultEditMode()
   const formRef = useRef<EntityFormHandle>(null)
+  const abortRef = useRef<AbortController | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [progress, setProgress] = useState<CreateEntityProgressState | null>(null)
   const [canSubmit, setCanSubmit] = useState(true)
   const [afterCreate, setAfterCreate] = useState<AfterCreateMode>('close')
   const [createCount, setCreateCount] = useState(1)
@@ -118,6 +131,10 @@ export function CreateEntityDialog({
       setEmptyBeforeInsert(false)
       setCreateCount(1)
       setCreateCountInput('1')
+    } else {
+      abortRef.current?.abort()
+      abortRef.current = null
+      setProgress(null)
     }
   }, [open, initialData, defaultEditMode, mobile])
 
@@ -151,18 +168,46 @@ export function CreateEntityDialog({
       }
 
       let created = 0
+      const controller = new AbortController()
+      abortRef.current = controller
+      setProgress(
+        shouldEmpty
+          ? { phase: 'emptying' }
+          : { phase: times > 1 ? 'preparing' : 'creating', current: 0, total: times }
+      )
       try {
-        // One bulk request (or 100-sized batches). Templates resolve fresh per entity in the API.
         await onSubmit(data, {
           refresh: false,
           count: times,
           emptyBeforeInsert: shouldEmpty,
+          signal: controller.signal,
+          onProgress: (current, total, phase) => setProgress({ phase, current, total }),
         })
+        if (controller.signal.aborted) return
         created = times
+        setProgress({ phase: 'refreshing' })
+        await onRefresh?.()
+        toast({
+          title:
+            created > 1
+              ? t('createEntity.entitiesCreated', { count: created })
+              : t('createEntity.entityCreated'),
+          description: t('createEntity.createdDescription', {
+            count: created,
+            dataclass: dataclassName,
+          }),
+        })
+      } catch (err) {
+        if (isAbortError(err) || controller.signal.aborted) return
+        toast({
+          title: t('createEntity.createFailed'),
+          description: err instanceof Error ? err.message : String(err),
+          variant: 'destructive',
+        })
+        throw err
       } finally {
-        if (created > 0) {
-          await onRefresh?.()
-        }
+        if (abortRef.current === controller) abortRef.current = null
+        setProgress(null)
       }
       setLastCreatedCount(created)
 
@@ -180,11 +225,6 @@ export function CreateEntityDialog({
         return
       }
 
-      toast.success(
-        created > 1
-          ? t('createEntity.entitiesCreated', { count: created })
-          : t('createEntity.entityCreated')
-      )
       onClose()
     },
     [
@@ -522,43 +562,54 @@ export function CreateEntityDialog({
         onAfterCreateChange={setAfterCreate}
         onEmptyBeforeInsertChange={setEmptyBeforeInsert}
       />
-      <div className={cn('flex w-full justify-end gap-2', mobile && 'flex-col-reverse')}>
-        <Button
-          variant="outline"
-          onClick={onClose}
-          disabled={isSubmitting}
-          className={mobile ? 'h-11' : undefined}
-        >
-          {t('createEntity.cancel')}
-        </Button>
-        <Button
-          variant={emptyBeforeInsert && createCount > 1 ? 'destructive' : 'default'}
-          onClick={handleCreateClick}
-          disabled={
-            isSubmitting ||
-            (editMode === 'form' && !canSubmit) ||
-            (editMode === 'json' && (!!jsonError || !!switchToFormError))
-          }
-          title={
-            editMode === 'json' && (jsonError || switchToFormError)
-              ? t('createEntity.fixJsonOrUse')
-              : emptyBeforeInsert && createCount > 1
-                ? t('createEntity.emptyBeforeInsertHint', { dataclassName })
-                : undefined
-          }
-          className={mobile ? 'h-11' : undefined}
-        >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              {t('createEntity.creating')}
-            </>
-          ) : createCount > 1 ? (
-            t('createEntity.createN', { count: createCount })
-          ) : (
-            t('createEntity.create')
-          )}
-        </Button>
+      <div className={cn('flex w-full items-center gap-2', mobile && 'flex-col-reverse')}>
+        <div className="min-w-0 flex-1">
+          {progress ? (
+            <CreateEntityProgress
+              progress={progress}
+              dataclassName={dataclassName}
+              onCancel={() => abortRef.current?.abort()}
+            />
+          ) : null}
+        </div>
+        <div className={cn('flex shrink-0 justify-end gap-2', mobile && 'w-full')}>
+          <Button
+            variant="outline"
+            onClick={onClose}
+            disabled={isSubmitting}
+            className={mobile ? 'h-11' : undefined}
+          >
+            {t('createEntity.cancel')}
+          </Button>
+          <Button
+            variant={emptyBeforeInsert && createCount > 1 ? 'destructive' : 'default'}
+            onClick={handleCreateClick}
+            disabled={
+              isSubmitting ||
+              (editMode === 'form' && !canSubmit) ||
+              (editMode === 'json' && (!!jsonError || !!switchToFormError))
+            }
+            title={
+              editMode === 'json' && (jsonError || switchToFormError)
+                ? t('createEntity.fixJsonOrUse')
+                : emptyBeforeInsert && createCount > 1
+                  ? t('createEntity.emptyBeforeInsertHint', { dataclassName })
+                  : undefined
+            }
+            className={mobile ? 'h-11' : undefined}
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {t('createEntity.creating')}
+              </>
+            ) : createCount > 1 ? (
+              t('createEntity.createN', { count: createCount })
+            ) : (
+              t('createEntity.create')
+            )}
+          </Button>
+        </div>
       </div>
     </DialogFooter>
   )

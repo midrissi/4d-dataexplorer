@@ -34,6 +34,20 @@ import { useTabsStore } from '~/store/tabs'
 /** Max entities per `$method=update` array body when bulk-creating. */
 export const CREATE_ENTITIES_BATCH_SIZE = 100
 
+/** Yield to the UI this often while resolving create templates. */
+export const CREATE_ENTITIES_PREPARE_YIELD = 25
+
+export type CreateManyProgressPhase = 'preparing' | 'creating'
+
+export type CreateManyEntitiesOptions = {
+  onProgress?: (current: number, total: number, phase: CreateManyProgressPhase) => void
+  signal?: AbortSignal
+}
+
+function throwIfAborted(signal?: AbortSignal) {
+  if (signal?.aborted) throw new DOMException('Request cancelled', 'AbortError')
+}
+
 /**
  * Flatten an unknown thrown value (and Error.cause chain) into a readable message.
  */
@@ -1006,7 +1020,11 @@ export const api = {
    * Create multiple entities via REST `$method=update` (array body).
    * Resolves env templates per entity, then sends in batches of {@link CREATE_ENTITIES_BATCH_SIZE}.
    */
-  createManyEntities: async (dataclassName: string, entities: Record<string, unknown>[]) => {
+  createManyEntities: async (
+    dataclassName: string,
+    entities: Record<string, unknown>[],
+    options?: CreateManyEntitiesOptions
+  ) => {
     if (entities.length === 0) {
       return {
         dataclass: dataclassName,
@@ -1016,10 +1034,15 @@ export const api = {
       }
     }
 
+    throwIfAborted(options?.signal)
     const schema = await api.getDataclassSchema(dataclassName)
     const prepared: Record<string, unknown>[] = []
     const unresolved: string[] = []
-    for (const entity of entities) {
+    const total = entities.length
+    options?.onProgress?.(0, total, 'preparing')
+    for (let index = 0; index < entities.length; index++) {
+      throwIfAborted(options?.signal)
+      const entity = entities[index]
       const resolved = resolveEnvTemplatesDeepWithThis(entity, getActiveEnvMap(), (current) =>
         buildEntityThis(current as Record<string, unknown>)
       )
@@ -1029,16 +1052,24 @@ export const api = {
       prepared.push(
         coerceEntityDataBySchema(resolved.value as Record<string, unknown>, schema.attributes)
       )
+      const done = index + 1
+      if (done === total || done % CREATE_ENTITIES_PREPARE_YIELD === 0) {
+        options?.onProgress?.(done, total, 'preparing')
+        if (done < total) await new Promise<void>((resolve) => setTimeout(resolve, 0))
+      }
     }
     if (unresolved.length > 0) {
       consoleService.warn(`Unresolved environment variables: ${unresolved.join(', ')}`)
     }
 
     const allResults = []
+    options?.onProgress?.(0, prepared.length, 'creating')
     for (let offset = 0; offset < prepared.length; offset += CREATE_ENTITIES_BATCH_SIZE) {
+      throwIfAborted(options?.signal)
       const chunk = prepared.slice(offset, offset + CREATE_ENTITIES_BATCH_SIZE)
       const results = await client.dataclass(dataclassName).updateMany(chunk)
       allResults.push(...results)
+      options?.onProgress?.(allResults.length, prepared.length, 'creating')
     }
 
     return {

@@ -12,6 +12,7 @@ import {
   normalizePickListDeclarations,
   parseHardcodedListValues,
   parseListsExport,
+  pickListNameIssue,
   stringifyDistinctValue,
 } from './pick-lists'
 
@@ -66,6 +67,40 @@ describe('pick-lists normalize', () => {
     ).toEqual({ companyKeys: ['1', '2'] })
     expect(stringifyDistinctValue({ ID: 12, __KEY: '12' }, 'ID')).toBe('12')
     expect(stringifyDistinctValue(12)).toBe('12')
+  })
+
+  it('keeps same-name declarations so in-progress names are not dropped', () => {
+    expect(
+      normalizePickListDeclarations([
+        { id: 'a', name: 'test', type: 'hardcoded', values: ['x'] },
+        { id: 'b', name: 'test', type: 'hardcoded', values: ['y'] },
+      ])
+    ).toEqual([
+      { id: 'a', name: 'test', type: 'hardcoded', values: ['x'] },
+      { id: 'b', name: 'test', type: 'hardcoded', values: ['y'] },
+    ])
+    const first = { id: 'a', name: 'test', type: 'hardcoded' as const, values: ['x'] }
+    const second = { id: 'b', name: 'test', type: 'hardcoded' as const, values: ['y'] }
+    const third = { id: 'c', name: 'test', type: 'hardcoded' as const, values: ['z'] }
+    const dupes = [first, second, third]
+    expect(pickListNameIssue(first, dupes)).toBeNull()
+    expect(pickListNameIssue(second, dupes)).toBeNull()
+    expect(pickListNameIssue(third, dupes)).toBe('duplicate')
+    expect(
+      pickListNameIssue({ id: 'b', name: 'test2', type: 'hardcoded', values: ['y'] }, [
+        { id: 'a', name: 'test', type: 'hardcoded', values: ['x'] },
+      ])
+    ).toBeNull()
+    expect(
+      pickListNameIssue({ id: 'b', name: '', type: 'hardcoded', values: [] }, [
+        { id: 'a', name: 'test', type: 'hardcoded', values: ['x'] },
+      ])
+    ).toBeNull()
+    expect(
+      pickListNameIssue({ id: 'b', name: '1bad', type: 'hardcoded', values: [] }, [
+        { id: 'a', name: 'test', type: 'hardcoded', values: ['x'] },
+      ])
+    ).toBe('invalid')
   })
 })
 

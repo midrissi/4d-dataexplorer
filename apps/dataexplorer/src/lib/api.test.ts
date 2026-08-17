@@ -462,6 +462,23 @@ describe('lib/api', () => {
         )
       }
     })
+
+    it('reports prepare and create progress and honors abort', async () => {
+      const payload = [{ name: 'A' }, { name: 'B' }]
+      const phases: Array<{ current: number; total: number; phase: string }> = []
+      const result = await api.createManyEntities('Employee', payload, {
+        onProgress: (current, total, phase) => phases.push({ current, total, phase }),
+      })
+      expect(result.count).toBe(2)
+      expect(phases.some((p) => p.phase === 'preparing')).toBe(true)
+      expect(phases.some((p) => p.phase === 'creating' && p.current === 2)).toBe(true)
+
+      const controller = new AbortController()
+      controller.abort()
+      await expect(
+        api.createManyEntities('Employee', payload, { signal: controller.signal })
+      ).rejects.toMatchObject({ name: 'AbortError' })
+    })
   })
 
   describe('updateManyEntities', () => {

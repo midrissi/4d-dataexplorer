@@ -8,6 +8,7 @@ import {
   loadInlineListRefs,
 } from '~/lib/env'
 import { useEnvironmentsStore } from '~/store/environments'
+import { useListsStore } from '~/store/lists'
 import { mergeReadyLists } from './anonymize-dialog-helpers'
 
 export type EnsureReferencedListsResult =
@@ -26,6 +27,7 @@ export function useAnonymizeLists({
   const { t } = useTranslation()
   const [listsReady, setListsReady] = useState<Record<string, readonly string[]>>({})
   const envRevision = useEnvironmentsStore((s) => s.revision)
+  const listsRevision = useListsStore((s) => s.revision)
   const getPickListNames = useEnvironmentsStore((s) => s.getPickListNames)
   const getPickListsResolveMap = useEnvironmentsStore((s) => s.getPickListsResolveMap)
 
@@ -33,13 +35,15 @@ export function useAnonymizeLists({
   // fresh arrays/objects on every render would also invalidate the row suggestion caches.
   const anonymizeListNames = useMemo(() => {
     void envRevision
+    void listsRevision
     return getPickListNames()
-  }, [getPickListNames, envRevision])
+  }, [getPickListNames, envRevision, listsRevision])
   const anonymizeLists = useMemo(() => {
     void envRevision
+    void listsRevision
     const fromStore = getPickListsResolveMap()
     return { ...fromStore, ...listsReady }
-  }, [getPickListsResolveMap, listsReady, envRevision])
+  }, [getPickListsResolveMap, listsReady, envRevision, listsRevision])
 
   const resetLists = useCallback(() => setListsReady({}), [])
 

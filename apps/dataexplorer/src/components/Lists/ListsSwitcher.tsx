@@ -10,7 +10,7 @@ import {
   TooltipTrigger,
 } from '@4d/ui'
 import { List, Settings2 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from '~/i18n'
 import { useListsStore } from '~/store/lists'
 import { useTabsStore } from '~/store/tabs'
@@ -41,7 +41,7 @@ export function ListsSwitcher({
     base: t('lists.switcherScopeBase'),
   }
 
-  const entries = useMemo(() => buildSwitcherEntries(getScopedLists()), [getScopedLists])
+  const entries = buildSwitcherEntries(getScopedLists())
 
   const count = entries.length
   const countLabel =

@@ -59,6 +59,28 @@ export function isValidPickListName(name: string): boolean {
   return NAME_RE.test(name.trim())
 }
 
+/**
+ * Same-scope name clash (empty / invalid names are not treated as duplicates).
+ * When several rows share a valid name, only the last one is flagged.
+ */
+export function pickListNameIssue(
+  entry: PickListDeclaration,
+  entries: readonly PickListDeclaration[]
+): 'invalid' | 'duplicate' | null {
+  const name = entry.name.trim()
+  if (!name) return null
+  if (!isValidPickListName(name)) return 'invalid'
+  let lastId: string | undefined
+  let count = 0
+  for (const item of entries) {
+    if (item.name.trim() !== name) continue
+    lastId = item.id
+    count += 1
+  }
+  if (count > 1 && lastId === entry.id) return 'duplicate'
+  return null
+}
+
 export function createPickListId(): string {
   return `list-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
 }
@@ -155,7 +177,6 @@ export function normalizePickListDeclarations(raw: unknown): PickListDeclaration
   if (!Array.isArray(raw)) return []
   const out: PickListDeclaration[] = []
   const seenIds = new Set<string>()
-  const seenNames = new Set<string>()
   for (const item of raw) {
     const decl = normalizePickListDeclaration(item)
     if (!decl) continue
@@ -163,12 +184,6 @@ export function normalizePickListDeclarations(raw: unknown): PickListDeclaration
       decl.id = createPickListId()
     }
     seenIds.add(decl.id)
-    // Drop duplicate valid names within one scope (keep first).
-    const name = decl.name.trim()
-    if (name && isValidPickListName(name)) {
-      if (seenNames.has(name)) continue
-      seenNames.add(name)
-    }
     out.push(decl)
   }
   return out

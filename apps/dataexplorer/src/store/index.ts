@@ -116,7 +116,12 @@ type DataExplorerState = {
   setEditedEntity: (entity: string | null) => void
   createEntity: (
     data: Record<string, unknown>,
-    options?: { refresh?: boolean; count?: number }
+    options?: {
+      refresh?: boolean
+      count?: number
+      onProgress?: (current: number, total: number, phase: 'preparing' | 'creating') => void
+      signal?: AbortSignal
+    }
   ) => Promise<void>
   updateEntity: (id: string, data: Record<string, unknown>) => Promise<void>
   deleteEntity: (id: string) => Promise<void>
@@ -551,11 +556,22 @@ export const useDataExplorerStore = create<DataExplorerState>()(
               : 1
 
           if (count === 1) {
+            if (options?.signal?.aborted) {
+              throw new DOMException('Request cancelled', 'AbortError')
+            }
+            options?.onProgress?.(0, 1, 'creating')
             await api.createEntity(selectedDataclass, data)
+            if (options?.signal?.aborted) {
+              throw new DOMException('Request cancelled', 'AbortError')
+            }
+            options?.onProgress?.(1, 1, 'creating')
           } else {
             // Same template N times — createManyEntities resolves templates per item, then batches.
             const templates = Array.from({ length: count }, () => data)
-            await api.createManyEntities(selectedDataclass, templates)
+            await api.createManyEntities(selectedDataclass, templates, {
+              onProgress: options?.onProgress,
+              signal: options?.signal,
+            })
           }
 
           if (options?.refresh === false) return

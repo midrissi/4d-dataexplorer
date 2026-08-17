@@ -1,12 +1,12 @@
-.entity-io-anonymize-progress {
+.job-progress {
   display: flex;
   min-width: 0;
   align-items: center;
   gap: 0.5rem;
-  animation: entity-io-anonymize-progress-enter 180ms ease-out;
+  animation: job-progress-enter 180ms ease-out;
 }
 
-.entity-io-anonymize-progress__icon {
+.job-progress__icon {
   display: flex;
   width: 1.5rem;
   height: 1.5rem;
@@ -19,7 +19,7 @@
   color: var(--primary);
 }
 
-.entity-io-anonymize-progress__content {
+.job-progress__content {
   display: flex;
   min-width: 0;
   max-width: 15rem;
@@ -28,7 +28,7 @@
   gap: 0.25rem;
 }
 
-.entity-io-anonymize-progress__label {
+.job-progress__label {
   display: flex;
   gap: 0.35rem;
   overflow: hidden;
@@ -37,15 +37,15 @@
   line-height: 1;
   text-overflow: ellipsis;
   white-space: nowrap;
-  animation: entity-io-anonymize-progress-label 180ms ease-out;
+  animation: job-progress-label 180ms ease-out;
 }
 
-.entity-io-anonymize-progress__count {
+.job-progress__count {
   flex: none;
   font-variant-numeric: tabular-nums;
 }
 
-.entity-io-anonymize-progress__track {
+.job-progress__track {
   position: relative;
   display: block;
   width: 100%;
@@ -55,7 +55,7 @@
   background: color-mix(in oklch, var(--border) 85%, transparent);
 }
 
-.entity-io-anonymize-progress__fill {
+.job-progress__fill {
   display: block;
   height: 100%;
   border-radius: inherit;
@@ -63,12 +63,12 @@
   transition: width 420ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.entity-io-anonymize-progress__track--indeterminate .entity-io-anonymize-progress__fill {
+.job-progress__track--indeterminate .job-progress__fill {
   width: 35%;
-  animation: entity-io-anonymize-progress-sweep 1.4s ease-in-out infinite;
+  animation: job-progress-sweep 1.4s ease-in-out infinite;
 }
 
-@keyframes entity-io-anonymize-progress-enter {
+@keyframes job-progress-enter {
   from {
     opacity: 0;
     transform: translateY(0.25rem);
@@ -79,7 +79,7 @@
   }
 }
 
-@keyframes entity-io-anonymize-progress-label {
+@keyframes job-progress-label {
   from {
     opacity: 0;
     transform: translateY(0.125rem);
@@ -90,7 +90,7 @@
   }
 }
 
-@keyframes entity-io-anonymize-progress-sweep {
+@keyframes job-progress-sweep {
   from {
     transform: translateX(-120%);
   }
@@ -100,14 +100,14 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .entity-io-anonymize-progress,
-  .entity-io-anonymize-progress__label,
-  .entity-io-anonymize-progress__fill {
+  .job-progress,
+  .job-progress__label,
+  .job-progress__fill {
     animation: none;
     transition: none;
   }
 
-  .entity-io-anonymize-progress__track--indeterminate .entity-io-anonymize-progress__fill {
+  .job-progress__track--indeterminate .job-progress__fill {
     transform: translateX(95%);
   }
 }

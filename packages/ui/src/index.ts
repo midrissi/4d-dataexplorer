@@ -112,6 +112,7 @@ export {
   type EnvWriteTarget,
 } from './components/env-variable-chip'
 export { Input } from './components/input'
+export { JobProgress, JobProgressCount, type JobProgressProps } from './components/job-progress'
 export { Label } from './components/label'
 export {
   Markdown,

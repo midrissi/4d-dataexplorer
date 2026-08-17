@@ -1,4 +1,5 @@
 import type { TextPreviewMode } from '~/components/HttpClient/TextPreviewPanel'
+import { isAbortError } from '~/lib/abort'
 import { api } from '~/lib/api'
 import type { EntityIoFormatId } from '~/lib/entity-io'
 
@@ -41,10 +42,7 @@ export function parseAnonymizeSeed(seed: string): number | undefined {
 }
 
 export function isAnonymizeAbortError(error: unknown): boolean {
-  return (
-    (error instanceof DOMException && error.name === 'AbortError') ||
-    (error instanceof Error && error.name === 'AbortError')
-  )
+  return isAbortError(error)
 }
 
 export function previewModeForFormat(formatId: EntityIoFormatId): TextPreviewMode {

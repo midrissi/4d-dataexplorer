@@ -12,7 +12,7 @@ import { ListRowChrome } from './ListRowChrome'
 
 export function HardcodedListRow({
   entry,
-  nameOk,
+  nameIssue,
   pendingFocusId,
   onNameChange,
   onTypeChange,
@@ -24,7 +24,7 @@ export function HardcodedListRow({
   onDuplicateTo,
 }: {
   entry: HardcodedPickListDeclaration
-  nameOk: boolean
+  nameIssue: 'invalid' | 'duplicate' | null
   pendingFocusId: MutableRefObject<string | null>
   onNameChange: (name: string) => void
   onTypeChange: (type: PickListKind) => void
@@ -40,9 +40,8 @@ export function HardcodedListRow({
   return (
     <ListRowChrome
       entry={entry}
-      nameOk={nameOk}
+      nameIssue={nameIssue}
       placeholder="statusCodes"
-      gridClassName="grid min-h-9 grid-cols-[minmax(6rem,0.7fr)_minmax(6.5rem,0.55fr)_minmax(10rem,1.6fr)_auto] items-start gap-1.5 rounded-md border border-border/60 bg-background/60 px-1.5 py-1 transition-colors hover:bg-muted/20"
       pendingFocusId={pendingFocusId}
       onNameChange={onNameChange}
       onTypeChange={onTypeChange}
@@ -51,7 +50,6 @@ export function HardcodedListRow({
       transferTargets={transferTargets}
       onMoveTo={onMoveTo}
       onDuplicateTo={onDuplicateTo}
-      trailingClassName="flex items-center gap-0.5 pt-0.5"
       trailing={
         <Badge
           variant="muted"
@@ -59,13 +57,6 @@ export function HardcodedListRow({
         >
           {entry.values.length}
         </Badge>
-      }
-      footer={
-        !nameOk ? (
-          <span className="col-span-full truncate text-[10px] text-destructive" role="alert">
-            {t('lists.nameInvalid')}
-          </span>
-        ) : null
       }
     >
       <div className="min-w-0 rounded-md border border-border/50 bg-background/80">

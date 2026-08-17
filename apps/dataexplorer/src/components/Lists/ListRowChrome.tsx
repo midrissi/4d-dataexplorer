@@ -1,13 +1,18 @@
 import {
   Button,
+  cn,
   Input,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
 } from '@4d/ui'
-import { Trash2 } from 'lucide-react'
+import { CircleAlert, Trash2 } from 'lucide-react'
 import type { MutableRefObject, ReactNode } from 'react'
 import { useTranslation } from '~/i18n'
 import type { PickListDeclaration, PickListKind, PickListScope } from '~/lib/env'
@@ -15,9 +20,8 @@ import { ListRowActionsMenu } from './ListRowActionsMenu'
 
 export function ListRowChrome({
   entry,
-  nameOk,
+  nameIssue,
   placeholder,
-  gridClassName,
   pendingFocusId,
   onNameChange,
   onTypeChange,
@@ -29,12 +33,10 @@ export function ListRowChrome({
   children,
   trailing,
   trailingClassName,
-  footer,
 }: {
   entry: PickListDeclaration
-  nameOk: boolean
+  nameIssue: 'invalid' | 'duplicate' | null
   placeholder: string
-  gridClassName: string
   pendingFocusId: MutableRefObject<string | null>
   onNameChange: (name: string) => void
   onTypeChange: (type: PickListKind) => void
@@ -46,26 +48,70 @@ export function ListRowChrome({
   children: ReactNode
   trailing: ReactNode
   trailingClassName?: string
-  footer?: ReactNode
 }) {
   const { t } = useTranslation()
+  const nameOk = nameIssue === null
+  const nameErrorLabel =
+    nameIssue === 'duplicate'
+      ? t('lists.nameDuplicate')
+      : nameIssue === 'invalid'
+        ? t('lists.nameInvalid')
+        : undefined
+  const nameErrorId = `list-name-error-${entry.id}`
+
+  const nameInput = (
+    <Input
+      ref={(el) => {
+        if (el && pendingFocusId.current === entry.id) {
+          el.focus()
+          pendingFocusId.current = null
+        }
+      }}
+      className={cn(
+        'h-7 min-w-0 font-mono text-[10px]',
+        !nameOk && 'border-destructive pr-6 focus-visible:ring-destructive'
+      )}
+      aria-label={t('lists.name')}
+      aria-invalid={!nameOk || undefined}
+      aria-describedby={!nameOk ? nameErrorId : undefined}
+      placeholder={placeholder}
+      value={entry.name}
+      onChange={(event) => onNameChange(event.target.value)}
+    />
+  )
 
   return (
-    <fieldset aria-label={entry.name.trim() || t('lists.newEntry')} className={gridClassName}>
-      <Input
-        ref={(el) => {
-          if (el && pendingFocusId.current === entry.id) {
-            el.focus()
-            pendingFocusId.current = null
-          }
-        }}
-        className="h-7 min-w-0 font-mono text-[10px]"
-        aria-label={t('lists.name')}
-        placeholder={placeholder}
-        value={entry.name}
-        aria-invalid={!nameOk}
-        onChange={(event) => onNameChange(event.target.value)}
-      />
+    <fieldset
+      aria-label={entry.name.trim() || t('lists.newEntry')}
+      className="grid min-h-9 grid-cols-[9rem_7rem_minmax(0,1fr)_auto] items-center gap-1.5 rounded-md border border-border/60 bg-background/60 px-1.5 py-1 transition-colors hover:bg-muted/20"
+    >
+      <div className="relative w-full min-w-0">
+        {nameInput}
+        {nameErrorLabel ? (
+          <>
+            <TooltipProvider delayDuration={250}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 flex cursor-pointer items-center px-1.5 text-destructive"
+                    aria-label={nameErrorLabel}
+                    onMouseDown={(event) => event.preventDefault()}
+                  >
+                    <CircleAlert className="size-3.5" aria-hidden />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top" align="center">
+                  {nameErrorLabel}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            <span id={nameErrorId} className="sr-only">
+              {nameErrorLabel}
+            </span>
+          </>
+        ) : null}
+      </div>
       <div className="focus-ring-wrap min-w-0">
         <Select value={entry.type} onValueChange={(value) => onTypeChange(value as PickListKind)}>
           <SelectTrigger className="h-7 min-w-0 text-[10px]" aria-label={t('lists.type')}>
@@ -77,7 +123,7 @@ export function ListRowChrome({
           </SelectContent>
         </Select>
       </div>
-      {children}
+      <div className="min-w-0">{children}</div>
       <div className={trailingClassName ?? 'flex items-center gap-0.5'}>
         {trailing}
         <ListRowActionsMenu
@@ -103,7 +149,6 @@ export function ListRowChrome({
           <Trash2 className="h-3.5 w-3.5" aria-hidden />
         </Button>
       </div>
-      {footer}
     </fieldset>
   )
 }

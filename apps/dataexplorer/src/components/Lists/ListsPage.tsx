@@ -1,6 +1,6 @@
 import { Button, SegmentedControl } from '@4d/ui'
 import { Download, List, Upload } from 'lucide-react'
-import { useMemo, useRef } from 'react'
+import { useRef } from 'react'
 import { ListsEditor } from '~/components/Lists/ListsEditor'
 import { useTranslation } from '~/i18n'
 import { applyListsImport, type ListsExport, type PickListScope } from '~/lib/env'
@@ -41,10 +41,7 @@ export function ListsPage() {
     setListsScope(tab.id, value)
   }
 
-  const count = useMemo(
-    () => getLists(scope).filter((entry) => entry.name.trim()).length,
-    [getLists, scope]
-  )
+  const count = getLists(scope).filter((entry) => entry.name.trim()).length
 
   const scopeHint =
     scope === 'globals'

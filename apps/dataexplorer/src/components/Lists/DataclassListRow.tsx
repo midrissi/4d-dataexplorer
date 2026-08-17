@@ -15,7 +15,7 @@ import { ListRowChrome } from './ListRowChrome'
 
 export function DataclassListRow({
   entry,
-  nameOk,
+  nameIssue,
   loading,
   valuesState,
   dataclassOptions,
@@ -33,7 +33,7 @@ export function DataclassListRow({
   onDuplicateTo,
 }: {
   entry: DataclassPickListDeclaration
-  nameOk: boolean
+  nameIssue: 'invalid' | 'duplicate' | null
   loading: boolean
   valuesState: PickListValuesState
   dataclassOptions: EntityIoSelectOption<string>[]
@@ -65,9 +65,8 @@ export function DataclassListRow({
   return (
     <ListRowChrome
       entry={entry}
-      nameOk={nameOk}
+      nameIssue={nameIssue}
       placeholder="companyKeys"
-      gridClassName="grid min-h-9 grid-cols-[minmax(6rem,0.7fr)_minmax(6.5rem,0.55fr)_minmax(7rem,0.9fr)_minmax(7rem,0.9fr)_minmax(7rem,1.1fr)_auto] items-center gap-1.5 rounded-md border border-border/60 bg-background/60 px-1.5 py-1 transition-colors hover:bg-muted/20"
       pendingFocusId={pendingFocusId}
       onNameChange={onNameChange}
       onTypeChange={onTypeChange}
@@ -85,7 +84,11 @@ export function DataclassListRow({
           aria-label={t('lists.load')}
           title={t('lists.load')}
           disabled={
-            !entry.name.trim() || !entry.dataclass || !entry.attribute || loading || !nameOk
+            !entry.name.trim() ||
+            !entry.dataclass ||
+            !entry.attribute ||
+            loading ||
+            nameIssue !== null
           }
           onClick={onRefresh}
         >
@@ -99,65 +102,56 @@ export function DataclassListRow({
         </Button>
       }
     >
-      <div className="focus-ring-wrap min-w-0">
-        <EntityIoSelect
-          ariaLabel={t('lists.dataclass')}
-          value={entry.dataclass}
-          onValueChange={onDataclassChange}
-          options={dataclassOptions}
-          className="h-7 min-w-0 font-mono text-[10px]"
-        />
-      </div>
-      <div className="focus-ring-wrap min-w-0">
-        <EntityIoSelect
-          ariaLabel={t('lists.attribute')}
-          value={entry.attribute}
-          disabled={!entry.dataclass}
-          onValueChange={onAttributeChange}
-          options={attributeOptions}
-          className="h-7 min-w-0 font-mono text-[10px]"
-        />
-      </div>
-      <div
-        className="flex min-w-0 items-center gap-1.5 overflow-hidden"
-        title={
-          !nameOk
-            ? t('lists.nameInvalid')
-            : valuesState.status === 'error'
-              ? valuesState.message
-              : (preview ?? undefined)
-        }
-      >
-        {!nameOk ? (
-          <>
-            <CircleAlert className="size-3.5 shrink-0 text-destructive" aria-hidden />
-            <span className="truncate text-[10px] text-destructive">{t('lists.nameInvalid')}</span>
-          </>
-        ) : valuesState.status === 'ready' ? (
-          <>
-            <Badge
-              variant="muted"
-              className="h-5 shrink-0 px-1.5 py-0 font-mono text-[9px] tabular-nums"
-            >
-              {valuesState.values.length}
-              {valuesState.truncated ? ` · ${t('lists.truncated')}` : null}
-            </Badge>
-            <span className="truncate font-mono text-[9px] text-muted-foreground">{preview}</span>
-          </>
-        ) : valuesState.status === 'empty' ? (
-          <span className="truncate text-[10px] text-muted-foreground">
-            {t('lists.emptyValues')}
-          </span>
-        ) : valuesState.status === 'error' ? (
-          <>
-            <CircleAlert className="size-3.5 shrink-0 text-destructive" aria-hidden />
-            <span className="truncate text-[10px] text-destructive">{valuesState.message}</span>
-          </>
-        ) : (
-          <span className="truncate font-mono text-[9px] text-muted-foreground/70">
-            {entry.dataclass && entry.attribute ? `${entry.dataclass}.${entry.attribute}` : '—'}
-          </span>
-        )}
+      <div className="grid min-w-0 grid-cols-[minmax(7rem,0.9fr)_minmax(7rem,0.9fr)_minmax(0,1.1fr)] items-center gap-1.5">
+        <div className="focus-ring-wrap min-w-0">
+          <EntityIoSelect
+            ariaLabel={t('lists.dataclass')}
+            value={entry.dataclass}
+            onValueChange={onDataclassChange}
+            options={dataclassOptions}
+            className="h-7 min-w-0 font-mono text-[10px]"
+          />
+        </div>
+        <div className="focus-ring-wrap min-w-0">
+          <EntityIoSelect
+            ariaLabel={t('lists.attribute')}
+            value={entry.attribute}
+            disabled={!entry.dataclass}
+            onValueChange={onAttributeChange}
+            options={attributeOptions}
+            className="h-7 min-w-0 font-mono text-[10px]"
+          />
+        </div>
+        <div
+          className="flex min-w-0 items-center gap-1.5 overflow-hidden"
+          title={valuesState.status === 'error' ? valuesState.message : (preview ?? undefined)}
+        >
+          {valuesState.status === 'ready' ? (
+            <>
+              <Badge
+                variant="muted"
+                className="h-5 shrink-0 px-1.5 py-0 font-mono text-[9px] tabular-nums"
+              >
+                {valuesState.values.length}
+                {valuesState.truncated ? ` · ${t('lists.truncated')}` : null}
+              </Badge>
+              <span className="truncate font-mono text-[9px] text-muted-foreground">{preview}</span>
+            </>
+          ) : valuesState.status === 'empty' ? (
+            <span className="truncate text-[10px] text-muted-foreground">
+              {t('lists.emptyValues')}
+            </span>
+          ) : valuesState.status === 'error' ? (
+            <>
+              <CircleAlert className="size-3.5 shrink-0 text-destructive" aria-hidden />
+              <span className="truncate text-[10px] text-destructive">{valuesState.message}</span>
+            </>
+          ) : (
+            <span className="truncate font-mono text-[9px] text-muted-foreground/70">
+              {entry.dataclass && entry.attribute ? `${entry.dataclass}.${entry.attribute}` : '—'}
+            </span>
+          )}
+        </div>
       </div>
     </ListRowChrome>
   )

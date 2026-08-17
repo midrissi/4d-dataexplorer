@@ -29,6 +29,7 @@ import {
 import type { EnvScope, EnvVarLookup } from '~/lib/env/types'
 import { getCurrentBaseId } from '~/lib/storage'
 import { setEnvVarCurrentValue, useEnvironmentsStore } from '~/store/environments'
+import { useListsStore } from '~/store/lists'
 import { useTabsStore } from '~/store/tabs'
 
 /**
@@ -162,8 +163,20 @@ export function useTemplatedEnvFieldProps(options?: TemplatedEnvFieldOptions) {
   const { t } = useTranslation()
   const contextThis = useEnvThisRoot()
   const thisRoot = options?.thisRoot !== undefined ? options.thisRoot : contextThis
-  const lists = options?.lists
-  const listNames = options?.listNames
+  const listsRevision = useListsStore((s) => s.revision)
+  const getPickListNames = useListsStore((s) => s.getPickListNames)
+  const getPickListsResolveMap = useListsStore((s) => s.getPickListsResolveMap)
+  const storeListNames = useMemo(() => {
+    void listsRevision
+    return getPickListNames()
+  }, [getPickListNames, listsRevision])
+  const storeLists = useMemo(() => {
+    void listsRevision
+    return getPickListsResolveMap()
+  }, [getPickListsResolveMap, listsRevision])
+  // Callers (e.g. anonymize) may pass scoped/loaded lists; otherwise use merged declarations.
+  const lists = options?.lists ?? storeLists
+  const listNames = options?.listNames ?? storeListNames
   const afterManageVariables = options?.onManageVariables
   // Re-render when env data changes so chip lookups / suggestions stay fresh.
   const revision = useEnvironmentsStore((s) => s.revision)

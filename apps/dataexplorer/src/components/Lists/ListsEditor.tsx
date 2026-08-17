@@ -2,7 +2,7 @@ import { Button } from '@4d/ui'
 import { List, Plus } from 'lucide-react'
 import { EmptyPanel as AppEmptyPanel, EmptyPanelAction } from '~/components/EmptyPanel'
 import { useTranslation } from '~/i18n'
-import { isHardcodedPickList, isValidPickListName, type PickListScope } from '~/lib/env'
+import { isHardcodedPickList, type PickListScope, pickListNameIssue } from '~/lib/env'
 import { DataclassListRow } from './DataclassListRow'
 import { HardcodedListRow } from './HardcodedListRow'
 import { useListsEditor } from './use-lists-editor'
@@ -73,7 +73,7 @@ export function ListsEditor({
         </div>
         <div className="min-h-0 flex-1 space-y-1.5 overflow-auto overscroll-contain p-2">
           {entries.map((entry) => {
-            const nameOk = !entry.name.trim() || isValidPickListName(entry.name)
+            const nameIssue = pickListNameIssue(entry, entries)
             const valuesState = getListValuesState(entry)
             const loading = refreshingId === entry.id || valuesState.status === 'loading'
 
@@ -82,7 +82,7 @@ export function ListsEditor({
                 <HardcodedListRow
                   key={entry.id}
                   entry={entry}
-                  nameOk={nameOk}
+                  nameIssue={nameIssue}
                   pendingFocusId={pendingFocusId}
                   onNameChange={(name) => replaceEntry(entry.id, { ...entry, name })}
                   onTypeChange={(type) => handleTypeChange(entry.id, type)}
@@ -100,7 +100,7 @@ export function ListsEditor({
               <DataclassListRow
                 key={entry.id}
                 entry={entry}
-                nameOk={nameOk}
+                nameIssue={nameIssue}
                 loading={loading}
                 valuesState={valuesState}
                 dataclassOptions={dataclassOptions}
