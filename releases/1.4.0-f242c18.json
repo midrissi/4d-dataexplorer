@@ -3,7 +3,7 @@
   "name": "Release v1.4.0-f242c18",
   "publishedAt": "2026-08-18T10:28:44Z",
   "htmlUrl": "https://github.com/midrissi/4d-dataexplorer/releases/tag/v1.4.0-f242c18",
-  "total": 4,
+  "total": 5,
   "platforms": [
     {
       "id": "android",
@@ -13,7 +13,7 @@
     {
       "id": "macos",
       "label": "macOS",
-      "downloads": 1
+      "downloads": 2
     },
     {
       "id": "ios",
@@ -38,6 +38,14 @@
   ],
   "assets": [
     {
+      "name": "latest.json",
+      "downloadCount": 16,
+      "size": 6280,
+      "contentType": "application/json",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.4.0-f242c18/latest.json"
+    },
+    {
       "name": "Data-Explorer_1.4.0-f242c18_android-aarch64.apk",
       "downloadCount": 3,
       "size": 29226082,
@@ -46,16 +54,8 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.4.0-f242c18/Data-Explorer_1.4.0-f242c18_android-aarch64.apk"
     },
     {
-      "name": "latest.json",
-      "downloadCount": 2,
-      "size": 6280,
-      "contentType": "application/json",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.4.0-f242c18/latest.json"
-    },
-    {
       "name": "Data.Explorer_1.4.0-f242c18_aarch64.app.tar.gz",
-      "downloadCount": 1,
+      "downloadCount": 2,
       "size": 13324745,
       "contentType": "application/zip",
       "platform": "macos",
