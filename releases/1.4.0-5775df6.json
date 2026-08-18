@@ -38,20 +38,20 @@
   ],
   "assets": [
     {
+      "name": "latest.json",
+      "downloadCount": 5,
+      "size": 6280,
+      "contentType": "application/json",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.4.0-5775df6/latest.json"
+    },
+    {
       "name": "Data.Explorer_1.4.0-5775df6_aarch64.app.tar.gz",
       "downloadCount": 1,
       "size": 13324156,
       "contentType": "application/zip",
       "platform": "macos",
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.4.0-5775df6/Data.Explorer_1.4.0-5775df6_aarch64.app.tar.gz"
-    },
-    {
-      "name": "latest.json",
-      "downloadCount": 1,
-      "size": 6280,
-      "contentType": "application/json",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.4.0-5775df6/latest.json"
     },
     {
       "name": "Data-Explorer_1.4.0-5775df6_aarch64.zip",
