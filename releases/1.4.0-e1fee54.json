@@ -126,6 +126,22 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.4.0-e1fee54/Data.Explorer_1.4.0-e1fee54_amd64.deb.sig"
     },
     {
+      "name": "Data.Explorer_1.4.0-e1fee54_x64-setup.exe",
+      "downloadCount": 0,
+      "size": 11098237,
+      "contentType": "application/zip",
+      "platform": "windows",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.4.0-e1fee54/Data.Explorer_1.4.0-e1fee54_x64-setup.exe"
+    },
+    {
+      "name": "Data.Explorer_1.4.0-e1fee54_x64-setup.exe.sig",
+      "downloadCount": 0,
+      "size": 436,
+      "contentType": "application/zip",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.4.0-e1fee54/Data.Explorer_1.4.0-e1fee54_x64-setup.exe.sig"
+    },
+    {
       "name": "Data.Explorer_1.4.0-e1fee54_x64.app.tar.gz",
       "downloadCount": 0,
       "size": 13917437,
@@ -200,7 +216,7 @@
     {
       "name": "latest.json",
       "downloadCount": 0,
-      "size": 4705,
+      "size": 5880,
       "contentType": "application/zip",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.4.0-e1fee54/latest.json"
