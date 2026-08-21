@@ -54,6 +54,38 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.4.0-c65bf4d/Data-Explorer_1.4.0-c65bf4d_aarch64.zip.sha256"
     },
     {
+      "name": "Data-Explorer_1.4.0-c65bf4d_android-aarch64.apk",
+      "downloadCount": 0,
+      "size": 30515862,
+      "contentType": "application/vnd.android.package-archive",
+      "platform": "android",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.4.0-c65bf4d/Data-Explorer_1.4.0-c65bf4d_android-aarch64.apk"
+    },
+    {
+      "name": "Data-Explorer_1.4.0-c65bf4d_ios-sim-release.zip",
+      "downloadCount": 0,
+      "size": 12056479,
+      "contentType": "application/zip",
+      "platform": "ios",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.4.0-c65bf4d/Data-Explorer_1.4.0-c65bf4d_ios-sim-release.zip"
+    },
+    {
+      "name": "Data-Explorer_1.4.0-c65bf4d_x86_64.zip",
+      "downloadCount": 0,
+      "size": 14712660,
+      "contentType": "application/zip",
+      "platform": "macos",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.4.0-c65bf4d/Data-Explorer_1.4.0-c65bf4d_x86_64.zip"
+    },
+    {
+      "name": "Data-Explorer_1.4.0-c65bf4d_x86_64.zip.sha256",
+      "downloadCount": 0,
+      "size": 105,
+      "contentType": "application/octet-stream",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.4.0-c65bf4d/Data-Explorer_1.4.0-c65bf4d_x86_64.zip.sha256"
+    },
+    {
       "name": "Data.Explorer_1.4.0-c65bf4d_aarch64.app.tar.gz",
       "downloadCount": 0,
       "size": 14386603,
@@ -76,6 +108,94 @@
       "contentType": "application/zip",
       "platform": "macos",
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.4.0-c65bf4d/Data.Explorer_1.4.0-c65bf4d_aarch64.dmg"
+    },
+    {
+      "name": "Data.Explorer_1.4.0-c65bf4d_amd64.AppImage",
+      "downloadCount": 0,
+      "size": 94702072,
+      "contentType": "application/zip",
+      "platform": "linux",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.4.0-c65bf4d/Data.Explorer_1.4.0-c65bf4d_amd64.AppImage"
+    },
+    {
+      "name": "Data.Explorer_1.4.0-c65bf4d_amd64.AppImage.sig",
+      "downloadCount": 0,
+      "size": 436,
+      "contentType": "application/zip",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.4.0-c65bf4d/Data.Explorer_1.4.0-c65bf4d_amd64.AppImage.sig"
+    },
+    {
+      "name": "Data.Explorer_1.4.0-c65bf4d_amd64.deb",
+      "downloadCount": 0,
+      "size": 15850760,
+      "contentType": "application/zip",
+      "platform": "linux",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.4.0-c65bf4d/Data.Explorer_1.4.0-c65bf4d_amd64.deb"
+    },
+    {
+      "name": "Data.Explorer_1.4.0-c65bf4d_amd64.deb.sig",
+      "downloadCount": 0,
+      "size": 432,
+      "contentType": "application/zip",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.4.0-c65bf4d/Data.Explorer_1.4.0-c65bf4d_amd64.deb.sig"
+    },
+    {
+      "name": "Data.Explorer_1.4.0-c65bf4d_x64-setup.exe",
+      "downloadCount": 0,
+      "size": 12064762,
+      "contentType": "application/zip",
+      "platform": "windows",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.4.0-c65bf4d/Data.Explorer_1.4.0-c65bf4d_x64-setup.exe"
+    },
+    {
+      "name": "Data.Explorer_1.4.0-c65bf4d_x64-setup.exe.sig",
+      "downloadCount": 0,
+      "size": 436,
+      "contentType": "application/zip",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.4.0-c65bf4d/Data.Explorer_1.4.0-c65bf4d_x64-setup.exe.sig"
+    },
+    {
+      "name": "Data.Explorer_1.4.0-c65bf4d_x64.app.tar.gz",
+      "downloadCount": 0,
+      "size": 14863343,
+      "contentType": "application/zip",
+      "platform": "macos",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.4.0-c65bf4d/Data.Explorer_1.4.0-c65bf4d_x64.app.tar.gz"
+    },
+    {
+      "name": "Data.Explorer_1.4.0-c65bf4d_x64.app.tar.gz.sig",
+      "downloadCount": 0,
+      "size": 412,
+      "contentType": "application/zip",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.4.0-c65bf4d/Data.Explorer_1.4.0-c65bf4d_x64.app.tar.gz.sig"
+    },
+    {
+      "name": "Data.Explorer_1.4.0-c65bf4d_x64.dmg",
+      "downloadCount": 0,
+      "size": 14781698,
+      "contentType": "application/zip",
+      "platform": "macos",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.4.0-c65bf4d/Data.Explorer_1.4.0-c65bf4d_x64.dmg"
+    },
+    {
+      "name": "Data.Explorer-1.4.0-c65bf4d-1.x86_64.rpm",
+      "downloadCount": 0,
+      "size": 15851664,
+      "contentType": "application/zip",
+      "platform": "linux",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.4.0-c65bf4d/Data.Explorer-1.4.0-c65bf4d-1.x86_64.rpm"
+    },
+    {
+      "name": "Data.Explorer-1.4.0-c65bf4d-1.x86_64.rpm.sig",
+      "downloadCount": 0,
+      "size": 436,
+      "contentType": "application/zip",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.4.0-c65bf4d/Data.Explorer-1.4.0-c65bf4d-1.x86_64.rpm.sig"
     },
     {
       "name": "DataExplorer.zip",
@@ -112,7 +232,7 @@
     {
       "name": "latest.json",
       "downloadCount": 0,
-      "size": 1236,
+      "size": 5880,
       "contentType": "application/zip",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.4.0-c65bf4d/latest.json"
