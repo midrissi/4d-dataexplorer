@@ -38,6 +38,14 @@
   ],
   "assets": [
     {
+      "name": "latest.json",
+      "downloadCount": 3,
+      "size": 6280,
+      "contentType": "application/json",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-a0ba050/latest.json"
+    },
+    {
       "name": "Data-Explorer_1.5.0-a0ba050_aarch64.zip",
       "downloadCount": 0,
       "size": 14175001,
@@ -228,14 +236,6 @@
       "contentType": "application/x-sh",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-a0ba050/install-desktop.sh"
-    },
-    {
-      "name": "latest.json",
-      "downloadCount": 0,
-      "size": 6280,
-      "contentType": "application/json",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-a0ba050/latest.json"
     }
   ]
 }
