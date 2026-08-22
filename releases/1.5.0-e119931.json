@@ -70,6 +70,22 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-e119931/Data-Explorer_1.5.0-e119931_ios-sim-release.zip"
     },
     {
+      "name": "Data-Explorer_1.5.0-e119931_x86_64.zip",
+      "downloadCount": 0,
+      "size": 14724431,
+      "contentType": "application/zip",
+      "platform": "macos",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-e119931/Data-Explorer_1.5.0-e119931_x86_64.zip"
+    },
+    {
+      "name": "Data-Explorer_1.5.0-e119931_x86_64.zip.sha256",
+      "downloadCount": 0,
+      "size": 105,
+      "contentType": "application/octet-stream",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-e119931/Data-Explorer_1.5.0-e119931_x86_64.zip.sha256"
+    },
+    {
       "name": "Data.Explorer_1.5.0-e119931_aarch64.app.tar.gz",
       "downloadCount": 0,
       "size": 14397195,
@@ -92,6 +108,30 @@
       "contentType": "application/zip",
       "platform": "macos",
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-e119931/Data.Explorer_1.5.0-e119931_aarch64.dmg"
+    },
+    {
+      "name": "Data.Explorer_1.5.0-e119931_x64.app.tar.gz",
+      "downloadCount": 0,
+      "size": 14875332,
+      "contentType": "application/zip",
+      "platform": "macos",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-e119931/Data.Explorer_1.5.0-e119931_x64.app.tar.gz"
+    },
+    {
+      "name": "Data.Explorer_1.5.0-e119931_x64.app.tar.gz.sig",
+      "downloadCount": 0,
+      "size": 412,
+      "contentType": "application/zip",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-e119931/Data.Explorer_1.5.0-e119931_x64.app.tar.gz.sig"
+    },
+    {
+      "name": "Data.Explorer_1.5.0-e119931_x64.dmg",
+      "downloadCount": 0,
+      "size": 14793314,
+      "contentType": "application/zip",
+      "platform": "macos",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-e119931/Data.Explorer_1.5.0-e119931_x64.dmg"
     },
     {
       "name": "DataExplorer.zip",
@@ -128,7 +168,7 @@
     {
       "name": "latest.json",
       "downloadCount": 0,
-      "size": 1236,
+      "size": 2360,
       "contentType": "application/zip",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-e119931/latest.json"
