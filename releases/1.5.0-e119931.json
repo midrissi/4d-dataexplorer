@@ -3,12 +3,22 @@
   "name": "Release v1.5.0-e119931",
   "publishedAt": "2026-08-22T00:24:50Z",
   "htmlUrl": "https://github.com/midrissi/4d-dataexplorer/releases/tag/v1.5.0-e119931",
-  "total": 0,
+  "total": 4,
   "platforms": [
+    {
+      "id": "macos",
+      "label": "macOS",
+      "downloads": 2
+    },
     {
       "id": "android",
       "label": "Android",
-      "downloads": 0
+      "downloads": 1
+    },
+    {
+      "id": "web",
+      "label": "Web",
+      "downloads": 1
     },
     {
       "id": "ios",
@@ -21,22 +31,44 @@
       "downloads": 0
     },
     {
-      "id": "macos",
-      "label": "macOS",
-      "downloads": 0
-    },
-    {
-      "id": "web",
-      "label": "Web",
-      "downloads": 0
-    },
-    {
       "id": "windows",
       "label": "Windows",
       "downloads": 0
     }
   ],
   "assets": [
+    {
+      "name": "latest.json",
+      "downloadCount": 23,
+      "size": 6280,
+      "contentType": "application/json",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-e119931/latest.json"
+    },
+    {
+      "name": "Data.Explorer_1.5.0-e119931_aarch64.app.tar.gz",
+      "downloadCount": 2,
+      "size": 14397195,
+      "contentType": "application/zip",
+      "platform": "macos",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-e119931/Data.Explorer_1.5.0-e119931_aarch64.app.tar.gz"
+    },
+    {
+      "name": "Data-Explorer_1.5.0-e119931_android-aarch64.apk",
+      "downloadCount": 1,
+      "size": 30528146,
+      "contentType": "application/vnd.android.package-archive",
+      "platform": "android",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-e119931/Data-Explorer_1.5.0-e119931_android-aarch64.apk"
+    },
+    {
+      "name": "DataExplorer.zip",
+      "downloadCount": 1,
+      "size": 8421657,
+      "contentType": "application/zip",
+      "platform": "web",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-e119931/DataExplorer.zip"
+    },
     {
       "name": "Data-Explorer_1.5.0-e119931_aarch64.zip",
       "downloadCount": 0,
@@ -52,14 +84,6 @@
       "contentType": "application/octet-stream",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-e119931/Data-Explorer_1.5.0-e119931_aarch64.zip.sha256"
-    },
-    {
-      "name": "Data-Explorer_1.5.0-e119931_android-aarch64.apk",
-      "downloadCount": 0,
-      "size": 30528146,
-      "contentType": "application/vnd.android.package-archive",
-      "platform": "android",
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-e119931/Data-Explorer_1.5.0-e119931_android-aarch64.apk"
     },
     {
       "name": "Data-Explorer_1.5.0-e119931_ios-sim-release.zip",
@@ -84,14 +108,6 @@
       "contentType": "application/octet-stream",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-e119931/Data-Explorer_1.5.0-e119931_x86_64.zip.sha256"
-    },
-    {
-      "name": "Data.Explorer_1.5.0-e119931_aarch64.app.tar.gz",
-      "downloadCount": 0,
-      "size": 14397195,
-      "contentType": "application/zip",
-      "platform": "macos",
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-e119931/Data.Explorer_1.5.0-e119931_aarch64.app.tar.gz"
     },
     {
       "name": "Data.Explorer_1.5.0-e119931_aarch64.app.tar.gz.sig",
@@ -198,14 +214,6 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-e119931/Data.Explorer-1.5.0-e119931-1.x86_64.rpm.sig"
     },
     {
-      "name": "DataExplorer.zip",
-      "downloadCount": 0,
-      "size": 8421657,
-      "contentType": "application/zip",
-      "platform": "web",
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-e119931/DataExplorer.zip"
-    },
-    {
       "name": "fix-macos-quarantine.sh",
       "downloadCount": 0,
       "size": 3954,
@@ -228,14 +236,6 @@
       "contentType": "application/x-sh",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-e119931/install-desktop.sh"
-    },
-    {
-      "name": "latest.json",
-      "downloadCount": 0,
-      "size": 6280,
-      "contentType": "application/json",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-e119931/latest.json"
     }
   ]
 }
