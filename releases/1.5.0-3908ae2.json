@@ -232,8 +232,8 @@
     {
       "name": "latest.json",
       "downloadCount": 0,
-      "size": 5880,
-      "contentType": "application/zip",
+      "size": 6280,
+      "contentType": "application/json",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-3908ae2/latest.json"
     }
