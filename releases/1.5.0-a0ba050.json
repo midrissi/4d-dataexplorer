@@ -54,6 +54,22 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-a0ba050/Data-Explorer_1.5.0-a0ba050_aarch64.zip.sha256"
     },
     {
+      "name": "Data-Explorer_1.5.0-a0ba050_android-aarch64.apk",
+      "downloadCount": 0,
+      "size": 30527706,
+      "contentType": "application/vnd.android.package-archive",
+      "platform": "android",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-a0ba050/Data-Explorer_1.5.0-a0ba050_android-aarch64.apk"
+    },
+    {
+      "name": "Data-Explorer_1.5.0-a0ba050_ios-sim-release.zip",
+      "downloadCount": 0,
+      "size": 12069034,
+      "contentType": "application/zip",
+      "platform": "ios",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-a0ba050/Data-Explorer_1.5.0-a0ba050_ios-sim-release.zip"
+    },
+    {
       "name": "Data-Explorer_1.5.0-a0ba050_x86_64.zip",
       "downloadCount": 0,
       "size": 14726623,
