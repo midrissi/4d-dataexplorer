@@ -1,8 +1,8 @@
 {
-  "tag": "v1.5.0",
-  "name": "Release v1.5.0",
-  "publishedAt": "2026-08-21T23:04:14Z",
-  "htmlUrl": "https://github.com/midrissi/4d-dataexplorer/releases/tag/v1.5.0",
+  "tag": "v1.5.0-8b7b1f7",
+  "name": "Release v1.5.0-8b7b1f7",
+  "publishedAt": "2026-08-23T02:36:26Z",
+  "htmlUrl": "https://github.com/midrissi/4d-dataexplorer/releases/tag/v1.5.0-8b7b1f7",
   "total": 0,
   "platforms": [
     {
@@ -36,14 +36,5 @@
       "downloads": 0
     }
   ],
-  "assets": [
-    {
-      "name": "DataExplorer.zip",
-      "downloadCount": 0,
-      "size": 7536931,
-      "contentType": "application/zip",
-      "platform": "web",
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0/DataExplorer.zip"
-    }
-  ]
+  "assets": []
 }
