@@ -38,12 +38,84 @@
   ],
   "assets": [
     {
+      "name": "Data-Explorer_1.5.0-3dd7378_aarch64.zip",
+      "downloadCount": 0,
+      "size": 15332758,
+      "contentType": "application/zip",
+      "platform": "macos",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-3dd7378/Data-Explorer_1.5.0-3dd7378_aarch64.zip"
+    },
+    {
+      "name": "Data-Explorer_1.5.0-3dd7378_aarch64.zip.sha256",
+      "downloadCount": 0,
+      "size": 106,
+      "contentType": "application/octet-stream",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-3dd7378/Data-Explorer_1.5.0-3dd7378_aarch64.zip.sha256"
+    },
+    {
+      "name": "Data.Explorer_1.5.0-3dd7378_aarch64.app.tar.gz",
+      "downloadCount": 0,
+      "size": 15559389,
+      "contentType": "application/zip",
+      "platform": "macos",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-3dd7378/Data.Explorer_1.5.0-3dd7378_aarch64.app.tar.gz"
+    },
+    {
+      "name": "Data.Explorer_1.5.0-3dd7378_aarch64.app.tar.gz.sig",
+      "downloadCount": 0,
+      "size": 412,
+      "contentType": "application/zip",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-3dd7378/Data.Explorer_1.5.0-3dd7378_aarch64.app.tar.gz.sig"
+    },
+    {
+      "name": "Data.Explorer_1.5.0-3dd7378_aarch64.dmg",
+      "downloadCount": 0,
+      "size": 15407556,
+      "contentType": "application/zip",
+      "platform": "macos",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-3dd7378/Data.Explorer_1.5.0-3dd7378_aarch64.dmg"
+    },
+    {
       "name": "DataExplorer.zip",
       "downloadCount": 0,
       "size": 9554481,
       "contentType": "application/zip",
       "platform": "web",
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-3dd7378/DataExplorer.zip"
+    },
+    {
+      "name": "fix-macos-quarantine.sh",
+      "downloadCount": 0,
+      "size": 3954,
+      "contentType": "application/x-sh",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-3dd7378/fix-macos-quarantine.sh"
+    },
+    {
+      "name": "install-desktop.ps1",
+      "downloadCount": 0,
+      "size": 1496,
+      "contentType": "application/octet-stream",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-3dd7378/install-desktop.ps1"
+    },
+    {
+      "name": "install-desktop.sh",
+      "downloadCount": 0,
+      "size": 3876,
+      "contentType": "application/x-sh",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-3dd7378/install-desktop.sh"
+    },
+    {
+      "name": "latest.json",
+      "downloadCount": 0,
+      "size": 1236,
+      "contentType": "application/zip",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-3dd7378/latest.json"
     }
   ]
 }
