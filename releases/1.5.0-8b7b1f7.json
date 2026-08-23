@@ -3,8 +3,13 @@
   "name": "Release v1.5.0-8b7b1f7",
   "publishedAt": "2026-08-23T02:36:26Z",
   "htmlUrl": "https://github.com/midrissi/4d-dataexplorer/releases/tag/v1.5.0-8b7b1f7",
-  "total": 0,
+  "total": 1,
   "platforms": [
+    {
+      "id": "macos",
+      "label": "macOS",
+      "downloads": 1
+    },
     {
       "id": "android",
       "label": "Android",
@@ -21,11 +26,6 @@
       "downloads": 0
     },
     {
-      "id": "macos",
-      "label": "macOS",
-      "downloads": 0
-    },
-    {
       "id": "web",
       "label": "Web",
       "downloads": 0
@@ -37,6 +37,22 @@
     }
   ],
   "assets": [
+    {
+      "name": "latest.json",
+      "downloadCount": 4,
+      "size": 6280,
+      "contentType": "application/json",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-8b7b1f7/latest.json"
+    },
+    {
+      "name": "Data.Explorer_1.5.0-8b7b1f7_aarch64.app.tar.gz",
+      "downloadCount": 1,
+      "size": 13624845,
+      "contentType": "application/zip",
+      "platform": "macos",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-8b7b1f7/Data.Explorer_1.5.0-8b7b1f7_aarch64.app.tar.gz"
+    },
     {
       "name": "Data-Explorer_1.5.0-8b7b1f7_aarch64.zip",
       "downloadCount": 0,
@@ -84,14 +100,6 @@
       "contentType": "application/octet-stream",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-8b7b1f7/Data-Explorer_1.5.0-8b7b1f7_x86_64.zip.sha256"
-    },
-    {
-      "name": "Data.Explorer_1.5.0-8b7b1f7_aarch64.app.tar.gz",
-      "downloadCount": 0,
-      "size": 13624845,
-      "contentType": "application/zip",
-      "platform": "macos",
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-8b7b1f7/Data.Explorer_1.5.0-8b7b1f7_aarch64.app.tar.gz"
     },
     {
       "name": "Data.Explorer_1.5.0-8b7b1f7_aarch64.app.tar.gz.sig",
@@ -228,14 +236,6 @@
       "contentType": "application/x-sh",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-8b7b1f7/install-desktop.sh"
-    },
-    {
-      "name": "latest.json",
-      "downloadCount": 0,
-      "size": 6280,
-      "contentType": "application/json",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-8b7b1f7/latest.json"
     }
   ]
 }
