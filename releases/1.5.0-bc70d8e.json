@@ -3,8 +3,18 @@
   "name": "Release v1.5.0-bc70d8e",
   "publishedAt": "2026-08-22T21:34:58Z",
   "htmlUrl": "https://github.com/midrissi/4d-dataexplorer/releases/tag/v1.5.0-bc70d8e",
-  "total": 0,
+  "total": 2,
   "platforms": [
+    {
+      "id": "macos",
+      "label": "macOS",
+      "downloads": 1
+    },
+    {
+      "id": "web",
+      "label": "Web",
+      "downloads": 1
+    },
     {
       "id": "android",
       "label": "Android",
@@ -21,22 +31,44 @@
       "downloads": 0
     },
     {
-      "id": "macos",
-      "label": "macOS",
-      "downloads": 0
-    },
-    {
-      "id": "web",
-      "label": "Web",
-      "downloads": 0
-    },
-    {
       "id": "windows",
       "label": "Windows",
       "downloads": 0
     }
   ],
   "assets": [
+    {
+      "name": "latest.json",
+      "downloadCount": 20,
+      "size": 6280,
+      "contentType": "application/json",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-bc70d8e/latest.json"
+    },
+    {
+      "name": "Data.Explorer_1.5.0-bc70d8e_aarch64.app.tar.gz",
+      "downloadCount": 1,
+      "size": 14426793,
+      "contentType": "application/zip",
+      "platform": "macos",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-bc70d8e/Data.Explorer_1.5.0-bc70d8e_aarch64.app.tar.gz"
+    },
+    {
+      "name": "DataExplorer.zip",
+      "downloadCount": 1,
+      "size": 8452389,
+      "contentType": "application/zip",
+      "platform": "web",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-bc70d8e/DataExplorer.zip"
+    },
+    {
+      "name": "install-desktop.sh",
+      "downloadCount": 1,
+      "size": 3876,
+      "contentType": "application/x-sh",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-bc70d8e/install-desktop.sh"
+    },
     {
       "name": "Data-Explorer_1.5.0-bc70d8e_aarch64.zip",
       "downloadCount": 0,
@@ -84,14 +116,6 @@
       "contentType": "application/octet-stream",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-bc70d8e/Data-Explorer_1.5.0-bc70d8e_x86_64.zip.sha256"
-    },
-    {
-      "name": "Data.Explorer_1.5.0-bc70d8e_aarch64.app.tar.gz",
-      "downloadCount": 0,
-      "size": 14426793,
-      "contentType": "application/zip",
-      "platform": "macos",
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-bc70d8e/Data.Explorer_1.5.0-bc70d8e_aarch64.app.tar.gz"
     },
     {
       "name": "Data.Explorer_1.5.0-bc70d8e_aarch64.app.tar.gz.sig",
@@ -198,14 +222,6 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-bc70d8e/Data.Explorer-1.5.0-bc70d8e-1.x86_64.rpm.sig"
     },
     {
-      "name": "DataExplorer.zip",
-      "downloadCount": 0,
-      "size": 8452389,
-      "contentType": "application/zip",
-      "platform": "web",
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-bc70d8e/DataExplorer.zip"
-    },
-    {
       "name": "fix-macos-quarantine.sh",
       "downloadCount": 0,
       "size": 3954,
@@ -220,22 +236,6 @@
       "contentType": "application/octet-stream",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-bc70d8e/install-desktop.ps1"
-    },
-    {
-      "name": "install-desktop.sh",
-      "downloadCount": 0,
-      "size": 3876,
-      "contentType": "application/x-sh",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-bc70d8e/install-desktop.sh"
-    },
-    {
-      "name": "latest.json",
-      "downloadCount": 0,
-      "size": 6280,
-      "contentType": "application/json",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-bc70d8e/latest.json"
     }
   ]
 }

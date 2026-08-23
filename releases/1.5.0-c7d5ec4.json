@@ -1,0 +1,40 @@
+{
+  "tag": "v1.5.0-c7d5ec4",
+  "name": "Release v1.5.0-c7d5ec4",
+  "publishedAt": "2026-08-23T00:37:32Z",
+  "htmlUrl": "https://github.com/midrissi/4d-dataexplorer/releases/tag/v1.5.0-c7d5ec4",
+  "total": 0,
+  "platforms": [
+    {
+      "id": "android",
+      "label": "Android",
+      "downloads": 0
+    },
+    {
+      "id": "ios",
+      "label": "iOS",
+      "downloads": 0
+    },
+    {
+      "id": "linux",
+      "label": "Linux",
+      "downloads": 0
+    },
+    {
+      "id": "macos",
+      "label": "macOS",
+      "downloads": 0
+    },
+    {
+      "id": "web",
+      "label": "Web",
+      "downloads": 0
+    },
+    {
+      "id": "windows",
+      "label": "Windows",
+      "downloads": 0
+    }
+  ],
+  "assets": []
+}
