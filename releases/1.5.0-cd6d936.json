@@ -3,12 +3,12 @@
   "name": "Release v1.5.0-cd6d936",
   "publishedAt": "2026-08-24T01:10:55Z",
   "htmlUrl": "https://github.com/midrissi/4d-dataexplorer/releases/tag/v1.5.0-cd6d936",
-  "total": 1,
+  "total": 6,
   "platforms": [
     {
       "id": "macos",
       "label": "macOS",
-      "downloads": 1
+      "downloads": 6
     },
     {
       "id": "android",
@@ -39,15 +39,23 @@
   "assets": [
     {
       "name": "latest.json",
-      "downloadCount": 2,
+      "downloadCount": 29,
       "size": 6280,
       "contentType": "application/json",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-cd6d936/latest.json"
     },
     {
+      "name": "Data-Explorer_1.5.0-cd6d936_x86_64.zip",
+      "downloadCount": 2,
+      "size": 15901325,
+      "contentType": "application/zip",
+      "platform": "macos",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-cd6d936/Data-Explorer_1.5.0-cd6d936_x86_64.zip"
+    },
+    {
       "name": "Data.Explorer_1.5.0-cd6d936_aarch64.app.tar.gz",
-      "downloadCount": 1,
+      "downloadCount": 2,
       "size": 15571191,
       "contentType": "application/zip",
       "platform": "macos",
@@ -55,11 +63,27 @@
     },
     {
       "name": "Data-Explorer_1.5.0-cd6d936_aarch64.zip",
-      "downloadCount": 0,
+      "downloadCount": 1,
       "size": 15343600,
       "contentType": "application/zip",
       "platform": "macos",
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-cd6d936/Data-Explorer_1.5.0-cd6d936_aarch64.zip"
+    },
+    {
+      "name": "Data.Explorer_1.5.0-cd6d936_x64.app.tar.gz",
+      "downloadCount": 1,
+      "size": 16056729,
+      "contentType": "application/zip",
+      "platform": "macos",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-cd6d936/Data.Explorer_1.5.0-cd6d936_x64.app.tar.gz"
+    },
+    {
+      "name": "install-desktop.sh",
+      "downloadCount": 1,
+      "size": 3876,
+      "contentType": "application/x-sh",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-cd6d936/install-desktop.sh"
     },
     {
       "name": "Data-Explorer_1.5.0-cd6d936_aarch64.zip.sha256",
@@ -84,14 +108,6 @@
       "contentType": "application/zip",
       "platform": "ios",
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-cd6d936/Data-Explorer_1.5.0-cd6d936_ios-sim-release.zip"
-    },
-    {
-      "name": "Data-Explorer_1.5.0-cd6d936_x86_64.zip",
-      "downloadCount": 0,
-      "size": 15901325,
-      "contentType": "application/zip",
-      "platform": "macos",
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-cd6d936/Data-Explorer_1.5.0-cd6d936_x86_64.zip"
     },
     {
       "name": "Data-Explorer_1.5.0-cd6d936_x86_64.zip.sha256",
@@ -166,14 +182,6 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-cd6d936/Data.Explorer_1.5.0-cd6d936_x64-setup.exe.sig"
     },
     {
-      "name": "Data.Explorer_1.5.0-cd6d936_x64.app.tar.gz",
-      "downloadCount": 0,
-      "size": 16056729,
-      "contentType": "application/zip",
-      "platform": "macos",
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-cd6d936/Data.Explorer_1.5.0-cd6d936_x64.app.tar.gz"
-    },
-    {
       "name": "Data.Explorer_1.5.0-cd6d936_x64.app.tar.gz.sig",
       "downloadCount": 0,
       "size": 412,
@@ -228,14 +236,6 @@
       "contentType": "application/octet-stream",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-cd6d936/install-desktop.ps1"
-    },
-    {
-      "name": "install-desktop.sh",
-      "downloadCount": 0,
-      "size": 3876,
-      "contentType": "application/x-sh",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-cd6d936/install-desktop.sh"
     }
   ]
 }
