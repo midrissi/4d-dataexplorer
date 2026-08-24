@@ -1,16 +1,21 @@
 {
-  "total": 48,
+  "total": 51,
   "releaseCount": 24,
   "platforms": [
     {
       "id": "macos",
       "label": "macOS",
-      "downloads": 34
+      "downloads": 35
     },
     {
       "id": "android",
       "label": "Android",
       "downloads": 9
+    },
+    {
+      "id": "linux",
+      "label": "Linux",
+      "downloads": 3
     },
     {
       "id": "web",
@@ -23,17 +28,12 @@
       "downloads": 1
     },
     {
-      "id": "linux",
-      "label": "Linux",
-      "downloads": 1
-    },
-    {
       "id": "windows",
       "label": "Windows",
       "downloads": 1
     }
   ],
-  "fetchedAt": "2026-08-24T09:40:37.921Z",
+  "fetchedAt": "2026-08-24T12:37:37.234Z",
   "sourceUrl": "https://github.com/midrissi/4d-dataexplorer/releases",
   "mocked": false,
   "releases": [
@@ -52,7 +52,7 @@
     {
       "tag": "v1.5.0-cd6d936",
       "file": "releases/1.5.0-cd6d936.json",
-      "total": 6,
+      "total": 9,
       "publishedAt": "2026-08-24T01:10:55Z"
     },
     {
