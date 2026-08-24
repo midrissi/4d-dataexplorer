@@ -3,7 +3,7 @@
   "name": "Release v1.5.0-3dd7378",
   "publishedAt": "2026-08-23T18:51:03Z",
   "htmlUrl": "https://github.com/midrissi/4d-dataexplorer/releases/tag/v1.5.0-3dd7378",
-  "total": 2,
+  "total": 3,
   "platforms": [
     {
       "id": "macos",
@@ -11,13 +11,13 @@
       "downloads": 2
     },
     {
-      "id": "android",
-      "label": "Android",
-      "downloads": 0
-    },
-    {
       "id": "ios",
       "label": "iOS",
+      "downloads": 1
+    },
+    {
+      "id": "android",
+      "label": "Android",
       "downloads": 0
     },
     {
@@ -39,7 +39,7 @@
   "assets": [
     {
       "name": "latest.json",
-      "downloadCount": 12,
+      "downloadCount": 36,
       "size": 6280,
       "contentType": "application/json",
       "platform": null,
@@ -52,6 +52,14 @@
       "contentType": "application/zip",
       "platform": "macos",
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-3dd7378/Data.Explorer_1.5.0-3dd7378_aarch64.app.tar.gz"
+    },
+    {
+      "name": "Data-Explorer_1.5.0-3dd7378_ios-sim-release.zip",
+      "downloadCount": 1,
+      "size": 13228136,
+      "contentType": "application/zip",
+      "platform": "ios",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-3dd7378/Data-Explorer_1.5.0-3dd7378_ios-sim-release.zip"
     },
     {
       "name": "Data-Explorer_1.5.0-3dd7378_aarch64.zip",
@@ -76,14 +84,6 @@
       "contentType": "application/vnd.android.package-archive",
       "platform": "android",
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-3dd7378/Data-Explorer_1.5.0-3dd7378_android-aarch64.apk"
-    },
-    {
-      "name": "Data-Explorer_1.5.0-3dd7378_ios-sim-release.zip",
-      "downloadCount": 0,
-      "size": 13228136,
-      "contentType": "application/zip",
-      "platform": "ios",
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-3dd7378/Data-Explorer_1.5.0-3dd7378_ios-sim-release.zip"
     },
     {
       "name": "Data-Explorer_1.5.0-3dd7378_x86_64.zip",
