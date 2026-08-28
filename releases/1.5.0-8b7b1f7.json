@@ -3,11 +3,16 @@
   "name": "Release v1.5.0-8b7b1f7",
   "publishedAt": "2026-08-23T02:36:26Z",
   "htmlUrl": "https://github.com/midrissi/4d-dataexplorer/releases/tag/v1.5.0-8b7b1f7",
-  "total": 1,
+  "total": 2,
   "platforms": [
     {
       "id": "macos",
       "label": "macOS",
+      "downloads": 1
+    },
+    {
+      "id": "windows",
+      "label": "Windows",
       "downloads": 1
     },
     {
@@ -29,17 +34,12 @@
       "id": "web",
       "label": "Web",
       "downloads": 0
-    },
-    {
-      "id": "windows",
-      "label": "Windows",
-      "downloads": 0
     }
   ],
   "assets": [
     {
       "name": "latest.json",
-      "downloadCount": 32,
+      "downloadCount": 33,
       "size": 6280,
       "contentType": "application/json",
       "platform": null,
@@ -52,6 +52,14 @@
       "contentType": "application/zip",
       "platform": "macos",
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-8b7b1f7/Data.Explorer_1.5.0-8b7b1f7_aarch64.app.tar.gz"
+    },
+    {
+      "name": "Data.Explorer_1.5.0-8b7b1f7_x64-setup.exe",
+      "downloadCount": 1,
+      "size": 11301341,
+      "contentType": "application/zip",
+      "platform": "windows",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-8b7b1f7/Data.Explorer_1.5.0-8b7b1f7_x64-setup.exe"
     },
     {
       "name": "Data-Explorer_1.5.0-8b7b1f7_aarch64.zip",
@@ -148,14 +156,6 @@
       "contentType": "application/zip",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-8b7b1f7/Data.Explorer_1.5.0-8b7b1f7_amd64.deb.sig"
-    },
-    {
-      "name": "Data.Explorer_1.5.0-8b7b1f7_x64-setup.exe",
-      "downloadCount": 0,
-      "size": 11301341,
-      "contentType": "application/zip",
-      "platform": "windows",
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.0-8b7b1f7/Data.Explorer_1.5.0-8b7b1f7_x64-setup.exe"
     },
     {
       "name": "Data.Explorer_1.5.0-8b7b1f7_x64-setup.exe.sig",
