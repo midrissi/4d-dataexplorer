@@ -1,0 +1,40 @@
+{
+  "tag": "v1.5.2-054b685",
+  "name": "Release v1.5.2-054b685",
+  "publishedAt": "2026-09-04T23:16:04Z",
+  "htmlUrl": "https://github.com/midrissi/4d-dataexplorer/releases/tag/v1.5.2-054b685",
+  "total": 0,
+  "platforms": [
+    {
+      "id": "android",
+      "label": "Android",
+      "downloads": 0
+    },
+    {
+      "id": "ios",
+      "label": "iOS",
+      "downloads": 0
+    },
+    {
+      "id": "linux",
+      "label": "Linux",
+      "downloads": 0
+    },
+    {
+      "id": "macos",
+      "label": "macOS",
+      "downloads": 0
+    },
+    {
+      "id": "web",
+      "label": "Web",
+      "downloads": 0
+    },
+    {
+      "id": "windows",
+      "label": "Windows",
+      "downloads": 0
+    }
+  ],
+  "assets": []
+}
