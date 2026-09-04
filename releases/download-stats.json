@@ -1,6 +1,6 @@
 {
-  "total": 59,
-  "releaseCount": 27,
+  "total": 58,
+  "releaseCount": 25,
   "platforms": [
     {
       "id": "macos",
@@ -13,13 +13,13 @@
       "downloads": 9
     },
     {
-      "id": "web",
-      "label": "Web",
-      "downloads": 5
-    },
-    {
       "id": "linux",
       "label": "Linux",
+      "downloads": 4
+    },
+    {
+      "id": "web",
+      "label": "Web",
       "downloads": 4
     },
     {
@@ -33,15 +33,15 @@
       "downloads": 1
     }
   ],
-  "fetchedAt": "2026-09-04T23:41:54.849Z",
+  "fetchedAt": "2026-09-04T23:52:39.523Z",
   "sourceUrl": "https://github.com/midrissi/4d-dataexplorer/releases",
   "mocked": false,
   "releases": [
     {
-      "tag": "v1.5.2",
-      "file": "releases/1.5.2.json",
-      "total": 1,
-      "publishedAt": "2026-09-04T23:16:14Z"
+      "tag": "v1.5.3-1e750eb",
+      "file": "releases/1.5.3-1e750eb.json",
+      "total": 0,
+      "publishedAt": "2026-09-04T23:52:30Z"
     },
     {
       "tag": "v1.5.0-e119931",
@@ -114,18 +114,6 @@
       "file": "releases/1.5.0-263c98f.json",
       "total": 2,
       "publishedAt": "2026-08-23T16:17:48Z"
-    },
-    {
-      "tag": "v1.5.0",
-      "file": "releases/1.5.0.json",
-      "total": 0,
-      "publishedAt": "2026-08-21T23:04:14Z"
-    },
-    {
-      "tag": "ide-v1.5.3-1e750eb",
-      "file": "releases/ide-v1.5.3-1e750eb.json",
-      "total": 0,
-      "publishedAt": "2026-09-04T23:41:47Z"
     },
     {
       "tag": "v1.4.0-ffa5cd5",
