@@ -1,8 +1,8 @@
 {
-  "tag": "ide-latest",
-  "name": "4D Code updater (ide-latest)",
-  "publishedAt": "2026-09-05T02:54:55Z",
-  "htmlUrl": "https://github.com/midrissi/4d-dataexplorer/releases/tag/ide-latest",
+  "tag": "v1.5.7-653c16e",
+  "name": "Release v1.5.7-653c16e",
+  "publishedAt": "2026-09-05T03:46:43Z",
+  "htmlUrl": "https://github.com/midrissi/4d-dataexplorer/releases/tag/v1.5.7-653c16e",
   "total": 0,
   "platforms": [
     {
@@ -36,14 +36,5 @@
       "downloads": 0
     }
   ],
-  "assets": [
-    {
-      "name": "latest.json",
-      "downloadCount": 1,
-      "size": 1918,
-      "contentType": "application/json",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/ide-latest/latest.json"
-    }
-  ]
+  "assets": []
 }
