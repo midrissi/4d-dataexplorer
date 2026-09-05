@@ -478,6 +478,14 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/Data.Explorer-1.5.7-8a93303-1.x86_64.rpm.sig"
     },
     {
+      "name": "ide-latest.json",
+      "downloadCount": 0,
+      "size": 2528,
+      "contentType": "application/json",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/ide-latest.json"
+    },
+    {
       "name": "latest.json",
       "downloadCount": 0,
       "size": 2590,
