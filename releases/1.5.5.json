@@ -3,8 +3,13 @@
   "name": "Release v1.5.5",
   "publishedAt": "2026-09-05T02:25:29Z",
   "htmlUrl": "https://github.com/midrissi/4d-dataexplorer/releases/tag/v1.5.5",
-  "total": 0,
+  "total": 1,
   "platforms": [
+    {
+      "id": "web",
+      "label": "Web",
+      "downloads": 1
+    },
     {
       "id": "android",
       "label": "Android",
@@ -26,11 +31,6 @@
       "downloads": 0
     },
     {
-      "id": "web",
-      "label": "Web",
-      "downloads": 0
-    },
-    {
       "id": "windows",
       "label": "Windows",
       "downloads": 0
@@ -39,7 +39,7 @@
   "assets": [
     {
       "name": "DataExplorer.zip",
-      "downloadCount": 0,
+      "downloadCount": 1,
       "size": 9615831,
       "contentType": "application/zip",
       "platform": "web",
