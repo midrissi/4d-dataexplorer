@@ -39,7 +39,7 @@
   "assets": [
     {
       "name": "latest.json",
-      "downloadCount": 1,
+      "downloadCount": 0,
       "size": 1918,
       "contentType": "application/json",
       "platform": null,

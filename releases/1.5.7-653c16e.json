@@ -926,6 +926,14 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/ide_desktop.exe"
     },
     {
+      "name": "ide-latest.json",
+      "downloadCount": 0,
+      "size": 1918,
+      "contentType": "application/json",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/ide-latest.json"
+    },
+    {
       "name": "latest.json",
       "downloadCount": 0,
       "size": 1966,
