@@ -62,14 +62,6 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/Data.Explorer_1.5.7-653c16e_aarch64.app.tar.gz.sig"
     },
     {
-      "name": "latest.json",
-      "downloadCount": 2,
-      "size": 1966,
-      "contentType": "application/json",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/latest.json"
-    },
-    {
       "name": "4D-Code_1.5.7-653c16e_aarch64.zip",
       "downloadCount": 1,
       "size": 9903396,
@@ -270,14 +262,6 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/fix-macos-quarantine.sh"
     },
     {
-      "name": "ide-latest.json",
-      "downloadCount": 1,
-      "size": 1918,
-      "contentType": "application/json",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/ide-latest.json"
-    },
-    {
       "name": "install-desktop.ps1",
       "downloadCount": 1,
       "size": 1496,
@@ -476,6 +460,22 @@
       "contentType": "application/zip",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/Data.Explorer-1.5.7-653c16e-1.x86_64.rpm.sig"
+    },
+    {
+      "name": "ide-latest.json",
+      "downloadCount": 0,
+      "size": 2528,
+      "contentType": "application/json",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/ide-latest.json"
+    },
+    {
+      "name": "latest.json",
+      "downloadCount": 0,
+      "size": 2590,
+      "contentType": "application/json",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/latest.json"
     }
   ]
 }
