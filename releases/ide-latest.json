@@ -1,0 +1,49 @@
+{
+  "tag": "ide-latest",
+  "name": "4D Code updater (ide-latest)",
+  "publishedAt": "2026-09-05T02:54:55Z",
+  "htmlUrl": "https://github.com/midrissi/4d-dataexplorer/releases/tag/ide-latest",
+  "total": 0,
+  "platforms": [
+    {
+      "id": "android",
+      "label": "Android",
+      "downloads": 0
+    },
+    {
+      "id": "ios",
+      "label": "iOS",
+      "downloads": 0
+    },
+    {
+      "id": "linux",
+      "label": "Linux",
+      "downloads": 0
+    },
+    {
+      "id": "macos",
+      "label": "macOS",
+      "downloads": 0
+    },
+    {
+      "id": "web",
+      "label": "Web",
+      "downloads": 0
+    },
+    {
+      "id": "windows",
+      "label": "Windows",
+      "downloads": 0
+    }
+  ],
+  "assets": [
+    {
+      "name": "latest.json",
+      "downloadCount": 0,
+      "size": 1918,
+      "contentType": "application/json",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/ide-latest/latest.json"
+    }
+  ]
+}
