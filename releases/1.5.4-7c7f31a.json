@@ -278,6 +278,22 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.4-7c7f31a/Data.Explorer_1.5.4-7c7f31a_amd64.deb.sig"
     },
     {
+      "name": "Data.Explorer_1.5.4-7c7f31a_x64-setup.exe",
+      "downloadCount": 0,
+      "size": 13316905,
+      "contentType": "application/zip",
+      "platform": "windows",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.4-7c7f31a/Data.Explorer_1.5.4-7c7f31a_x64-setup.exe"
+    },
+    {
+      "name": "Data.Explorer_1.5.4-7c7f31a_x64-setup.exe.sig",
+      "downloadCount": 0,
+      "size": 436,
+      "contentType": "application/zip",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.4-7c7f31a/Data.Explorer_1.5.4-7c7f31a_x64-setup.exe.sig"
+    },
+    {
       "name": "Data.Explorer_1.5.4-7c7f31a_x64.app.tar.gz",
       "downloadCount": 0,
       "size": 16117212,
@@ -320,7 +336,7 @@
     {
       "name": "latest.json",
       "downloadCount": 0,
-      "size": 4705,
+      "size": 5880,
       "contentType": "application/zip",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.4-7c7f31a/latest.json"
