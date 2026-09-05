@@ -36,5 +36,14 @@
       "downloads": 0
     }
   ],
-  "assets": []
+  "assets": [
+    {
+      "name": "DataExplorer.zip",
+      "downloadCount": 0,
+      "size": 9617202,
+      "contentType": "application/zip",
+      "platform": "web",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-70a988e/DataExplorer.zip"
+    }
+  ]
 }
