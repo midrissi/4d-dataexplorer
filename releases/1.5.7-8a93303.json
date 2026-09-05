@@ -342,6 +342,38 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/Data.Explorer_1.5.7-8a93303_aarch64.dmg"
     },
     {
+      "name": "Data.Explorer_1.5.7-8a93303_amd64.AppImage",
+      "downloadCount": 0,
+      "size": 95951352,
+      "contentType": "application/zip",
+      "platform": "linux",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/Data.Explorer_1.5.7-8a93303_amd64.AppImage"
+    },
+    {
+      "name": "Data.Explorer_1.5.7-8a93303_amd64.AppImage.sig",
+      "downloadCount": 0,
+      "size": 436,
+      "contentType": "application/zip",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/Data.Explorer_1.5.7-8a93303_amd64.AppImage.sig"
+    },
+    {
+      "name": "Data.Explorer_1.5.7-8a93303_amd64.deb",
+      "downloadCount": 0,
+      "size": 17098886,
+      "contentType": "application/zip",
+      "platform": "linux",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/Data.Explorer_1.5.7-8a93303_amd64.deb"
+    },
+    {
+      "name": "Data.Explorer_1.5.7-8a93303_amd64.deb.sig",
+      "downloadCount": 0,
+      "size": 432,
+      "contentType": "application/zip",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/Data.Explorer_1.5.7-8a93303_amd64.deb.sig"
+    },
+    {
       "name": "Data.Explorer_1.5.7-8a93303_x64.app.tar.gz",
       "downloadCount": 0,
       "size": 16117126,
@@ -364,6 +396,22 @@
       "contentType": "application/zip",
       "platform": "macos",
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/Data.Explorer_1.5.7-8a93303_x64.dmg"
+    },
+    {
+      "name": "Data.Explorer-1.5.7-8a93303-1.x86_64.rpm",
+      "downloadCount": 0,
+      "size": 17098614,
+      "contentType": "application/zip",
+      "platform": "linux",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/Data.Explorer-1.5.7-8a93303-1.x86_64.rpm"
+    },
+    {
+      "name": "Data.Explorer-1.5.7-8a93303-1.x86_64.rpm.sig",
+      "downloadCount": 0,
+      "size": 436,
+      "contentType": "application/zip",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/Data.Explorer-1.5.7-8a93303-1.x86_64.rpm.sig"
     },
     {
       "name": "DataExplorer.zip",
