@@ -182,6 +182,38 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/4D.Code_1.5.7-653c16e_aarch64.dmg"
     },
     {
+      "name": "4D.Code_1.5.7-653c16e_amd64.AppImage",
+      "downloadCount": 0,
+      "size": 88631800,
+      "contentType": "application/vnd.appimage",
+      "platform": "linux",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/4D.Code_1.5.7-653c16e_amd64.AppImage"
+    },
+    {
+      "name": "4D.Code_1.5.7-653c16e_amd64.AppImage.sig",
+      "downloadCount": 0,
+      "size": 428,
+      "contentType": "application/pgp-signature",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/4D.Code_1.5.7-653c16e_amd64.AppImage.sig"
+    },
+    {
+      "name": "4D.Code_1.5.7-653c16e_amd64.deb",
+      "downloadCount": 0,
+      "size": 11489716,
+      "contentType": "application/x-debian-package",
+      "platform": "linux",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/4D.Code_1.5.7-653c16e_amd64.deb"
+    },
+    {
+      "name": "4D.Code_1.5.7-653c16e_amd64.deb.sig",
+      "downloadCount": 0,
+      "size": 424,
+      "contentType": "application/pgp-signature",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/4D.Code_1.5.7-653c16e_amd64.deb.sig"
+    },
+    {
       "name": "4D.Code_1.5.7-653c16e_x64.app.tar.gz",
       "downloadCount": 0,
       "size": 10438625,
@@ -204,6 +236,22 @@
       "contentType": "application/x-apple-diskimage",
       "platform": "macos",
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/4D.Code_1.5.7-653c16e_x64.dmg"
+    },
+    {
+      "name": "4D.Code-1.5.7-653c16e-1.x86_64.rpm",
+      "downloadCount": 0,
+      "size": 11490521,
+      "contentType": "application/x-rpm",
+      "platform": "linux",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/4D.Code-1.5.7-653c16e-1.x86_64.rpm"
+    },
+    {
+      "name": "4D.Code-1.5.7-653c16e-1.x86_64.rpm.sig",
+      "downloadCount": 0,
+      "size": 428,
+      "contentType": "application/pgp-signature",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/4D.Code-1.5.7-653c16e-1.x86_64.rpm.sig"
     },
     {
       "name": "4D.Code.app.tar.gz",
@@ -294,6 +342,38 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/Data.Explorer_1.5.7-653c16e_aarch64.dmg"
     },
     {
+      "name": "Data.Explorer_1.5.7-653c16e_amd64.AppImage",
+      "downloadCount": 0,
+      "size": 95955448,
+      "contentType": "application/zip",
+      "platform": "linux",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/Data.Explorer_1.5.7-653c16e_amd64.AppImage"
+    },
+    {
+      "name": "Data.Explorer_1.5.7-653c16e_amd64.AppImage.sig",
+      "downloadCount": 0,
+      "size": 436,
+      "contentType": "application/zip",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/Data.Explorer_1.5.7-653c16e_amd64.AppImage.sig"
+    },
+    {
+      "name": "Data.Explorer_1.5.7-653c16e_amd64.deb",
+      "downloadCount": 0,
+      "size": 17098904,
+      "contentType": "application/zip",
+      "platform": "linux",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/Data.Explorer_1.5.7-653c16e_amd64.deb"
+    },
+    {
+      "name": "Data.Explorer_1.5.7-653c16e_amd64.deb.sig",
+      "downloadCount": 0,
+      "size": 432,
+      "contentType": "application/zip",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/Data.Explorer_1.5.7-653c16e_amd64.deb.sig"
+    },
+    {
       "name": "Data.Explorer_1.5.7-653c16e_x64.app.tar.gz",
       "downloadCount": 0,
       "size": 16117297,
@@ -316,6 +396,22 @@
       "contentType": "application/zip",
       "platform": "macos",
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/Data.Explorer_1.5.7-653c16e_x64.dmg"
+    },
+    {
+      "name": "Data.Explorer-1.5.7-653c16e-1.x86_64.rpm",
+      "downloadCount": 0,
+      "size": 17098581,
+      "contentType": "application/zip",
+      "platform": "linux",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/Data.Explorer-1.5.7-653c16e-1.x86_64.rpm"
+    },
+    {
+      "name": "Data.Explorer-1.5.7-653c16e-1.x86_64.rpm.sig",
+      "downloadCount": 0,
+      "size": 436,
+      "contentType": "application/zip",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/Data.Explorer-1.5.7-653c16e-1.x86_64.rpm.sig"
     },
     {
       "name": "DataExplorer.zip",
