@@ -38,6 +38,110 @@
   ],
   "assets": [
     {
+      "name": "4D-Code_1.5.4-7c7f31a_extensions.zip",
+      "downloadCount": 0,
+      "size": 51849428,
+      "contentType": "application/zip",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.4-7c7f31a/4D-Code_1.5.4-7c7f31a_extensions.zip"
+    },
+    {
+      "name": "4D-Code_1.5.4-7c7f31a_web.zip",
+      "downloadCount": 0,
+      "size": 5740005,
+      "contentType": "application/zip",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.4-7c7f31a/4D-Code_1.5.4-7c7f31a_web.zip"
+    },
+    {
+      "name": "4d-ide-4d-lsp_0.1.0.4de",
+      "downloadCount": 0,
+      "size": 6986,
+      "contentType": "application/octet-stream",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.4-7c7f31a/4d-ide-4d-lsp_0.1.0.4de"
+    },
+    {
+      "name": "4d-ide-cline_0.1.0.4de",
+      "downloadCount": 0,
+      "size": 51770411,
+      "contentType": "application/octet-stream",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.4-7c7f31a/4d-ide-cline_0.1.0.4de"
+    },
+    {
+      "name": "4d-ide-core_0.1.0.4de",
+      "downloadCount": 0,
+      "size": 13216,
+      "contentType": "application/octet-stream",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.4-7c7f31a/4d-ide-core_0.1.0.4de"
+    },
+    {
+      "name": "4d-ide-daylane_0.3.2.4de",
+      "downloadCount": 0,
+      "size": 31775,
+      "contentType": "application/octet-stream",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.4-7c7f31a/4d-ide-daylane_0.3.2.4de"
+    },
+    {
+      "name": "4d-ide-explorer_0.1.0.4de",
+      "downloadCount": 0,
+      "size": 6797,
+      "contentType": "application/octet-stream",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.4-7c7f31a/4d-ide-explorer_0.1.0.4de"
+    },
+    {
+      "name": "4d-ide-git_0.1.0.4de",
+      "downloadCount": 0,
+      "size": 99434,
+      "contentType": "application/octet-stream",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.4-7c7f31a/4d-ide-git_0.1.0.4de"
+    },
+    {
+      "name": "4d-ide-icons_0.1.0.4de",
+      "downloadCount": 0,
+      "size": 3368,
+      "contentType": "application/octet-stream",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.4-7c7f31a/4d-ide-icons_0.1.0.4de"
+    },
+    {
+      "name": "4d-ide-method_0.1.0.4de",
+      "downloadCount": 0,
+      "size": 7118,
+      "contentType": "application/octet-stream",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.4-7c7f31a/4d-ide-method_0.1.0.4de"
+    },
+    {
+      "name": "4d-ide-preferences_0.1.0.4de",
+      "downloadCount": 0,
+      "size": 3086,
+      "contentType": "application/octet-stream",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.4-7c7f31a/4d-ide-preferences_0.1.0.4de"
+    },
+    {
+      "name": "4d-ide-project-settings_0.1.0.4de",
+      "downloadCount": 0,
+      "size": 2862,
+      "contentType": "application/octet-stream",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.4-7c7f31a/4d-ide-project-settings_0.1.0.4de"
+    },
+    {
+      "name": "4d-ide-structure_0.1.0.4de",
+      "downloadCount": 0,
+      "size": 3181,
+      "contentType": "application/octet-stream",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.4-7c7f31a/4d-ide-structure_0.1.0.4de"
+    },
+    {
       "name": "DataExplorer.zip",
       "downloadCount": 0,
       "size": 9615704,
