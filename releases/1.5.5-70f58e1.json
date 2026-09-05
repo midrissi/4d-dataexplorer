@@ -62,6 +62,14 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.5-70f58e1/4D-Code_1.5.5-70f58e1_web.zip"
     },
     {
+      "name": "4D-Code_1.5.5-70f58e1_x86_64.zip",
+      "downloadCount": 0,
+      "size": 10323692,
+      "contentType": "application/zip",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.5-70f58e1/4D-Code_1.5.5-70f58e1_x86_64.zip"
+    },
+    {
       "name": "4d-ide-4d-lsp_0.1.0.4de",
       "downloadCount": 0,
       "size": 6986,
@@ -174,9 +182,33 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.5-70f58e1/4D.Code_1.5.5-70f58e1_aarch64.dmg"
     },
     {
+      "name": "4D.Code_1.5.5-70f58e1_x64.app.tar.gz",
+      "downloadCount": 0,
+      "size": 10438920,
+      "contentType": "application/zip",
+      "platform": "macos",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.5-70f58e1/4D.Code_1.5.5-70f58e1_x64.app.tar.gz"
+    },
+    {
+      "name": "4D.Code_1.5.5-70f58e1_x64.app.tar.gz.sig",
+      "downloadCount": 0,
+      "size": 404,
+      "contentType": "application/zip",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.5-70f58e1/4D.Code_1.5.5-70f58e1_x64.app.tar.gz.sig"
+    },
+    {
+      "name": "4D.Code_1.5.5-70f58e1_x64.dmg",
+      "downloadCount": 0,
+      "size": 10429659,
+      "contentType": "application/x-apple-diskimage",
+      "platform": "macos",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.5-70f58e1/4D.Code_1.5.5-70f58e1_x64.dmg"
+    },
+    {
       "name": "4D.Code.app.tar.gz",
       "downloadCount": 0,
-      "size": 10075026,
+      "size": 10438920,
       "contentType": "application/x-gtar",
       "platform": "macos",
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.5-70f58e1/4D.Code.app.tar.gz"
