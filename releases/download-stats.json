@@ -33,21 +33,21 @@
       "downloads": 1
     }
   ],
-  "fetchedAt": "2026-09-05T02:25:29.126Z",
+  "fetchedAt": "2026-09-05T02:25:41.536Z",
   "sourceUrl": "https://github.com/midrissi/4d-dataexplorer/releases",
   "mocked": false,
   "releases": [
-    {
-      "tag": "v1.5.5",
-      "file": "releases/1.5.5.json",
-      "total": 0,
-      "publishedAt": null
-    },
     {
       "tag": "v1.5.5-70f58e1",
       "file": "releases/1.5.5-70f58e1.json",
       "total": 0,
       "publishedAt": "2026-09-05T02:25:17Z"
+    },
+    {
+      "tag": "v1.5.5",
+      "file": "releases/1.5.5.json",
+      "total": 0,
+      "publishedAt": "2026-09-05T02:25:29Z"
     },
     {
       "tag": "v1.5.0-e119931",
