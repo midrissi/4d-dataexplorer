@@ -3,7 +3,7 @@
   "name": "Release v1.5.7-8a93303",
   "publishedAt": "2026-09-05T12:17:50Z",
   "htmlUrl": "https://github.com/midrissi/4d-dataexplorer/releases/tag/v1.5.7-8a93303",
-  "total": 10,
+  "total": 11,
   "platforms": [
     {
       "id": "macos",
@@ -11,14 +11,14 @@
       "downloads": 9
     },
     {
-      "id": "web",
-      "label": "Web",
+      "id": "android",
+      "label": "Android",
       "downloads": 1
     },
     {
-      "id": "android",
-      "label": "Android",
-      "downloads": 0
+      "id": "web",
+      "label": "Web",
+      "downloads": 1
     },
     {
       "id": "ios",
@@ -238,6 +238,14 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/Data-Explorer_1.5.7-8a93303_aarch64.zip.sha256"
     },
     {
+      "name": "Data-Explorer_1.5.7-8a93303_android-aarch64.apk",
+      "downloadCount": 1,
+      "size": 31796950,
+      "contentType": "application/vnd.android.package-archive",
+      "platform": "android",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/Data-Explorer_1.5.7-8a93303_android-aarch64.apk"
+    },
+    {
       "name": "Data.Explorer_1.5.7-8a93303_aarch64.dmg",
       "downloadCount": 1,
       "size": 15483323,
@@ -396,14 +404,6 @@
       "contentType": "application/pgp-signature",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4D.Code.app.tar.gz.sig"
-    },
-    {
-      "name": "Data-Explorer_1.5.7-8a93303_android-aarch64.apk",
-      "downloadCount": 0,
-      "size": 31796950,
-      "contentType": "application/vnd.android.package-archive",
-      "platform": "android",
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/Data-Explorer_1.5.7-8a93303_android-aarch64.apk"
     },
     {
       "name": "Data-Explorer_1.5.7-8a93303_ios-sim-release.zip",
