@@ -3,7 +3,7 @@
   "name": "Release v1.5.7-0a7af92",
   "publishedAt": "2026-09-06T01:58:51Z",
   "htmlUrl": "https://github.com/midrissi/4d-dataexplorer/releases/tag/v1.5.7-0a7af92",
-  "total": 7,
+  "total": 8,
   "platforms": [
     {
       "id": "macos",
@@ -11,14 +11,14 @@
       "downloads": 6
     },
     {
-      "id": "web",
-      "label": "Web",
+      "id": "android",
+      "label": "Android",
       "downloads": 1
     },
     {
-      "id": "android",
-      "label": "Android",
-      "downloads": 0
+      "id": "web",
+      "label": "Web",
+      "downloads": 1
     },
     {
       "id": "ios",
@@ -76,6 +76,14 @@
       "contentType": "application/octet-stream",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-0a7af92/Data-Explorer_1.5.7-0a7af92_aarch64.zip.sha256"
+    },
+    {
+      "name": "Data-Explorer_1.5.7-0a7af92_android-aarch64.apk",
+      "downloadCount": 1,
+      "size": 31796950,
+      "contentType": "application/vnd.android.package-archive",
+      "platform": "android",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-0a7af92/Data-Explorer_1.5.7-0a7af92_android-aarch64.apk"
     },
     {
       "name": "Data.Explorer_1.5.7-0a7af92_aarch64.dmg",
@@ -148,14 +156,6 @@
       "contentType": "application/x-sh",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-0a7af92/install-desktop.sh"
-    },
-    {
-      "name": "Data-Explorer_1.5.7-0a7af92_android-aarch64.apk",
-      "downloadCount": 0,
-      "size": 31796950,
-      "contentType": "application/vnd.android.package-archive",
-      "platform": "android",
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-0a7af92/Data-Explorer_1.5.7-0a7af92_android-aarch64.apk"
     },
     {
       "name": "Data-Explorer_1.5.7-0a7af92_ios-sim-release.zip",
