@@ -54,6 +54,22 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4D.Code_1.5.7-8a93303_aarch64.app.tar.gz"
     },
     {
+      "name": "4D-Code_1.5.7-8a93303_aarch64.zip",
+      "downloadCount": 2,
+      "size": 9903399,
+      "contentType": "application/zip",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4D-Code_1.5.7-8a93303_aarch64.zip"
+    },
+    {
+      "name": "4d-ide-daylane_0.3.2.4de",
+      "downloadCount": 2,
+      "size": 31775,
+      "contentType": "application/octet-stream",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4d-ide-daylane_0.3.2.4de"
+    },
+    {
       "name": "4D.Code_1.5.7-8a93303_aarch64.app.tar.gz.sig",
       "downloadCount": 2,
       "size": 404,
@@ -76,14 +92,6 @@
       "contentType": "application/zip",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/Data.Explorer_1.5.7-8a93303_aarch64.app.tar.gz.sig"
-    },
-    {
-      "name": "4D-Code_1.5.7-8a93303_aarch64.zip",
-      "downloadCount": 1,
-      "size": 9903399,
-      "contentType": "application/zip",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4D-Code_1.5.7-8a93303_aarch64.zip"
     },
     {
       "name": "4D-Code_1.5.7-8a93303_extensions.zip",
@@ -124,14 +132,6 @@
       "contentType": "application/octet-stream",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4d-ide-core_0.1.0.4de"
-    },
-    {
-      "name": "4d-ide-daylane_0.3.2.4de",
-      "downloadCount": 1,
-      "size": 31775,
-      "contentType": "application/octet-stream",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4d-ide-daylane_0.3.2.4de"
     },
     {
       "name": "4d-ide-explorer_0.1.0.4de",

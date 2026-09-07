@@ -3,12 +3,12 @@
   "name": "Release v1.5.7-0a7af92",
   "publishedAt": "2026-09-06T01:58:51Z",
   "htmlUrl": "https://github.com/midrissi/4d-dataexplorer/releases/tag/v1.5.7-0a7af92",
-  "total": 5,
+  "total": 6,
   "platforms": [
     {
       "id": "macos",
       "label": "macOS",
-      "downloads": 4
+      "downloads": 5
     },
     {
       "id": "web",
@@ -39,7 +39,7 @@
   "assets": [
     {
       "name": "latest.json",
-      "downloadCount": 70,
+      "downloadCount": 76,
       "size": 2590,
       "contentType": "application/json",
       "platform": null,
@@ -47,7 +47,7 @@
     },
     {
       "name": "Data.Explorer_1.5.7-0a7af92_aarch64.app.tar.gz",
-      "downloadCount": 2,
+      "downloadCount": 3,
       "size": 15637776,
       "contentType": "application/zip",
       "platform": "macos",
