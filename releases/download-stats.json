@@ -1,11 +1,11 @@
 {
-  "total": 94,
+  "total": 95,
   "releaseCount": 31,
   "platforms": [
     {
       "id": "macos",
       "label": "macOS",
-      "downloads": 65
+      "downloads": 66
     },
     {
       "id": "android",
@@ -33,14 +33,14 @@
       "downloads": 1
     }
   ],
-  "fetchedAt": "2026-09-08T07:43:22.755Z",
+  "fetchedAt": "2026-09-08T13:14:07.582Z",
   "sourceUrl": "https://github.com/midrissi/4d-dataexplorer/releases",
   "mocked": false,
   "releases": [
     {
       "tag": "v1.5.7-8a93303",
       "file": "releases/1.5.7-8a93303.json",
-      "total": 12,
+      "total": 13,
       "publishedAt": "2026-09-05T12:17:50Z"
     },
     {
