@@ -3,12 +3,12 @@
   "name": "Release v1.5.7-8a93303",
   "publishedAt": "2026-09-05T12:17:50Z",
   "htmlUrl": "https://github.com/midrissi/4d-dataexplorer/releases/tag/v1.5.7-8a93303",
-  "total": 15,
+  "total": 16,
   "platforms": [
     {
       "id": "macos",
       "label": "macOS",
-      "downloads": 13
+      "downloads": 14
     },
     {
       "id": "android",
@@ -158,6 +158,14 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4D.Code_1.5.7-8a93303_aarch64.dmg"
     },
     {
+      "name": "Data-Explorer_1.5.7-8a93303_aarch64.zip",
+      "downloadCount": 2,
+      "size": 15410159,
+      "contentType": "application/zip",
+      "platform": "macos",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/Data-Explorer_1.5.7-8a93303_aarch64.zip"
+    },
+    {
       "name": "Data.Explorer_1.5.7-8a93303_aarch64.app.tar.gz.sig",
       "downloadCount": 2,
       "size": 412,
@@ -236,14 +244,6 @@
       "contentType": "application/zip",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4D.Code_1.5.7-8a93303_x64.app.tar.gz.sig"
-    },
-    {
-      "name": "Data-Explorer_1.5.7-8a93303_aarch64.zip",
-      "downloadCount": 1,
-      "size": 15410159,
-      "contentType": "application/zip",
-      "platform": "macos",
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/Data-Explorer_1.5.7-8a93303_aarch64.zip"
     },
     {
       "name": "Data-Explorer_1.5.7-8a93303_aarch64.zip.sha256",
