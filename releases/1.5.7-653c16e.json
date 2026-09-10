@@ -3,12 +3,12 @@
   "name": "Release v1.5.7-653c16e",
   "publishedAt": "2026-09-05T03:46:43Z",
   "htmlUrl": "https://github.com/midrissi/4d-dataexplorer/releases/tag/v1.5.7-653c16e",
-  "total": 7,
+  "total": 8,
   "platforms": [
     {
       "id": "macos",
       "label": "macOS",
-      "downloads": 6
+      "downloads": 7
     },
     {
       "id": "web",
@@ -84,6 +84,14 @@
       "contentType": "application/octet-stream",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/4d-ide-project-settings_0.1.0.4de"
+    },
+    {
+      "name": "4D.Code_1.5.7-653c16e_aarch64.app.tar.gz",
+      "downloadCount": 2,
+      "size": 10074777,
+      "contentType": "application/zip",
+      "platform": "macos",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/4D.Code_1.5.7-653c16e_aarch64.app.tar.gz"
     },
     {
       "name": "4D.Code_1.5.7-653c16e_amd64.AppImage.sig",
@@ -220,14 +228,6 @@
       "contentType": "application/octet-stream",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/4d-ide-structure_0.1.0.4de"
-    },
-    {
-      "name": "4D.Code_1.5.7-653c16e_aarch64.app.tar.gz",
-      "downloadCount": 1,
-      "size": 10074777,
-      "contentType": "application/zip",
-      "platform": "macos",
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/4D.Code_1.5.7-653c16e_aarch64.app.tar.gz"
     },
     {
       "name": "4D.Code_1.5.7-653c16e_aarch64.dmg",
