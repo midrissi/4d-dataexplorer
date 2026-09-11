@@ -3,12 +3,12 @@
   "name": "Release v1.5.7-8a93303",
   "publishedAt": "2026-09-05T12:17:50Z",
   "htmlUrl": "https://github.com/midrissi/4d-dataexplorer/releases/tag/v1.5.7-8a93303",
-  "total": 16,
+  "total": 17,
   "platforms": [
     {
       "id": "macos",
       "label": "macOS",
-      "downloads": 14
+      "downloads": 15
     },
     {
       "id": "android",
@@ -52,6 +52,14 @@
       "contentType": "application/zip",
       "platform": "macos",
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4D.Code_1.5.7-8a93303_aarch64.app.tar.gz"
+    },
+    {
+      "name": "4D-Code_1.5.7-8a93303_extensions.zip",
+      "downloadCount": 3,
+      "size": 51834263,
+      "contentType": "application/zip",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4D-Code_1.5.7-8a93303_extensions.zip"
     },
     {
       "name": "4d-ide-daylane_0.3.2.4de",
@@ -100,14 +108,6 @@
       "contentType": "application/zip",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4D-Code_1.5.7-8a93303_aarch64.zip"
-    },
-    {
-      "name": "4D-Code_1.5.7-8a93303_extensions.zip",
-      "downloadCount": 2,
-      "size": 51834263,
-      "contentType": "application/zip",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4D-Code_1.5.7-8a93303_extensions.zip"
     },
     {
       "name": "4D-Code_1.5.7-8a93303_web.zip",
@@ -182,6 +182,14 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/Data.Explorer_1.5.7-8a93303_aarch64.dmg"
     },
     {
+      "name": "fix-macos-quarantine.sh",
+      "downloadCount": 2,
+      "size": 3954,
+      "contentType": "application/x-sh",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/fix-macos-quarantine.sh"
+    },
+    {
       "name": "install-desktop.sh",
       "downloadCount": 2,
       "size": 3876,
@@ -246,6 +254,14 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4D.Code_1.5.7-8a93303_x64.app.tar.gz.sig"
     },
     {
+      "name": "4D.Code.app.tar.gz",
+      "downloadCount": 1,
+      "size": 10438850,
+      "contentType": "application/x-gtar",
+      "platform": "macos",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4D.Code.app.tar.gz"
+    },
+    {
       "name": "Data-Explorer_1.5.7-8a93303_aarch64.zip.sha256",
       "downloadCount": 1,
       "size": 106,
@@ -292,14 +308,6 @@
       "contentType": "application/zip",
       "platform": "web",
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/DataExplorer.zip"
-    },
-    {
-      "name": "fix-macos-quarantine.sh",
-      "downloadCount": 1,
-      "size": 3954,
-      "contentType": "application/x-sh",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/fix-macos-quarantine.sh"
     },
     {
       "name": "ide-latest.json",
@@ -388,14 +396,6 @@
       "contentType": "application/pgp-signature",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4D.Code-1.5.7-8a93303-1.x86_64.rpm.sig"
-    },
-    {
-      "name": "4D.Code.app.tar.gz",
-      "downloadCount": 0,
-      "size": 10438850,
-      "contentType": "application/x-gtar",
-      "platform": "macos",
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4D.Code.app.tar.gz"
     },
     {
       "name": "4D.Code.app.tar.gz.sig",

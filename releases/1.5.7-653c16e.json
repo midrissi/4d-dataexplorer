@@ -102,6 +102,14 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/4d-ide-core_0.1.0.4de"
     },
     {
+      "name": "4d-ide-explorer_0.1.0.4de",
+      "downloadCount": 2,
+      "size": 6796,
+      "contentType": "application/octet-stream",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/4d-ide-explorer_0.1.0.4de"
+    },
+    {
       "name": "4d-ide-project-settings_0.1.0.4de",
       "downloadCount": 2,
       "size": 2862,
@@ -150,6 +158,14 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/Data.Explorer_1.5.7-653c16e_x64.app.tar.gz.sig"
     },
     {
+      "name": "fix-macos-quarantine.sh",
+      "downloadCount": 2,
+      "size": 3954,
+      "contentType": "application/x-sh",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/fix-macos-quarantine.sh"
+    },
+    {
       "name": "ide-latest.json",
       "downloadCount": 2,
       "size": 2528,
@@ -180,14 +196,6 @@
       "contentType": "application/octet-stream",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/4d-ide-daylane_0.3.2.4de"
-    },
-    {
-      "name": "4d-ide-explorer_0.1.0.4de",
-      "downloadCount": 1,
-      "size": 6796,
-      "contentType": "application/octet-stream",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/4d-ide-explorer_0.1.0.4de"
     },
     {
       "name": "4d-ide-git_0.1.0.4de",
@@ -284,14 +292,6 @@
       "contentType": "application/zip",
       "platform": "web",
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/DataExplorer.zip"
-    },
-    {
-      "name": "fix-macos-quarantine.sh",
-      "downloadCount": 1,
-      "size": 3954,
-      "contentType": "application/x-sh",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/fix-macos-quarantine.sh"
     },
     {
       "name": "install-desktop.ps1",
