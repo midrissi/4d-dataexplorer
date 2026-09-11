@@ -3,12 +3,12 @@
   "name": "Release v1.5.7-8a93303",
   "publishedAt": "2026-09-05T12:17:50Z",
   "htmlUrl": "https://github.com/midrissi/4d-dataexplorer/releases/tag/v1.5.7-8a93303",
-  "total": 18,
+  "total": 19,
   "platforms": [
     {
       "id": "macos",
       "label": "macOS",
-      "downloads": 15
+      "downloads": 16
     },
     {
       "id": "web",
@@ -54,6 +54,14 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4D.Code_1.5.7-8a93303_aarch64.app.tar.gz"
     },
     {
+      "name": "Data.Explorer_1.5.7-8a93303_aarch64.app.tar.gz",
+      "downloadCount": 4,
+      "size": 15636468,
+      "contentType": "application/zip",
+      "platform": "macos",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/Data.Explorer_1.5.7-8a93303_aarch64.app.tar.gz"
+    },
+    {
       "name": "4D-Code_1.5.7-8a93303_extensions.zip",
       "downloadCount": 3,
       "size": 51834263,
@@ -94,14 +102,6 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4d-ide-structure_0.1.0.4de"
     },
     {
-      "name": "Data.Explorer_1.5.7-8a93303_aarch64.app.tar.gz",
-      "downloadCount": 3,
-      "size": 15636468,
-      "contentType": "application/zip",
-      "platform": "macos",
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/Data.Explorer_1.5.7-8a93303_aarch64.app.tar.gz"
-    },
-    {
       "name": "4D-Code_1.5.7-8a93303_aarch64.zip",
       "downloadCount": 2,
       "size": 9903399,
@@ -116,6 +116,14 @@
       "contentType": "application/zip",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4D-Code_1.5.7-8a93303_web.zip"
+    },
+    {
+      "name": "4d-ide-4d-lsp_0.1.0.4de",
+      "downloadCount": 2,
+      "size": 6986,
+      "contentType": "application/octet-stream",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4d-ide-4d-lsp_0.1.0.4de"
     },
     {
       "name": "4d-ide-core_0.1.0.4de",
@@ -220,14 +228,6 @@
       "contentType": "application/x-sh",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/install-desktop.sh"
-    },
-    {
-      "name": "4d-ide-4d-lsp_0.1.0.4de",
-      "downloadCount": 1,
-      "size": 6986,
-      "contentType": "application/octet-stream",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4d-ide-4d-lsp_0.1.0.4de"
     },
     {
       "name": "4d-ide-cline_0.1.0.4de",

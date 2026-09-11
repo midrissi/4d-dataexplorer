@@ -102,6 +102,14 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/4d-ide-core_0.1.0.4de"
     },
     {
+      "name": "4d-ide-daylane_0.3.2.4de",
+      "downloadCount": 2,
+      "size": 31775,
+      "contentType": "application/octet-stream",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/4d-ide-daylane_0.3.2.4de"
+    },
+    {
       "name": "4d-ide-explorer_0.1.0.4de",
       "downloadCount": 2,
       "size": 6796,
@@ -204,14 +212,6 @@
       "contentType": "application/octet-stream",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/4d-ide-cline_0.1.0.4de"
-    },
-    {
-      "name": "4d-ide-daylane_0.3.2.4de",
-      "downloadCount": 1,
-      "size": 31775,
-      "contentType": "application/octet-stream",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/4d-ide-daylane_0.3.2.4de"
     },
     {
       "name": "4d-ide-icons_0.1.0.4de",
