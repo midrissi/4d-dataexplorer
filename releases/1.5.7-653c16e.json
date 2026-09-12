@@ -222,6 +222,14 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/ide-latest.json"
     },
     {
+      "name": "install-desktop.ps1",
+      "downloadCount": 2,
+      "size": 1496,
+      "contentType": "application/octet-stream",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/install-desktop.ps1"
+    },
+    {
       "name": "4D-Code_1.5.7-653c16e_web.zip",
       "downloadCount": 1,
       "size": 5740006,
@@ -292,14 +300,6 @@
       "contentType": "application/zip",
       "platform": "web",
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/DataExplorer.zip"
-    },
-    {
-      "name": "install-desktop.ps1",
-      "downloadCount": 1,
-      "size": 1496,
-      "contentType": "application/octet-stream",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/install-desktop.ps1"
     },
     {
       "name": "install-desktop.sh",
