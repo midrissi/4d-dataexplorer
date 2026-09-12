@@ -126,6 +126,14 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4d-ide-4d-lsp_0.1.0.4de"
     },
     {
+      "name": "4d-ide-cline_0.1.0.4de",
+      "downloadCount": 2,
+      "size": 51753570,
+      "contentType": "application/octet-stream",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4d-ide-cline_0.1.0.4de"
+    },
+    {
       "name": "4d-ide-core_0.1.0.4de",
       "downloadCount": 2,
       "size": 13217,
@@ -156,6 +164,14 @@
       "contentType": "application/octet-stream",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4d-ide-preferences_0.1.0.4de"
+    },
+    {
+      "name": "4d-ide-project-settings_0.1.0.4de",
+      "downloadCount": 2,
+      "size": 2862,
+      "contentType": "application/octet-stream",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4d-ide-project-settings_0.1.0.4de"
     },
     {
       "name": "4D.Code_1.5.7-8a93303_aarch64.app.tar.gz.sig",
@@ -228,22 +244,6 @@
       "contentType": "application/x-sh",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/install-desktop.sh"
-    },
-    {
-      "name": "4d-ide-cline_0.1.0.4de",
-      "downloadCount": 1,
-      "size": 51753570,
-      "contentType": "application/octet-stream",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4d-ide-cline_0.1.0.4de"
-    },
-    {
-      "name": "4d-ide-project-settings_0.1.0.4de",
-      "downloadCount": 1,
-      "size": 2862,
-      "contentType": "application/octet-stream",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4d-ide-project-settings_0.1.0.4de"
     },
     {
       "name": "4D.Code_1.5.7-8a93303_amd64.AppImage.sig",
