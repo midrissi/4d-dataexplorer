@@ -3,7 +3,7 @@
   "name": "Release v1.5.7-653c16e",
   "publishedAt": "2026-09-05T03:46:43Z",
   "htmlUrl": "https://github.com/midrissi/4d-dataexplorer/releases/tag/v1.5.7-653c16e",
-  "total": 11,
+  "total": 12,
   "platforms": [
     {
       "id": "macos",
@@ -13,7 +13,7 @@
     {
       "id": "web",
       "label": "Web",
-      "downloads": 1
+      "downloads": 2
     },
     {
       "id": "android",
@@ -222,6 +222,14 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/Data.Explorer_1.5.7-653c16e_x64.app.tar.gz.sig"
     },
     {
+      "name": "DataExplorer.zip",
+      "downloadCount": 2,
+      "size": 9615814,
+      "contentType": "application/zip",
+      "platform": "web",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/DataExplorer.zip"
+    },
+    {
       "name": "fix-macos-quarantine.sh",
       "downloadCount": 2,
       "size": 3954,
@@ -292,14 +300,6 @@
       "contentType": "application/zip",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/Data.Explorer_1.5.7-653c16e_x64-setup.exe.sig"
-    },
-    {
-      "name": "DataExplorer.zip",
-      "downloadCount": 1,
-      "size": 9615814,
-      "contentType": "application/zip",
-      "platform": "web",
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/DataExplorer.zip"
     },
     {
       "name": "install-desktop.sh",
