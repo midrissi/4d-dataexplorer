@@ -3,12 +3,12 @@
   "name": "Release v1.5.7-8a93303",
   "publishedAt": "2026-09-05T12:17:50Z",
   "htmlUrl": "https://github.com/midrissi/4d-dataexplorer/releases/tag/v1.5.7-8a93303",
-  "total": 23,
+  "total": 24,
   "platforms": [
     {
       "id": "macos",
       "label": "macOS",
-      "downloads": 20
+      "downloads": 21
     },
     {
       "id": "web",
@@ -47,7 +47,7 @@
     },
     {
       "name": "4D.Code_1.5.7-8a93303_aarch64.app.tar.gz",
-      "downloadCount": 5,
+      "downloadCount": 6,
       "size": 10074170,
       "contentType": "application/zip",
       "platform": "macos",
@@ -118,6 +118,14 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4d-ide-git_0.1.0.4de"
     },
     {
+      "name": "4d-ide-icons_0.1.0.4de",
+      "downloadCount": 3,
+      "size": 3368,
+      "contentType": "application/octet-stream",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4d-ide-icons_0.1.0.4de"
+    },
+    {
       "name": "4d-ide-method_0.1.0.4de",
       "downloadCount": 3,
       "size": 7117,
@@ -174,6 +182,14 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/Data.Explorer_1.5.7-8a93303_aarch64.dmg"
     },
     {
+      "name": "install-desktop.sh",
+      "downloadCount": 3,
+      "size": 3876,
+      "contentType": "application/x-sh",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/install-desktop.sh"
+    },
+    {
       "name": "4d-ide-cline_0.1.0.4de",
       "downloadCount": 2,
       "size": 51753570,
@@ -188,14 +204,6 @@
       "contentType": "application/octet-stream",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4d-ide-core_0.1.0.4de"
-    },
-    {
-      "name": "4d-ide-icons_0.1.0.4de",
-      "downloadCount": 2,
-      "size": 3368,
-      "contentType": "application/octet-stream",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/4d-ide-icons_0.1.0.4de"
     },
     {
       "name": "4D.Code_1.5.7-8a93303_aarch64.app.tar.gz.sig",
@@ -244,14 +252,6 @@
       "contentType": "application/octet-stream",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/install-desktop.ps1"
-    },
-    {
-      "name": "install-desktop.sh",
-      "downloadCount": 2,
-      "size": 3876,
-      "contentType": "application/x-sh",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/install-desktop.sh"
     },
     {
       "name": "4D.Code_1.5.7-8a93303_amd64.AppImage.sig",
