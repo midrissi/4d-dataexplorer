@@ -190,6 +190,14 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/Data.Explorer_1.5.7-8a93303_aarch64.dmg"
     },
     {
+      "name": "fix-macos-quarantine.sh",
+      "downloadCount": 3,
+      "size": 3954,
+      "contentType": "application/x-sh",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/fix-macos-quarantine.sh"
+    },
+    {
       "name": "install-desktop.sh",
       "downloadCount": 3,
       "size": 3876,
@@ -236,14 +244,6 @@
       "contentType": "application/zip",
       "platform": "web",
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/DataExplorer.zip"
-    },
-    {
-      "name": "fix-macos-quarantine.sh",
-      "downloadCount": 2,
-      "size": 3954,
-      "contentType": "application/x-sh",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/fix-macos-quarantine.sh"
     },
     {
       "name": "install-desktop.ps1",
