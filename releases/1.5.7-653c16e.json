@@ -46,6 +46,14 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/latest.json"
     },
     {
+      "name": "4D-Code_1.5.7-653c16e_aarch64.zip",
+      "downloadCount": 3,
+      "size": 9903396,
+      "contentType": "application/zip",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/4D-Code_1.5.7-653c16e_aarch64.zip"
+    },
+    {
       "name": "4D-Code_1.5.7-653c16e_extensions.zip",
       "downloadCount": 3,
       "size": 51849445,
@@ -76,14 +84,6 @@
       "contentType": "application/zip",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/Data.Explorer_1.5.7-653c16e_aarch64.app.tar.gz.sig"
-    },
-    {
-      "name": "4D-Code_1.5.7-653c16e_aarch64.zip",
-      "downloadCount": 2,
-      "size": 9903396,
-      "contentType": "application/zip",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-653c16e/4D-Code_1.5.7-653c16e_aarch64.zip"
     },
     {
       "name": "4D-Code_1.5.7-653c16e_web.zip",
