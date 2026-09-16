@@ -3,7 +3,7 @@
   "name": "Release v1.5.7-8a93303",
   "publishedAt": "2026-09-05T12:17:50Z",
   "htmlUrl": "https://github.com/midrissi/4d-dataexplorer/releases/tag/v1.5.7-8a93303",
-  "total": 24,
+  "total": 25,
   "platforms": [
     {
       "id": "macos",
@@ -13,7 +13,7 @@
     {
       "id": "web",
       "label": "Web",
-      "downloads": 2
+      "downloads": 3
     },
     {
       "id": "android",
@@ -190,12 +190,28 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/Data.Explorer_1.5.7-8a93303_aarch64.dmg"
     },
     {
+      "name": "DataExplorer.zip",
+      "downloadCount": 3,
+      "size": 9615814,
+      "contentType": "application/zip",
+      "platform": "web",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/DataExplorer.zip"
+    },
+    {
       "name": "fix-macos-quarantine.sh",
       "downloadCount": 3,
       "size": 3954,
       "contentType": "application/x-sh",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/fix-macos-quarantine.sh"
+    },
+    {
+      "name": "install-desktop.ps1",
+      "downloadCount": 3,
+      "size": 1496,
+      "contentType": "application/octet-stream",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/install-desktop.ps1"
     },
     {
       "name": "install-desktop.sh",
@@ -236,22 +252,6 @@
       "contentType": "application/zip",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/Data.Explorer_1.5.7-8a93303_aarch64.app.tar.gz.sig"
-    },
-    {
-      "name": "DataExplorer.zip",
-      "downloadCount": 2,
-      "size": 9615814,
-      "contentType": "application/zip",
-      "platform": "web",
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/DataExplorer.zip"
-    },
-    {
-      "name": "install-desktop.ps1",
-      "downloadCount": 2,
-      "size": 1496,
-      "contentType": "application/octet-stream",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-8a93303/install-desktop.ps1"
     },
     {
       "name": "4D.Code_1.5.7-8a93303_amd64.AppImage.sig",
