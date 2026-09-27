@@ -3,12 +3,12 @@
   "name": "Release v1.5.7-0a7af92",
   "publishedAt": "2026-09-06T01:58:51Z",
   "htmlUrl": "https://github.com/midrissi/4d-dataexplorer/releases/tag/v1.5.7-0a7af92",
-  "total": 9,
+  "total": 11,
   "platforms": [
     {
       "id": "macos",
       "label": "macOS",
-      "downloads": 7
+      "downloads": 9
     },
     {
       "id": "android",
@@ -39,11 +39,19 @@
   "assets": [
     {
       "name": "latest.json",
-      "downloadCount": 1416,
+      "downloadCount": 1432,
       "size": 2590,
       "contentType": "application/json",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-0a7af92/latest.json"
+    },
+    {
+      "name": "Data-Explorer_1.5.7-0a7af92_aarch64.zip",
+      "downloadCount": 3,
+      "size": 15409810,
+      "contentType": "application/zip",
+      "platform": "macos",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-0a7af92/Data-Explorer_1.5.7-0a7af92_aarch64.zip"
     },
     {
       "name": "Data.Explorer_1.5.7-0a7af92_aarch64.app.tar.gz",
@@ -70,12 +78,12 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-0a7af92/Data.Explorer_1.5.7-0a7af92_x64.app.tar.gz"
     },
     {
-      "name": "Data-Explorer_1.5.7-0a7af92_aarch64.zip",
-      "downloadCount": 1,
-      "size": 15409810,
-      "contentType": "application/zip",
-      "platform": "macos",
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-0a7af92/Data-Explorer_1.5.7-0a7af92_aarch64.zip"
+      "name": "install-desktop.sh",
+      "downloadCount": 2,
+      "size": 3876,
+      "contentType": "application/x-sh",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-0a7af92/install-desktop.sh"
     },
     {
       "name": "Data-Explorer_1.5.7-0a7af92_aarch64.zip.sha256",
@@ -148,14 +156,6 @@
       "contentType": "application/octet-stream",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-0a7af92/install-desktop.ps1"
-    },
-    {
-      "name": "install-desktop.sh",
-      "downloadCount": 1,
-      "size": 3876,
-      "contentType": "application/x-sh",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-0a7af92/install-desktop.sh"
     },
     {
       "name": "Data-Explorer_1.5.7-0a7af92_ios-sim-release.zip",
