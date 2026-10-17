@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <title>4D Data Explorer — Open Graph image</title>
+  <!--
+    Source art for og-image.png. Rasterize with:
+      rsvg-convert -w 1200 -h 630 apps/docs/public/og-image.svg -o apps/docs/public/og-image.png
+    Colors match the docs dark theme (oklch → hex): bg #131b29, brand #df5e3b / #f37f5f,
+    text #e7ebf2 / #b0b8c5 / #7c8799. Fonts: Fraunces (title), DM Sans (UI).
+  -->
+  <defs>
+    <linearGradient id="logoGrad" x1="64" y1="52" x2="112" y2="100" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffc078"/>
+      <stop offset="0.4" stop-color="#f97316"/>
+      <stop offset="1" stop-color="#9a3412"/>
+    </linearGradient>
+    <linearGradient id="logoBody" x1="88" y1="62" x2="88" y2="98" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#fff1e0"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1020 520) rotate(90) scale(460 400)">
+      <stop offset="0" stop-color="#df5e3b" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#df5e3b" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="dots" width="24" height="24" patternUnits="userSpaceOnUse">
+      <circle cx="1.2" cy="1.2" r="1.1" fill="#df5e3b" fill-opacity="0.10"/>
+    </pattern>
+    <pattern id="dots2" width="48" height="48" patternUnits="userSpaceOnUse">
+      <circle cx="13.2" cy="13.2" r="1" fill="#7c8799" fill-opacity="0.08"/>
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="630" fill="#131b29"/>
+  <rect width="1200" height="630" fill="url(#dots)"/>
+  <rect width="1200" height="630" fill="url(#dots2)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+
+  <!-- BRAND_MARK_START -->
+  <image x="64" y="52" width="48" height="48" href="data:image/png;base64,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" xlink:href="data:image/png;base64,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" xmlns:xlink="http://www.w3.org/1999/xlink" />
+<!-- BRAND_MARK_END -->
+  <text x="128" y="82" fill="#df5e3b" font-family="DM Sans, Helvetica, Arial, sans-serif" font-size="15" font-weight="600" letter-spacing="3.4">4D REST DATA BROWSER</text>
+
+  <text x="64" y="180" fill="#e7ebf2" font-family="Fraunces, Georgia, serif" font-size="78" font-weight="700">Data Explorer</text>
+  <text x="64" y="228" fill="#b0b8c5" font-family="DM Sans, Helvetica, Arial, sans-serif" font-size="24">Browse, query, and document your database through the REST API.</text>
+  <text x="64" y="262" fill="#7c8799" font-family="DM Sans, Helvetica, Arial, sans-serif" font-size="20">Tabbed workspace for everyday 4D data work in the browser, Docker, or desktop.</text>
+
+  <g font-family="DM Sans, Helvetica, Arial, sans-serif" font-size="15" font-weight="500">
+    <rect x="64" y="300" width="168" height="36" rx="18" fill="#1c2433" stroke="#3b4253"/>
+    <text x="148" y="323" text-anchor="middle" fill="#e7ebf2">Structure graph</text>
+    <rect x="244" y="300" width="150" height="36" rx="18" fill="#1c2433" stroke="#3b4253"/>
+    <text x="319" y="323" text-anchor="middle" fill="#e7ebf2">Query builder</text>
+    <rect x="406" y="300" width="132" height="36" rx="18" fill="#1c2433" stroke="#3b4253"/>
+    <text x="472" y="323" text-anchor="middle" fill="#e7ebf2">AI assistant</text>
+    <rect x="550" y="300" width="168" height="36" rx="18" fill="#1c2433" stroke="#3b4253"/>
+    <text x="634" y="323" text-anchor="middle" fill="#e7ebf2">Method Executor</text>
+    <rect x="730" y="300" width="108" height="36" rx="18" fill="#1c2433" stroke="#3b4253"/>
+    <text x="784" y="323" text-anchor="middle" fill="#e7ebf2">Themes</text>
+    <rect x="850" y="300" width="148" height="36" rx="18" fill="#1c2433" stroke="#3b4253"/>
+    <text x="924" y="323" text-anchor="middle" fill="#e7ebf2">Entity viewer</text>
+
+    <rect x="64" y="348" width="132" height="36" rx="18" fill="#1c2433" stroke="#3b4253"/>
+    <text x="130" y="371" text-anchor="middle" fill="#e7ebf2">Console</text>
+    <rect x="208" y="348" width="176" height="36" rx="18" fill="#1c2433" stroke="#3b4253"/>
+    <text x="296" y="371" text-anchor="middle" fill="#e7ebf2">Schema builder</text>
+    <rect x="396" y="348" width="168" height="36" rx="18" fill="#1c2433" stroke="#3b4253"/>
+    <text x="480" y="371" text-anchor="middle" fill="#e7ebf2">Command palette</text>
+    <rect x="576" y="348" width="188" height="36" rx="18" fill="#1c2433" stroke="#3b4253"/>
+    <text x="670" y="371" text-anchor="middle" fill="#e7ebf2">Metadata editor</text>
+    <rect x="776" y="348" width="112" height="36" rx="18" fill="#1c2433" stroke="#3b4253"/>
+    <text x="832" y="371" text-anchor="middle" fill="#e7ebf2">Profiles</text>
+  </g>
+
+  <g font-family="DM Sans, Helvetica, Arial, sans-serif" font-size="16" font-weight="600">
+    <rect x="64" y="422" width="210" height="44" rx="22" fill="#df5e3b"/>
+    <text x="169" y="449" text-anchor="middle" fill="#ffffff">Desktop app</text>
+    <rect x="290" y="422" width="210" height="44" rx="22" fill="#1c2433" stroke="#df5e3b" stroke-width="1.5"/>
+    <text x="395" y="449" text-anchor="middle" fill="#e7ebf2">Run with Docker</text>
+    <rect x="516" y="422" width="250" height="44" rx="22" fill="#1c2433" stroke="#3b4253"/>
+    <text x="641" y="449" text-anchor="middle" fill="#b0b8c5">DataExplorer.zip</text>
+  </g>
+
+  <text x="64" y="530" fill="#7c8799" font-family="DM Sans, Helvetica, Arial, sans-serif" font-size="18">Guide · Download · Release notes · GitHub</text>
+  <text x="64" y="568" fill="#b0b8c5" font-family="DM Sans, Helvetica, Arial, sans-serif" font-size="20" font-weight="500">midrissi.github.io/4d-dataexplorer</text>
+  <text x="1136" y="568" text-anchor="end" fill="#7c8799" font-family="DM Sans, Helvetica, Arial, sans-serif" font-size="16">REST · ORDA · AI</text>
+</svg>
