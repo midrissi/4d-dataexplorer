@@ -38,6 +38,46 @@
   ],
   "assets": [
     {
+      "name": "Data.Explorer_1.5.7-d094ae0_aarch64.app.tar.gz.sig",
+      "downloadCount": 1,
+      "size": 412,
+      "contentType": "application/zip",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/Data.Explorer_1.5.7-d094ae0_aarch64.app.tar.gz.sig"
+    },
+    {
+      "name": "Data.Explorer_1.5.7-d094ae0_amd64.AppImage.sig",
+      "downloadCount": 1,
+      "size": 436,
+      "contentType": "application/zip",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/Data.Explorer_1.5.7-d094ae0_amd64.AppImage.sig"
+    },
+    {
+      "name": "Data.Explorer_1.5.7-d094ae0_x64-setup.exe.sig",
+      "downloadCount": 1,
+      "size": 436,
+      "contentType": "application/zip",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/Data.Explorer_1.5.7-d094ae0_x64-setup.exe.sig"
+    },
+    {
+      "name": "Data.Explorer_1.5.7-d094ae0_x64.app.tar.gz.sig",
+      "downloadCount": 1,
+      "size": 412,
+      "contentType": "application/zip",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/Data.Explorer_1.5.7-d094ae0_x64.app.tar.gz.sig"
+    },
+    {
+      "name": "latest.json",
+      "downloadCount": 1,
+      "size": 2590,
+      "contentType": "application/json",
+      "platform": null,
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/latest.json"
+    },
+    {
       "name": "Data-Explorer_1.5.7-d094ae0_aarch64.zip",
       "downloadCount": 0,
       "size": 15424581,
@@ -94,14 +134,6 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/Data.Explorer_1.5.7-d094ae0_aarch64.app.tar.gz"
     },
     {
-      "name": "Data.Explorer_1.5.7-d094ae0_aarch64.app.tar.gz.sig",
-      "downloadCount": 0,
-      "size": 412,
-      "contentType": "application/zip",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/Data.Explorer_1.5.7-d094ae0_aarch64.app.tar.gz.sig"
-    },
-    {
       "name": "Data.Explorer_1.5.7-d094ae0_aarch64.dmg",
       "downloadCount": 0,
       "size": 15501165,
@@ -116,14 +148,6 @@
       "contentType": "application/zip",
       "platform": "linux",
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/Data.Explorer_1.5.7-d094ae0_amd64.AppImage"
-    },
-    {
-      "name": "Data.Explorer_1.5.7-d094ae0_amd64.AppImage.sig",
-      "downloadCount": 0,
-      "size": 436,
-      "contentType": "application/zip",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/Data.Explorer_1.5.7-d094ae0_amd64.AppImage.sig"
     },
     {
       "name": "Data.Explorer_1.5.7-d094ae0_amd64.deb",
@@ -150,28 +174,12 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/Data.Explorer_1.5.7-d094ae0_x64-setup.exe"
     },
     {
-      "name": "Data.Explorer_1.5.7-d094ae0_x64-setup.exe.sig",
-      "downloadCount": 0,
-      "size": 436,
-      "contentType": "application/zip",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/Data.Explorer_1.5.7-d094ae0_x64-setup.exe.sig"
-    },
-    {
       "name": "Data.Explorer_1.5.7-d094ae0_x64.app.tar.gz",
       "downloadCount": 0,
       "size": 16138560,
       "contentType": "application/zip",
       "platform": "macos",
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/Data.Explorer_1.5.7-d094ae0_x64.app.tar.gz"
-    },
-    {
-      "name": "Data.Explorer_1.5.7-d094ae0_x64.app.tar.gz.sig",
-      "downloadCount": 0,
-      "size": 412,
-      "contentType": "application/zip",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/Data.Explorer_1.5.7-d094ae0_x64.app.tar.gz.sig"
     },
     {
       "name": "Data.Explorer_1.5.7-d094ae0_x64.dmg",
@@ -228,14 +236,6 @@
       "contentType": "application/x-sh",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/install-desktop.sh"
-    },
-    {
-      "name": "latest.json",
-      "downloadCount": 0,
-      "size": 2590,
-      "contentType": "application/json",
-      "platform": null,
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/latest.json"
     }
   ]
 }
