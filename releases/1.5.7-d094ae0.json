@@ -3,12 +3,17 @@
   "name": "Release v1.5.7-d094ae0",
   "publishedAt": "2026-10-17T06:05:56Z",
   "htmlUrl": "https://github.com/midrissi/4d-dataexplorer/releases/tag/v1.5.7-d094ae0",
-  "total": 6,
+  "total": 11,
   "platforms": [
     {
       "id": "macos",
       "label": "macOS",
-      "downloads": 3
+      "downloads": 6
+    },
+    {
+      "id": "linux",
+      "label": "Linux",
+      "downloads": 2
     },
     {
       "id": "android",
@@ -21,14 +26,9 @@
       "downloads": 1
     },
     {
-      "id": "linux",
-      "label": "Linux",
-      "downloads": 1
-    },
-    {
       "id": "web",
       "label": "Web",
-      "downloads": 0
+      "downloads": 1
     },
     {
       "id": "windows",
@@ -39,7 +39,7 @@
   "assets": [
     {
       "name": "latest.json",
-      "downloadCount": 365,
+      "downloadCount": 375,
       "size": 2590,
       "contentType": "application/json",
       "platform": null,
@@ -60,6 +60,14 @@
       "contentType": "application/zip",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/Data.Explorer_1.5.7-d094ae0_x64-setup.exe.sig"
+    },
+    {
+      "name": "Data-Explorer_1.5.7-d094ae0_aarch64.zip",
+      "downloadCount": 1,
+      "size": 15424581,
+      "contentType": "application/zip",
+      "platform": "macos",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/Data-Explorer_1.5.7-d094ae0_aarch64.zip"
     },
     {
       "name": "Data-Explorer_1.5.7-d094ae0_android-aarch64.apk",
@@ -86,6 +94,22 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/Data.Explorer_1.5.7-d094ae0_aarch64.app.tar.gz.sig"
     },
     {
+      "name": "Data.Explorer_1.5.7-d094ae0_aarch64.dmg",
+      "downloadCount": 1,
+      "size": 15501165,
+      "contentType": "application/zip",
+      "platform": "macos",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/Data.Explorer_1.5.7-d094ae0_aarch64.dmg"
+    },
+    {
+      "name": "Data.Explorer_1.5.7-d094ae0_amd64.AppImage",
+      "downloadCount": 1,
+      "size": 96582136,
+      "contentType": "application/zip",
+      "platform": "linux",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/Data.Explorer_1.5.7-d094ae0_amd64.AppImage"
+    },
+    {
       "name": "Data.Explorer_1.5.7-d094ae0_amd64.AppImage.sig",
       "downloadCount": 1,
       "size": 436,
@@ -110,6 +134,14 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/Data.Explorer_1.5.7-d094ae0_x64.app.tar.gz.sig"
     },
     {
+      "name": "Data.Explorer_1.5.7-d094ae0_x64.dmg",
+      "downloadCount": 1,
+      "size": 16048626,
+      "contentType": "application/zip",
+      "platform": "macos",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/Data.Explorer_1.5.7-d094ae0_x64.dmg"
+    },
+    {
       "name": "Data.Explorer-1.5.7-d094ae0-1.x86_64.rpm",
       "downloadCount": 1,
       "size": 17104351,
@@ -118,12 +150,12 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/Data.Explorer-1.5.7-d094ae0-1.x86_64.rpm"
     },
     {
-      "name": "Data-Explorer_1.5.7-d094ae0_aarch64.zip",
-      "downloadCount": 0,
-      "size": 15424581,
+      "name": "DataExplorer.zip",
+      "downloadCount": 1,
+      "size": 9618567,
       "contentType": "application/zip",
-      "platform": "macos",
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/Data-Explorer_1.5.7-d094ae0_aarch64.zip"
+      "platform": "web",
+      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/DataExplorer.zip"
     },
     {
       "name": "Data-Explorer_1.5.7-d094ae0_aarch64.zip.sha256",
@@ -150,22 +182,6 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/Data-Explorer_1.5.7-d094ae0_x86_64.zip.sha256"
     },
     {
-      "name": "Data.Explorer_1.5.7-d094ae0_aarch64.dmg",
-      "downloadCount": 0,
-      "size": 15501165,
-      "contentType": "application/zip",
-      "platform": "macos",
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/Data.Explorer_1.5.7-d094ae0_aarch64.dmg"
-    },
-    {
-      "name": "Data.Explorer_1.5.7-d094ae0_amd64.AppImage",
-      "downloadCount": 0,
-      "size": 96582136,
-      "contentType": "application/zip",
-      "platform": "linux",
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/Data.Explorer_1.5.7-d094ae0_amd64.AppImage"
-    },
-    {
       "name": "Data.Explorer_1.5.7-d094ae0_amd64.deb",
       "downloadCount": 0,
       "size": 17104680,
@@ -190,28 +206,12 @@
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/Data.Explorer_1.5.7-d094ae0_x64-setup.exe"
     },
     {
-      "name": "Data.Explorer_1.5.7-d094ae0_x64.dmg",
-      "downloadCount": 0,
-      "size": 16048626,
-      "contentType": "application/zip",
-      "platform": "macos",
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/Data.Explorer_1.5.7-d094ae0_x64.dmg"
-    },
-    {
       "name": "Data.Explorer-1.5.7-d094ae0-1.x86_64.rpm.sig",
       "downloadCount": 0,
       "size": 436,
       "contentType": "application/zip",
       "platform": null,
       "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/Data.Explorer-1.5.7-d094ae0-1.x86_64.rpm.sig"
-    },
-    {
-      "name": "DataExplorer.zip",
-      "downloadCount": 0,
-      "size": 9618567,
-      "contentType": "application/zip",
-      "platform": "web",
-      "browserDownloadUrl": "https://github.com/midrissi/4d-dataexplorer/releases/download/v1.5.7-d094ae0/DataExplorer.zip"
     },
     {
       "name": "fix-macos-quarantine.sh",
